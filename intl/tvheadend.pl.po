@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-15 03:11+0000\n"
+"POT-Creation-Date: 2026-08-03 03:13+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: Marek Adamski, 2026\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
@@ -32,15 +32,15 @@ msgstr ""
 "Aby uzyskać więcej informacji, odwiedź stronę Tvheadend:\n"
 "https://tvheadend.org\n"
 
-#: src/input/mpegts/mpegts_network.c:337
+#: src/input/mpegts/mpegts_network.c:349
 msgid "# Mapped channels"
 msgstr "Liczba zmapowanych kanałów"
 
-#: src/input/mpegts/mpegts_network.c:321
+#: src/input/mpegts/mpegts_network.c:333
 msgid "# Muxes"
 msgstr "Liczba multiplekserów"
 
-#: src/input/mpegts/mpegts_network.c:329
+#: src/input/mpegts/mpegts_network.c:341
 msgid "# Services"
 msgstr "Liczba usług"
 
@@ -536,7 +536,7 @@ msgstr "Dostęp"
 msgid "Access (ACL)"
 msgstr "Dostęp (ACL)"
 
-#: src/wizard.c:467
+#: src/wizard.c:469
 msgid "Access Control"
 msgstr "Kontrola dostępu"
 
@@ -603,7 +603,7 @@ msgid ""
 msgstr ""
 "Dodatkowe opcje wiersza poleceń podczas pobierania grafiki dla nowych nagrań"
 
-#: src/epggrab/channel.c:825
+#: src/epggrab/channel.c:848
 msgid "Additional service names found in EPG data."
 msgstr "Dodatkowe nazwy usług znalezione w danych EPG."
 
@@ -669,7 +669,7 @@ msgstr "Reklama / zakupy"
 msgid "After creating the network scan it for services."
 msgstr "Po utworzeniu sieci przeskanuj ją w poszukiwaniu usług."
 
-#: src/ratinglabels.c:653
+#: src/ratinglabels.c:650
 msgid "Age"
 msgstr "Wiek"
 
@@ -677,7 +677,7 @@ msgstr "Wiek"
 msgid "Age Rating"
 msgstr "Klasyfikacja wiekowa"
 
-#: src/ratinglabels.c:662
+#: src/ratinglabels.c:659
 msgid "Age to use in the EPG parental rating field."
 msgstr "Wiek do użycia w polu oceny rodzicielskiej EPG."
 
@@ -815,7 +815,7 @@ msgstr "Dozwolona sieć"
 msgid "Allowed networks"
 msgstr "Dozwolone sieci"
 
-#: src/epggrab/module/xmltv.c:1422
+#: src/epggrab/module/xmltv.c:1429
 msgid "Alter programme description to include detailed information"
 msgstr "Zmień opis programu, aby zawierał szczegółowe informacje."
 
@@ -976,7 +976,7 @@ msgstr "Typ dźwięku"
 msgid "Audioes muxer"
 msgstr "Multiplekser dźwiękowy"
 
-#: src/webui/webui.c:190
+#: src/webui/webui.c:215
 msgid "Authenticated user"
 msgstr "Uwierzytelniony użytkownik"
 
@@ -984,7 +984,7 @@ msgstr "Uwierzytelniony użytkownik"
 msgid "Authentication type"
 msgstr "Typ uwierzytelniania"
 
-#: src/ratinglabels.c:683
+#: src/ratinglabels.c:680
 msgid "Authority"
 msgstr "Organ"
 
@@ -1026,6 +1026,10 @@ msgstr "Wykryto automatycznie"
 msgid "Auto-Map to channels"
 msgstr "Automatycznie mapuj do kanałów"
 
+#: src/input/mpegts/mpegts_network.c:243
+msgid "Auto-map EPG source on new channels"
+msgstr ""
+
 #: src/service.c:180
 msgid "Automatic checking"
 msgstr "Automatyczne sprawdzanie"
@@ -1064,7 +1068,7 @@ msgstr ""
 msgid "Automatically map EPG source"
 msgstr "Automatycznie mapowane źródło EPG"
 
-#: src/wizard.c:1114
+#: src/wizard.c:1116
 msgid "Automatically map all available services to channels."
 msgstr "Automatycznie mapuj wszystkie dostępne usługi do kanałów."
 
@@ -1463,7 +1467,7 @@ msgstr "Kategoria"
 msgid "Category "
 msgstr "Kategoria"
 
-#: src/epggrab/module/xmltv.c:1444
+#: src/epggrab/module/xmltv.c:1451
 msgid "Category Code XPath"
 msgstr "XPath kodu kategorii"
 
@@ -1490,7 +1494,7 @@ msgstr "Ikona kanału"
 msgid "Channel icon URL."
 msgstr "Adres URL ikony kanału."
 
-#: src/epggrab/channel.c:843
+#: src/epggrab/channel.c:866
 msgid "Channel icon as defined in EPG data."
 msgstr "Ikona kanału, jak określono w danych EPG."
 
@@ -1534,7 +1538,7 @@ msgstr "Kanału nie znaleziono"
 msgid "Channel number"
 msgstr "Numer kanału"
 
-#: src/epggrab/channel.c:835
+#: src/epggrab/channel.c:858
 msgid "Channel number as defined in EPG data."
 msgstr "Numer kanału, jak określono w danych EPG."
 
@@ -1546,7 +1550,7 @@ msgstr "Przesunięcie numeru kanału"
 msgid "Channel number range"
 msgstr "Zakres numerów kanałów"
 
-#: src/epggrab/module/xmltv.c:1406
+#: src/epggrab/module/xmltv.c:1413
 msgid "Channel numbers (heuristic)"
 msgstr "Numery kanałów (heurystyka)"
 
@@ -1578,11 +1582,11 @@ msgstr "Tagi kanału do których użytkownik ma prawo dostępu/wykluczenia."
 msgid "Channel to use/used for the recording."
 msgstr "Kanał do użycia/używany do nagrywania."
 
-#: src/epggrab/channel.c:873
+#: src/epggrab/channel.c:896
 msgid "Channel update options"
 msgstr "Opcje aktualizacji kanałów"
 
-#: src/epggrab/channel.c:851
+#: src/epggrab/channel.c:874
 msgid "Channels"
 msgstr "Kanały"
 
@@ -1598,7 +1602,7 @@ msgstr "Kanały / EPG - Tagi kanałów"
 msgid "Channels / EPG - Channels"
 msgstr "Kanały / EPG - Kanały"
 
-#: src/epggrab/channel.c:743
+#: src/epggrab/channel.c:766
 msgid "Channels / EPG - EPG Grabber Channels"
 msgstr "Kanały / EPG - Kanały grabbera EPG"
 
@@ -1610,11 +1614,11 @@ msgstr "Kanały / EPG - Konfiguracja grabbera EPG"
 msgid "Channels / EPG - EPG Grabber Modules"
 msgstr "Kanały / EPG - Moduły grabbera EPG"
 
-#: src/epggrab/channel.c:852
+#: src/epggrab/channel.c:875
 msgid "Channels EPG data is used by."
 msgstr "Dane kanałów EPG są używane."
 
-#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:302
+#: src/dvr/dvr_config.c:1228 src/input/mpegts/mpegts_network.c:314
 #: src/input/mpegts/mpegts_mux.c:647 src/input/mpegts/mpegts_service.c:278
 msgid "Character set"
 msgstr "Ustawienie znaków"
@@ -1631,7 +1635,7 @@ msgstr ""
 msgid "Charset"
 msgstr "Zestaw znaków"
 
-#: src/service_mapper.c:598
+#: src/service_mapper.c:609
 msgid "Check availability"
 msgstr "Sprawdź dostępność"
 
@@ -1643,7 +1647,7 @@ msgstr ""
 "Sprawdź obecność usług. Jeśli usługa nie jest już nadawana, to pole zmieni "
 "się na 'Brakujące' w PAT/SDT."
 
-#: src/service_mapper.c:599
+#: src/service_mapper.c:610
 msgid ""
 "Check services for availability. If enabled, services that are not currently"
 " broadcasting (or can't be decrypted) will be ignored. Leave disabled if you"
@@ -1780,7 +1784,7 @@ msgstr "Polecenie przesunięcia anteny za pomocą zewnętrznego polecenia."
 #: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344
-#: src/bouquet.c:1338 src/epggrab/channel.c:885 src/dvr/dvr_db.c:5011
+#: src/bouquet.c:1338 src/epggrab/channel.c:908 src/dvr/dvr_db.c:5011
 #: src/dvr/dvr_autorec.c:1487 src/dvr/dvr_timerec.c:679
 #: src/dvr/dvr_config.c:1170 src/descrambler/caclient.c:319
 msgid "Comment"
@@ -1881,7 +1885,7 @@ msgstr "Konfiguracja-Strumień"
 msgid "Config-Users"
 msgstr "Konfiguracja-Użytkownicy"
 
-#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:752
+#: src/tvhlog.c:103 src/profile.c:2100 src/epggrab/channel.c:775
 msgid "Configuration"
 msgstr "Konfiguracja"
 
@@ -2023,15 +2027,15 @@ msgstr "Rok praw autorskich"
 msgid "Count of objects"
 msgstr "Liczba obiektów"
 
-#: src/ratinglabels.c:646
+#: src/ratinglabels.c:643
 msgid "Country"
 msgstr "Kraj"
 
-#: src/ratinglabels.c:647
+#: src/ratinglabels.c:644
 msgid "Country received via OTA EPG."
 msgstr "Kraj otrzymany za pośrednictwem OTA EPG."
 
-#: src/service_mapper.c:649
+#: src/service_mapper.c:660
 msgid "Create SDTV/HDTV/Radio tags."
 msgstr "Utwórz tagi SDTV/HDTV/Radio."
 
@@ -2069,15 +2073,15 @@ msgstr ""
 "utworzone tylko wtedy, gdy coś zostanie nagrane. Format katalogu będzie "
 "zgodny ze standardem ISO RRRR-MM-DD."
 
-#: src/service_mapper.c:657
+#: src/service_mapper.c:668
 msgid "Create a provider name tag."
 msgstr "Utwórz tag dostawcy."
 
-#: src/wizard.c:1132
+#: src/wizard.c:1134
 msgid "Create and associate a network tag to created channels."
 msgstr "Utwórz i powiąż tag sieciowy z utworzonymi kanałami."
 
-#: src/wizard.c:1123
+#: src/wizard.c:1125
 msgid "Create and associate a provider tag to created channels."
 msgstr "Utwórz i powiąż tag dostawcy z utworzonymi kanałami."
 
@@ -2101,23 +2105,23 @@ msgstr "Utwórz katalogi używając tych uprawnień."
 msgid "Create files using these permissions."
 msgstr "Utwórz pliki używając tych uprawnień."
 
-#: src/service_mapper.c:664 src/bouquet.c:1040
+#: src/service_mapper.c:675 src/bouquet.c:1040
 msgid "Create network name tags"
 msgstr "Utwórz nazwy tagów sieci"
 
-#: src/service_mapper.c:665
+#: src/service_mapper.c:676
 msgid "Create network name tags (set by provider)."
 msgstr "Utwórz nazwy tagów sieci (ustaw po dostawcy)."
 
-#: src/wizard.c:1131
+#: src/wizard.c:1133
 msgid "Create network tags"
 msgstr "Utwórz tagi sieci"
 
-#: src/service_mapper.c:656 src/bouquet.c:1035
+#: src/service_mapper.c:667 src/bouquet.c:1035
 msgid "Create provider name tags"
 msgstr "Utwórz nazwy tagów dostawców"
 
-#: src/wizard.c:1122
+#: src/wizard.c:1124
 msgid "Create provider tags"
 msgstr "Utwórz tagi dostawców"
 
@@ -2145,7 +2149,7 @@ msgstr ""
 "Twórz tagi w nagraniach, używając kontenerów multimediów obsługujących "
 "metadane (jeśli to możliwe)."
 
-#: src/service_mapper.c:648 src/bouquet.c:1030
+#: src/service_mapper.c:659 src/bouquet.c:1030
 msgid "Create type-based tags"
 msgstr "Twórz tagi oparte na typie"
 
@@ -2490,7 +2494,7 @@ msgstr "Próg błędu danych dla nieudanych nagrań (0 = wyłączone)"
 msgid "Data errors"
 msgstr "Dane błędów"
 
-#: src/epggrab/channel.c:790
+#: src/epggrab/channel.c:813
 msgid "Data path (if applicable)."
 msgstr "Ścieżka danych (jeśli dotyczy)."
 
@@ -2511,7 +2515,7 @@ msgstr ""
 msgid "Data timeout (sec) (0=infinite)"
 msgstr "Limit czasu (s) (0=nieskończony)"
 
-#: src/epggrab/channel.c:799
+#: src/epggrab/channel.c:822
 msgid "Date the EPG data was last updated (not set for OTA grabbers)."
 msgstr ""
 "Data ostatniej aktualizacji danych EPG (nieustawiona dla grabberów OTA)."
@@ -2594,7 +2598,7 @@ msgstr "Domyślny(e) język(i)"
 msgid "Default language."
 msgstr "Domyślny język."
 
-#: src/http.c:708
+#: src/http.c:709
 msgid "Default login"
 msgstr "Domyślne logowanie"
 
@@ -2817,7 +2821,7 @@ msgstr "Wyłącz obejścia dla urządzenia/firmware"
 msgid "Disable syslog (all messages)"
 msgstr "Wyłącz syslog (wszystkie wiadomości)"
 
-#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1484
+#: src/channels.c:399 src/profile.c:2339 src/epggrab/module/xmltv.c:1491
 msgid "Disabled"
 msgstr "Wyłączony"
 
@@ -2848,11 +2852,11 @@ msgstr "DiseqC"
 msgid "DiseqC repeats"
 msgstr "Powtórzenia DiseqC"
 
-#: src/ratinglabels.c:661
+#: src/ratinglabels.c:658
 msgid "Display Age"
 msgstr "Wyświetlaj wiek"
 
-#: src/ratinglabels.c:669
+#: src/ratinglabels.c:666
 msgid "Display Label"
 msgstr "Wyświetlaj etykiety"
 
@@ -2922,7 +2926,7 @@ msgstr "Nie zmieniaj harmonogramu, jeśli nagrywanie się nie powiedzie."
 msgid "Don't reschedule"
 msgstr "Nie planuj ponownie"
 
-#: src/input/mpegts/mpegts_network.c:284
+#: src/input/mpegts/mpegts_network.c:296
 msgid "Don't use the provider's channel numbers."
 msgstr "Nie używaj numerów kanałów dostawcy."
 
@@ -2958,7 +2962,7 @@ msgstr "Przetwarzanie EIT"
 msgid "EIT processing (default)"
 msgstr "Przetwarzanie EIT (domyślne)"
 
-#: src/input/mpegts/mpegts_network.c:312
+#: src/input/mpegts/mpegts_network.c:324
 msgid "EIT time offset"
 msgstr "Przesunięcie czasu EIT"
 
@@ -2970,11 +2974,11 @@ msgstr "Ustawienia EMM"
 msgid "EPG"
 msgstr "EPG"
 
-#: src/epggrab/module/xmltv.c:1596
+#: src/epggrab/module/xmltv.c:1603
 msgid "EPG - External XMLTV EPG Grabber"
 msgstr "EPG - Zewnętrzny grabber EPG XMLTV"
 
-#: src/epggrab/module/xmltv.c:1494
+#: src/epggrab/module/xmltv.c:1501
 msgid "EPG - Internal XMLTV EPG Grabber"
 msgstr "EPG - Wewnętrzny grabber EPG XMLTV"
 
@@ -2994,7 +2998,7 @@ msgstr "Grabber EPG"
 msgid "EPG Language (priority order)"
 msgstr "Język EPG (priorytet kolejności)"
 
-#: src/ratinglabels.c:626
+#: src/ratinglabels.c:623
 msgid "EPG Parental Rating Labels"
 msgstr "Etykiety oceny rodzicielskiej EPG"
 
@@ -3006,7 +3010,7 @@ msgstr "Ustawienia EPG"
 msgid "EPG behaviour"
 msgstr "Zachowanie EPG"
 
-#: src/epggrab/channel.c:809
+#: src/epggrab/channel.c:832
 msgid "EPG data ID."
 msgstr "Identyfikator danych EPG."
 
@@ -3285,7 +3289,7 @@ msgid "Enable/Disable web interface mouse-over tooltips."
 msgstr ""
 "Włącz/wyłącz podpowiedzi po najechaniu myszką na interfejs internetowy."
 
-#: src/epggrab/channel.c:762
+#: src/epggrab/channel.c:785
 msgid "Enable/disable EPG data for the entry."
 msgstr "Włącz/wyłącz dane EPG dla wpisu."
 
@@ -3393,7 +3397,7 @@ msgstr "Włącz/wyłącz wpis."
 msgid "Enable/disable the grabber."
 msgstr "Włącz/wyłącz grabber."
 
-#: src/ratinglabels.c:638
+#: src/ratinglabels.c:635
 msgid "Enable/disable the rating label."
 msgstr "Włącz/wyłącz etykietę oceny."
 
@@ -3408,7 +3412,7 @@ msgstr "Włącz/wyłącz tuner/adapter."
 #: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172
 #: src/imagecache.c:90 src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
-#: src/ratinglabels.c:637 src/epggrab/module.c:171 src/epggrab/channel.c:761
+#: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:784
 #: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
 #: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
@@ -3432,11 +3436,11 @@ msgstr "Zaszyfrowany"
 msgid "Encrypted service"
 msgstr "Usługa kodowana"
 
-#: src/wizard.c:454
+#: src/wizard.c:455
 msgid "Enter a non-admin user password."
 msgstr "Wprowadź hasło użytkownika innego niż administrator."
 
-#: src/wizard.c:445
+#: src/wizard.c:446
 msgid "Enter a non-admin user username."
 msgstr "Wprowadź nazwę użytkownika innego niż administrator."
 
@@ -3536,11 +3540,11 @@ msgstr "Obraz odcinka."
 msgid "Episode number/ID."
 msgstr "Numer/identyfikator odcinka."
 
-#: src/epggrab/module/xmltv.c:1463
+#: src/epggrab/module/xmltv.c:1470
 msgid "EpisodeLink XPath"
 msgstr "XPath EpisodeLink"
 
-#: src/epggrab/module/xmltv.c:1475
+#: src/epggrab/module/xmltv.c:1482
 msgid "EpisodeLink XPath fallback"
 msgstr "Awaryjny XPath EpisodeLink"
 
@@ -3788,7 +3792,7 @@ msgstr "Szybkość pola"
 msgid "File missing"
 msgstr "Plik utracony"
 
-#: src/ratinglabels.c:691
+#: src/ratinglabels.c:688
 msgid "File name for this rating's icon."
 msgstr "Nazwa pliku dla ikony tej oceny."
 
@@ -3844,7 +3848,7 @@ msgstr "Filtr"
 msgid "Fine arts"
 msgstr "Sztuki piękne"
 
-#: src/wizard.c:1196 src/dvr/dvr_db.c:662
+#: src/wizard.c:1198 src/dvr/dvr_db.c:662
 msgid "Finished"
 msgstr "Zakończone"
 
@@ -3860,7 +3864,7 @@ msgstr "Pierwsze trafienie"
 msgid "First scan"
 msgstr "Pierwsze skanowanie"
 
-#: src/epggrab/module/xmltv.c:1485
+#: src/epggrab/module/xmltv.c:1492
 msgid "First word"
 msgstr "Pierwsze słowo"
 
@@ -4043,11 +4047,11 @@ msgstr "Format dla wyjścia xmltv"
 msgid "Format string/Pathname specification"
 msgstr "Specyfikacja ciągu formatującego/ścieżki"
 
-#: src/wizard.c:1029
+#: src/wizard.c:1031
 msgid "Found muxes"
 msgstr "Znaleziono multipleksery"
 
-#: src/wizard.c:1038
+#: src/wizard.c:1040
 msgid "Found services"
 msgstr "Znalezione usługi"
 
@@ -4086,7 +4090,7 @@ msgstr "Dowolne pole, wpisz tutaj, co chcesz."
 msgid "Free-form text field, enter whatever you like here."
 msgstr "Dowolne pole tekstowe, wpisz tutaj, co chcesz."
 
-#: src/bouquet.c:1339 src/epggrab/channel.c:886 src/descrambler/caclient.c:320
+#: src/bouquet.c:1339 src/epggrab/channel.c:909 src/descrambler/caclient.c:320
 msgid "Free-form text field, enter whatever you like."
 msgstr "Dowolne pole tekstowe, wpisz, co chcesz."
 
@@ -4189,8 +4193,8 @@ msgstr "Zbierz statystyki czasowe dla kodu"
 
 #: src/tvhlog.c:835 src/epggrab.c:367 src/profile.c:296 src/profile.c:1344
 #: src/profile.c:1590 src/profile.c:1825 src/profile.c:2502
-#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1497
-#: src/epggrab/module/xmltv.c:1599 src/dvr/dvr_config.c:925
+#: src/satip/server.c:653 src/epggrab/module/xmltv.c:1504
+#: src/epggrab/module/xmltv.c:1606 src/dvr/dvr_config.c:925
 #: src/descrambler/caclient.c:276 src/transcoding/codec/profile_class.c:232
 #: src/descrambler/cclient.c:1357 src/descrambler/dvbcam.c:848
 msgid "General Settings"
@@ -4457,11 +4461,11 @@ msgstr ""
 "Jak radzić sobie z duplikatami nagrań. Wartość „Użyj konfiguracji DVR” "
 "(domyślna) dziedziczy ustawienia z przypisanej konfiguracji DVR."
 
-#: src/epggrab/channel.c:808
+#: src/epggrab/channel.c:831
 msgid "ID"
 msgstr "Identyfikator"
 
-#: src/wizard.c:820
+#: src/wizard.c:822
 msgid "ID of the network."
 msgstr "Identyfikator sieci."
 
@@ -4579,7 +4583,7 @@ msgstr "Multipleks ISDB-T"
 msgid "ISI (Stream ID)"
 msgstr "ISI (identyfikator strumienia)"
 
-#: src/ratinglabels.c:690 src/epggrab/channel.c:664 src/epggrab/channel.c:842
+#: src/ratinglabels.c:687 src/epggrab/channel.c:687 src/epggrab/channel.c:865
 msgid "Icon"
 msgstr "Ikona"
 
@@ -4587,7 +4591,7 @@ msgstr "Ikona"
 msgid "Icon (full URL)"
 msgstr "Ikona (pełny adres URL)"
 
-#: src/channels.c:473 src/channels.c:1826 src/ratinglabels.c:697
+#: src/channels.c:473 src/channels.c:1826 src/ratinglabels.c:694
 #: src/input/mpegts/iptv/iptv_mux.c:222
 msgid "Icon URL"
 msgstr "Adres URL ikony"
@@ -4616,11 +4620,11 @@ msgstr "Bezczynny"
 msgid "Idle scan"
 msgstr "Bezczynne skanowanie"
 
-#: src/input/mpegts/mpegts_network.c:256
+#: src/input/mpegts/mpegts_network.c:268
 msgid "Idle scan muxes"
 msgstr "Bezczynne skanowanie multiplekserów"
 
-#: src/epggrab/module/xmltv.c:1472
+#: src/epggrab/module/xmltv.c:1479
 msgid ""
 "If a SeriesLink XPath is not found, use the standard TVH method for creating"
 " a SeriesLink."
@@ -4636,7 +4640,7 @@ msgstr ""
 "Jeśli ukończone nagranie zawiera taką liczbę lub więcej błędów danych, "
 "oznacz je jako nieudane. Ustaw na 0, aby wyłączyć to sprawdzanie."
 
-#: src/epggrab/module/xmltv.c:1477
+#: src/epggrab/module/xmltv.c:1484
 msgid ""
 "If an EpisodeLink XPath is not found, use the standard TVH method for "
 "creating an EpisodeLink."
@@ -4660,7 +4664,7 @@ msgstr ""
 "Jeśli zdefiniowano zarówno piconę, jak i ikonę specyficzną dla kanału (np. "
 "nazwa_kanału.jpg), preferuj ikonę."
 
-#: src/epggrab/module/xmltv.c:1424
+#: src/epggrab/module/xmltv.c:1431
 msgid ""
 "If enabled then this will alter the programme descriptions to include "
 "information about actors, keywords and categories (if available from the "
@@ -4685,7 +4689,7 @@ msgstr ""
 " używasz opcji „Wykryj duplikat, jeśli inny opis”, ponieważ opisy ulegną "
 "zmianie z powodu dodanych informacji."
 
-#: src/service_mapper.c:625
+#: src/service_mapper.c:636
 msgid ""
 "If merge same name is enabled then merge services with the same name into "
 "one channel but using fuzzy logic such as ignoring whitespace, case and some"
@@ -4800,7 +4804,7 @@ msgstr "Ignoruj argumenty HTTP"
 msgid "Ignore descriptor 5"
 msgstr "Ignoruj deskryptor 5"
 
-#: src/service_mapper.c:610
+#: src/service_mapper.c:621
 msgid "Ignore encryption flag, include encrypted services anyway."
 msgstr "Ignoruj ​​flagę szyfrowania, mimo to dołącz zaszyfrowane usługi."
 
@@ -4829,7 +4833,7 @@ msgstr ""
 msgid "Ignore path components"
 msgstr "Ignoruj składniki ścieżki"
 
-#: src/input/mpegts/mpegts_network.c:283
+#: src/input/mpegts/mpegts_network.c:295
 msgid "Ignore provider's channel numbers"
 msgstr "Ignoruj numery kanałów dostwców"
 
@@ -4929,6 +4933,13 @@ msgstr "Informacyjny"
 #: src/input/mpegts/mpegts_input.c:289
 msgid "Initial scan"
 msgstr "Wstępne skanowanie"
+
+#: src/input/mpegts/mpegts_network.c:244
+msgid ""
+"Initial value of the channel option \"Automatically map EPG source\" for "
+"channels created from this network. Changing this setting does not affect "
+"existing channels."
+msgstr ""
 
 #: src/input.c:29
 msgid "Input base"
@@ -5127,7 +5138,7 @@ msgstr "Typ LNB"
 msgid "LNB: %s"
 msgstr "LNB: %s"
 
-#: src/ratinglabels.c:676
+#: src/ratinglabels.c:673
 msgid "Label"
 msgstr "Etykieta"
 
@@ -5411,15 +5422,15 @@ msgstr "Nazwa użytkownika logowania."
 msgid "Login/Logout"
 msgstr "Zaloguj / Wyloguj"
 
-#: src/webui/comet.c:392
+#: src/webui/comet.c:407
 msgid "Loglevel debug: disabled"
 msgstr "Debugowanie na poziomie dziennika: wyłączone"
 
-#: src/webui/comet.c:390
+#: src/webui/comet.c:405
 msgid "Loglevel debug: enabled"
 msgstr "Debugowanie na poziomie dziennika: włączone"
 
-#: src/webui/webui.c:180
+#: src/webui/webui.c:205
 msgid "Logout"
 msgstr "Wyloguj"
 
@@ -5584,11 +5595,11 @@ msgstr "Strona z informacjami o produkcie producenta dla urządzenia."
 msgid "Manufacturer's product name."
 msgstr "Nazwa produktu producenta."
 
-#: src/wizard.c:1113
+#: src/wizard.c:1115
 msgid "Map all services"
 msgstr "Mapuj wszystkie usługi"
 
-#: src/service_mapper.c:609 src/bouquet.c:952
+#: src/service_mapper.c:620 src/bouquet.c:952
 msgid "Map encrypted services"
 msgstr "Mapuj zaszyfrowane usługi"
 
@@ -5752,11 +5763,11 @@ msgstr "Melodramat"
 msgid "Memory Information"
 msgstr "Informacje o pamięci"
 
-#: src/service_mapper.c:617 src/bouquet.c:957
+#: src/service_mapper.c:628 src/bouquet.c:957
 msgid "Merge same name"
 msgstr "Scal te same nazwy"
 
-#: src/service_mapper.c:618
+#: src/service_mapper.c:629
 msgid "Merge services with the same name into one channel."
 msgstr "Scal usługi o tej samej nazwie w jeden kanał."
 
@@ -5837,15 +5848,15 @@ msgstr "Numer modelu"
 msgid "Modulation"
 msgstr "Modulacja"
 
-#: src/epggrab/channel.c:780
+#: src/epggrab/channel.c:803
 msgid "Module"
 msgstr "Moduł"
 
-#: src/epggrab/channel.c:770
+#: src/epggrab/channel.c:793
 msgid "Module ID"
 msgstr "Identyfikator modułu"
 
-#: src/epggrab/channel.c:771
+#: src/epggrab/channel.c:794
 msgid "Module ID used to grab EPG data."
 msgstr "Identyfikator modułu używany do pobierania danych EPG."
 
@@ -5967,8 +5978,8 @@ msgid "NVENC"
 msgstr "NVENC"
 
 #: src/channels.c:439 src/channels.c:1791 src/bouquet.c:1268
-#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:674
-#: src/epggrab/channel.c:816 src/dvr/dvr_autorec.c:1152
+#: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:697
+#: src/epggrab/channel.c:839 src/dvr/dvr_autorec.c:1152
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
 #: src/input/mpegts/mpegts_mux.c:585
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1553
@@ -6001,7 +6012,7 @@ msgstr "Nazwa klienta."
 msgid "Name of the entry."
 msgstr "Nazwa wpisu."
 
-#: src/epggrab/channel.c:781
+#: src/epggrab/channel.c:804
 msgid "Name of the module used to grab EPG data."
 msgstr "Nazwa modułu używanego do pobierania danych EPG."
 
@@ -6013,7 +6024,7 @@ msgstr ""
 "Nazwa modułu, grabbera lub kanału, którego należy użyć do aktualizacji "
 "informacji EPG tego kanału."
 
-#: src/wizard.c:812 src/input/mpegts/mpegts_network.c:200
+#: src/wizard.c:814 src/input/mpegts/mpegts_network.c:200
 msgid "Name of the network."
 msgstr "Nazwa sieci."
 
@@ -6025,7 +6036,7 @@ msgstr "Nazwa profilu."
 msgid "Name of the tag."
 msgstr "Nazwa tagu."
 
-#: src/wizard.c:569 src/wizard.c:577
+#: src/wizard.c:571 src/wizard.c:579
 msgid "Name of the tuner."
 msgstr "Nazwa tunera."
 
@@ -6037,7 +6048,7 @@ msgstr "Nazwa tunera/adaptera."
 msgid "Name."
 msgstr "Nazwa."
 
-#: src/epggrab/channel.c:824
+#: src/epggrab/channel.c:847
 msgid "Names"
 msgstr "Nazwy"
 
@@ -6049,13 +6060,13 @@ msgstr "Nauki przyrodnicze"
 msgid "Nature"
 msgstr "Natura"
 
-#: src/wizard.c:787 src/wizard.c:811 src/input/mpegts/mpegts_mux.c:569
+#: src/wizard.c:789 src/wizard.c:813 src/input/mpegts/mpegts_mux.c:569
 #: src/input/mpegts/mpegts_service.c:146
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:206
 msgid "Network"
 msgstr "Sieć"
 
-#: src/wizard.c:561
+#: src/wizard.c:563
 msgid "Network "
 msgstr "Sieć "
 
@@ -6149,7 +6160,7 @@ msgstr "Prefiks sieci"
 msgid "Network settings"
 msgstr "Ustawienia sieci"
 
-#: src/wizard.c:584 src/input/mpegts/satip/satip_frontend.c:373
+#: src/wizard.c:586 src/input/mpegts/satip/satip_frontend.c:373
 #: src/input/mpegts/satip/satip_frontend.c:578
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:241
 msgid "Network type"
@@ -6174,7 +6185,7 @@ msgstr "Nowe / premiera"
 msgid "New / premiere / unknown"
 msgstr "Nowość / premiera / nieznany"
 
-#: src/http.c:711
+#: src/http.c:712
 msgid "New login"
 msgstr "Nowe logowanie"
 
@@ -6327,7 +6338,7 @@ msgstr "Nieustawiony (brak lub konfiguracja kanału)"
 msgid "Not set (use channel or DVR configuration)"
 msgstr "Nieustawiony (użyj kanału lub konfiguracji DVR)"
 
-#: src/channels.c:451 src/epggrab/channel.c:669 src/epggrab/channel.c:834
+#: src/channels.c:451 src/epggrab/channel.c:692 src/epggrab/channel.c:857
 msgid "Number"
 msgstr "Numer"
 
@@ -6373,7 +6384,7 @@ msgstr ""
 "zostanie oznaczone jako odtworzone, gdy klient buforuje dane, co może "
 "nastąpić przed faktycznym zakończeniem programu."
 
-#: src/wizard.c:1030
+#: src/wizard.c:1032
 msgid "Number of muxes found."
 msgstr "Liczba znalezionych multiplekserów."
 
@@ -6461,7 +6472,7 @@ msgstr "OTA (bezprzewodowe) tłumaczenie gatunków"
 msgid "OTA (Over-the-air) Grabber Settings"
 msgstr "Ustawienia grabbera OTA (bezprzewodowego)"
 
-#: src/epggrab/module/xmltv.c:1413
+#: src/epggrab/module/xmltv.c:1420
 msgid ""
 "Obtain list of credits (actors, etc.), keywords and extra information from "
 "the xml tags (if available). Some xmltv providers supply a list of actors "
@@ -6516,7 +6527,7 @@ msgstr "Podczas usuwania plików"
 msgid "On-demand (no first rewind)"
 msgstr "Na żądanie (bez pierwszego przewijania)"
 
-#: src/epggrab/channel.c:862
+#: src/epggrab/channel.c:885
 msgid "Once per auto channel"
 msgstr "Raz na kanał automatyczny"
 
@@ -6540,7 +6551,7 @@ msgstr ""
 "pierwszym żądaniu nie ma bufora, przewijanie nie jest w tym momencie "
 "możliwe."
 
-#: src/webui/comet.c:388
+#: src/webui/comet.c:403
 msgid "Only admin can watch the realtime log."
 msgstr "Tylko administrator może oglądać dziennik w czasie rzeczywistym."
 
@@ -6552,7 +6563,7 @@ msgstr ""
 "Zezwalaj na używanie tagu tylko użytkownikom z tym tagiem (lub bez tagów) "
 "ustawionym w konfiguracji dostępu."
 
-#: src/epggrab/module/xmltv.c:1486
+#: src/epggrab/module/xmltv.c:1493
 msgid "Only digits"
 msgstr "Tylko cyfry"
 
@@ -6575,7 +6586,7 @@ msgid "Only use specified DVB adapters (comma-separated, -1 = none)"
 msgstr ""
 "Używaj tylko określonych adapterów DVB (rozdzielone przecinkami, -1 = brak)"
 
-#: src/epggrab/channel.c:863
+#: src/epggrab/channel.c:886
 msgid ""
 "Only use this EPG data once when automatically determining what EPG data to "
 "set for a channel."
@@ -6601,7 +6612,7 @@ msgstr ""
 "Opcje do użycia/używane podczas mapowania – zobacz Pomoc, aby uzyskać "
 "szczegółowe informacje."
 
-#: src/epggrab/channel.c:874
+#: src/epggrab/channel.c:897
 msgid "Options used when updating channels."
 msgstr "Opcje używane podczas aktualizacji kanałów."
 
@@ -6828,7 +6839,7 @@ msgstr "Multiplekser przelotowy"
 msgid "Passthrough Muxer SI Tables"
 msgstr "Przejściowe tabele multipleksera SI"
 
-#: src/access.c:2315 src/wizard.c:453 src/descrambler/cclient.c:1387
+#: src/access.c:2315 src/wizard.c:454 src/descrambler/cclient.c:1387
 msgid "Password"
 msgstr "Hasło"
 
@@ -6840,7 +6851,7 @@ msgstr "Hasło do wpisu."
 msgid "Password2"
 msgstr "Hasło2"
 
-#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:789
+#: src/epggrab/module.c:201 src/epggrab/module.c:228 src/epggrab/channel.c:812
 msgid "Path"
 msgstr "Ścieżka"
 
@@ -6965,7 +6976,7 @@ msgstr "Format pikseli"
 msgid "Plain (insecure)"
 msgstr "Jawny (niezabezpieczony)"
 
-#: src/webui/webui.c:193
+#: src/webui/webui.c:218
 #, c-format
 msgid ""
 "Please, follow %s link and cancel the next authorization to correctly clear "
@@ -7057,7 +7068,7 @@ msgstr "Oszczędzanie energii"
 msgid "Power up time (ms) (10-500)"
 msgstr "Czas włączenia zasilania (ms) (10-500)"
 
-#: src/wizard.c:801 src/input/mpegts/mpegts_network_dvb.c:247
+#: src/wizard.c:803 src/input/mpegts/mpegts_network_dvb.c:247
 #: src/input/mpegts/mpegts_network_dvb.c:270
 #: src/input/mpegts/mpegts_network_dvb.c:293
 #: src/input/mpegts/mpegts_network_dvb.c:326
@@ -7082,7 +7093,7 @@ msgstr "Nagrywanie przed"
 msgid "Pre-school children's programs"
 msgstr "Programy dla dzieci w wieku przedszkolnym"
 
-#: src/wizard.c:966
+#: src/wizard.c:968
 msgid "Predefined Muxes"
 msgstr "Predefiniowane multipleksery"
 
@@ -7236,7 +7247,7 @@ msgid "Program unique ID (from grabber), such as MV101010101.0000"
 msgstr ""
 "Unikalny identyfikator programu (z grabbera), taki jak MV101010101.0000"
 
-#: src/wizard.c:780
+#: src/wizard.c:782
 msgid "Progress"
 msgstr "Postęp"
 
@@ -7389,7 +7400,7 @@ msgstr "Etykieta oceny."
 msgid "Rating Labels"
 msgstr "Etykiety ocen"
 
-#: src/ratinglabels.c:670
+#: src/ratinglabels.c:667
 msgid "Rating label to be displayed."
 msgstr "Etykieta oceny do wyświetlenia."
 
@@ -7590,7 +7601,7 @@ msgstr "Ogranicz \"pids=all\""
 msgid "Restrict connections to this type."
 msgstr "Ogranicz połączenia do tego typu."
 
-#: src/webui/comet.c:308
+#: src/webui/comet.c:323
 msgid "Restricted log mode (no administrator)"
 msgstr "Ograniczony tryb dziennika (bez administratora)"
 
@@ -7808,7 +7819,7 @@ msgstr "Serwer SAT>IP"
 msgid "SAT>IP Server SI Tables"
 msgstr "Tabele SI serwera SAT>IP"
 
-#: src/input/mpegts/mpegts_network.c:293
+#: src/input/mpegts/mpegts_network.c:305
 msgid "SAT>IP source number"
 msgstr "Numer źródła SAT>IP"
 
@@ -7990,7 +8001,7 @@ msgstr "Skanuj po utworzeniu"
 msgid "Scan grace period (seconds)"
 msgstr "Okres karencji skanowania (sekundy)"
 
-#: src/input/mpegts/mpegts_network.c:345
+#: src/input/mpegts/mpegts_network.c:357
 msgid "Scan queue length"
 msgstr "Długość skanowania kolejki"
 
@@ -8006,7 +8017,7 @@ msgstr "Status skanowania"
 msgid "Scanfile"
 msgstr "Plik skanowania"
 
-#: src/wizard.c:1051
+#: src/wizard.c:1053
 msgid "Scanning"
 msgstr "Skanowanie"
 
@@ -8078,7 +8089,7 @@ msgstr "Pobierz tytuł"
 msgid "Scrape behaviour"
 msgstr "Zachowanie pobierania"
 
-#: src/epggrab/module/xmltv.c:1411
+#: src/epggrab/module/xmltv.c:1418
 msgid "Scrape credits and extra information"
 msgstr "Pobierz zaangażowanych i dodatkowe informacje"
 
@@ -8127,7 +8138,7 @@ msgstr ""
 "Jeśli opis jest pusty, opcje „Zapisz”, „Dołącz” i „Dodaj na początku” "
 "zastąpią opis."
 
-#: src/wizard.c:585
+#: src/wizard.c:587
 msgid "Select an available network type for this tuner."
 msgstr "Wybierz dostępny typ sieci dla tego tunera."
 
@@ -8236,7 +8247,7 @@ msgstr "Wybierz jakość dla trybu stałej jakości [0-51]."
 msgid "Select the quality for constant quality mode [0-63]."
 msgstr "Wybierz jakość dla trybu stałej jakości [0-63]."
 
-#: src/input/mpegts/mpegts_network.c:313
+#: src/input/mpegts/mpegts_network.c:325
 msgid "Select the time offset for EIT events."
 msgstr "Wybierz przesunięcie czasowe dla wydarzeń EIT."
 
@@ -8262,7 +8273,7 @@ msgstr ""
 "nadal możesz określić lokalne ikony (file://) i będą one obsługiwane przez "
 "wbudowany serwer WWW."
 
-#: src/service_mapper.c:589
+#: src/service_mapper.c:600
 msgid "Select/Selected services to map."
 msgstr "Wybierz/wybrane usługi do zmapowania."
 
@@ -8320,11 +8331,11 @@ msgstr "Łącze serii"
 msgid "Series link ID."
 msgstr "Identyfikator łącza serii."
 
-#: src/epggrab/module/xmltv.c:1456
+#: src/epggrab/module/xmltv.c:1463
 msgid "SeriesLink XPath"
 msgstr "XPath SeriesLink"
 
-#: src/epggrab/module/xmltv.c:1470
+#: src/epggrab/module/xmltv.c:1477
 msgid "SeriesLink XPath fallback"
 msgstr "Awaryjny XPath SeriesLink"
 
@@ -8377,11 +8388,11 @@ msgstr "Identyfikator usługi"
 msgid "Service Mapper"
 msgstr "Maper usług"
 
-#: src/wizard.c:1143
+#: src/wizard.c:1145
 msgid "Service Mapping"
 msgstr "Mapowanie usług"
 
-#: src/service_mapper.c:578
+#: src/service_mapper.c:589
 msgid "Service Mapping (Map services to channels)"
 msgstr "Mapowanie usług (mapowanie usług na kanały)"
 
@@ -8402,7 +8413,7 @@ msgstr "Ograniczenie usługi"
 msgid "Service name"
 msgstr "Nazwa usługi"
 
-#: src/epggrab/channel.c:817
+#: src/epggrab/channel.c:840
 msgid "Service name found in EPG data."
 msgstr "Nazwa usługi znaleziona w danych EPG."
 
@@ -8434,7 +8445,7 @@ msgstr ""
 "Zastępowanie typu usługi. Ta wartość zastąpi typ usługi zapewnianej przez "
 "strumień."
 
-#: src/channels.c:556 src/service_mapper.c:588 src/bouquet.c:1312
+#: src/channels.c:556 src/service_mapper.c:599 src/bouquet.c:1312
 #: src/bouquet.c:1330 src/input/mpegts/mpegts_mux.c:658
 msgid "Services"
 msgstr "Usługi"
@@ -8620,7 +8631,7 @@ msgstr "Pomiń reklamy"
 msgid "Skip initial bytes"
 msgstr "Pomiń wstępne bajty"
 
-#: src/input/mpegts/mpegts_network.c:245
+#: src/input/mpegts/mpegts_network.c:257
 msgid ""
 "Skip scanning known muxes when Tvheadend starts. If \"startup scan\" is "
 "allowed and new muxes are found then they will still be scanned. See Help "
@@ -8631,7 +8642,7 @@ msgstr ""
 "nowe multipleksery, będą one nadal skanowane. Zobacz Pomoc, aby uzyskać "
 "więcej informacji."
 
-#: src/input/mpegts/mpegts_network.c:244
+#: src/input/mpegts/mpegts_network.c:256
 msgid "Skip startup scan"
 msgstr "Pomiń skanowanie przy uruchamianiu"
 
@@ -8703,7 +8714,7 @@ msgstr ""
 "tmdb-key my_key_from_website'. Można je tutaj określić. Zobacz Pomoc, aby "
 "uzyskać więcej informacji."
 
-#: src/service_mapper.c:638
+#: src/service_mapper.c:649
 msgid ""
 "Some broadcasters distinguish channels by appending descriptors such as "
 "'HD'. This option strips those so 'Channel 4 HD' would be named 'Channel 4'."
@@ -8715,7 +8726,7 @@ msgstr ""
 "Zauważ, że ustawienia xmltv mogą próbować dopasować po nazwie kanału, więc "
 "zmiana nazwy kanału może wymagać ręcznego mapowania xmltv."
 
-#: src/epggrab/module/xmltv.c:1436
+#: src/epggrab/module/xmltv.c:1443
 msgid ""
 "Some xmltv providers supply multiple category tags, however mapping to "
 "genres is imprecise and many categories have no genre mapping at all. Some "
@@ -9504,7 +9515,7 @@ msgstr "Nazwa serwera SAT>IP."
 msgid "The SAT>IP server's universally unique identifier."
 msgstr "Uniwersalnie unikalny identyfikator serwera SAT>IP."
 
-#: src/input/mpegts/mpegts_network.c:294
+#: src/input/mpegts/mpegts_network.c:306
 msgid "The SAT>IP source number."
 msgstr "Numer źródła SAT>IP."
 
@@ -9532,7 +9543,7 @@ msgstr ""
 msgid "The URL to the playlist."
 msgstr "Adres URL listy odtwarzania."
 
-#: src/epggrab/module/xmltv.c:1458
+#: src/epggrab/module/xmltv.c:1465
 msgid ""
 "The XPath-like expression used to extract a SeriesLink identifier from the "
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
@@ -9542,7 +9553,7 @@ msgstr ""
 "SeriesLink z danych XMLTV. Ten identyfikator służy do identyfikacji wielu "
 "wystąpień tej samej serii. Węzeł główny = 'programme'."
 
-#: src/epggrab/module/xmltv.c:1451
+#: src/epggrab/module/xmltv.c:1458
 msgid ""
 "The XPath-like expression used to extract a unique event identifier from the"
 " XMLTV data.  This ID is used to match existing EPG events so that they can "
@@ -9553,7 +9564,7 @@ msgstr ""
 "dopasowania istniejących zdarzeń EPG, dzięki czemu można je aktualizować, a "
 "nie zastępować. Węzeł główny = 'programme'."
 
-#: src/epggrab/module/xmltv.c:1465
+#: src/epggrab/module/xmltv.c:1472
 msgid ""
 "The XPath-like expression used to extract an EpisodeLink identifier from the"
 " XMLTV data.  This ID is used to identify multiple occurrences of the same "
@@ -9563,7 +9574,7 @@ msgstr ""
 "EpisodeLink z danych XMLTV. Ten identyfikator służy do identyfikacji wielu "
 "wystąpień tego samego odcinka. Węzeł główny = 'programme'."
 
-#: src/epggrab/module/xmltv.c:1446
+#: src/epggrab/module/xmltv.c:1453
 msgid ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "XMLTV data. Root node = 'category'."
@@ -9644,7 +9655,7 @@ msgstr "Kanał, na który mapowana jest ta usługa."
 msgid "The channel's name or callsign as set by the cable provider."
 msgstr "Nazwa kanału lub znak wywoławczy ustawiony przez dostawcę kablowego."
 
-#: src/input/mpegts/mpegts_network.c:303
+#: src/input/mpegts/mpegts_network.c:315
 msgid "The character encoding for this network (e.g. UTF-8)."
 msgstr "Kodowanie znaków dla tej sieci (np. UTF-8)."
 
@@ -9851,7 +9862,7 @@ msgid "The imagecache path to the icon to use/used for the channel."
 msgstr ""
 "Ścieżka pamięci podręcznej obrazów do ikony do używania/używanej dla kanału."
 
-#: src/ratinglabels.c:698
+#: src/ratinglabels.c:695
 msgid "The imagecache path to the icon to use/used for the rating label."
 msgstr ""
 "Ścieżka obrazu pamięci podręcznej do ikony używanej do etykiety oceny."
@@ -10227,7 +10238,7 @@ msgstr ""
 "Liczba dni, po których pliki ciasteczek ustawione przez Tvheadend powinny "
 "wygasnąć."
 
-#: src/input/mpegts/mpegts_network.c:346
+#: src/input/mpegts/mpegts_network.c:358
 msgid "The number of muxes left to scan on this network."
 msgstr "Liczba multiplekserów pozostałych do przeskanowania w tej sieci."
 
@@ -10671,7 +10682,7 @@ msgstr "Wygaśnięcie biletu (sekundy)"
 msgid "Tidy channel name (e.g., stripping HD/UHD suffix)"
 msgstr "Uporządkowana nazwa kanału (np. usuwanie sufiksu HD/UHD)"
 
-#: src/service_mapper.c:637
+#: src/service_mapper.c:648
 msgid "Tidy the channel name such as removing trailing HD text"
 msgstr "Uporządkuj nazwę kanału, na przykład usuń końcowy tekst HD"
 
@@ -10816,19 +10827,19 @@ msgstr "Zbyt wiele błędów danych"
 msgid "Tooltips"
 msgstr "Podpowiedzi"
 
-#: src/input/mpegts/mpegts_network.c:338
+#: src/input/mpegts/mpegts_network.c:350
 msgid "Total number of mapped channels on this network."
 msgstr "Całkowita liczba zmapowanych kanałów w tej sieci."
 
-#: src/input/mpegts/mpegts_network.c:322
+#: src/input/mpegts/mpegts_network.c:334
 msgid "Total number of muxes found on this network."
 msgstr "Całkowita liczba multiplekserów znaleziona w tej sieci."
 
-#: src/input/mpegts/mpegts_network.c:330
+#: src/input/mpegts/mpegts_network.c:342
 msgid "Total number of services found on this network."
 msgstr "Całkowita liczba usług znaleziona w tej sieci."
 
-#: src/wizard.c:1039
+#: src/wizard.c:1041
 msgid "Total number of services found."
 msgstr "Całkowita liczba znalezionych usług."
 
@@ -10922,7 +10933,7 @@ msgstr ""
 "Spróbuj ponownie zaplanować nagrywanie, jeśli wystąpi więcej błędów niż "
 "(0=wyłączone)"
 
-#: src/epggrab/module/xmltv.c:1408
+#: src/epggrab/module/xmltv.c:1415
 msgid ""
 "Try to obtain channel numbers from the display-name xml tag. If the first "
 "word is number, it is used as the channel number."
@@ -10952,11 +10963,11 @@ msgstr "Dostrój parametry kodowania (por. x264 --fullhelp)."
 msgid "Tune the encoding to a specific scenario."
 msgstr "Dostrój kodowanie do określonego scenariusza."
 
-#: src/wizard.c:568
+#: src/wizard.c:570
 msgid "Tuner"
 msgstr "Tuner"
 
-#: src/wizard.c:671
+#: src/wizard.c:673
 msgid "Tuner and Network"
 msgstr "Tuner i sieć"
 
@@ -11016,7 +11027,7 @@ msgstr "UHD: bardzo wysoka rozdzielczość"
 msgid "UPnP Protocol"
 msgstr "Protokół UPnP"
 
-#: src/tvhlog.c:98 src/wizard.c:827 src/dvr/dvr_db.c:4962
+#: src/tvhlog.c:98 src/wizard.c:829 src/dvr/dvr_db.c:4962
 #: src/input/mpegts/iptv/iptv.c:952 src/input/mpegts/iptv/iptv_mux.c:130
 msgid "URL"
 msgstr "Adres URL"
@@ -11025,7 +11036,7 @@ msgstr "Adres URL"
 msgid "URL for comparison"
 msgstr "Adres URL dla porównania"
 
-#: src/wizard.c:828
+#: src/wizard.c:830
 msgid "URL of the M3U playlist."
 msgstr "Adres URL listy odtwarzania M3U."
 
@@ -11254,7 +11265,7 @@ msgstr "Typ jednokablowy"
 msgid "Unimportant"
 msgstr "Nieważny"
 
-#: src/epggrab/module/xmltv.c:1449
+#: src/epggrab/module/xmltv.c:1456
 msgid "Unique Event ID XPath"
 msgstr "XPath unikalnego identyfikatora zdarzenia"
 
@@ -11292,7 +11303,7 @@ msgstr "Nieograniczony rozmiar"
 msgid "Unlimited time"
 msgstr "Nieograniczony czas"
 
-#: src/ratinglabels.c:654
+#: src/ratinglabels.c:651
 msgid "Unprocessed rating 'age' received via DVB OTA EPG."
 msgstr "Nieprzetworzona ocena \"wiek\" otrzymana za pośrednictwem OTA EPG DVB."
 
@@ -11342,7 +11353,7 @@ msgstr "Aktualizuj czas"
 msgid "Update tolerance (ms)"
 msgstr "Tolerancja aktualizacji (ms)"
 
-#: src/epggrab/channel.c:798
+#: src/epggrab/channel.c:821
 msgid "Updated"
 msgstr "Zaktualizowane"
 
@@ -11495,7 +11506,7 @@ msgstr ""
 "mogą być czasami nieaktualne i mogą powodować, że skanowanie będzie trwało "
 "dłużej niż zwykle."
 
-#: src/epggrab/module/xmltv.c:1434
+#: src/epggrab/module/xmltv.c:1441
 msgid "Use category instead of genre"
 msgstr "Użyj kategorii zamiast gatunku"
 
@@ -11503,7 +11514,7 @@ msgstr "Użyj kategorii zamiast gatunku"
 msgid "Use default configuration"
 msgstr "Użyj domyślnej konfiguracji"
 
-#: src/service_mapper.c:624 src/bouquet.c:962
+#: src/service_mapper.c:635 src/bouquet.c:962
 msgid "Use fuzzy mapping if merging same name"
 msgstr "Użyj rozmytego mapowania, jeśli łączysz te same nazwy"
 
@@ -11523,7 +11534,7 @@ msgstr "Użyj tylko tego identyfikatora usługi, odfiltruj inne."
 msgid "Use original"
 msgstr "Użyj oryginalnego"
 
-#: src/input/mpegts/mpegts_network.c:274
+#: src/input/mpegts/mpegts_network.c:286
 msgid "Use service IDs as channel numbers"
 msgstr "Użyj identyfikatorów usług jako numerów kanałów"
 
@@ -11531,7 +11542,7 @@ msgstr "Użyj identyfikatorów usług jako numerów kanałów"
 msgid "Use tag internally (don't expose to clients)."
 msgstr "Używaj tagu wewnętrznie (nie udostępniaj go klientom)."
 
-#: src/input/mpegts/mpegts_network.c:275
+#: src/input/mpegts/mpegts_network.c:287
 msgid "Use the provider's service IDs as channel numbers."
 msgstr "Użyj identyfikatorów usług dostawcy jako numerów kanałów."
 
@@ -11587,7 +11598,7 @@ msgstr "Login użytkownika"
 msgid "User request"
 msgstr "Żądanie użytkownika"
 
-#: src/access.c:1760 src/access.c:2307 src/wizard.c:444
+#: src/access.c:1760 src/access.c:2307 src/wizard.c:445
 #: src/descrambler/cclient.c:1378
 msgid "Username"
 msgstr "Nazwa użytkownika"
@@ -11868,7 +11879,7 @@ msgstr ""
 "Niektóre klienty mogą wymagać określonego numeru modelu, aby działały. "
 "Pozostaw puste, aby Tvheadend użył domyślnego."
 
-#: src/input/mpegts/mpegts_network.c:257
+#: src/input/mpegts/mpegts_network.c:269
 msgid ""
 "When nothing else is happening Tvheadend will continuously rotate among all "
 "muxes and tune to them to verify that they are still working when the inputs"
@@ -11982,7 +11993,7 @@ msgstr ""
 "usuń najstarszy segment z bufora zamiast całkowicie go zastępować. Uwaga, "
 "może to skrócić czas przewijania do tyłu."
 
-#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:353
+#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:365
 msgid "Wizard"
 msgstr "Kreator"
 
@@ -12021,13 +12032,13 @@ msgstr ""
 "importu xmltv, więc w przypadku awarii/nieoczekiwanego wyłączenia dane EPG "
 "są zapisywane (odczytane ponownie przy następnym uruchomieniu)."
 
-#: src/ratinglabels.c:677
+#: src/ratinglabels.c:674
 msgid "XML 'rating' tag value to match events received via XMLTV."
 msgstr ""
 "Wartość znacznika 'ocena' XML odpowiadająca zdarzeniom odbieranym za "
 "pośrednictwem XMLTV."
 
-#: src/ratinglabels.c:684
+#: src/ratinglabels.c:681
 msgid "XMLTV 'system' attribute to match events received via XMLTV."
 msgstr "Atrybut „system” XMLTV pasujący do zdarzeń odbieranych przez XMLTV."
 
@@ -12039,7 +12050,7 @@ msgstr "Import EPG XMLTV"
 msgid "XMLTV output format"
 msgstr "Format wyjściowy XMLTV"
 
-#: src/epggrab/module/xmltv.c:1501 src/epggrab/module/xmltv.c:1603
+#: src/epggrab/module/xmltv.c:1508 src/epggrab/module/xmltv.c:1610
 msgid "XPath Settings"
 msgstr "Ustawienia XPath"
 
@@ -12144,7 +12155,7 @@ msgstr "libx265"
 msgid "libx26x"
 msgstr "libx26x"
 
-#: src/webui/webui.c:198
+#: src/webui/webui.c:223
 msgid "logout"
 msgstr "wyloguj"
 
@@ -12217,7 +12228,7 @@ msgstr "psnr"
 msgid "realtime"
 msgstr "czas rzeczywisty"
 
-#: src/webui/webui.c:209
+#: src/webui/webui.c:234
 msgid "return"
 msgstr "wróć"
 
