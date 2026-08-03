@@ -45,6 +45,8 @@ body:
         - Fedora 40
         - Fedora 41
         - Fedora 42
+        - Fedora 43
+        - Fedora 44
         - Fedora Rawhide
         - FreeBSD (all)
         - Raspberry Pi OS (Buster)
