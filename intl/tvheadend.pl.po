@@ -1028,7 +1028,7 @@ msgstr "Automatycznie mapuj do kanałów"
 
 #: src/input/mpegts/mpegts_network.c:243
 msgid "Auto-map EPG source on new channels"
-msgstr ""
+msgstr "Automatycznie mapuj źródła EPG na nowych kanałach"
 
 #: src/service.c:180
 msgid "Automatic checking"
@@ -4940,6 +4940,9 @@ msgid ""
 "channels created from this network. Changing this setting does not affect "
 "existing channels."
 msgstr ""
+"Wartość początkowa opcji kanału „Automatycznie mapuj źródło EPG” dla kanałów"
+" utworzonych z tej sieci. Zmiana tego ustawienia nie ma wpływu na istniejące"
+" kanały."
 
 #: src/input.c:29
 msgid "Input base"
