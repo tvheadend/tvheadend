@@ -50,10 +50,10 @@ interface DvrTab {
 }
 
 const ALL_TABS: DvrTab[] = [
-  { to: '/dvr/upcoming', label: t('Upcoming / Current Recordings') },
-  { to: '/dvr/finished', label: t('Finished Recordings') },
-  { to: '/dvr/failed', label: t('Failed Recordings') },
-  { to: '/dvr/removed', label: t('Removed Recordings'), requiredLevel: 'expert' },
+  { to: '/dvr/upcoming', label: t('Upcoming / Current') },
+  { to: '/dvr/finished', label: t('Finished') },
+  { to: '/dvr/failed', label: t('Failed') },
+  { to: '/dvr/removed', label: t('Removed'), requiredLevel: 'expert' },
   { to: '/dvr/autorecs', label: t('Autorecs') },
   { to: '/dvr/timers', label: t('Timers') },
 ]
