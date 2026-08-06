@@ -116,8 +116,8 @@ const NAV_SECTIONS: NavSection[] = [
     id: 'tv',
     label: t('TV'),
     items: [
-      { routeName: 'epg', label: t('Electronic Program Guide'), icon: Calendar },
-      { routeName: 'dvr', label: t('Digital Video Recorder'), icon: Video },
+      { routeName: 'epg', label: t('Guide'), icon: Calendar },
+      { routeName: 'dvr', label: t('Recordings'), icon: Video },
     ],
   },
   {
