@@ -2845,7 +2845,7 @@ webui_init(int xspf)
     hp->hp_flags = HTTP_PATH_NO_VERIFICATION;
   }
 
-#if CONFIG_SATIP_SERVER
+#if ENABLE_SATIP_SERVER
   http_path_add("/satip_server", NULL, satip_server_http_page, ACCESS_ANONYMOUS);
 #endif
 
