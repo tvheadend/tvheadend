@@ -1123,7 +1123,7 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
   tvh_mutex_unlock(&capmt->capmt_mutex);
 }
 
-#if CONFIG_LINUXDVB
+#if ENABLE_LINUXDVB
 #ifdef CAPMT_OSCAM_SO_WRAPPER
 static void
 capmt_abort(capmt_t *capmt, int keystate)
@@ -1559,7 +1559,7 @@ show_connection(capmt_t *capmt, const char *what)
   }
 }
 
-#if CONFIG_LINUXDVB
+#if ENABLE_LINUXDVB
 static void 
 handle_ca0(capmt_t *capmt)
 {
@@ -1785,7 +1785,7 @@ handle_single(capmt_t *capmt)
   capmt->capmt_poll = NULL;
 }
 
-#if CONFIG_LINUXDVB
+#if ENABLE_LINUXDVB
 #ifdef CAPMT_OSCAM_SO_WRAPPER
 static void 
 handle_ca0_wrapper(capmt_t *capmt)
@@ -1921,7 +1921,7 @@ capmt_thread(void *aux)
 
     if (capmt->capmt_sock[0] >= 0) {
       caclient_set_status((caclient_t *)capmt, CACLIENT_STATUS_CONNECTED);
-#if CONFIG_LINUXDVB
+#if ENABLE_LINUXDVB
       if (capmt_oscam_new(capmt)) {
         handle_single(capmt);
       } else {
