@@ -599,10 +599,10 @@ tvh_context_open_filters(TVHContext *self,
         ret = AVERROR_FILTER_NOT_FOUND;
         goto finish;
     }
-    ret = avfilter_graph_create_filter(&self->oavfltctx, oavflt, "out",
-                                       NULL, NULL, self->avfltgraph);
-    if (ret < 0) {
+    if (!(self->oavfltctx = avfilter_graph_alloc_filter(self->avfltgraph, oavflt,
+                                                       "out"))) {
         tvh_context_log(self, LOG_ERR, "filters: failed to create 'out' filter");
+        ret = AVERROR(ENOMEM);
         goto finish;
     }
 
@@ -612,6 +612,13 @@ tvh_context_open_filters(TVHContext *self,
     ret = _context_filters_apply_sink_options(self, ap);
     va_end(ap);
     if (ret) {
+        goto finish;
+    }
+
+    // the format options are not runtime options, so the sink can only be
+    // initialized once all of them have been applied
+    if ((ret = avfilter_init_dict(self->oavfltctx, NULL)) < 0) {
+        tvh_context_log(self, LOG_ERR, "filters: failed to init 'out' filter");
         goto finish;
     }
 
