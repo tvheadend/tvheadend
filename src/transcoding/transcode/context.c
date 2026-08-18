@@ -110,6 +110,9 @@ _context_filters_apply_sink_options(TVHContext *self, va_list ap)
 #if LIBAVCODEC_VERSION_MAJOR > 59
     const char *opt_val_char = NULL;
     av_opt_set_type opt_type = AV_OPT_SET_UNKNOWN;
+#if TVH_BUFFERSINK_ARRAY_OPTS
+    enum AVOptionType opt_val_type = AV_OPT_TYPE_FLAGS;
+#endif
     char err_desciption[32];
 #endif
     int opt_size = 0;
@@ -118,18 +121,28 @@ _context_filters_apply_sink_options(TVHContext *self, va_list ap)
     while ((opt_name = va_arg(ap, const char *))) {
 #if LIBAVCODEC_VERSION_MAJOR > 59
         opt_type = (av_opt_set_type) va_arg(ap, int);
-        opt_size = va_arg(ap, int);
-        if (opt_type == AV_OPT_SET_BIN) {
-            opt_val = va_arg(ap, const uint8_t *);
-            ret = av_opt_set_bin(self->oavfltctx, opt_name, opt_val, opt_size, AV_OPT_SEARCH_CHILDREN);}
-        else {
-            if (opt_type == AV_OPT_SET_STRING) {
+        switch (opt_type) {
+#if TVH_BUFFERSINK_ARRAY_OPTS
+            case AV_OPT_SET_ARRAY:
+                opt_val_type = (enum AVOptionType) va_arg(ap, int);
+                opt_val = va_arg(ap, const uint8_t *);
+                ret = av_opt_set_array(self->oavfltctx, opt_name, AV_OPT_SEARCH_CHILDREN,
+                                       0, 1, opt_val_type, opt_val);
+                break;
+#endif
+            case AV_OPT_SET_BIN:
+                opt_size = va_arg(ap, int);
+                opt_val = va_arg(ap, const uint8_t *);
+                ret = av_opt_set_bin(self->oavfltctx, opt_name, opt_val, opt_size, AV_OPT_SEARCH_CHILDREN);
+                break;
+            case AV_OPT_SET_STRING:
+                opt_size = va_arg(ap, int);
                 opt_val_char = va_arg(ap, const char *);
-                ret = av_opt_set(self->oavfltctx, opt_name, opt_val_char, AV_OPT_SEARCH_CHILDREN);} 
-            else {
+                ret = av_opt_set(self->oavfltctx, opt_name, opt_val_char, AV_OPT_SEARCH_CHILDREN);
+                break;
+            default:
                 tvh_context_log(self, LOG_ERR, "filters: failed to set option: '%s' with error: 'AV_OPT_SET_UNKNOWN'", opt_name);
                 return ret;
-            }
         }
         if (ret) {
             switch (ret) {
