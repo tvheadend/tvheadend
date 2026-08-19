@@ -22,6 +22,7 @@
 #include "access.h"
 #include "api.h"
 #include "imagecache.h"
+#include "epg.h"
 
 static int
 api_imagecache_clean
@@ -30,8 +31,13 @@ api_imagecache_clean
   int b;
   if (htsmsg_get_bool(args, "clean", &b))
     return EINVAL;
-  if (b)
+  if (b) {
     imagecache_clean();
+    /* refill from the guide, soonest-airing first, as at start-up */
+    tvh_mutex_lock(&global_lock);
+    epg_broadcast_images_register();
+    tvh_mutex_unlock(&global_lock);
+  }
   return 0;
 }
 

@@ -342,10 +342,10 @@ htsp_flush_queue(htsp_connection_t *htsp, htsp_msg_q_t *hmq, int dead)
  */
 static const char *
 htsp_image(htsp_connection_t *htsp, const char *image,
-           char *buf, size_t buflen, int version)
+           char *buf, size_t buflen, int version, int64_t airtime)
 {
   const char *ret = image;
-  const int id = imagecache_get_id(image);
+  const int id = imagecache_get_id_prio(image, airtime);
 
   /* Handle older clients */
   if (id) {
@@ -879,7 +879,7 @@ htsp_build_channel(channel_t *ch, const char *method, htsp_connection_t *htsp)
 
   htsmsg_add_str(out, "channelName", channel_get_name(ch, channel_blank_name));
   if ((icon = channel_get_icon(ch)))
-    htsmsg_add_str(out, "channelIcon", htsp_image(htsp, icon, buf, sizeof(buf), 8));
+    htsmsg_add_str(out, "channelIcon", htsp_image(htsp, icon, buf, sizeof(buf), 8, 0));
 
   now  = ch->ch_epg_now;
   next = ch->ch_epg_next;
@@ -945,7 +945,7 @@ htsp_build_tag(htsp_connection_t *htsp, channel_tag_t *ct, const char *method, i
   htsmsg_add_str(out, "tagName", ct->ct_name);
   icon = channel_tag_get_icon(ct);
   if (!strempty(icon))
-    htsmsg_add_str(out, "tagIcon", htsp_image(htsp, icon, buf, sizeof(buf), 34));
+    htsmsg_add_str(out, "tagIcon", htsp_image(htsp, icon, buf, sizeof(buf), 34, 0));
   htsmsg_add_u32(out, "tagTitledIcon", ct->ct_titled_icon);
 
   if(members != NULL) {
@@ -1112,11 +1112,11 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
      */
     const char *image = dvr_entry_get_image(de);
     if(!strempty(image))
-      htsmsg_add_str(out, "image", htsp_image(htsp, image, buf, sizeof(buf), 34));
+      htsmsg_add_str(out, "image", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
     /* htsmsg camelcase to be compatible with other names */
     image = de->de_fanart_image;
     if(!strempty(image))
-      htsmsg_add_str(out, "fanartImage", htsp_image(htsp, image, buf, sizeof(buf), 34));
+      htsmsg_add_str(out, "fanartImage", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
     if (de->de_copyright_year)
       htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
@@ -1438,7 +1438,8 @@ htsp_build_event
   epg_broadcast_get_epnum(e, &epnum);
   htsp_serialize_epnum(out, &epnum, NULL);
   if (!strempty(e->image))
-    htsmsg_add_str(out, "image", htsp_image(htsp, e->image, buf, sizeof(buf), 34));
+    htsmsg_add_str(out, "image", htsp_image(htsp, e->image, buf, sizeof(buf), 34,
+                                              (int64_t)e->start));
 
   if (e->channel) {
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
