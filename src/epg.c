@@ -1417,8 +1417,25 @@ int epg_broadcast_set_image
   save = _epg_object_set_str(b, &b->image, image,
                              changed, EPG_CHANGED_IMAGE);
   if (save)
-    imagecache_get_id(image);
+    imagecache_get_id_prio(image, (int64_t)b->start);
   return save;
+}
+
+/*
+ * Register every broadcast's image at its airing time, as loading the EPG at
+ * start-up does.  Used after an image cache clean, so the refill starts with
+ * the soonest-airing artwork instead of waiting for a client to walk the guide.
+ */
+void epg_broadcast_images_register ( void )
+{
+  channel_t *ch;
+  epg_broadcast_t *b;
+
+  lock_assert(&global_lock);
+  CHANNEL_FOREACH(ch)
+    RB_FOREACH(b, &ch->ch_epg_schedule, sched_link)
+      if (!strempty(b->image))
+        imagecache_get_id_prio(b->image, (int64_t)b->start);
 }
 
 int epg_broadcast_set_epnumber
