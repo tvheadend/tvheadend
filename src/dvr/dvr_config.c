@@ -135,6 +135,36 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
  *
  */
 static int
+dvr_charset_is_ascii(const char *s)
+{
+  return s && (strcasecmp(s, "ASCII") == 0 ||
+               strcasecmp(s, "US-ASCII") == 0 ||
+               strcasecmp(s, "ANSI_X3.4-1968") == 0);
+}
+
+/*
+ * The charset a new configuration starts with.  Converting to ASCII
+ * without transliteration replaces every non-ASCII character with the
+ * same substitute, which makes unreadable and colliding file names, so
+ * use UTF-8 there.  A charset the user picks is left alone.
+ */
+static const char *
+dvr_default_charset(htsmsg_t *conf)
+{
+  const char *s = intlconv_filesystem_charset();
+
+  if (dvr_charset_is_ascii(s) && !intlconv_translit_supported()) {
+    /* Stay quiet when a saved or submitted charset replaces this. */
+    if (conf == NULL || htsmsg_get_str(conf, "charset") == NULL)
+      tvhinfo(LS_DVR, "iconv() cannot transliterate, using UTF-8 "
+                      "rather than %s for file names", s);
+    /* Not NULL, dvr_charset_update() would turn that back into s. */
+    return "UTF-8";
+  }
+  return s;
+}
+
+static int
 dvr_charset_update(dvr_config_t *cfg, const char *charset)
 {
   const char *s, *id;
@@ -183,7 +213,7 @@ dvr_config_create(const char *name, const char *uuid, htsmsg_t *conf)
   cfg->dvr_tag_files = 1;
   cfg->dvr_create_scene_markers = 1;
   cfg->dvr_skip_commercials = 1;
-  dvr_charset_update(cfg, intlconv_filesystem_charset());
+  dvr_charset_update(cfg, dvr_default_charset(conf));
   cfg->dvr_warm_time = 30;
   cfg->dvr_update_window = 24 * 3600;
   cfg->dvr_pathname = strdup("$t$n.$x");
