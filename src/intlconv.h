@@ -22,6 +22,11 @@
 extern const char *intlconv_charsets[];
 
 void intlconv_init( void );
+
+/* False when iconv rejects the //TRANSLIT suffix, so that a conversion to
+   a charset that cannot represent the text replaces characters instead of
+   transliterating them. */
+int intlconv_translit_supported( void );
 void intlconv_done( void );
 const char *
 intlconv_filesystem_charset( void );
