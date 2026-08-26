@@ -24,9 +24,14 @@
 #include "htsbuf.h"
 #include "tvhdhomerun.h"
 
+#define BUFFER_SIZE    (20000000 / 8)
+#define UDP_PKTS        64
+#define UDP_PKT_SIZE    1472
+
 typedef struct tvhdhomerun_device_info tvhdhomerun_device_info_t;
 typedef struct tvhdhomerun_device      tvhdhomerun_device_t;
 typedef struct tvhdhomerun_frontend    tvhdhomerun_frontend_t;
+typedef struct tvhdhomerun_tune_req    tvhdhomerun_tune_req_t;
 
 
 static struct hdhomerun_debug_t* hdhomerun_debug_obj = 0;
@@ -58,18 +63,19 @@ struct tvhdhomerun_device
   /*
     Flags...
   */
-  int                        hd_fullmux_ok;
-
+  uint8_t                    hd_fullmux_ok;
   int                        hd_pids_max;
-  int                        hd_pids_len;
-  int                        hd_pids_deladd;
 
   dvb_fe_type_t              hd_type;
   char                      *hd_override_type;
 
 };
 
-#define HDHOMERUN_MAX_PIDS 32
+struct tvhdhomerun_tune_req {
+  mpegts_mux_instance_t      *hf_mmi;
+
+  mpegts_apids_t             hf_pids;
+};
 
 struct tvhdhomerun_frontend
 {
@@ -87,35 +93,32 @@ struct tvhdhomerun_frontend
    */
   int                            hf_tunerNumber;
   dvb_fe_type_t                  hf_type;
+  int                            hf_grace_period;
 
   // libhdhomerun objects.
   struct hdhomerun_device_t     *hf_hdhomerun_tuner;
 
   // Tuning information
-  int                            hf_locked;
-  int                            hf_ready;
-  int                            hf_status;
+  uint8_t                        hf_locked;
+  uint8_t                        hf_running;
+  uint8_t                        hf_status;
+  uint8_t                        hf_tables;
+  uint64_t                       hf_last_tune;
 
   // input thread..
-  pthread_t                      hf_input_thread;
-  tvh_mutex_t                    hf_input_thread_mutex;        /* used in condition signaling */
-  tvh_cond_t                     hf_input_thread_cond;         /* used in condition signaling */
-  th_pipe_t                      hf_input_thread_pipe;         /* IPC with input thread */
-  uint8_t                        hf_input_thread_running;      // Indicates if input_thread is running.
-  uint8_t                        hf_input_thread_terminating;  // Used for terminating the input_thread.
+  pthread_t                      hf_dvr_thread;
+  th_pipe_t                      hf_dvr_pipe;
+  tvh_mutex_t                    hf_dvr_lock;
 
+  tvhdhomerun_tune_req_t         *hf_req;
+  tvhdhomerun_tune_req_t         *hf_req_thread;
   // Global lock for the libhdhomerun library since it seems to have some threading-issues.
   tvh_mutex_t                    hf_hdhomerun_device_mutex;
 
   /*
    * Reception
    */
-  char                           hf_pid_filter_buf[1024];
-
   mtimer_t                       hf_monitor_timer;
-
-  mpegts_mux_instance_t         *hf_mmi;
-
 };
 
 /*
