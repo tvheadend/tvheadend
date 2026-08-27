@@ -1854,14 +1854,14 @@ epg_broadcast_t *epg_broadcast_deserialize
     *save |= epg_broadcast_set_image(ebc, str, &changes);
 
   if ((hm = htsmsg_get_list(m, "genre"))) {
-    epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    epg_genre_list_t *egl = NULL;
     HTSMSG_FOREACH(f, hm) {
-      epg_genre_t genre;
-      genre.code = (uint8_t)f->hmf_s64;
-      epg_genre_list_add(egl, &genre);
+      epg_genre_list_add_by_eit(&egl, (uint8_t)f->hmf_s64);
     }
-    *save |= epg_broadcast_set_genre(ebc, egl, &changes);
-    epg_genre_list_destroy(egl);
+    if (egl) {
+      *save |= epg_broadcast_set_genre(ebc, egl, &changes);
+      epg_genre_list_destroy(egl);
+    }
   }
 
   if ((ls = lang_str_deserialize(m, "tit"))) {
@@ -2232,18 +2232,23 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
   return 1;
 }
 
-int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit )
+int epg_genre_list_add_by_eit ( epg_genre_list_t **list, uint8_t eit )
 {
+  if (eit >= 0xB0) return 0; // 0xB0 is the start of the 'Special Characteristics' block.
   epg_genre_t g;
   g.code = eit;
-  return epg_genre_list_add(list, &g);
+  if (*list == NULL)
+    *list = calloc(1, sizeof(epg_genre_list_t));
+  return epg_genre_list_add(*list, &g);
 }
 
-int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str, const char *lang )
+int epg_genre_list_add_by_str ( epg_genre_list_t **list, const char *str, const char *lang )
 {
   epg_genre_t g;
   g.code = _epg_genre_find_by_name(str, lang);
-  return epg_genre_list_add(list, &g);
+  if (*list == NULL)
+    *list = calloc(1, sizeof(epg_genre_list_t));
+  return epg_genre_list_add(*list, &g);
 }
 
 // Note: if partial=1 and genre is a major only category then all minor
@@ -2263,6 +2268,7 @@ int epg_genre_list_contains
 
 void epg_genre_list_destroy ( epg_genre_list_t *list )
 {
+  if (!list) return;
   epg_genre_t *g;
   while ((g = LIST_FIRST(list))) {
     LIST_REMOVE(g, link);

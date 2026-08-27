@@ -409,10 +409,8 @@ static int _eit_desc_content
 
     if (tempPtr == 0xb1)  //0xB1 is the genre code for 'Black and White'
       ev->bw = 1;
-    else if (tempPtr < 0xb0) {  //0xB0 is the start of the 'Special Characteristics' block.
-      if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_eit(ev->genre, (const uint8_t)tempPtr);  //Cast as a 'const'
-    }
+    else
+      epg_genre_list_add_by_eit(&ev->genre, tempPtr);
     len -= 2;
     ptr += 2;
   }
