@@ -360,9 +360,12 @@ static void timeshift_input
     }
 
     /* Check for exit */
-    else if (type == SMT_EXIT ||
-        (type == SMT_STOP && sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
+    else if (type == SMT_EXIT)
       ts->exit = 1;
+
+    // Don't exit timeshift on SMT_STOP as the subscription might restart later on.
+    // i.e. SM_CODE_SOURCE_RECONFIGURED, SM_CODE_SUBSCRIPTION_OVERRIDDEN, ...
+    // else if (type == SMT_STOP)
 
     else if (type == SMT_MPEGTS)
       ts->packet_mode = 0;
