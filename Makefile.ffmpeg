@@ -38,7 +38,7 @@ PROTOCOLS      = file http https hls mmsh mmst rtmp rtmpe rtmps rtmpt rtmpte rtm
                  ffrtmpcrypt ffrtmphttp rtp srtp tcp udp udplite unix crypto
 DECODERS       = mpeg2video mp2 aac vorbis ac3 eac3 aac_latm opus h264 hevc theora flac
 ENCODERS       = mpeg2video mp2 aac vorbis flac
-MUXERS         = mpegts matroska mp4
+MUXERS         = mpeg2dvd mpegts matroska mp4
 DEMUXERS       = mpegts matroska hls flv live_flv
 BSFS           = h264_mp4toannexb hevc_mp4toannexb
 FILTERS        = yadif format hwupload hwdownload scale null aresample anull
