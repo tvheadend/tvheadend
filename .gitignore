@@ -32,6 +32,7 @@ nbproject
 *.bak
 *.orig
 *.patch
+wget-log*
 
 debian/.debhelper
 debian/changelog
