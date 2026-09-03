@@ -85,8 +85,16 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
   UI-chrome strings use a `t(…)` composable backed by the same
   `/locale.js` catalog the ExtJS UI uses, so shared wording is
   translated once.
-- **Themes.** Three themes (Blue / Grey / Access) are server-driven
-  via the access object and applied through CSS custom properties.
+- **Themes.** Four themes (Blue / Grey / Dark / Access) are
+  server-driven via the access object and applied through CSS custom
+  properties. Blue and Grey are light; Dark is the low-glare night
+  palette and Access the high-contrast white-on-dark variant. Adding
+  one means a `[data-theme='<name>']` block in `styles/tokens.css`,
+  the same selector in the shared list at the top of
+  `styles/primevue.css`, an entry in `theme_get_ui_list()`
+  (`src/access.c`), and — for a dark palette — the selector added to
+  `darkModeSelector` in `main.ts` so PrimeVue's teleported overlays
+  follow.
 - **Responsive.** Desktop tables, tablet horizontal scroll, phone
   card lists; drawers go full-width on phone.
 

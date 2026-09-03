@@ -87,6 +87,15 @@ describe('--tvh-text-scale per theme (desktop)', () => {
     expect(getDecl(rule, '--tvh-text-scale')).toBe('1.5')
   })
 
+  it("[data-theme='dark'] inherits the :root scale of 1", () => {
+    /* Dark is a colour-only theme — it deliberately does NOT touch
+     * --tvh-text-scale, unlike Access. Asserting absence keeps a
+     * future edit from quietly giving the night palette a different
+     * text size from Blue/Gray. */
+    const dark = findTopLevelRule("[data-theme='dark']")
+    expect(() => getDecl(dark, '--tvh-text-scale')).toThrow()
+  })
+
   it("[data-theme='gray'] inherits the :root scale of 1", () => {
     /* Gray intentionally does NOT override --tvh-text-scale on
      * desktop — the cascade from :root delivers scale=1. Asserting
@@ -98,13 +107,14 @@ describe('--tvh-text-scale per theme (desktop)', () => {
 })
 
 describe('--tvh-text-scale per theme (phone @media max-width: 767px)', () => {
-  it('Blue and Gray have no phone override — inherit desktop scale 1', () => {
+  it('Blue, Gray and Dark have no phone override — inherit desktop scale 1', () => {
     /* Asserting absence: if a future edit accidentally adds a phone
-     * override for either default-scale theme, the test fails. The
+     * override for any default-scale theme, the test fails. The
      * architecture supports the override (just add the selector to
      * the @media block); we deliberately don't apply one today. */
     expect(() => findMediaRule('max-width: 767px', ':root')).toThrow()
     expect(() => findMediaRule('max-width: 767px', "[data-theme='gray']")).toThrow()
+    expect(() => findMediaRule('max-width: 767px', "[data-theme='dark']")).toThrow()
   })
 
   it("[data-theme='access'] scales 1.15 on phone", () => {

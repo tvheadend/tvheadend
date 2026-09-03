@@ -4,10 +4,11 @@
 /*
  * Tvheadend Vue UI — design tokens
  *
- * Three themes via [data-theme] selectors per brief §6.4: Blue (the
- * default in :root), Gray, and Access. Access is the high-contrast
- * white-on-dark variant and needs stronger interaction tints than
- * the subtle Blue/Grey defaults.
+ * Four themes via [data-theme] selectors: Blue (the default in
+ * :root), Gray, Dark and Access. Dark is the low-glare night
+ * palette and Access the high-contrast white-on-dark variant; both
+ * need stronger interaction tints than the subtle Blue/Gray
+ * defaults, and both opt back in to `color-scheme: dark`.
  */
 
 :root {
@@ -122,6 +123,70 @@
   --tvh-active-strength: 18%;
 }
 
+[data-theme='dark'] {
+  /*
+   * Night-use dark theme.
+   *
+   * Distinct from Access below: Access is the high-contrast
+   * accessibility variant (true black, white borders, 1.5x text),
+   * this is a low-glare everyday dark palette — dark slate surfaces,
+   * off-white text, subtle borders and no text scaling.
+   *
+   * Pure white on pure black haloes on OLED panels and is tiring to
+   * read at night, so text stops short of #fff and the page short of
+   * #000. Surface stays LIGHTER than page, mirroring the light
+   * themes' raised-surface relationship (page #f8fafc < surface
+   * #ffffff), so elevation reads the same way in every theme.
+   *
+   * Opt native widgets (checkboxes, radios, scrollbars, date
+   * pickers) into dark rendering, for the same reason :root forces
+   * them light — see the comment there.
+   */
+  color-scheme: dark;
+
+  /*
+   * Deliberately no --tvh-text-scale: this theme changes colour
+   * only, and inherits the :root scale of 1.
+   */
+
+  --tvh-primary: #60a5fa;
+  --tvh-bg-page: #0f141a;
+  --tvh-bg-surface: #171d25;
+  --tvh-border: #29313b;
+  --tvh-border-strong: #3c4653;
+  --tvh-text: #e6eaf0;
+  --tvh-text-muted: #98a3b3;
+  --tvh-success: #4ade80;
+  --tvh-warning: #fbbf24;
+  --tvh-error: #f87171;
+
+  /*
+   * Text/icon colour for elements filled with --tvh-primary.
+   *
+   * The light themes leave this undefined and consuming sites fall
+   * back to #fff, which is right over their #2563eb (5.2:1). Here
+   * the primary has to be light so it stays legible AS text on the
+   * dark page (7.3:1), and #fff over it would be 2.5:1. A near-black
+   * on-colour restores 7.5:1, so both directions pass AAA.
+   */
+  --tvh-on-primary: #0b1017;
+
+  /*
+   * Subtle interaction tints wash out over a dark surface, so both
+   * strengths sit above the light themes' 8%/14% — but well below
+   * Access's 30%/50%, which is assertive by design.
+   */
+  --tvh-hover-strength: 16%;
+  --tvh-active-strength: 26%;
+
+  /*
+   * Light scroll-fade tint — a dark one is invisible against these
+   * surfaces. Softer than Access's 0.18 to suit the calmer palette.
+   * See the comment on the default in :root.
+   */
+  --tvh-scroll-fade: rgba(255, 255, 255, 0.14);
+}
+
 [data-theme='access'] {
   /*
    * High-contrast white-on-dark theme. True black palette per
@@ -174,8 +239,8 @@
 /*
  * Phone-mode text-scale overrides.
  *
- * Blue and Gray keep their desktop scale of 1 on phone — same
- * text size as desktop, deliberate. Access scales smaller on phone
+ * Blue, Gray and Dark keep their desktop scale of 1 on phone —
+ * same text size as desktop, deliberate. Access scales smaller on phone
  * than on desktop (1.15 vs 1.5) because desktop's 1.5× would push
  * grid headers and toolbar action labels past the visual viewport.
  * To add a phone override for a future theme, add that theme's

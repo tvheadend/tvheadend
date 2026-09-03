@@ -8,15 +8,17 @@
  * automatically pick up the active theme.
  *
  * The base block applies to all themes via the cascade. Per-theme blocks
- * (gray, access) inherit and only override what differs. PrimeVue's
+ * (gray, dark, access) inherit and only override what differs. PrimeVue's
  * variable surface for DataTable et al. is large; here we map the ones
  * that visibly affect the grid + the small set of common controls
  * (buttons, paginator, headers). Theme name spelling matches the
- * server's enum (access.c:1499-1508 — "blue", "gray", "access").
+ * server's enum in theme_get_ui_list() — "blue", "gray", "dark",
+ * "access".
  */
 
 :root,
 [data-theme='gray'],
+[data-theme='dark'],
 [data-theme='access'] {
   /* Core content tokens */
   --p-primary-color: var(--tvh-primary);
