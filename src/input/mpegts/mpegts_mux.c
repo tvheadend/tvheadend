@@ -89,21 +89,21 @@ mpegts_mux_instance_create0
 }
 
 static void
+mpegts_mux_scan_timeout_arm ( mpegts_mux_t *mm, mpegts_input_t *mi )
+{
+  mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm,
+                 sec2mono(mpegts_input_grace(mi, mm)));
+}
+
+static void
 mpegts_mux_scan_active
   ( mpegts_mux_t *mm, const char *buf, mpegts_input_t *mi )
 {
-  int t;
-
   /* Setup scan */
   if (mm->mm_scan_state == MM_SCAN_STATE_PEND ||
       mm->mm_scan_state == MM_SCAN_STATE_IPEND) {
     mpegts_network_scan_mux_active(mm);
-
-    /* Get timeout */
-    t = mpegts_input_grace(mi, mm);
-  
-    /* Setup timeout */
-    mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm, sec2mono(t));
+    mpegts_mux_scan_timeout_arm(mm, mi);
   }
 }
 
@@ -1356,7 +1356,8 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint32_t tsid, int force )
   mm->mm_tsid = tsid;
   tvhtrace(LS_MPEGTS, "%s - set tsid %04X (%d)", mm->mm_nicename, tsid, tsid);
   idnode_changed(&mm->mm_id);
-  mpegts_network_scan_mux_reactivate(mm);
+  if (mpegts_network_scan_mux_reactivate(mm))
+    mpegts_mux_scan_timeout_arm(mm, mm->mm_active->mmi_input);
   return 1;
 }
 

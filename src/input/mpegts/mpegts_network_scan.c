@@ -282,16 +282,23 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
 }
 
 /* Mux has been reactivated */
-void
+int
 mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
-    return;
+    return 0;
+  /* Only a tuned mux may be moved to the active queue. Otherwise, the mux
+   * is orphaned - it is taken out of the scan queues, but nothing is able
+   * to finish the scan for it, so it never returns to the idle state.
+   */
+  if (mm->mm_active == NULL)
+    return 0;
   mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_init  = 0;
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
+  return 1;
 }
 
 /******************************************************************************
