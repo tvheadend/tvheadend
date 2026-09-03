@@ -134,11 +134,40 @@ mpegts_network_scan_do_mux ( mpegts_mux_queue_t *q, mpegts_mux_t *mm )
   return 0;
 }
 
+/*
+ * A mux in the active queue which is not tuned and has no scan timeout
+ * armed can never be finished - nothing is left to call
+ * mpegts_mux_scan_done() for it. It is out of the scan queues, so it is
+ * never tried again either, and as it stays out of the idle state it
+ * blocks the network scan for good. Put such a mux back to the queue.
+ */
+static void
+mpegts_network_scan_active_check ( mpegts_network_t *mn )
+{
+  mpegts_mux_t *mm, *nxt;
+  int weight, flags;
+
+  for (mm = TAILQ_FIRST(&mn->mn_scan_active); mm != NULL; mm = nxt) {
+    nxt = TAILQ_NEXT(mm, mm_scan_link);
+    if (mm->mm_active || mtimer_armed(&mm->mm_scan_timeout))
+      continue;
+    tvhwarn(LS_MPEGTS, "%s - stuck in the active scan queue, requeueing",
+            mm->mm_nicename);
+    weight = mm->mm_scan_weight ?: SUBSCRIPTION_PRIO_SCAN_INIT;
+    flags  = mm->mm_scan_flags;
+    mpegts_network_scan_queue_del(mm);
+    mpegts_network_scan_queue_add(mm, weight, flags, 0);
+  }
+}
+
 void
 mpegts_network_scan_timer_cb ( void *p )
 {
   mpegts_network_t *mn = p;
   mpegts_mux_t *mm, *nxt = NULL;
+
+  /* Rescue muxes which can no longer finish their scan */
+  mpegts_network_scan_active_check(mn);
 
   /* Process standard Q */
   for (mm = TAILQ_FIRST(&mn->mn_scan_pend); mm != NULL; mm = nxt) {

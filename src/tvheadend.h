@@ -156,6 +156,9 @@ void GTIMER_FCN(mtimer_arm_abs)
 
 void mtimer_disarm(mtimer_t *mti);
 
+static inline int mtimer_armed(const mtimer_t *mti)
+  { return mti->mti_callback != NULL; }
+
 
 
 /*
