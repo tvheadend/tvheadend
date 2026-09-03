@@ -92,7 +92,10 @@ mpegts_network_scan_do_mux ( mpegts_mux_queue_t *q, mpegts_mux_t *mm )
          state == MM_SCAN_STATE_ACTIVE);
 
   /* Don't try to subscribe already tuned muxes */
-  if (mm->mm_active) return 0;
+  if (mm->mm_active) {
+    tvhtrace(LS_MPEGTS, "%s - scan skipped, mux is already tuned", mm->mm_nicename);
+    return 0;
+  }
 
   /* Attempt to tune */
   r = mpegts_mux_subscribe(mm, NULL, "scan", mm->mm_scan_weight,
@@ -292,8 +295,10 @@ mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
    * is orphaned - it is taken out of the scan queues, but nothing is able
    * to finish the scan for it, so it never returns to the idle state.
    */
-  if (mm->mm_active == NULL)
+  if (mm->mm_active == NULL) {
+    tvhtrace(LS_MPEGTS, "%s - scan not reactivated, mux is not tuned", mm->mm_nicename);
     return 0;
+  }
   mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_init  = 0;
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
