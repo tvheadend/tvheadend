@@ -2705,6 +2705,49 @@ static int http_file_test(const char *path)
   return -1;
 }
 
+#define WEBUI_THEME_DEFAULT "blue"
+
+/*
+ * Serve a per-theme stylesheet as a CSS import, falling back to the
+ * default theme when the active one has no legacy ExtJS variant.
+ *
+ * Themes added for the Vue interface (currently "dark") ship no
+ * xtheme-<name>.css / ext-<name>.css of their own, because those are
+ * full ExtJS widget themes rather than a token palette. Without this
+ * fallback the legacy interface would answer its own theme.css
+ * request with 400 and render entirely unstyled for anyone who
+ * picked such a theme.
+ *
+ * `prefix`/`suffix` bracket the theme name: the source tree is probed
+ * for src/webui/<prefix><name><suffix> and, when that exists, the
+ * matching /<prefix><name><suffix> URL is imported.
+ */
+static int
+http_theme_css(http_connection_t *hc, const char *prefix,
+               const char *suffix, const char *theme)
+{
+  const char *names[2] = { theme, WEBUI_THEME_DEFAULT };
+  char rel[128];
+  char buf[256];
+  int i;
+
+  for (i = 0; i < 2; i++) {
+    if (names[i] == NULL || names[i][0] == '\0')
+      continue;
+    /* Don't probe the same file twice when the theme IS the default. */
+    if (i && names[0] && !strcmp(names[0], names[1]))
+      break;
+    snprintf(rel, sizeof(rel), "%s%s%s", prefix, names[i], suffix);
+    snprintf(buf, sizeof(buf), "src/webui/%s", rel);
+    if (http_file_test(buf))
+      continue;
+    snprintf(buf, sizeof(buf), "/%s", rel);
+    http_css_import(hc, buf);
+    return 0;
+  }
+  return HTTP_STATUS_BAD_REQUEST;
+}
+
 /**
  *
  */
@@ -2742,39 +2785,15 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
     }
     if (!strcmp(components[0], "theme.css")) {
       theme = access_get_theme(hc->hc_access);
-      if (theme) {
-        snprintf(buf, sizeof(buf), "src/webui/static/tvh.%s.css.gz", theme);
-        if (!http_file_test(buf)) {
-          snprintf(buf, sizeof(buf), "/static/tvh.%s.css.gz", theme);
-          http_css_import(hc, buf);
-          return 0;
-        }
-      }
-      return HTTP_STATUS_BAD_REQUEST;
+      return http_theme_css(hc, "static/tvh.", ".css.gz", theme);
     }
     if (!strcmp(components[0], "theme.debug.css")) {
       theme = access_get_theme(hc->hc_access);
-      if (theme) {
-        snprintf(buf, sizeof(buf), "src/webui/static/extjs/resources/css/xtheme-%s.css", theme);
-        if (!http_file_test(buf)) {
-          snprintf(buf, sizeof(buf), "/static/extjs/resources/css/xtheme-%s.css", theme);
-          http_css_import(hc, buf);
-          return 0;
-        }
-      }
-      return HTTP_STATUS_BAD_REQUEST;
+      return http_theme_css(hc, "static/extjs/resources/css/xtheme-", ".css", theme);
     }
     if (!strcmp(components[0], "theme.app.debug.css")) {
       theme = access_get_theme(hc->hc_access);
-      if (theme) {
-        snprintf(buf, sizeof(buf), "src/webui/static/app/ext-%s.css", theme);
-        if (!http_file_test(buf)) {
-          snprintf(buf, sizeof(buf), "/static/app/ext-%s.css", theme);
-          http_css_import(hc, buf);
-          return 0;
-        }
-      }
-      return HTTP_STATUS_BAD_REQUEST;
+      return http_theme_css(hc, "static/app/ext-", ".css", theme);
     }
   }
 
