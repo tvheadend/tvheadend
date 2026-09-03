@@ -117,7 +117,7 @@
     z-index: 100;
     padding: var(--tvh-space-2) var(--tvh-space-3);
     background: var(--tvh-primary);
-    color: #fff;
+    color: var(--tvh-on-primary, #fff);
     border-radius: var(--tvh-radius-sm);
   }
 

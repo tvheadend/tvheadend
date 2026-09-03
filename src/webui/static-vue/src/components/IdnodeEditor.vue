@@ -2314,7 +2314,7 @@ onBeforeUnmount(() => {
 
 .idnode-editor__btn--save {
   background: var(--tvh-primary);
-  color: #fff;
+  color: var(--tvh-on-primary, #fff);
   border-color: var(--tvh-primary);
 }
 

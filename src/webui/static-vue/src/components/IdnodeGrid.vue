@@ -3459,7 +3459,7 @@ defineExpose({
  * drawer's 88%-primary mix-with-black. */
 .idnode-grid__edit-btn--primary:not(:disabled) {
   background: var(--tvh-primary);
-  color: #fff;
+  color: var(--tvh-on-primary, #fff);
   border-color: var(--tvh-primary);
 }
 
