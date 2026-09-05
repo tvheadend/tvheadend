@@ -138,18 +138,20 @@ jobs:
           # publicly in your project's package repository, so it is vital that
           # no secrets are present in the container state or logs.
           install: |
-            if [ "${{ matrix.distro }}" = "buster" ] && [ "${{ matrix.arch }}" = "armv6" ]; then
-              echo "Skipping source list modification for buster on armv6"
-            else
-              case "${{ matrix.distro }}" in
-                jessie|stretch|buster)
-                  sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
-                  sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
-                  sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
-                  sed -i '/${{ matrix.distro }}-updates/d' /etc/apt/sources.list
-                  ;;
-              esac
-            fi
+            case "${{ matrix.distro }}" in
+              jessie|stretch|buster)
+                sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
+                sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                sed -i '/${{ matrix.distro }}-updates/d' /etc/apt/sources.list
+                ;;
+              bullseye)
+                sed -i 's|//deb.debian.org/debian-security|//snapshot.debian.org/archive/debian-security/20260901T000000Z|g' /etc/apt/sources.list
+                sed -i 's|//security.debian.org/debian-security|//snapshot.debian.org/archive/debian-security/20260901T000000Z|g' /etc/apt/sources.list
+                sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+                ;;
+            esac
             case "${{ matrix.distro }}" in
               ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
@@ -227,12 +229,22 @@ jobs:
           docker pull ${{ matrix.container[0] }}
           docker run --name build-container -d -e GITHUB_ACTIONS=true -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
-        if: endsWith(matrix.container[0], 'debian:stretch') || endsWith(matrix.container[0], 'debian:buster')
+        if: endsWith(matrix.container[0], 'debian:stretch') || endsWith(matrix.container[0], 'debian:buster') || endsWith(matrix.container[0], 'debian:bullseye')
         env:
           SCRIPT: |
-            sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
-            sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
-            sed -i '/stretch-updates/d' /etc/apt/sources.list
+            case "${{ matrix.container[0] }}" in
+              *bullseye)
+                sed -i 's|//deb.debian.org/debian-security|//snapshot.debian.org/archive/debian-security/20260901T000000Z|g' /etc/apt/sources.list
+                sed -i 's|//security.debian.org/debian-security|//snapshot.debian.org/archive/debian-security/20260901T000000Z|g' /etc/apt/sources.list
+                sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+                ;;
+              *)
+                sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
+                sed -i '/stretch-updates/d' /etc/apt/sources.list
+                ;;
+            esac
         run: docker exec build-container bash -c "$SCRIPT"
       - name: dependencies
         env:
