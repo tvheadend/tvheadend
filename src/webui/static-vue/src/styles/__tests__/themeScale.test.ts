@@ -91,29 +91,26 @@ describe('--tvh-text-scale per theme (desktop)', () => {
     /* Dark is a colour-only theme — it deliberately does NOT touch
      * --tvh-text-scale, unlike Access. Asserting absence keeps a
      * future edit from quietly giving the night palette a different
-     * text size from Blue/Gray. */
+     * text size from Light. */
     const dark = findTopLevelRule("[data-theme='dark']")
     expect(() => getDecl(dark, '--tvh-text-scale')).toThrow()
   })
 
-  it("[data-theme='gray'] inherits the :root scale of 1", () => {
-    /* Gray intentionally does NOT override --tvh-text-scale on
-     * desktop — the cascade from :root delivers scale=1. Asserting
-     * absence is part of the contract: if a future edit accidentally
-     * declares the variable on the Gray block, the test catches it. */
-    const gray = findTopLevelRule("[data-theme='gray']")
-    expect(() => getDecl(gray, '--tvh-text-scale')).toThrow()
+  it('Light is the :root palette and declares no selector of its own', () => {
+    /* Light is the default: its tokens live in :root rather than in a
+     * [data-theme='light'] block, so `data-theme` can be absent (pre-
+     * Comet) or "light" and render identically. */
+    expect(() => findTopLevelRule("[data-theme='light']")).toThrow()
   })
 })
 
 describe('--tvh-text-scale per theme (phone @media max-width: 767px)', () => {
-  it('Blue, Gray and Dark have no phone override — inherit desktop scale 1', () => {
+  it('Light and Dark have no phone override — inherit desktop scale 1', () => {
     /* Asserting absence: if a future edit accidentally adds a phone
      * override for any default-scale theme, the test fails. The
      * architecture supports the override (just add the selector to
      * the @media block); we deliberately don't apply one today. */
     expect(() => findMediaRule('max-width: 767px', ':root')).toThrow()
-    expect(() => findMediaRule('max-width: 767px', "[data-theme='gray']")).toThrow()
     expect(() => findMediaRule('max-width: 767px', "[data-theme='dark']")).toThrow()
   })
 

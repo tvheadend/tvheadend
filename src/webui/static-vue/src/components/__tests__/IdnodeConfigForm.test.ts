@@ -265,10 +265,10 @@ describe('IdnodeConfigForm — mandatoryFields', () => {
       id: 'theme_ui',
       type: 'str',
       caption: 'Theme',
-      value: 'blue',
+      value: 'light',
       enum: [
-        { key: 'blue', val: 'Blue' },
-        { key: 'gray', val: 'Gray' },
+        { key: 'light', val: 'Light' },
+        { key: 'dark', val: 'Dark' },
       ],
     },
   ] as const
@@ -1135,7 +1135,7 @@ describe('IdnodeConfigForm — access refetch on save', () => {
     access.data = { admin: true, dvr: true, uilevel: 'expert' }
 
     const wrapper = await mountWithParams(
-      [{ id: 'theme_ui', type: 'str', caption: 'Theme', value: 'blue' }],
+      [{ id: 'theme_ui', type: 'str', caption: 'Theme', value: 'light' }],
       { accessRefetchFields: ['theme_ui'] } as never
     )
     /* Subsequent calls: config/save, access/whoami, config/load. */
@@ -1156,7 +1156,7 @@ describe('IdnodeConfigForm — access refetch on save', () => {
 
     const wrapper = await mountWithParams(
       [
-        { id: 'theme_ui', type: 'str', caption: 'Theme', value: 'blue' },
+        { id: 'theme_ui', type: 'str', caption: 'Theme', value: 'light' },
         { id: 'name', type: 'str', caption: 'Name', value: '' },
       ],
       { accessRefetchFields: ['theme_ui'] } as never

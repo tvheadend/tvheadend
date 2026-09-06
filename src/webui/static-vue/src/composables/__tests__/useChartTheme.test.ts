@@ -9,11 +9,11 @@ import { useChartTheme, type ChartTheme } from '../useChartTheme'
 /* Inject a tiny stylesheet so getComputedStyle returns real values
  * during the test — happy-dom defaults to '' for unset custom
  * properties. */
-function applyTheme(name: 'blue' | 'access'): void {
+function applyTheme(name: 'light' | 'access'): void {
   const style = document.getElementById('test-theme-css') ?? document.createElement('style')
   style.id = 'test-theme-css'
   style.textContent =
-    name === 'blue'
+    name === 'light'
       ? `:root {
           --tvh-primary: #2563eb;
           --tvh-success: #16a34a;
@@ -39,7 +39,7 @@ function applyTheme(name: 'blue' | 'access'): void {
 }
 
 beforeEach(() => {
-  applyTheme('blue')
+  applyTheme('light')
 })
 
 afterEach(() => {

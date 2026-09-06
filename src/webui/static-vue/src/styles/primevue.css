@@ -8,16 +8,15 @@
  * automatically pick up the active theme.
  *
  * The base block applies to all themes via the cascade. Per-theme blocks
- * (gray, dark, access) inherit and only override what differs. PrimeVue's
- * variable surface for DataTable et al. is large; here we map the ones
- * that visibly affect the grid + the small set of common controls
- * (buttons, paginator, headers). Theme name spelling matches the
- * server's enum in theme_get_ui_list() — "blue", "gray", "dark",
- * "access".
+ * inherit and only override what differs. PrimeVue's variable surface
+ * for DataTable et al. is large; here we map the ones that visibly
+ * affect the grid + the small set of common controls (buttons,
+ * paginator, headers). Theme name spelling matches the server's enum in
+ * theme_get_ui_list() — "light", "dark", "access".
  */
 
 :root,
-[data-theme='gray'],
+[data-theme='light'],
 [data-theme='dark'],
 [data-theme='access'] {
   /* Core content tokens */
@@ -80,7 +79,7 @@
    * primary color (which is what Aura's default `selectedColor:
    * '{highlight.color}'` falls through to). On a primary-tinted
    * background, primary-colored text has near-zero contrast — a
-   * highlighted row becomes unreadable in the Blue and Grey themes.
+   * highlighted row becomes unreadable in the Light theme.
    * ExtJS's xtheme-blue solves this the same way: light tint +
    * explicit black text (xtheme-blue.css:676 — `color: #000`).
    *
@@ -155,7 +154,7 @@
  * (emerald green) because we only override `--p-primary-color` — we
  * don't redefine the full palette. Without this rule, a "selected"
  * row gets emerald green background with dark green text regardless
- * of the user's Blue or Grey theme; PrimeVue's CSS lives in
+ * of the user's theme; PrimeVue's CSS lives in
  * `@layer primevue`, and while unlayered overrides should win, in
  * practice a direct rule with the same selector is the most reliable
  * way to guarantee the visual matches the surrounding theme.
@@ -180,7 +179,7 @@
  * above. PrimeVue's hover style applies when the user's mouse is
  * over a row; Aura's defaults give it a primary-tinted background
  * AND a primary-tinted text color via `{content.hover.color}`. The
- * combo is "almost impossible to read" in the Blue and Grey themes
+ * combo is "almost impossible to read" in the Light theme
  * (verified — the contrast is real). We override the background
  * via `--p-datatable-row-hover-background` above, but the text
  * color falls through to Aura's default unless we pin it directly.
@@ -203,8 +202,8 @@
  * resolves the highlight tokens to `{primary.50}` / `{primary.700}`
  * shade aliases that we don't override (we set `--p-primary-color`,
  * not the per-shade palette). Without these direct rules, a selected
- * tree node renders Aura's emerald-on-emerald-dark in our Blue and
- * Grey themes, and a hovered node renders dark-emerald text on our
+ * tree node renders Aura's emerald-on-emerald-dark in our Light
+ * theme, and a hovered node renders dark-emerald text on our
  * primary-tinted hover background — both unreadable.
  *
  * Same selectors PrimeVue uses internally (see

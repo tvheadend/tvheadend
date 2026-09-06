@@ -4,19 +4,19 @@
 /*
  * Tvheadend Vue UI — design tokens
  *
- * Four themes via [data-theme] selectors: Blue (the default in
- * :root), Gray, Dark and Access. Dark is the low-glare night
+ * Three themes via [data-theme] selectors: Light (the default,
+ * declared in :root), Dark and Access. Dark is the low-glare night
  * palette and Access the high-contrast white-on-dark variant; both
- * need stronger interaction tints than the subtle Blue/Gray
- * defaults, and both opt back in to `color-scheme: dark`.
+ * need stronger interaction tints than the subtle Light defaults,
+ * and both opt back in to `color-scheme: dark`.
  */
 
 :root {
   /*
    * Force native widgets (checkboxes, radios, scrollbars, date
    * pickers, etc.) to render in light-mode style regardless of the
-   * OS-level `prefers-color-scheme` — Blue and Gray are both light
-   * variants and iOS Safari (and other browsers) would otherwise
+   * OS-level `prefers-color-scheme` — Light is, as the name says, a
+   * light variant and iOS Safari (and other browsers) would otherwise
    * draw native form controls in dark style at night while our own
    * surfaces stay light, producing the "checkbox painted as a dark
    * filled rectangle" effect. The Access theme below opts back in
@@ -25,7 +25,7 @@
    */
   color-scheme: light;
 
-  /* Blue — default theme */
+  /* Light — default theme */
   --tvh-primary: #2563eb;
   --tvh-bg-page: #f8fafc;
   --tvh-bg-surface: #ffffff;
@@ -110,19 +110,6 @@
   --tvh-scroll-fade: rgba(0, 0, 0, 0.18);
 }
 
-[data-theme='gray'] {
-  --tvh-primary: #475569;
-  --tvh-bg-page: #f6f7f8;
-  --tvh-bg-surface: #ffffff;
-  --tvh-border: #e4e6e9;
-  --tvh-border-strong: #c8ccd1;
-  --tvh-text: #1f2937;
-  --tvh-text-muted: #6b7280;
-
-  --tvh-hover-strength: 10%;
-  --tvh-active-strength: 18%;
-}
-
 [data-theme='dark'] {
   /*
    * Night-use dark theme.
@@ -134,8 +121,8 @@
    *
    * Pure white on pure black haloes on OLED panels and is tiring to
    * read at night, so text stops short of #fff and the page short of
-   * #000. Surface stays LIGHTER than page, mirroring the light
-   * themes' raised-surface relationship (page #f8fafc < surface
+   * #000. Surface stays LIGHTER than page, mirroring the Light
+   * theme's raised-surface relationship (page #f8fafc < surface
    * #ffffff), so elevation reads the same way in every theme.
    *
    * Opt native widgets (checkboxes, radios, scrollbars, date
@@ -163,8 +150,8 @@
   /*
    * Text/icon colour for elements filled with --tvh-primary.
    *
-   * The light themes leave this undefined and consuming sites fall
-   * back to #fff, which is right over their #2563eb (5.2:1). Here
+   * The Light theme leaves this undefined and consuming sites fall
+   * back to #fff, which is right over its #2563eb (5.2:1). Here
    * the primary has to be light so it stays legible AS text on the
    * dark page (7.3:1), and #fff over it would be 2.5:1. A near-black
    * on-colour restores 7.5:1, so both directions pass AAA.
@@ -173,7 +160,7 @@
 
   /*
    * Subtle interaction tints wash out over a dark surface, so both
-   * strengths sit above the light themes' 8%/14% — but well below
+   * strengths sit above the Light theme's 8%/14% — but well below
    * Access's 30%/50%, which is assertive by design.
    */
   --tvh-hover-strength: 16%;
@@ -239,8 +226,8 @@
 /*
  * Phone-mode text-scale overrides.
  *
- * Blue, Gray and Dark keep their desktop scale of 1 on phone —
- * same text size as desktop, deliberate. Access scales smaller on phone
+ * Light and Dark keep their desktop scale of 1 on phone — same
+ * text size as desktop, deliberate. Access scales smaller on phone
  * than on desktop (1.15 vs 1.5) because desktop's 1.5× would push
  * grid headers and toolbar action labels past the visual viewport.
  * To add a phone override for a future theme, add that theme's

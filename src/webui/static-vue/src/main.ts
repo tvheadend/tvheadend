@@ -48,8 +48,8 @@ async function bootstrap() {
          * PrimeVue's light/dark tracks the app's theme rather than the
          * OS. Both Dark (the low-glare night palette) and Access (the
          * high-contrast white-on-dark variant) set `color-scheme: dark`
-         * in tokens.css; Blue and Gray are light and don't match, so
-         * Aura stays light for them.
+         * in tokens.css; Light does not match, so Aura stays light
+         * for it.
          *
          * This is what makes teleported overlays (Select dropdown,
          * MultiSelect, Datepicker, menus, the paginator rows-per-page

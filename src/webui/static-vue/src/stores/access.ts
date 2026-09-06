@@ -200,7 +200,7 @@ export const useAccessStore = defineStore('access', () => {
 
   /*
    * Server-driven theme application. The wire value of `theme` (per
-   * access.c:1499-1508 — "blue", "gray", "access") drives the
+   * theme_get_ui_list() — "light", "dark", "access") drives the
    * `[data-theme=<value>]` selector in tokens.css and primevue.css.
    * Configuration → General → Theme writes to `config.theme_ui`,
    * the server resolves it via `access_get_theme()`, and the next
@@ -212,9 +212,10 @@ export const useAccessStore = defineStore('access', () => {
    *
    * Pre-Comet (before the first accessUpdate lands), no `data-theme`
    * attribute is set and the document falls through to the `:root`
-   * defaults in tokens.css — the blue theme. Brief blue flash on
-   * cold load for non-blue users; same UX as quicktips/uilevel/etc.
-   * which all wait for the same first message.
+   * defaults in tokens.css — the Light theme. Brief light flash on
+   * cold load for users on a dark theme; same UX as
+   * quicktips/uilevel/etc. which all wait for the same first
+   * message.
    */
   watch(
     () => data.value?.theme,

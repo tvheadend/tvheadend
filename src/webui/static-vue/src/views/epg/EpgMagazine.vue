@@ -1164,7 +1164,7 @@ defineExpose({
  *
  * Colour: 18 % of the theme's text colour (`--tvh-text`) mixed
  * with transparent. `--tvh-text` is already theme-aware — dark
- * on Blue / Gray, white on Access — so the fade reads
+ * on Light, white on Dark and Access — so the fade reads
  * as a soft shadow on light surfaces and a soft glow on dark
  * surfaces, same visual affordance in either polarity. Mirrors
  * the scroll-shadow gradients on `IdnodeGrid` and `PageTabs`.

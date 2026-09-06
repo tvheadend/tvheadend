@@ -756,7 +756,7 @@ defineExpose({ visibleCount })
   /* Stay clear of host theme classes that scope styling to
    * `.action-menu` descendants — popover is now a sibling of
    * <body>, no longer a descendant of the host. Re-apply the
-   * theme background + border tokens here so dark / Grey / Access
+   * theme background + border tokens here so the Dark and Access
    * themes still paint the popover correctly. (These tokens
    * already resolve at the :root level — the popover inherits
    * them by virtue of being under <body>.) */

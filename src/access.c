@@ -320,10 +320,10 @@ const char *
 access_get_theme(access_t *a)
 {
   if (a == NULL)
-    return "blue";
+    return "light";
   if (tvh_str_default(a->aa_theme, NULL) == NULL) {
     if (tvh_str_default(config.theme_ui, NULL) == NULL)
-      return "blue";
+      return "light";
     return config.theme_ui;
   }
   return a->aa_theme;
@@ -1507,8 +1507,7 @@ htsmsg_t *
 theme_get_ui_list ( void *p, const char *lang )
 {
   static struct strtab_str tab[] = {
-    { N_("Blue"),     "blue"  },
-    { N_("Gray"),     "gray"  },
+    { N_("Light"),    "light" },
     { N_("Dark"),     "dark"  },
     { N_("Access"),   "access" },
   };

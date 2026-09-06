@@ -91,7 +91,7 @@ const ACCESS_REFETCH_FIELDS: readonly string[] = [
  *
  * Currently just the two:
  *   - language_ui   defaulted at startup; UI breaks if cleared.
- *   - theme_ui      defaulted "blue" at startup; same constraint.
+ *   - theme_ui      defaulted "light" at startup; same constraint.
  *
  * Numeric-keyed enums on this page (`page_size_ui`, `uilevel`,
  * `default_tab`, `chiconscheme`, `piconscheme`, `digest`,

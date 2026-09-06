@@ -933,7 +933,7 @@ defineExpose({
    * transparency — a non-transparent background here would show
    * through as a coloured rectangle behind the logo (very visible
    * under Access's #000/#1a1a1a surface, faintly visible on
-   * Blue / Gray too where bg-page and the cell's bg-surface
+   * Light too where bg-page and the cell's bg-surface
    * don't quite match). Border-radius stays so opaque logos
    * (some skin packs ship square JPGs) still get rounded
    * corners. */
@@ -1220,7 +1220,7 @@ defineExpose({
  *
  * Colour: 18 % of the theme's text colour (`--tvh-text`) mixed
  * with transparent. `--tvh-text` is already theme-aware — dark
- * on Blue / Gray, white on Access — so the fade reads
+ * on Light, white on Dark and Access — so the fade reads
  * as a soft shadow on light surfaces and a soft glow on dark
  * surfaces, same visual affordance in either polarity. Mirrors
  * the scroll-shadow gradients on `IdnodeGrid` and `PageTabs`.

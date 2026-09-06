@@ -6,7 +6,7 @@
  * option presets for the bandwidth chart.
  *
  * Reads CSS custom properties from the document root so the chart
- * picks up the active theme (Blue / Gray / Access) and re-runs on
+ * picks up the active theme (Light / Dark / Access) and re-runs on
  * theme switch via a MutationObserver on `[data-theme]`.
  *
  * The palette is an 8-entry array sourced from the theme's state

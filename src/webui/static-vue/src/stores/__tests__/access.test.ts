@@ -90,9 +90,9 @@ describe('access store — preloadFromHttp', () => {
     h.listeners.get('accessUpdate')?.({
       notificationClass: 'accessUpdate',
       ...WHOAMI,
-      theme: 'gray',
+      theme: 'dark',
     })
     await nextTick()
-    expect(document.documentElement.dataset.theme).toBe('gray')
+    expect(document.documentElement.dataset.theme).toBe('dark')
   })
 })
