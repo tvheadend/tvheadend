@@ -99,8 +99,11 @@ describe('--tvh-text-scale per theme (desktop)', () => {
   it('Light is the :root palette and declares no selector of its own', () => {
     /* Light is the default: its tokens live in :root rather than in a
      * [data-theme='light'] block, so `data-theme` can be absent (pre-
-     * Comet) or "light" and render identically. */
+     * Comet) or "light" and render identically. Auto has no block
+     * either — the access store resolves it to light or dark before it
+     * reaches the DOM. */
     expect(() => findTopLevelRule("[data-theme='light']")).toThrow()
+    expect(() => findTopLevelRule("[data-theme='auto']")).toThrow()
   })
 })
 

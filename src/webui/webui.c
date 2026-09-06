@@ -2718,7 +2718,7 @@ static int http_file_test(const char *path)
  * Serve a per-theme stylesheet as a CSS import, falling back to the
  * ExtJS fallback theme when the active one has no legacy variant.
  *
- * The Vue interface's own themes ("light", "dark") ship no
+ * The Vue interface's own themes ("light", "dark", "auto") ship no
  * xtheme-<name>.css / ext-<name>.css of their own, because those are
  * full ExtJS widget themes rather than a token palette. Without this
  * fallback the legacy interface would answer its own theme.css

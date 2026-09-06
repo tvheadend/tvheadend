@@ -7,7 +7,7 @@
  * `accessUpdate` remains the live-update channel and the only path on
  * pre-v20 servers (where whoami 404s and must be swallowed).
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 
@@ -94,5 +94,106 @@ describe('access store — preloadFromHttp', () => {
     })
     await nextTick()
     expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+})
+
+/*
+ * The Auto theme is resolved in the store rather than in CSS: the
+ * server sends "auto", the client answers it from the host's
+ * prefers-color-scheme, and `data-theme` only ever carries a palette
+ * tokens.css actually declares. These tests pin both halves of that —
+ * the initial resolution and the live follow when the host flips.
+ */
+function stubPrefersDark(initial: boolean) {
+  const listeners = new Set<() => void>()
+  const mql = {
+    matches: initial,
+    media: '(prefers-color-scheme: dark)',
+    addEventListener: (_: string, fn: () => void) => {
+      listeners.add(fn)
+    },
+    removeEventListener: (_: string, fn: () => void) => {
+      listeners.delete(fn)
+    },
+  }
+  vi.stubGlobal('matchMedia', () => mql)
+  return {
+    /* Flip the host preference the way a browser would. */
+    set(next: boolean) {
+      mql.matches = next
+      listeners.forEach((fn) => fn())
+    },
+  }
+}
+
+function sendTheme(theme: string) {
+  h.listeners.get('accessUpdate')?.({
+    notificationClass: 'accessUpdate',
+    ...WHOAMI,
+    theme,
+  })
+}
+
+describe('access store — Auto theme', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("resolves 'auto' to light when the host prefers light", async () => {
+    stubPrefersDark(false)
+    useAccessStore()
+
+    sendTheme('auto')
+    await nextTick()
+    expect(document.documentElement.dataset.theme).toBe('light')
+  })
+
+  it("resolves 'auto' to dark when the host prefers dark", async () => {
+    stubPrefersDark(true)
+    useAccessStore()
+
+    sendTheme('auto')
+    await nextTick()
+    expect(document.documentElement.dataset.theme).toBe('dark')
+  })
+
+  it('follows the host preference while Auto is selected', async () => {
+    const host = stubPrefersDark(false)
+    useAccessStore()
+
+    sendTheme('auto')
+    await nextTick()
+    expect(document.documentElement.dataset.theme).toBe('light')
+
+    /* No reload, no new accessUpdate — the media-query listener
+     * re-resolves on its own. */
+    host.set(true)
+    expect(document.documentElement.dataset.theme).toBe('dark')
+
+    host.set(false)
+    expect(document.documentElement.dataset.theme).toBe('light')
+  })
+
+  it('ignores the host preference while a concrete theme is selected', async () => {
+    const host = stubPrefersDark(false)
+    useAccessStore()
+
+    sendTheme('access')
+    await nextTick()
+    expect(document.documentElement.dataset.theme).toBe('access')
+
+    /* The listener stays attached for the life of the store; it must
+     * be inert for anything but Auto. */
+    host.set(true)
+    expect(document.documentElement.dataset.theme).toBe('access')
+  })
+
+  it("never puts 'auto' in the DOM", async () => {
+    stubPrefersDark(true)
+    useAccessStore()
+
+    sendTheme('auto')
+    await nextTick()
+    expect(document.documentElement.dataset.theme).not.toBe('auto')
   })
 })

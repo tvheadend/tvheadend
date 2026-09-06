@@ -12,7 +12,8 @@
  * for DataTable et al. is large; here we map the ones that visibly
  * affect the grid + the small set of common controls (buttons,
  * paginator, headers). Theme name spelling matches the server's enum in
- * theme_get_ui_list() — "light", "dark", "access".
+ * theme_get_ui_list() — "light", "dark", "access"; "auto" resolves to
+ * one of those before it reaches the DOM.
  */
 
 :root,

@@ -1509,6 +1509,7 @@ theme_get_ui_list ( void *p, const char *lang )
   static struct strtab_str tab[] = {
     { N_("Light"),    "light" },
     { N_("Dark"),     "dark"  },
+    { N_("Auto"),     "auto"  },
     { N_("Access"),   "access" },
   };
   return strtab2htsmsg_str(tab, 1, lang);

@@ -49,7 +49,9 @@ async function bootstrap() {
          * OS. Both Dark (the low-glare night palette) and Access (the
          * high-contrast white-on-dark variant) set `color-scheme: dark`
          * in tokens.css; Light does not match, so Aura stays light
-         * for it.
+         * for it. Auto never reaches the DOM under its own name — the
+         * access store resolves it to `light` or `dark` first — so it
+         * is covered by whichever of the two is in effect.
          *
          * This is what makes teleported overlays (Select dropdown,
          * MultiSelect, Datepicker, menus, the paginator rows-per-page

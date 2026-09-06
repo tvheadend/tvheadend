@@ -4,11 +4,16 @@
 /*
  * Tvheadend Vue UI — design tokens
  *
- * Three themes via [data-theme] selectors: Light (the default,
+ * Three palettes via [data-theme] selectors: Light (the default,
  * declared in :root), Dark and Access. Dark is the low-glare night
  * palette and Access the high-contrast white-on-dark variant; both
  * need stronger interaction tints than the subtle Light defaults,
  * and both opt back in to `color-scheme: dark`.
+ *
+ * The Auto theme has no palette of its own: the access store
+ * resolves it to `light` or `dark` from the host's
+ * prefers-color-scheme, so `data-theme` always names one of the
+ * three declared here.
  */
 
 :root {
