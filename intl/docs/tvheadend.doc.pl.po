@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-08 03:10+0000\n"
+"POT-Creation-Date: 2026-08-03 03:13+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: Marek Adamski, 2026\n"
 "Language-Team: Polish (https://app.transifex.com/tvheadend/teams/43381/pl/)\n"
@@ -2220,7 +2220,7 @@ msgstr "Tylko Konfiguracja -> Ogólne -> Podstawowe."
 
 #: src/docs_inc.c:1364 src/docs_inc.c:1370
 msgid "Configuration -> General -> Image cache only."
-msgstr "Tylko Konfiguracja -> Ogólne -> Pamięć podręczna obrazu."
+msgstr "Tylko Konfiguracja -> Ogólne -> Pamięć podręczna obrazów."
 
 #: src/docs_inc.c:1378
 msgid "Configuration -> General -> SAT>IP Server only."
@@ -4098,7 +4098,7 @@ msgstr "Ignorowanie nieznanych strumieni"
 
 #: src/docs_inc.c:2448 src/docs_inc.c:3468
 msgid "Image Cache"
-msgstr "Pamięć podręczna obrazu"
+msgstr "Pamięć podręczna obrazów"
 
 #: src/docs_inc.c:1597
 msgid ""
