@@ -67,6 +67,10 @@ int
 udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
                  struct sockaddr_storage *storage );
 
+int
+udp_get_local_ip_for_dest( const struct sockaddr_storage *dst,
+                           struct sockaddr_storage *local );
+
 typedef struct udp_multirecv {
   int             um_psize;
   int             um_packets;

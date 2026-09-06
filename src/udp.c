@@ -539,6 +539,31 @@ udp_write_queue( udp_connection_t *uc, htsbuf_queue_t *q,
   return r;
 }
 
+int
+udp_get_local_ip_for_dest(const struct sockaddr_storage *dst, struct sockaddr_storage *local)
+{
+  int fd;
+  socklen_t len = sizeof(*local);
+
+  fd = socket(dst->ss_family, SOCK_DGRAM, 0);
+  if (fd < 0)
+    return -1;
+
+  if (connect(fd, (const struct sockaddr *)dst,
+              dst->ss_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6)) < 0) {
+    close(fd);
+    return -1;
+  }
+
+  if (getsockname(fd, (struct sockaddr *)local, &len) < 0) {
+    close(fd);
+    return -1;
+  }
+
+  close(fd);
+  return 0;
+}
+
 /*
  * UDP multi packet receive support
  */
