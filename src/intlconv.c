@@ -27,6 +27,45 @@ tvh_iconv(iconv_t cd, char **inbuf, size_t *inbytesleft,
   return iconv(cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
+/*
+ * Some iconv implementations - musl for one - reject a charset name
+ * carrying the GNU //TRANSLIT or //IGNORE suffix outright instead of
+ * ignoring it, so a name built with one can never be opened.  Probe
+ * once and leave the suffix out where it is not understood, so that the
+ * conversion still happens.
+ */
+static int intlconv_translit = -1;
+static int intlconv_ignore   = -1;
+
+static int
+intlconv_suffix_supported( const char *charset, int *cache )
+{
+  iconv_t ic;
+
+  if (*cache < 0) {
+    errno = 0;
+    ic = iconv_open(charset, "UTF-8");
+    if (ic != (iconv_t)-1) {
+      iconv_close(ic);
+      *cache = 1;
+    } else if (errno == EINVAL) {
+      /* The implementation does not know this suffix. */
+      *cache = 0;
+    } else {
+      /* Out of memory or descriptors, which says nothing about the
+         suffix, so do not remember an answer. */
+      return 1;
+    }
+  }
+  return *cache;
+}
+
+int
+intlconv_translit_supported( void )
+{
+  return intlconv_suffix_supported("ASCII//TRANSLIT", &intlconv_translit);
+}
+
 static void
 intlconv_test( void )
 {
@@ -36,7 +75,9 @@ intlconv_test( void )
   if (s == NULL ||
       (strcmp(s, "ZlutouckyKun") &&
        strcmp(s, "Zlutouck'yKun") &&
-       strcmp(s, "?lu?ou?k?K??"))) {
+       strcmp(s, "?lu?ou?k?K??") &&
+       /* Same outcome as the '?' form above, with musl's substitute. */
+       strcmp(s, "*lu*ou*k*K**"))) {
     tvherror(LS_MAIN, "iconv() routine is not working properly (%s), aborting!", s);
     tvh_safe_usleep(2000000);
     abort();
@@ -49,6 +90,11 @@ intlconv_init( void )
 {
   tvh_mutex_init(&intlconv_lock, NULL);
   tvh_mutex_init(&intlconv_lock_src, NULL);
+  /* Settle both probes here, while this is still single threaded. */
+  if (!intlconv_suffix_supported("ASCII//TRANSLIT", &intlconv_translit))
+    tvhwarn(LS_MAIN, "iconv() does not implement //TRANSLIT, non-ASCII "
+                     "characters will be replaced rather than transliterated");
+  intlconv_suffix_supported("ASCII//IGNORE", &intlconv_ignore);
   intlconv_test();
 }
 
@@ -103,6 +149,12 @@ intlconv_charset_id( const char *charset,
       strcasecmp(charset, "UTF8") == 0 ||
       strcasecmp(charset, "UTF-8") == 0)
     return NULL;
+  if (transil &&
+      !intlconv_suffix_supported("ASCII//TRANSLIT", &intlconv_translit))
+    transil = 0;
+  if (ignore_bad_chars &&
+      !intlconv_suffix_supported("ASCII//IGNORE", &intlconv_ignore))
+    ignore_bad_chars = 0;
   delim = index(charset, '/') ?
             (charset[strlen(charset)-1] != '/' ? "/" : "") : "//";
   if (transil && ignore_bad_chars)
