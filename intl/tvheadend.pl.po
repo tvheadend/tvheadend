@@ -2484,7 +2484,7 @@ msgstr "Taniec"
 
 #: src/access.c:1511
 msgid "Dark"
-msgstr ""
+msgstr "Ciemny"
 
 #: src/dvr/dvr_config.c:1102
 msgid "Data error threshold for failed recordings (0=off)"
@@ -5247,7 +5247,7 @@ msgstr "Hobby"
 
 #: src/access.c:1510
 msgid "Light"
-msgstr ""
+msgstr "Jasny"
 
 #: src/channels.c:495
 msgid "Limit EPG (days)"
