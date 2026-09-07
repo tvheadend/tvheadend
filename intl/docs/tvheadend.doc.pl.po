@@ -2532,7 +2532,7 @@ msgstr "Profile DVR i powiązane ustawienia"
 
 #: src/docs_inc.c:6247 src/docs_inc.c:6259
 msgid "Dark"
-msgstr ""
+msgstr "Ciemny"
 
 #: src/docs_inc.c:13
 msgid "Debug options"
@@ -3239,6 +3239,8 @@ msgstr "Pierwszy uporządkowany wpis listy"
 #: src/docs_inc.c:6253
 msgid "Follow the browser or operating system, switching between"
 msgstr ""
+"Dostosuj zgodnie z przeglądarką lub systemem operacyjnym, przełączając się "
+"między nimi"
 
 #: src/docs_inc.c:5709
 msgid ""
@@ -4382,7 +4384,7 @@ msgstr "Licencjonowanie"
 
 #: src/docs_inc.c:6243 src/docs_inc.c:6255
 msgid "Light"
-msgstr ""
+msgstr "Jasny"
 
 #: src/docs_inc.c:5121
 msgid "Limit access to DVR functionality only."
@@ -8929,11 +8931,13 @@ msgstr "Użyj wartości \"Stały poziom intefejsu użytkownika\" ustawionej w"
 
 #: src/docs_inc.c:6245
 msgid "Use the (default) light theme."
-msgstr ""
+msgstr "Użyj (domyślnego) jasnego motywu."
 
 #: src/docs_inc.c:6249
 msgid "Use the dark theme, a low-glare palette for night-time use."
 msgstr ""
+"Użyj ciemnego motywu i palety kolorów o niskim współczynniku odbicia, "
+"idealnej do użytku nocnego."
 
 #: src/docs_inc.c:6289
 msgid "Use the default view level value as set in"
@@ -9617,6 +9621,11 @@ msgid ""
 "changed by hand. The switch takes effect as soon as the host setting "
 "changes; no reload is needed."
 msgstr ""
+"__Automatycznie__ używa preferowanego schematu kolorów hosta, dzięki czemu "
+"interfejs działa zgodnie z systemem, który przełącza się automatycznie po "
+"wyłączeniu, bez konieczności ręcznej zmiany motywu. Zmiana zaczyna "
+"obowiązywać natychmiast po zmianie ustawień hosta; nie jest wymagane ponowne"
+" ładowanie."
 
 #: src/docs_inc.c:1808
 msgid "__BER__ :"
@@ -9714,6 +9723,9 @@ msgid ""
 "interface has no dark stylesheet of its own and falls back to its light one "
 "when either theme is selected."
 msgstr ""
+"Style __Ciemny__ i __Automatycznie__ dotyczą tylko interfejsu internetowego "
+"Vue. Starszy interfejs ExtJS nie ma własnego ciemnego arkusza stylów i wraca"
+" do jasnego po wybraniu któregokolwiek z tych motywów."
 
 #: src/docs_inc.c:1899
 msgid "__Descramble__ : The CAID used to descramble the stream."
@@ -10251,7 +10263,7 @@ msgstr "arm"
 
 #: src/docs_inc.c:6261
 msgid "as that setting changes."
-msgstr ""
+msgstr "przy zmianie ustawienia."
 
 #: src/docs_inc.c:3538
 msgid "audioes"
