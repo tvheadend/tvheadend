@@ -16,7 +16,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 03:13+0000\n"
+"POT-Creation-Date: 2026-09-07 02:13+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: jiezhao li, 2026\n"
 "Language-Team: Chinese (https://app.transifex.com/tvheadend/teams/43381/zh/)\n"
@@ -393,51 +393,51 @@ msgstr "AES ECB 固定码字"
 msgid "AES128 ECB Constant Code Word"
 msgstr "AES128 ECB 固定码字"
 
-#: src/config.c:2068
+#: src/config.c:2102
 msgid "AF11"
 msgstr "AF11"
 
-#: src/config.c:2069
+#: src/config.c:2103
 msgid "AF12"
 msgstr "AF12"
 
-#: src/config.c:2070
+#: src/config.c:2104
 msgid "AF13"
 msgstr "AF13"
 
-#: src/config.c:2072
+#: src/config.c:2106
 msgid "AF21"
 msgstr "AF21"
 
-#: src/config.c:2073
+#: src/config.c:2107
 msgid "AF22"
 msgstr "AF22"
 
-#: src/config.c:2074
+#: src/config.c:2108
 msgid "AF23"
 msgstr "AF23"
 
-#: src/config.c:2076
+#: src/config.c:2110
 msgid "AF31"
 msgstr "AF31"
 
-#: src/config.c:2077
+#: src/config.c:2111
 msgid "AF32"
 msgstr "AF32"
 
-#: src/config.c:2078
+#: src/config.c:2112
 msgid "AF33"
 msgstr "AF33"
 
-#: src/config.c:2080
+#: src/config.c:2114
 msgid "AF41"
 msgstr "AF41"
 
-#: src/config.c:2081
+#: src/config.c:2115
 msgid "AF42"
 msgstr "AF42"
 
-#: src/config.c:2082
+#: src/config.c:2116
 msgid "AF43"
 msgstr "AF43"
 
@@ -509,7 +509,7 @@ msgstr "自动"
 msgid "Aborted by user"
 msgstr "被用户中止"
 
-#: src/config.c:2169
+#: src/config.c:2203
 msgid "About"
 msgstr "关于"
 
@@ -529,7 +529,7 @@ msgstr "传输流 ID 为零时接受。"
 msgid "Accept zero value for TSID"
 msgstr "接受 TSID 零值"
 
-#: src/access.c:1512
+#: src/access.c:1513
 msgid "Access"
 msgstr "访问"
 
@@ -570,7 +570,7 @@ msgstr "适配器 in use by another 订阅"
 msgid "Adaptive"
 msgstr "自适应"
 
-#: src/config.c:2374
+#: src/config.c:2408
 msgid "Add channel numbers to the channel name list"
 msgstr "添加 频道 编号 to the 频道 名称 列表"
 
@@ -578,7 +578,7 @@ msgstr "添加 频道 编号 to the 频道 名称 列表"
 msgid "Add file and line numbers to debug"
 msgstr "添加 文件 and line 编号 to 调试"
 
-#: src/config.c:2383
+#: src/config.c:2417
 msgid "Add sources (like DVB-T string) to the channel name list"
 msgstr "添加 sources (like DVB-T 字符串) to the 频道 名称 列表"
 
@@ -617,7 +617,7 @@ msgstr ""
 "for those with 调谐器 that take some 时间 to tune and/or send garbage 数据 at the "
 "beginning. "
 
-#: src/access.c:1922
+#: src/access.c:1923
 msgid "Admin"
 msgstr "管理员"
 
@@ -637,7 +637,7 @@ msgstr "管理员登录"
 msgid "Adult movie"
 msgstr "成人电影"
 
-#: src/access.c:1489 src/access.c:1632 src/config.c:2096
+#: src/access.c:1489 src/access.c:1633 src/config.c:2130
 msgid "Advanced"
 msgstr "高级"
 
@@ -679,7 +679,7 @@ msgstr "年龄分级"
 msgid "Age to use in the EPG parental rating field."
 msgstr "Age to use in the EPG parental rating 字段."
 
-#: src/access.c:1437 src/access.c:1449 src/access.c:1525
+#: src/access.c:1437 src/access.c:1449 src/access.c:1526
 #: src/input/mpegts/satip/satip_frontend.c:357
 #: src/input/mpegts/satip/satip_frontend.c:465
 #: src/input/mpegts/satip/satip_frontend.c:562
@@ -702,7 +702,7 @@ msgstr ""
 "All characters that could possibly cause problems for filenaming will be "
 "replaced with an underscore. See 帮助 for 详情."
 
-#: src/config.c:2107
+#: src/config.c:2141
 msgid "All lower-case"
 msgstr "全部小写"
 
@@ -777,16 +777,16 @@ msgid ""
 "down or crash completely!"
 msgstr "允许时间偏移缓冲区无限增长，直到存储介质空间不足为止。警告：启用此选项可能导致您的系统发生性能问题或完全崩溃！"
 
-#: src/access.c:1923
+#: src/access.c:1924
 msgid "Allow/Disallow access to the 'Configuration' tab."
 msgstr "允许或禁止访问“配置”选项卡。"
 
-#: src/access.c:1915
+#: src/access.c:1916
 msgid ""
 "Allow/Disallow web interface access (this  includes access to the EPG)."
 msgstr "允许或禁止访问 Web 界面（包括访问EPG数据）。"
 
-#: src/access.c:1903
+#: src/access.c:1904
 msgid "Allowed DVR profiles. This limits the profiles the user has access to."
 msgstr "允许的 DVR 配置文件。该设置限制用户有权访问的配置文件。"
 
@@ -794,7 +794,7 @@ msgstr "允许的 DVR 配置文件。该设置限制用户有权访问的配置�
 msgid "Allowed network"
 msgstr "允许的网络"
 
-#: src/access.c:1767
+#: src/access.c:1768
 msgid "Allowed networks"
 msgstr "允许的网络"
 
@@ -855,7 +855,7 @@ msgstr "动物"
 msgid "Anonymize"
 msgstr "匿名化"
 
-#: src/access.c:1891
+#: src/access.c:1892
 msgid "Anonymize HTSP access"
 msgstr "匿名化 HTSP 访问"
 
@@ -951,7 +951,7 @@ msgstr "音频复用器"
 msgid "Authenticated user"
 msgstr "认证用户"
 
-#: src/config.c:2552
+#: src/config.c:2586
 msgid "Authentication type"
 msgstr "认证类型"
 
@@ -959,7 +959,7 @@ msgstr "认证类型"
 msgid "Authority"
 msgstr "监管部门"
 
-#: src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
+#: src/access.c:1512 src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
 #: src/descrambler/capmt.c:2706
 msgid "Auto"
 msgstr "自动"
@@ -1017,7 +1017,7 @@ msgstr "自动 计划 条目 not found"
 msgid "Automatic time scheduler entry not found"
 msgstr "自动 时间 scheduler 条目 not found"
 
-#: src/config.c:2801
+#: src/config.c:2835
 msgid "Automatically clear input error counters"
 msgstr "Automatically clear 输入 错误 counters"
 
@@ -1132,8 +1132,8 @@ msgstr "基本 DVB SI 表（PAT,CAT,PMT,SDT等）"
 msgid "Based on software from"
 msgstr "基于软件"
 
-#: src/access.c:1438 src/access.c:1450 src/access.c:1488 src/access.c:1627
-#: src/access.c:1670 src/config.c:2095
+#: src/access.c:1438 src/access.c:1450 src/access.c:1488 src/access.c:1628
+#: src/access.c:1671 src/config.c:2129
 msgid "Basic"
 msgstr "基本"
 
@@ -1176,10 +1176,6 @@ msgstr "比特率模式"
 msgid "Bitrate mode."
 msgstr "比特率模式。"
 
-#: src/access.c:1510
-msgid "Blue"
-msgstr "蓝色"
-
 #: src/transcoding/codec/profile_video_class.c:60
 msgid "Bob Deinterlacing"
 msgstr "Bob 反交错"
@@ -1192,7 +1188,7 @@ msgstr "Bonjour"
 msgid "Boot ID"
 msgstr "启动 ID"
 
-#: src/config.c:2129
+#: src/config.c:2163
 msgid "Both plain and digest"
 msgstr "明文与摘要"
 
@@ -1315,7 +1311,7 @@ msgstr "CCcam"
 msgid "CI Module"
 msgstr "CI 模块"
 
-#: src/config.c:2610
+#: src/config.c:2644
 msgid "CORS origin"
 msgstr "CORS 源"
 
@@ -1331,35 +1327,35 @@ msgstr "崩溃"
 msgid "CRID authority"
 msgstr "CRID 权威"
 
-#: src/config.c:2066
+#: src/config.c:2100
 msgid "CS0"
 msgstr "CS0"
 
-#: src/config.c:2067
+#: src/config.c:2101
 msgid "CS1"
 msgstr "CS1"
 
-#: src/config.c:2071
+#: src/config.c:2105
 msgid "CS2"
 msgstr "CS2"
 
-#: src/config.c:2075
+#: src/config.c:2109
 msgid "CS3"
 msgstr "CS3"
 
-#: src/config.c:2079
+#: src/config.c:2113
 msgid "CS4"
 msgstr "CS4"
 
-#: src/config.c:2083
+#: src/config.c:2117
 msgid "CS5"
 msgstr "CS5"
 
-#: src/config.c:2085
+#: src/config.c:2119
 msgid "CS6"
 msgstr "CS6"
 
-#: src/config.c:2086
+#: src/config.c:2120
 msgid "CS7"
 msgstr "CS7"
 
@@ -1427,7 +1423,7 @@ msgstr "分类"
 msgid "Category Code XPath"
 msgstr "分类代码 XPath"
 
-#: src/access.c:1777
+#: src/access.c:1778
 msgid "Change parameters"
 msgstr "变更参数"
 
@@ -1454,15 +1450,15 @@ msgstr "频道图标 URL。"
 msgid "Channel icon as defined in EPG data."
 msgstr "电子节目指南（EPG）数据中定义的频道图标。"
 
-#: src/config.c:2498
+#: src/config.c:2532
 msgid "Channel icon name scheme"
 msgstr "频道图标名称方案"
 
-#: src/config.c:2485
+#: src/config.c:2519
 msgid "Channel icon path"
 msgstr "频道图标路径"
 
-#: src/config.c:2231
+#: src/config.c:2265
 msgid "Channel icon/Picon Settings"
 msgstr "频道图标设置"
 
@@ -1478,11 +1474,11 @@ msgstr "频道映射选项"
 msgid "Channel name"
 msgstr "频道名"
 
-#: src/config.c:2373
+#: src/config.c:2407
 msgid "Channel name with numbers"
 msgstr "含频道号的频道名"
 
-#: src/config.c:2382
+#: src/config.c:2416
 msgid "Channel name with sources"
 msgstr "含来源的频道名"
 
@@ -1502,7 +1498,7 @@ msgstr "EPG 数据中定义的频道号。"
 msgid "Channel number offset"
 msgstr "频道号偏移量"
 
-#: src/access.c:1538
+#: src/access.c:1539
 msgid "Channel number range"
 msgstr "频道号范围"
 
@@ -1526,11 +1522,11 @@ msgstr "频道标签不存在"
 msgid "Channel tag reference"
 msgstr "频道标签参考"
 
-#: src/access.c:1543 src/access.c:1977 src/input/mpegts/iptv/iptv_mux.c:266
+#: src/access.c:1544 src/access.c:1978 src/input/mpegts/iptv/iptv_mux.c:266
 msgid "Channel tags"
 msgstr "频道标签"
 
-#: src/access.c:1978
+#: src/access.c:1979
 msgid "Channel tags the user is allowed access to/excluded from."
 msgstr "允许/禁止用户访问的频道标签。"
 
@@ -1724,7 +1720,7 @@ msgstr "命令时长（10-300 ms）"
 msgid "Command to move the dish with an external command."
 msgstr "用于通过外部命令移动卫星天线的命令。"
 
-#: src/access.c:2008 src/access.c:2354 src/access.c:2493 src/channels.c:1843
+#: src/access.c:2009 src/access.c:2355 src/access.c:2494 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344
 #: src/bouquet.c:1338 src/epggrab/channel.c:908 src/dvr/dvr_db.c:5011
@@ -1756,11 +1752,11 @@ msgstr "通用接口（CI）设置"
 msgid "Completed OK"
 msgstr "完成 OK"
 
-#: src/config.c:2444
+#: src/config.c:2478
 msgid "Compress EPG database"
 msgstr "压缩 EPG 数据库"
 
-#: src/config.c:2445
+#: src/config.c:2479
 msgid "Compress the EPG database to reduce disk I/O and space."
 msgstr "压缩 EPG 数据库以减少磁盘 I/O 和空间占用。"
 
@@ -1776,7 +1772,7 @@ msgstr "压缩级别（0-12），-1 为 FFmpeg 的默认值"
 msgid "Concurrent input limit per network group for satellite SAT>IP tuners."
 msgstr "卫星 SAT>IP 调谐器每个网络组的并发输入限制。"
 
-#: src/config.c:2349
+#: src/config.c:2383
 msgid "Conditional Access (for advanced view level)"
 msgstr "条件接收（用于高级视图）"
 
@@ -1789,35 +1785,35 @@ msgstr "CA 客户端"
 msgid "Conditional Access Identification."
 msgstr "CA 识别"
 
-#: src/config.c:2163
+#: src/config.c:2197
 msgid "Config-CAs"
 msgstr "配置-条件接收"
 
-#: src/config.c:2160
+#: src/config.c:2194
 msgid "Config-Channel/EPG"
 msgstr "配置-频道/EPG"
 
-#: src/config.c:2159
+#: src/config.c:2193
 msgid "Config-DVB Inputs"
 msgstr "配置-DVB 输入"
 
-#: src/config.c:2164
+#: src/config.c:2198
 msgid "Config-Debugging"
 msgstr "配置-调试"
 
-#: src/config.c:2157
+#: src/config.c:2191
 msgid "Config-General"
 msgstr "配置-通用"
 
-#: src/config.c:2162
+#: src/config.c:2196
 msgid "Config-Recording"
 msgstr "配置-录像"
 
-#: src/config.c:2161
+#: src/config.c:2195
 msgid "Config-Stream"
 msgstr "配置-流"
 
-#: src/config.c:2158
+#: src/config.c:2192
 msgid "Config-Users"
 msgstr "配置-用户"
 
@@ -1825,7 +1821,7 @@ msgstr "配置-用户"
 msgid "Configuration"
 msgstr "设置"
 
-#: src/config.c:2212
+#: src/config.c:2246
 msgid "Configuration - Base"
 msgstr "设置 - 基本"
 
@@ -1856,7 +1852,7 @@ msgstr ""
 msgid "Configuration name"
 msgstr "配置名称"
 
-#: src/config.c:2265
+#: src/config.c:2299
 msgid "Configuration version"
 msgstr "配置版本"
 
@@ -1864,11 +1860,11 @@ msgstr "配置版本"
 msgid "Connection Settings"
 msgstr "连接设置"
 
-#: src/access.c:1929
+#: src/access.c:1930
 msgid "Connection limit type"
 msgstr "连接限制类型"
 
-#: src/access.c:1558
+#: src/access.c:1559
 msgid "Connection limits"
 msgstr "连接限制"
 
@@ -1938,7 +1934,7 @@ msgid ""
 " 16'."
 msgstr "转发广播的分级编码为人类可读标签，如“PG”或“FSK 16”。"
 
-#: src/config.c:2575
+#: src/config.c:2609
 msgid "Cookie expiration (days)"
 msgstr "Cookie 有效期（天）"
 
@@ -2135,11 +2131,11 @@ msgstr "当前调谐器配置。"
 msgid "Custom HTTP headers"
 msgstr "自定义 HTTP 头"
 
-#: src/config.c:2390
+#: src/config.c:2424
 msgid "Custom date Format"
 msgstr "自定义日期格式"
 
-#: src/config.c:2391
+#: src/config.c:2425
 msgid "Custom date mask like (%yyyy-%M-%dd %h:%m:%s)"
 msgstr "自定义日期掩码，类似于 (%yyyy-%M-%dd %h:%m:%s)"
 
@@ -2175,7 +2171,7 @@ msgstr "DES NCB 固定码字"
 msgid "DES key"
 msgstr "DES 密钥"
 
-#: src/config.c:2763
+#: src/config.c:2797
 msgid "DSCP/TOS for streaming"
 msgstr "用于串流的 DSCP/TOS"
 
@@ -2239,7 +2235,7 @@ msgstr "DVB 时间表"
 msgid "DVB multiplex"
 msgstr "DVB 复用"
 
-#: src/config.c:2812
+#: src/config.c:2846
 msgid "DVB scan files path"
 msgstr "DVB 扫描文件目录"
 
@@ -2320,11 +2316,11 @@ msgstr "录像 Inotify"
 msgid "DVR configuration"
 msgstr "DVR 设置"
 
-#: src/access.c:1902
+#: src/access.c:1903
 msgid "DVR configuration profiles"
 msgstr "DVR "
 
-#: src/access.c:1548
+#: src/access.c:1549
 msgid "DVR configurations"
 msgstr "DVR 设置"
 
@@ -2376,33 +2372,37 @@ msgstr "DVR 计划暂无文件"
 msgid "DVR schedule not found"
 msgstr "找不到 DVR 计划"
 
-#: src/config.c:2155
+#: src/config.c:2189
 msgid "DVR-Autorecs"
 msgstr "录像-自动录制"
 
-#: src/config.c:2153
+#: src/config.c:2187
 msgid "DVR-Failed"
 msgstr "录像-失败"
 
-#: src/config.c:2152
+#: src/config.c:2186
 msgid "DVR-Finished"
 msgstr "录像-已完成"
 
-#: src/config.c:2154
+#: src/config.c:2188
 msgid "DVR-Removed"
 msgstr "录像-已移除"
 
-#: src/config.c:2156
+#: src/config.c:2190
 msgid "DVR-Timers"
 msgstr "录像-定时器"
 
-#: src/config.c:2151
+#: src/config.c:2185
 msgid "DVR-Upcoming/Current"
 msgstr "录像-即将/当前"
 
 #: src/epg.c:2026
 msgid "Dance"
 msgstr "舞蹈"
+
+#: src/access.c:1511
+msgid "Dark"
+msgstr ""
 
 #: src/dvr/dvr_config.c:1102
 msgid "Data error threshold for failed recordings (0=off)"
@@ -2482,7 +2482,7 @@ msgstr "调试追踪（底层）"
 msgid "Debugging"
 msgstr "调试"
 
-#: src/access.c:1487 src/access.c:1499 src/config.c:2065 src/profile.c:334
+#: src/access.c:1487 src/access.c:1499 src/config.c:2099 src/profile.c:334
 #: src/dvr/dvr_db.c:3736 src/transcoding/codec/profile_video_class.c:59
 msgid "Default"
 msgstr "默认"
@@ -2499,15 +2499,15 @@ msgstr ""
 "默认 EIT processing policy applied to 服务 whose own \"EIT processing\" is set "
 "to 默认. See 帮助 for the full policy descriptions."
 
-#: src/config.c:2284
+#: src/config.c:2318
 msgid "Default language"
 msgstr "默认语言"
 
-#: src/config.c:2429
+#: src/config.c:2463
 msgid "Default language(s)"
 msgstr "默认语言"
 
-#: src/access.c:1812
+#: src/access.c:1813
 msgid "Default language."
 msgstr "默认语言。"
 
@@ -2523,15 +2523,15 @@ msgstr "默认优先级"
 msgid "Default server config"
 msgstr "默认服务器配置"
 
-#: src/access.c:1593 src/access.c:1829 src/config.c:2399
+#: src/access.c:1594 src/access.c:1830 src/config.c:2433
 msgid "Default tab"
 msgstr "默认标签页"
 
-#: src/access.c:1790
+#: src/access.c:1791
 msgid "Default user interface level."
 msgstr "默认用户权限级别。"
 
-#: src/config.c:2326
+#: src/config.c:2360
 msgid "Default view level"
 msgstr "默认查看级别"
 
@@ -2586,7 +2586,7 @@ msgstr "解扰器"
 msgid "Descrambler EMM"
 msgstr "解扰器 EMM"
 
-#: src/config.c:2780
+#: src/config.c:2814
 msgid "Descrambler buffer (TS packets)"
 msgstr "解扰器缓冲（TS 包数量）"
 
@@ -2620,7 +2620,7 @@ msgstr "设备路径"
 msgid "Device path in sysfs"
 msgstr "sysfs 中的设备路径"
 
-#: src/config.c:2764
+#: src/config.c:2798
 msgid ""
 "Differentiated Services Code Point / Type of Service: Set the service class "
 "Tvheadend sends with each packet. Depending on the option selected this "
@@ -2632,18 +2632,18 @@ msgstr ""
 "发送数据包的优先级，这个选项通常不需要改变。更多信息请参见 "
 "https://en.wikipedia.org/wiki/Differentiated_services 。"
 
-#: src/config.c:2128
+#: src/config.c:2162
 msgid "Digest"
 msgstr "摘要"
 
-#: src/config.c:2553
+#: src/config.c:2587
 msgid ""
 "Digest access authentication is intended as a security trade-off. It is "
 "intended to replace unencrypted HTTP basic access authentication. This "
 "option should be enabled for standard usage."
 msgstr "摘要/Digest 访问身份验证是一种安全权衡。它旨在取代未加密的 HTTP 基本访问身份验证。对于标准使用，应该启用此选项。"
 
-#: src/config.c:2564
+#: src/config.c:2598
 msgid "Digest hash type"
 msgstr "Digest 哈希类型"
 
@@ -2759,7 +2759,7 @@ msgstr "显示标题"
 msgid "Do not send X_SATIPM3U information in the XML description to clients."
 msgstr "不要将 XML 描述中的 X_SATIPM3U 信息发送到客户端。"
 
-#: src/access.c:1892
+#: src/access.c:1893
 msgid ""
 "Do not send any stream specific information to the HTSP client like signal "
 "strength, input source etc."
@@ -2836,7 +2836,7 @@ msgstr "丢弃 \"fe=\" 属性"
 msgid "Duplicate handling"
 msgstr "复制操作"
 
-#: src/config.c:2084
+#: src/config.c:2118
 msgid "EF"
 msgstr "EF"
 
@@ -2860,7 +2860,7 @@ msgstr "EIT 时间偏移量"
 msgid "EMM Settings"
 msgstr "EMM 设置"
 
-#: src/config.c:2150
+#: src/config.c:2184
 msgid "EPG"
 msgstr "EPG"
 
@@ -2892,7 +2892,7 @@ msgstr "EPG 语言（优先级顺序）"
 msgid "EPG Parental Rating Labels"
 msgstr "EPG 家长分级标签"
 
-#: src/config.c:2227
+#: src/config.c:2261
 msgid "EPG Settings"
 msgstr "EPG 设置"
 
@@ -2912,7 +2912,7 @@ msgstr "EPG 模块 ID"
 msgid "EPG name"
 msgstr "EPG 名称"
 
-#: src/config.c:2456
+#: src/config.c:2490
 msgid "EPG overlap cut"
 msgstr "EPG 重叠剪切"
 
@@ -2928,7 +2928,7 @@ msgstr "EPG 扫描超时（30-7200 秒）"
 msgid "EPG source"
 msgstr "EPG 来源"
 
-#: src/config.c:2465 src/dvr/dvr_config.c:1448
+#: src/config.c:2499 src/dvr/dvr_config.c:1448
 msgid "EPG update window"
 msgstr "EPG 更新窗口"
 
@@ -2973,7 +2973,7 @@ msgstr "初级流过滤器"
 msgid "Elementary stream filter"
 msgstr "初级流过滤器"
 
-#: src/access.c:2245 src/input/mpegts/mpegts_mux.c:484
+#: src/access.c:2246 src/input/mpegts/mpegts_mux.c:484
 #: src/transcoding/codec/profile_video_class.c:84
 msgid "Enable"
 msgstr "启用"
@@ -2986,11 +2986,11 @@ msgstr "启用（自动）"
 msgid "Enable DBus"
 msgstr "启用 DBus"
 
-#: src/config.c:2709
+#: src/config.c:2743
 msgid "Enable HDHomeRun Server Emulation"
 msgstr "启用 HDHomeRun 服务器仿真"
 
-#: src/config.c:2845
+#: src/config.c:2879
 msgid "Enable NTP driver"
 msgstr "启用 NTP 驱动程序"
 
@@ -3014,7 +3014,7 @@ msgstr "启用调试到文件"
 msgid "Enable debug to syslog"
 msgstr "启用调试到 syslog"
 
-#: src/access.c:1967
+#: src/access.c:1968
 msgid ""
 "Enable exclusion of user-config defined channel tags. This will prevent the "
 "user from accessing channels associated with the tags selected (below)."
@@ -3065,7 +3065,7 @@ msgstr "启用或禁用该配置。"
 msgid "Enable over-the-air program guide (EPG) scanning on this input device."
 msgstr "在此输入设备上启用 OTA 电子节目指南（EPG）扫描。"
 
-#: src/config.c:2421
+#: src/config.c:2455
 msgid "Enable parser for kodi label formatting"
 msgstr "启用 Kodi 标签格式解析器"
 
@@ -3073,13 +3073,13 @@ msgstr "启用 Kodi 标签格式解析器"
 msgid "Enable syslog"
 msgstr "启用 syslog"
 
-#: src/config.c:2835
+#: src/config.c:2869
 msgid ""
 "Enable system time updates. This will only work if the user running "
 "Tvheadend has rights to update the system clock (normally only root)."
 msgstr "启用系统时间更新。仅当运行 Tvheadend 的用户有权更新系统时钟（通常只有 root）时可用。"
 
-#: src/config.c:2710
+#: src/config.c:2744
 msgid ""
 "Enable the Tvheadend server to emulate an HDHomeRun server.  This allows "
 "LiveTV to be used on some media servers."
@@ -3103,11 +3103,11 @@ msgstr ""
 msgid "Enable trace subsystems"
 msgstr "启用追踪子系统"
 
-#: src/config.c:2870
+#: src/config.c:2904
 msgid "Enable vainfo detection"
 msgstr "启用 vainfo 检测"
 
-#: src/config.c:2871
+#: src/config.c:2905
 msgid ""
 "Enable vainfo detection in order to show only encoders that are advertised by VAAPI driver.\n"
 "NOTE: After save, Tvheadend restart is required!"
@@ -3139,7 +3139,7 @@ msgstr "启用/禁用网络。"
 msgid "Enable/Disable service."
 msgstr "启用/禁用服务。"
 
-#: src/config.c:2350
+#: src/config.c:2384
 msgid ""
 "Enable/Disable the CAs (conditional accesses) tab for the advanced view "
 "level. By default, it's visible only to the Expert level."
@@ -3147,7 +3147,7 @@ msgstr ""
 "启用/禁用 the CAs (conditional accesses) 标签页 for the advanced 查看 级别. By 默认, it's"
 " visible only to the 专家 级别."
 
-#: src/access.c:1753
+#: src/access.c:1754
 msgid "Enable/Disable the entry."
 msgstr "启用/禁用条目。"
 
@@ -3155,7 +3155,7 @@ msgstr "启用/禁用条目。"
 msgid "Enable/Disable timeshift."
 msgstr "启用/禁用时移。"
 
-#: src/config.c:2318
+#: src/config.c:2352
 msgid "Enable/Disable web interface mouse-over tooltips."
 msgstr "启用/禁用 Web 界面 mouse-over tooltips."
 
@@ -3252,7 +3252,7 @@ msgstr "启用/禁用频道。"
 msgid "Enable/disable the device."
 msgstr "启用/禁用设备。"
 
-#: src/access.c:2300 src/access.c:2477 src/dvr/dvr_db.c:4497
+#: src/access.c:2301 src/access.c:2478 src/dvr/dvr_db.c:4497
 #: src/dvr/dvr_timerec.c:537 src/input/mpegts/mpegts_mux_sched.c:139
 msgid "Enable/disable the entry."
 msgstr "启用/禁用条目。"
@@ -3273,7 +3273,7 @@ msgstr "启用/禁用标签。"
 msgid "Enable/disable tuner/adapter."
 msgstr "启用/禁用调谐器/适配器。"
 
-#: src/access.c:1752 src/access.c:2299 src/access.c:2476 src/channels.c:400
+#: src/access.c:1753 src/access.c:2300 src/access.c:2477 src/channels.c:400
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172
 #: src/imagecache.c:90 src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
 #: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:784
@@ -3445,7 +3445,7 @@ msgstr "事件 does not exist"
 msgid "Every day"
 msgstr "每天"
 
-#: src/access.c:1966
+#: src/access.c:1967
 msgid "Exclude channel tags"
 msgstr "排除频道标签"
 
@@ -3457,7 +3457,7 @@ msgstr "探险"
 msgid "Experimental film"
 msgstr "实验电影"
 
-#: src/access.c:1490 src/config.c:2097
+#: src/access.c:1490 src/config.c:2131
 msgid "Expert"
 msgstr "专家"
 
@@ -3601,7 +3601,7 @@ msgstr "失败"
 msgid "Failed to open image"
 msgstr "Failed to open 图像"
 
-#: src/access.c:1690
+#: src/access.c:1691
 msgid "Failed view"
 msgstr "Failed 查看"
 
@@ -3826,7 +3826,7 @@ msgstr "强制优先级"
 msgid "Force profile to use this priority."
 msgstr "Force 配置方案 to use this priority."
 
-#: src/config.c:2118
+#: src/config.c:2152
 msgid "Force service type to 1"
 msgstr "Force 服务 类型 to 1"
 
@@ -3891,11 +3891,11 @@ msgstr "永久"
 msgid "Fork and run as daemon"
 msgstr "Fork 并以守护进程运行"
 
-#: src/access.c:1998
+#: src/access.c:1999
 msgid "Format for htsp output"
 msgstr "格式 for HTSP 输出"
 
-#: src/access.c:1988
+#: src/access.c:1989
 msgid "Format for xmltv output"
 msgstr "格式 for xmltv 输出"
 
@@ -3940,7 +3940,7 @@ msgstr "Free 订阅 weight"
 msgid "Free-form field, enter whatever you like here."
 msgstr "Free-form 字段, enter whatever you like here."
 
-#: src/access.c:2009 src/access.c:2355 src/access.c:2492 src/channels.c:1844
+#: src/access.c:2010 src/access.c:2356 src/access.c:2493 src/channels.c:1844
 #: src/dvr/dvr_db.c:5012 src/dvr/dvr_autorec.c:1488 src/dvr/dvr_timerec.c:680
 msgid "Free-form text field, enter whatever you like here."
 msgstr "Free-form 文本 字段, enter whatever you like here."
@@ -4092,10 +4092,6 @@ msgstr ""
 msgid "Grace period"
 msgstr "宽限期"
 
-#: src/access.c:1511
-msgid "Gray"
-msgstr "灰色"
-
 #: src/input/mpegts/mpegts_mux_dvb.c:244 src/input/mpegts/mpegts_mux_dvb.c:781
 #: src/input/mpegts/mpegts_mux_dvb.c:1064
 msgid "Guard interval"
@@ -4109,7 +4105,7 @@ msgstr "HD 电视"
 msgid "HD: high definition"
 msgstr "HD：高清晰度"
 
-#: src/config.c:2239
+#: src/config.c:2273
 msgid "HDHomeRun"
 msgstr "HDHomeRun"
 
@@ -4141,7 +4137,7 @@ msgstr "HDHomeRun DVB-T 前端"
 msgid "HDHomeRun ISDB-T frontend"
 msgstr "HDHomeRun ISDB-T 前端"
 
-#: src/config.c:2624
+#: src/config.c:2658
 msgid "HDHomerun IP Address"
 msgstr "HDHomerun IP 地址"
 
@@ -4149,7 +4145,7 @@ msgstr "HDHomerun IP 地址"
 msgid "HEVC - H.265"
 msgstr "HEVC - H.265"
 
-#: src/access.c:1637 src/access.c:1675
+#: src/access.c:1638 src/access.c:1676
 msgid "HTSP"
 msgstr "HTSP"
 
@@ -4173,11 +4169,11 @@ msgstr "HTSP 流 配置方案"
 msgid "HTSP Subscription"
 msgstr "HTSP 订阅"
 
-#: src/access.c:1588
+#: src/access.c:1589
 msgid "HTSP output format"
 msgstr "HTSP 输出格式"
 
-#: src/config.c:2611
+#: src/config.c:2645
 msgid ""
 "HTTP CORS (cross-origin resource sharing) origin. This option is usually set"
 " when Tvheadend is behind a proxy. Enter the URL (domain or IP address, "
@@ -4195,11 +4191,11 @@ msgstr "HTTP 客户端"
 msgid "HTTP Server"
 msgstr "HTTP 服务端"
 
-#: src/config.c:2235
+#: src/config.c:2269
 msgid "HTTP Server Settings"
 msgstr "HTTP 服务器 设置"
 
-#: src/config.c:2744
+#: src/config.c:2778
 msgid "HTTP User Agent"
 msgstr "HTTP 用户 Agent"
 
@@ -4265,7 +4261,7 @@ msgstr "更高"
 msgid "Higher LNB voltage"
 msgstr "Higher 高频头 voltage"
 
-#: src/access.c:1959
+#: src/access.c:1960
 msgid "Highest channel number the user can access."
 msgstr "Highest 频道 编号 the 用户 can 访问."
 
@@ -4337,7 +4333,7 @@ msgstr "IGNORE"
 msgid "IP address"
 msgstr "IP 地址"
 
-#: src/config.c:2625
+#: src/config.c:2659
 msgid ""
 "IP address of the HDHomerun device. This is needed if you plan to run "
 "Tvheadend in a container and you want to stream from an HDHomerun without "
@@ -4347,11 +4343,11 @@ msgstr ""
 "and you want to 流 from an HDHomerun without enabling 主机 networking for the "
 "容器."
 
-#: src/access.c:2434
+#: src/access.c:2435
 msgid "IP blocking"
 msgstr "IP 封锁"
 
-#: src/config.c:2637
+#: src/config.c:2671
 msgid ""
 "IP of the Docker host. Each HDHomeRun tuner sends data to Tvheadend through "
 "a socket. This lets you define the IP address that HDHomeRun needs to send "
@@ -4397,7 +4393,7 @@ msgstr "IPTV 信号 级别"
 msgid "IPTV thread #"
 msgstr "IPTV 线程 #"
 
-#: src/config.c:2754
+#: src/config.c:2788
 msgid "IPTV threads"
 msgstr "IPTV 线程"
 
@@ -4500,7 +4496,7 @@ msgid ""
 "possible)."
 msgstr "If an 错误 occurs clone the 已计划 条目 and try to 录制 again (if possible)."
 
-#: src/config.c:2476
+#: src/config.c:2510
 msgid ""
 "If both a picon and a channel-specific (e.g. channelname.jpg) icon are "
 "defined, prefer the picon."
@@ -4749,11 +4745,11 @@ msgstr ""
 msgid "Include time in filename"
 msgstr "包含 时间 in filename"
 
-#: src/access.c:1745 src/esfilter.c:602 src/descrambler/caclient.c:294
+#: src/access.c:1746 src/esfilter.c:602 src/descrambler/caclient.c:294
 msgid "Index"
 msgstr "索引"
 
-#: src/config.c:2361
+#: src/config.c:2395
 msgid "Information area"
 msgstr "信息 area"
 
@@ -4863,7 +4859,7 @@ msgstr "无效目标"
 msgid "Items"
 msgstr "项目"
 
-#: src/config.c:2306
+#: src/config.c:2340
 msgid "Items per page"
 msgstr "项目 per 页面"
 
@@ -4923,7 +4919,7 @@ msgstr "Kill 信号 to send to the spawn."
 msgid "Kill timeout (pipe/secs)"
 msgstr "终止超时（管道/秒）"
 
-#: src/config.c:2420
+#: src/config.c:2454
 msgid "Kodi label formatting support"
 msgstr "Kodi label formatting 支持"
 
@@ -4972,7 +4968,7 @@ msgstr "高频头: %s"
 msgid "Label"
 msgstr "标签"
 
-#: src/access.c:1563 src/access.c:1811 src/esfilter.c:638 src/esfilter.c:733
+#: src/access.c:1564 src/access.c:1812 src/esfilter.c:638 src/esfilter.c:733
 #: src/esfilter.c:829 src/esfilter.c:924 src/esfilter.c:1128 src/wizard.c:197
 msgid "Language"
 msgstr "语言"
@@ -5017,7 +5013,7 @@ msgstr "最后 扫描"
 msgid "Last seen"
 msgstr "最后 seen"
 
-#: src/config.c:2274
+#: src/config.c:2308
 msgid "Last updated from"
 msgstr "最后 updated from"
 
@@ -5074,6 +5070,10 @@ msgstr "Layer C: 时间 interleaving"
 msgid "Leisure hobbies"
 msgstr "休闲爱好"
 
+#: src/access.c:1510
+msgid "Light"
+msgstr ""
+
 #: src/channels.c:495
 msgid "Limit EPG (days)"
 msgstr "限制 EPG（天）"
@@ -5090,7 +5090,7 @@ msgstr ""
 msgid "Limit audio tracks"
 msgstr "Limit 音频 tracks"
 
-#: src/access.c:1939
+#: src/access.c:1940
 msgid "Limit connections"
 msgstr "限制连接数"
 
@@ -5136,7 +5136,7 @@ msgstr "LinuxDVB 适配器"
 msgid "LinuxDVB network"
 msgstr "LinuxDVB 网络"
 
-#: src/access.c:1768
+#: src/access.c:1769
 msgid "List of allowed IPv4 or IPv6 hosts or networks (comma-separated)."
 msgstr "列表 of allowed IPv4 or IPv6 hosts or 网络 (comma-separated)."
 
@@ -5160,11 +5160,11 @@ msgstr "文学"
 msgid "Local (server) time"
 msgstr "Local (服务器) 时间"
 
-#: src/config.c:2636
+#: src/config.c:2670
 msgid "Local IP Address"
 msgstr "Local IP 地址"
 
-#: src/config.c:2649
+#: src/config.c:2683
 msgid "Local Socket Port Number"
 msgstr "Local Socket 端口 编号"
 
@@ -5245,7 +5245,7 @@ msgstr "登录 密码."
 msgid "Login username."
 msgstr "登录 username."
 
-#: src/config.c:2055
+#: src/config.c:2089
 msgid "Login/Logout"
 msgstr "登录/Logout"
 
@@ -5269,7 +5269,7 @@ msgstr "低"
 msgid "Low frequency offset"
 msgstr "Low 频率 offset"
 
-#: src/access.c:1950
+#: src/access.c:1951
 msgid "Lowest channel number the user can access."
 msgstr "Lowest 频道 编号 the 用户 can 访问."
 
@@ -5277,7 +5277,7 @@ msgstr "Lowest 频道 编号 the 用户 can 访问."
 msgid "Lowest starting channel number (when mapping). "
 msgstr "Lowest starting 频道 编号 (when mapping). "
 
-#: src/config.c:2138
+#: src/config.c:2172
 msgid "MD5"
 msgstr "MD5"
 
@@ -5377,11 +5377,11 @@ msgstr "每天创建子目录"
 msgid "Make subdirectories per title"
 msgstr "Make subdirectories per 标题"
 
-#: src/access.c:1685
+#: src/access.c:1686
 msgid "Manage all"
 msgstr "管理全部"
 
-#: src/access.c:2334
+#: src/access.c:2335
 msgid "Manage persistent authentication for HTTP streaming."
 msgstr "管理 HTTP 流媒体的持久认证。"
 
@@ -5488,7 +5488,7 @@ msgstr "最大会话数"
 msgid "Max User connections"
 msgstr "Max 用户 连接"
 
-#: src/access.c:1958
+#: src/access.c:1959
 msgid "Maximal channel number"
 msgstr "最大频道号"
 
@@ -5505,7 +5505,7 @@ msgstr "Maximum PID"
 msgid "Maximum RAM size (MB)"
 msgstr "最大内存大小 (MB)"
 
-#: src/config.c:2466
+#: src/config.c:2500
 msgid ""
 "Maximum allowed difference between event start time when the EPG event is "
 "changed (in seconds)."
@@ -5611,7 +5611,7 @@ msgstr "Mime 类型"
 msgid "Mime type string (for example 'video/mp2t')."
 msgstr "Mime 类型 字符串 (for example '视频/mp2t')."
 
-#: src/access.c:1949
+#: src/access.c:1950
 msgid "Minimal channel number"
 msgstr "最小频道号"
 
@@ -5631,7 +5631,7 @@ msgstr "Minimum 季"
 msgid "Minimum year"
 msgstr "最小年份"
 
-#: src/tvhlog.c:843 src/config.c:2247 src/satip/server.c:669
+#: src/tvhlog.c:843 src/config.c:2281 src/satip/server.c:669
 #: src/dvr/dvr_config.c:952
 msgid "Miscellaneous Settings"
 msgstr "Miscellaneous 设置"
@@ -5972,7 +5972,7 @@ msgstr "网络 limit per group"
 msgid "Network name"
 msgstr "网络名称"
 
-#: src/access.c:2483
+#: src/access.c:2484
 msgid "Network prefix"
 msgstr "网络 prefix"
 
@@ -6087,7 +6087,7 @@ msgstr "No 输入 detected"
 msgid "No rating needed"
 msgstr "无需评分"
 
-#: src/config.c:2106
+#: src/config.c:2140
 msgid "No scheme"
 msgstr "无方案"
 
@@ -6250,7 +6250,7 @@ msgstr "编号 of times this 录像 was played."
 msgid "Number of tsfile tuners"
 msgstr "编号 of tsfile 调谐器"
 
-#: src/config.c:2670
+#: src/config.c:2704
 msgid "Number of tuners to export for HDHomeRun Server Emulation"
 msgstr "编号 of 调谐器 to export for HDHomeRun 服务器 Emulation"
 
@@ -6386,7 +6386,7 @@ msgstr "仅数字"
 msgid "Only preferred CA PID"
 msgstr "Only preferred 条件接收 PID"
 
-#: src/config.c:2858
+#: src/config.c:2892
 msgid ""
 "Only update the system clock (doesn't affect NTP driver) if the delta "
 "between the system clock and DVB time is greater than this. This can help "
@@ -6575,11 +6575,11 @@ msgstr "PMT 模式"
 msgid "PMT mode."
 msgstr "PMT 模式."
 
-#: src/config.c:2596
+#: src/config.c:2630
 msgid "PROXY protocol & X-Forwarded-For"
 msgstr "PROXY 协议 & X-Forwarded-For"
 
-#: src/config.c:2597
+#: src/config.c:2631
 msgid ""
 "PROXY protocol is an extension for support incoming TCP connections from a "
 "remote server (like a firewall) sending the original IP address of the "
@@ -6592,7 +6592,7 @@ msgstr ""
 "'X-Forwarded-For' do the same with HTTP 连接. Both 启用 tunneled 连接.This 选项 "
 "should be 已禁用 for standard usage."
 
-#: src/config.c:2790
+#: src/config.c:2824
 msgid "Packet backlog"
 msgstr "包积压"
 
@@ -6613,11 +6613,11 @@ msgstr "Parent 条目."
 msgid "Parental rating label UUID."
 msgstr "家长控制评分标签 UUID。"
 
-#: src/config.c:2825
+#: src/config.c:2859
 msgid "Parse HbbTV info"
 msgstr "Parse HbbTV 信息"
 
-#: src/config.c:2826
+#: src/config.c:2860
 msgid "Parse HbbTV information from services."
 msgstr "Parse HbbTV 信息 from 服务."
 
@@ -6647,15 +6647,15 @@ msgstr "Pass-thru 复用器"
 msgid "Passthrough Muxer SI Tables"
 msgstr "透传复用器 SI 表"
 
-#: src/access.c:2315 src/wizard.c:454 src/descrambler/cclient.c:1387
+#: src/access.c:2316 src/wizard.c:454 src/descrambler/cclient.c:1387
 msgid "Password"
 msgstr "密码"
 
-#: src/access.c:2316
+#: src/access.c:2317
 msgid "Password for the entry."
 msgstr "密码 for the 条目."
 
-#: src/access.c:2324
+#: src/access.c:2325
 msgid "Password2"
 msgstr "确认密码"
 
@@ -6663,7 +6663,7 @@ msgstr "确认密码"
 msgid "Path"
 msgstr "路径"
 
-#: src/config.c:2511
+#: src/config.c:2545
 msgid ""
 "Path to a directory (folder) containing your picon collection. See Help for "
 "more detailed information."
@@ -6671,7 +6671,7 @@ msgstr ""
 "路径 to a directory (folder) containing your picon collection. See 帮助 for more"
 " detailed 信息."
 
-#: src/config.c:2486
+#: src/config.c:2520
 msgid ""
 "Path to an icon for this channel. This can be named however you wish, as "
 "either a local (file://) or remote (http://) image. See Help for more "
@@ -6725,7 +6725,7 @@ msgstr "峰值大小"
 msgid "Performing arts"
 msgstr "表演艺术"
 
-#: src/config.c:2802
+#: src/config.c:2836
 msgid ""
 "Periodically resets input error counters (when a new mux starts for the "
 "target tuner). Note that previous counters will be lost."
@@ -6737,19 +6737,19 @@ msgstr ""
 msgid "Periodically save EPG to disk (hours)"
 msgstr "Periodically 保存 EPG to disk (hours)"
 
-#: src/access.c:2333
+#: src/access.c:2334
 msgid "Persistent authentication"
 msgstr "持久认证"
 
-#: src/access.c:2345
+#: src/access.c:2346
 msgid "Persistent authentication code"
 msgstr "持久认证码"
 
-#: src/access.c:1799
+#: src/access.c:1800
 msgid "Persistent user interface level"
 msgstr "Persistent 用户 界面 级别"
 
-#: src/config.c:2338
+#: src/config.c:2372
 msgid "Persistent view level"
 msgstr "Persistent 查看 级别"
 
@@ -6761,11 +6761,11 @@ msgstr "生理学"
 msgid "Pick the stream with given audio type only."
 msgstr "Pick the 流 with given 音频 类型 only."
 
-#: src/config.c:2522
+#: src/config.c:2556
 msgid "Picon name scheme"
 msgstr "Picon 名称 scheme"
 
-#: src/config.c:2510
+#: src/config.c:2544
 msgid "Picon path"
 msgstr "Picon 路径"
 
@@ -6777,7 +6777,7 @@ msgstr "导频"
 msgid "Pixel format"
 msgstr "Pixel 格式"
 
-#: src/config.c:2127
+#: src/config.c:2161
 msgid "Plain (insecure)"
 msgstr "明文（不安全）"
 
@@ -6825,7 +6825,7 @@ msgstr "端口 to connect to."
 msgid "Port to listen on or to connect to."
 msgstr "端口 to listen on or to connect to."
 
-#: src/config.c:2243
+#: src/config.c:2277
 msgid "Ports settings"
 msgstr "Ports 设置"
 
@@ -6900,7 +6900,7 @@ msgstr "学前儿童节目"
 msgid "Predefined Muxes"
 msgstr "Predefined 复用器"
 
-#: src/config.c:2475
+#: src/config.c:2509
 msgid "Prefer picons over channel icons"
 msgstr "Prefer picons over 频道 图标"
 
@@ -6939,7 +6939,7 @@ msgstr "预设"
 msgid "Press"
 msgstr "按下"
 
-#: src/access.c:1800
+#: src/access.c:1801
 msgid ""
 "Prevent the user from overriding the default user interface level setting "
 "and removes the view level drop-dowm from the interface."
@@ -6947,7 +6947,7 @@ msgstr ""
 "Prevent the 用户 from overriding the 默认 用户 界面 级别 设置 and removes the 查看 级别 放置-"
 "dowm from the 界面."
 
-#: src/config.c:2339
+#: src/config.c:2373
 msgid ""
 "Prevent users from overriding the view level setting. This option shows or "
 "hides the View level drop-down (next to the Help button)."
@@ -7140,11 +7140,11 @@ msgstr "RTP/AVP/TCP 传输 支持的"
 msgid "RTSP Protocol"
 msgstr "RTSP 协议"
 
-#: src/config.c:2734
+#: src/config.c:2768
 msgid "RTSP UDP maximum port"
 msgstr "RTSP UDP maximum 端口"
 
-#: src/config.c:2722
+#: src/config.c:2756
 msgid "RTSP UDP minimum port"
 msgstr "RTSP UDP minimum 端口"
 
@@ -7241,7 +7241,7 @@ msgstr ""
 "Real 时间 Streaming 协议 (RTSP) 端口 the 服务器 should listen on (554 or 9983, 0 = "
 "禁用)."
 
-#: src/config.c:2543
+#: src/config.c:2577
 msgid "Realm name"
 msgstr "Realm 名称"
 
@@ -7359,7 +7359,7 @@ msgstr "重播自"
 msgid "Reserved"
 msgstr "保留"
 
-#: src/access.c:2251
+#: src/access.c:2252
 msgid "Reset"
 msgstr "重置"
 
@@ -7392,7 +7392,7 @@ msgstr "Restart when the 订阅 is overriden (in then timeout 时间 窗口)."
 msgid "Restrict \"pids=all\""
 msgstr "Restrict \"PID=all\""
 
-#: src/access.c:1930
+#: src/access.c:1931
 msgid "Restrict connections to this type."
 msgstr "Restrict 连接 to this 类型."
 
@@ -7511,7 +7511,7 @@ msgstr ""
 "Rewrite 服务 identifier (SID) using the specified 值 (usually 1). Zero means no"
 " rewrite; preserving MPEG-TS original 网络 and 传输 流 IDs"
 
-#: src/access.c:1533
+#: src/access.c:1534
 msgid "Rights"
 msgstr "权限"
 
@@ -7630,11 +7630,11 @@ msgstr "SD 电视"
 msgid "SD: standard definition"
 msgstr "SD：标准清晰度"
 
-#: src/config.c:2139
+#: src/config.c:2173
 msgid "SHA-256"
 msgstr "SHA-256"
 
-#: src/config.c:2140
+#: src/config.c:2174
 msgid "SHA-512/256"
 msgstr "SHA-512/256"
 
@@ -7678,7 +7678,7 @@ msgstr "START"
 msgid "STOP"
 msgstr "STOP"
 
-#: src/config.c:2735
+#: src/config.c:2769
 msgid ""
 "Same as above, but for the maximum allowed port. Note that each stream "
 "requires two ports."
@@ -7830,7 +7830,7 @@ msgstr "已计划 开始 时间"
 msgid "Scheduled stop time"
 msgstr "已计划 停止 时间"
 
-#: src/config.c:2499
+#: src/config.c:2533
 msgid ""
 "Scheme to generate the channel icon names (all lower-case, service name "
 "picons etc.)."
@@ -7940,7 +7940,7 @@ msgstr "选择 low priority EPG language."
 msgid "Select medium priority EPG language."
 msgstr "选择 medium priority EPG language."
 
-#: src/config.c:2523
+#: src/config.c:2557
 msgid ""
 "Select scheme to generate the picon names (standard, force service type to "
 "1)"
@@ -7958,7 +7958,7 @@ msgstr ""
 "选择 the 默认 用户 界面 language. This can be overridden later in \"访问 条目\" on a "
 "per-用户 basis."
 
-#: src/config.c:2430
+#: src/config.c:2464
 msgid ""
 "Select the list of languages (in order of priority) to be used for supplying"
 " EPG information to clients that don't provide their own configuration."
@@ -7990,7 +7990,7 @@ msgid ""
 msgstr ""
 "选择 the 编号 of 卫星 positions 支持的 by the SAT>IP 硬件 and your coaxial 有线 wiring."
 
-#: src/config.c:2813
+#: src/config.c:2847
 msgid ""
 "Select the path to use for DVB scan configuration files. Typically dvb-apps "
 "stores these in /usr/share/dvb/. Leave blank to use the internal file set."
@@ -8065,7 +8065,7 @@ msgstr "Send RTCP 状态 reports"
 msgid "Send full PLAY cmd"
 msgstr "Send full 播放 cmd"
 
-#: src/config.c:2791
+#: src/config.c:2825
 msgid ""
 "Send previous stream frames to upper layers (before frame start is signalled"
 " in the stream). It may cause issues with some clients / players."
@@ -8117,7 +8117,7 @@ msgstr "严肃音乐"
 msgid "Server"
 msgstr "服务器"
 
-#: src/config.c:2219
+#: src/config.c:2253
 msgid "Server Settings"
 msgstr "服务器 设置"
 
@@ -8133,7 +8133,7 @@ msgstr "服务器连接性"
 msgid "Server details."
 msgstr "服务器 详情."
 
-#: src/config.c:2534
+#: src/config.c:2568
 msgid "Server name"
 msgstr "服务器 名称"
 
@@ -8183,7 +8183,7 @@ msgstr "服务 名称"
 msgid "Service name found in EPG data."
 msgstr "服务 名称 found in EPG 数据."
 
-#: src/config.c:2108
+#: src/config.c:2142
 msgid "Service name picons"
 msgstr "服务名称频道图标"
 
@@ -8226,11 +8226,11 @@ msgstr "服务 seen"
 msgid "Set as default profile."
 msgstr "Set as 默认 配置方案."
 
-#: src/access.c:1830
+#: src/access.c:1831
 msgid "Set the default start-up tab.  'EPG' is the default tab."
 msgstr "Set the 默认 开始-up 标签页.  'EPG' is the 默认 标签页."
 
-#: src/config.c:2400
+#: src/config.c:2434
 msgid "Set the default start-up tab.  'EPG' is the system default tab."
 msgstr "Set the 默认 开始-up 标签页.  'EPG' is the 系统 默认 标签页."
 
@@ -8246,13 +8246,13 @@ msgstr "Set the 编码 preset (cf. x264 --fullhelp)."
 msgid "Set the maxiumum packet identifiers your SAT>IP server supports."
 msgstr "Set the maxiumum packet identifiers your SAT>IP 服务器 supports."
 
-#: src/config.c:2257
+#: src/config.c:2291
 msgid ""
 "Set the name of the server so you can distinguish multiple instances apart."
 msgstr ""
 "Set the 名称 of the 服务器 so you can distinguish multiple instances apart."
 
-#: src/config.c:2755
+#: src/config.c:2789
 msgid "Set the number of threads for IPTV to split load across more CPUs."
 msgstr "Set the 编号 of threads for IPTV to split load across more CPUs."
 
@@ -8292,7 +8292,7 @@ msgstr "显示"
 msgid "Show / Game show"
 msgstr "显示 / Game 显示"
 
-#: src/config.c:2409
+#: src/config.c:2443
 msgid "Show DVR seconds"
 msgstr "显示 录像 seconds"
 
@@ -8303,7 +8303,7 @@ msgid ""
 msgstr ""
 "显示 only 信息 for sessions which are initiated from an IP 地址 of the requester."
 
-#: src/config.c:2410
+#: src/config.c:2444
 msgid ""
 "Show seconds in the DVR entry add/edit dialogue window. If disabled, "
 "existing seconds can not be edited and new entries will have seconds set to "
@@ -8320,7 +8320,7 @@ msgstr "显示 this 页面"
 msgid "Show version information"
 msgstr "显示 version 信息"
 
-#: src/config.c:2362
+#: src/config.c:2396
 msgid ""
 "Show, hide and sort the various details that appear on the interface next to"
 " the About tab."
@@ -8589,15 +8589,15 @@ msgstr "Specify bind 地址 for SAT>IP 服务器"
 msgid "Specify extra htsp port"
 msgstr "Specify extra HTSP 端口"
 
-#: src/access.c:1999
+#: src/access.c:2000
 msgid "Specify format for htsp output."
 msgstr "Specify 格式 for HTSP 输出."
 
-#: src/access.c:1989
+#: src/access.c:1990
 msgid "Specify format for xmltv output."
 msgstr "Specify 格式 for xmltv 输出."
 
-#: src/access.c:1778
+#: src/access.c:1779
 msgid "Specify the parameters to be changed. See Help for details."
 msgstr "Specify the parameters to be changed. See 帮助 for 详情."
 
@@ -8621,7 +8621,7 @@ msgstr "体育杂志"
 msgid "Squash"
 msgstr "壁球"
 
-#: src/config.c:2117 src/input/mpegts/mpegts_mux.c:512
+#: src/config.c:2151 src/input/mpegts/mpegts_mux.c:512
 msgid "Standard"
 msgstr "标准"
 
@@ -8684,7 +8684,7 @@ msgstr ""
 msgid "Start time"
 msgstr "开始 时间"
 
-#: src/config.c:2650
+#: src/config.c:2684
 msgid ""
 "Starting port number of the UDP listeners. The listeners listen for traffic "
 "from the HDHomerun tuners. This is needed if you plan to run Tvheadend in a "
@@ -8711,19 +8711,19 @@ msgstr "状态"
 msgid "Status period (ms)"
 msgstr "状态 period (ms)"
 
-#: src/config.c:2167
+#: src/config.c:2201
 msgid "Status-Connections"
 msgstr "状态-连接"
 
-#: src/config.c:2168
+#: src/config.c:2202
 msgid "Status-Service Mapper"
 msgstr "状态-服务 Mapper"
 
-#: src/config.c:2165
+#: src/config.c:2199
 msgid "Status-Stream"
 msgstr "状态-流"
 
-#: src/config.c:2166
+#: src/config.c:2200
 msgid "Status-Subscriptions"
 msgstr "状态-订阅"
 
@@ -8739,7 +8739,7 @@ msgstr "停止 时间"
 msgid "Storage path"
 msgstr "Storage 路径"
 
-#: src/config.c:2056
+#: src/config.c:2090
 msgid "Storage space"
 msgstr "存储空间"
 
@@ -8801,7 +8801,7 @@ msgstr "流 setup 错误"
 msgid "Stream type"
 msgstr "流 类型"
 
-#: src/access.c:1426 src/access.c:1849
+#: src/access.c:1426 src/access.c:1850
 msgid "Streaming"
 msgstr "流媒体"
 
@@ -8809,7 +8809,7 @@ msgstr "流媒体"
 msgid "Streaming Profile"
 msgstr "流媒体配置"
 
-#: src/access.c:1850
+#: src/access.c:1851
 msgid ""
 "Streaming flags, allow/disallow HTTP streaming, advanced HTTP streaming "
 "(e.g, direct service or mux links), HTSP protocol streaming (e.g, Kodi (via "
@@ -8823,7 +8823,7 @@ msgstr ""
 msgid "Streaming priority"
 msgstr "流媒体优先级"
 
-#: src/access.c:1553 src/access.c:1863
+#: src/access.c:1554 src/access.c:1864
 msgid "Streaming profiles"
 msgstr "流媒体配置"
 
@@ -8976,7 +8976,7 @@ msgstr "同步 + 不保留"
 msgid "System"
 msgstr "系统"
 
-#: src/config.c:2149
+#: src/config.c:2183
 msgid "System Default"
 msgstr "系统 默认"
 
@@ -9400,7 +9400,7 @@ msgstr ""
 "The character set to use/used. You should not have to 更改 this unless 频道 "
 "names and EPG 数据 appear garbled."
 
-#: src/access.c:2346
+#: src/access.c:2347
 msgid "The code which may be used for HTTP streaming."
 msgstr "可用于 HTTP 流媒体的授权码。"
 
@@ -9428,15 +9428,15 @@ msgstr "The 当前 boot ID."
 msgid "The current configuration ID."
 msgstr "The 当前 配置 ID."
 
-#: src/config.c:2266
+#: src/config.c:2300
 msgid "The current configuration version."
 msgstr "The 当前 配置 version."
 
-#: src/config.c:2327
+#: src/config.c:2361
 msgid "The default interface view level (next to the Help button)."
 msgstr "The 默认 界面 查看 级别 (下一个 to the 帮助 按钮)."
 
-#: src/config.c:2285
+#: src/config.c:2319
 msgid ""
 "The default language to use if the user  language isn't set (in the Access "
 "Entries tab)."
@@ -9447,11 +9447,11 @@ msgstr ""
 msgid "The default subscription weight for each subscription."
 msgstr "The 默认 订阅 weight for each 订阅."
 
-#: src/config.c:2307
+#: src/config.c:2341
 msgid "The default web interface items per page."
 msgstr "The 默认 Web 界面 项目 per 页面."
 
-#: src/config.c:2295
+#: src/config.c:2329
 msgid ""
 "The default web interface theme, if a user-specific one isn't set (in the "
 "Access Entries tab)."
@@ -9565,7 +9565,7 @@ msgstr ""
 "The guard interval used by the 复用器. If you're not sure of the 值 leave as "
 "AUTO."
 
-#: src/config.c:2565
+#: src/config.c:2599
 msgid "The hash algorithm type for the digest authentication."
 msgstr "The hash algorithm 类型 for the digest authentication."
 
@@ -9845,7 +9845,7 @@ msgstr "The 名称 of the 配置方案."
 msgid "The name of the the rule."
 msgstr "The 名称 of the the 规则."
 
-#: src/access.c:2484
+#: src/access.c:2485
 msgid ""
 "The network prefix(es) to block, e.g.192.168.2.0/24 (comma-separated list)."
 msgstr "The 网络 prefix(es) to block, e.g.192.168.2.0/24 (comma-separated 列表)."
@@ -9918,7 +9918,7 @@ msgstr "The 编号 of DVB-T2 (Terresterial) 调谐器 to export."
 msgid "The number of ISDB-T (Terresterial) tuners to export."
 msgstr "The 编号 of ISDB-T (Terresterial) 调谐器 to export."
 
-#: src/config.c:2781
+#: src/config.c:2815
 msgid ""
 "The number of MPEG-TS packets Tvheadend buffers in case there is a delay "
 "receiving CA keys. "
@@ -9926,7 +9926,7 @@ msgstr ""
 "The 编号 of MPEG-TS packets Tvheadend buffers in case there is a delay "
 "receiving 条件接收 keys. "
 
-#: src/access.c:1940
+#: src/access.c:1941
 msgid "The number of allowed connections this user can make to the server."
 msgstr "The 编号 of allowed 连接 this 用户 can make to the 服务器."
 
@@ -9938,7 +9938,7 @@ msgstr ""
 "The 编号 of bytes to buffer. By 默认, linuxdvb's 输入 buffer is 18800 bytes long. "
 "The accepted range is 18800-1880000 bytes."
 
-#: src/config.c:2576
+#: src/config.c:2610
 msgid "The number of days cookies set by Tvheadend should expire."
 msgstr "The 编号 of days cookies set by Tvheadend should expire."
 
@@ -9946,7 +9946,7 @@ msgstr "The 编号 of days cookies set by Tvheadend should expire."
 msgid "The number of muxes left to scan on this network."
 msgstr "The 编号 of 复用器 left to 扫描 on this 网络."
 
-#: src/config.c:2587
+#: src/config.c:2621
 msgid ""
 "The number of seconds in which authentication tickets generated by Tvheadend"
 " should expire."
@@ -10034,7 +10034,7 @@ msgstr ""
 "The quadrature amplitude modulation (QAM) used by the 复用器. If you're not "
 "sure of the 值 leave as AUTO."
 
-#: src/config.c:2544
+#: src/config.c:2578
 msgid "The realm name for HTTP authorization."
 msgstr "The realm 名称 for HTTP authorization."
 
@@ -10094,7 +10094,7 @@ msgid ""
 "available for a channel."
 msgstr "The 已选中 视频 类型 should be preferred when multiple 服务 are 可用 for a 频道."
 
-#: src/config.c:2535
+#: src/config.c:2569
 msgid "The server name for 'Server:' HTTP headers."
 msgstr "The 服务器 名称 for '服务器:' HTTP headers."
 
@@ -10193,7 +10193,7 @@ msgstr "The 流 ID used for the 复用器."
 msgid "The stream profile the DVR profile will use for recordings."
 msgstr "The 流 配置方案 the 录像 配置方案 will use for 录像."
 
-#: src/access.c:1864
+#: src/access.c:1865
 msgid ""
 "The streaming profile to use/used. If not set, the default will be used."
 msgstr "The streaming 配置方案 to use/used. If not set, the 默认 will be used."
@@ -10234,7 +10234,7 @@ msgstr ""
 msgid "The time the entry stops/stopped being recorded."
 msgstr "The 时间 the 条目 stops/stopped being recorded."
 
-#: src/config.c:2457
+#: src/config.c:2491
 msgid ""
 "The time window to cut the stop time from the overlapped event in seconds."
 msgstr "The 时间 窗口 to cut the 停止 时间 from the overlapped 事件 in seconds."
@@ -10293,7 +10293,7 @@ msgstr ""
 " use this 调谐器 out of preference). If not set (zero), the standard priority 值"
 " is used. See 帮助 for 详情."
 
-#: src/config.c:2745
+#: src/config.c:2779
 msgid "The user agent string for the build-in HTTP client."
 msgstr "The 用户 agent 字符串 for the build-in HTTP 客户端."
 
@@ -10305,7 +10305,7 @@ msgstr ""
 "The 用户 who created the 录像, or the 自动录制 source and IP 地址 if 已计划 by a matching"
 " 规则."
 
-#: src/config.c:2275
+#: src/config.c:2309
 msgid "The version of Tvheadend that last updated the config."
 msgstr "The version of Tvheadend that 最后 updated the 配置."
 
@@ -10313,7 +10313,7 @@ msgstr "The version of Tvheadend that 最后 updated the 配置."
 msgid "The video stream types the filter should apply to."
 msgstr "The 视频 流 类型 the 过滤 should 应用 to."
 
-#: src/access.c:1573 src/config.c:2294
+#: src/access.c:1574 src/config.c:2328
 msgid "Theme"
 msgstr "主题"
 
@@ -10331,7 +10331,7 @@ msgstr ""
 msgid "This tuner"
 msgstr "This 调谐器"
 
-#: src/config.c:2846
+#: src/config.c:2880
 msgid ""
 "This will create an NTP driver (using shmem interface) that you can feed "
 "into ntpd. This can be run without root privileges, but generally the "
@@ -10357,7 +10357,7 @@ msgstr "惊悚"
 msgid "Thu"
 msgstr "周四"
 
-#: src/config.c:2586
+#: src/config.c:2620
 msgid "Ticket expiration (seconds)"
 msgstr "票据过期（秒）"
 
@@ -10369,7 +10369,7 @@ msgstr "Tidy 频道 名称 (e.g., stripping HD/UHD suffix)"
 msgid "Tidy the channel name such as removing trailing HD text"
 msgstr "Tidy the 频道 名称 such as removing trailing HD 文本"
 
-#: src/tvhlog.c:92 src/config.c:2057
+#: src/tvhlog.c:92 src/config.c:2091
 msgid "Time"
 msgstr "时间"
 
@@ -10506,7 +10506,7 @@ msgstr "突发音"
 msgid "Too many data errors"
 msgstr "Too many 数据 errors"
 
-#: src/config.c:2317
+#: src/config.c:2351
 msgid "Tooltips"
 msgstr "工具提示"
 
@@ -10672,11 +10672,11 @@ msgstr "调谐失败"
 msgid "Turn off LNB when idle"
 msgstr "Turn off 高频头 when idle"
 
-#: src/config.c:2693
+#: src/config.c:2727
 msgid "Tvheadend model name for HDHomeRun Server Emulation"
 msgstr "Tvheadend model 名称 for HDHomeRun 服务器 Emulation"
 
-#: src/config.c:2256
+#: src/config.c:2290
 msgid "Tvheadend server name"
 msgstr "Tvheadend 服务器 名称"
 
@@ -11024,11 +11024,11 @@ msgstr "更新 频道 编号"
 msgid "Update disabled"
 msgstr "更新 已禁用"
 
-#: src/config.c:2834
+#: src/config.c:2868
 msgid "Update time"
 msgstr "更新 时间"
 
-#: src/config.c:2857
+#: src/config.c:2891
 msgid "Update tolerance (ms)"
 msgstr "更新 tolerance (ms)"
 
@@ -11251,7 +11251,7 @@ msgstr "用户 does not have 访问 to 频道"
 msgid "User icon"
 msgstr "用户 图标"
 
-#: src/access.c:1578 src/access.c:1789
+#: src/access.c:1579 src/access.c:1790
 msgid "User interface level"
 msgstr "用户界面级别"
 
@@ -11267,16 +11267,16 @@ msgstr "用户 登录"
 msgid "User request"
 msgstr "用户 request"
 
-#: src/access.c:1760 src/access.c:2307 src/wizard.c:445
+#: src/access.c:1761 src/access.c:2308 src/wizard.c:445
 #: src/descrambler/cclient.c:1378
 msgid "Username"
 msgstr "用户名"
 
-#: src/access.c:1761
+#: src/access.c:1762
 msgid "Username for the entry (login username)."
 msgstr "Username for the 条目 (登录 username)."
 
-#: src/access.c:2308
+#: src/access.c:2309
 msgid ""
 "Username of the entry (this should match a username from within the \"Access"
 " Entries\" tab)."
@@ -11284,15 +11284,15 @@ msgstr ""
 "Username of the 条目 (this should match a username from within the \"访问 条目\" "
 "标签页)."
 
-#: src/access.c:1732
+#: src/access.c:1733
 msgid "Users - Access Entries"
 msgstr "用户 - 访问 条目"
 
-#: src/access.c:2465
+#: src/access.c:2466
 msgid "Users - IP Blocking"
 msgstr "用户 - IP Blocking"
 
-#: src/access.c:2288
+#: src/access.c:2289
 msgid "Users - Passwords"
 msgstr "用户 - 密码"
 
@@ -11354,11 +11354,11 @@ msgstr "视频 编解码器 配置方案"
 msgid "Video pixel format."
 msgstr "视频 pixel 格式."
 
-#: src/access.c:1877
+#: src/access.c:1878
 msgid "Video recorder"
 msgstr "录像机"
 
-#: src/access.c:1878
+#: src/access.c:1879
 msgid ""
 "Video recorder flags, allow/disallow access to video recorder functionality "
 "(including Autorecs), allow/disallow users to view other DVR entries, "
@@ -11369,7 +11369,7 @@ msgstr ""
 "Autorecs), 允许/disallow 用户 to 查看 other 录像 条目, 允许/disallow 用户 to work with 录像 "
 "条目 of other 用户 (移除, 编辑) etc."
 
-#: src/access.c:1680
+#: src/access.c:1681
 msgid "View all"
 msgstr "查看 all"
 
@@ -11448,7 +11448,7 @@ msgstr "天气预报"
 msgid "Weave Deinterlacing"
 msgstr "编织去隔行"
 
-#: src/config.c:2223
+#: src/config.c:2257
 msgid "Web Interface Settings"
 msgstr "Web 界面 设置"
 
@@ -11456,23 +11456,23 @@ msgstr "Web 界面 设置"
 msgid "Web User Interface"
 msgstr "Web 用户界面"
 
-#: src/access.c:1914 src/wizard.c:184
+#: src/access.c:1915 src/wizard.c:184
 msgid "Web interface"
 msgstr "Web 界面"
 
-#: src/access.c:1568 src/access.c:1820
+#: src/access.c:1569 src/access.c:1821
 msgid "Web interface language"
 msgstr "Web 界面语言"
 
-#: src/access.c:1821
+#: src/access.c:1822
 msgid "Web interface language."
 msgstr "Web 界面 language."
 
-#: src/access.c:1839
+#: src/access.c:1840
 msgid "Web interface theme."
 msgstr "Web 界面 theme."
 
-#: src/access.c:1838
+#: src/access.c:1839
 msgid "Web theme"
 msgstr "Web 主题"
 
@@ -11507,7 +11507,7 @@ msgstr ""
 "字符串 consisting of the 标题 + 副标题 + 摘要 + 描述 + credits + keywords for all "
 "languages contained in the EPG 条目 being searched."
 
-#: src/config.c:2671
+#: src/config.c:2705
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we tell clients "
@@ -11528,7 +11528,7 @@ msgstr ""
 "affected by this 值.  Tvheadend will allocate 调谐器 automatically.  Set to zero"
 " for Tvheadend to use a 默认 值."
 
-#: src/config.c:2694
+#: src/config.c:2728
 msgid ""
 "When Tvheadend is acting as an HDHomeRun Server (emulating an HDHomeRun "
 "device for downstream media devices to stream Live TV) then we use this as "
@@ -11618,7 +11618,7 @@ msgstr "When the 服务 was 第一个 identified and recorded."
 msgid "When the service was last seen during a mux scan."
 msgstr "When the 服务 was 最后 seen during a 复用器 扫描."
 
-#: src/config.c:2723
+#: src/config.c:2757
 msgid ""
 "When using RTSP IPTV, this correspond to the minimum port bind on the client"
 " (this server), sent to the server. This is especially useful when using "
@@ -11650,7 +11650,7 @@ msgstr ""
 "oldest segment in the buffer instead of replacing it completely. 注意, this "
 "may reduce the amount of rewind 时间."
 
-#: src/access.c:2015 src/access.c:2361 src/input/mpegts/mpegts_network.c:365
+#: src/access.c:2016 src/access.c:2362 src/input/mpegts/mpegts_network.c:365
 msgid "Wizard"
 msgstr "向导"
 
@@ -11699,7 +11699,7 @@ msgstr "xmltv '系统' attribute to match 事件 received via xmltv."
 msgid "XMLTV EPG Import"
 msgstr "XMLTV EPG 导入"
 
-#: src/access.c:1583
+#: src/access.c:1584
 msgid "XMLTV output format"
 msgstr "XMLTV 输出格式"
 
