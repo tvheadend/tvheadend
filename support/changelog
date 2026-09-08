@@ -13,8 +13,8 @@ HISTORY=$(cd "$(dirname "$0")/.."; git log -5 --no-merges --pretty=format:"  * %
 
 # Defaults
 [ -z "$CHANGELOG"     ] && CHANGELOG=$(dirname "$0")/../debian/changelog
-[ -z "$DEBEMAIL"      ] && DEBEMAIL="andreas@tvheadend.org"
-[ -z "$DEBFULLNAME"   ] && DEBFULLNAME="Andreas Öman"
+[ -z "$DEBEMAIL"      ] && DEBEMAIL="debian@tvheadend.org"
+[ -z "$DEBFULLNAME"   ] && DEBFULLNAME="Tvheadend Project"
 [ -z "$VER"           ] && VER=$("$(dirname "$0")"/version)
 [ ! -z "$DIST"        ] && VER=${VER}~${DIST}
 [ -z "$DIST"          ] && DIST=unstable
