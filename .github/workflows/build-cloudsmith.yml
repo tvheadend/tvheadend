@@ -84,7 +84,7 @@ jobs:
        # aarch64 is not emulated here: it builds natively on arm64
        # runners in build-deb-native below.
        arch: [ armv7 ]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04, ubuntu_latest ]
+       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
        include:
          - arch: armv6
            distro: stretch
