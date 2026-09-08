@@ -200,21 +200,21 @@ export const useAccessStore = defineStore('access', () => {
 
   /*
    * Server-driven theme application. The wire value of `theme` (per
-   * theme_get_ui_list() — "light", "dark", "auto", "access") drives
-   * the `[data-theme=<value>]` selector in tokens.css and
-   * primevue.css. Configuration → General → Theme writes to
-   * `config.theme_ui`, the server resolves it via
+   * theme_get_ui_list() — "auto" by default, or "light", "dark",
+   * "access") drives the `[data-theme=<value>]` selector in
+   * tokens.css and primevue.css. Configuration → General → Theme
+   * writes to `config.theme_ui`, the server resolves it via
    * `access_get_theme()`, and the next mailbox accessUpdate reflects
    * the new value. Existing connected sessions still need a forced
    * reload to pick up the change because the server emits
    * `accessUpdate` only at WS-connect time; the General page's save
    * handler triggers that reload automatically.
    *
-   * "auto" is the one value that never reaches the DOM. It means
-   * "whatever the host is set to", which only the client can answer,
-   * so it is resolved here to `light` or `dark` from
-   * prefers-color-scheme and `data-theme` always names a palette
-   * that tokens.css actually declares. That keeps everything
+   * "auto" is the default, and the one value that never reaches the
+   * DOM. It means "whatever the host is set to", which only the
+   * client can answer, so it is resolved here to `light` or `dark`
+   * from prefers-color-scheme and `data-theme` always names a
+   * palette that tokens.css actually declares. That keeps everything
    * downstream — the `[data-theme]` blocks, PrimeVue's
    * darkModeSelector in main.ts, useTextScale's MutationObserver,
    * useChartTheme's token reads — working on concrete themes with no
@@ -228,10 +228,11 @@ export const useAccessStore = defineStore('access', () => {
    *
    * Pre-Comet (before the first accessUpdate lands), no `data-theme`
    * attribute is set and the document falls through to the `:root`
-   * defaults in tokens.css — the Light theme. Brief light flash on
-   * cold load for users on a dark theme, Auto included; same UX as
-   * quicktips/uilevel/etc. which all wait for the same first
-   * message.
+   * defaults in tokens.css — the Light palette. Brief light flash on
+   * cold load for anyone who ends up on a dark palette, which since
+   * Auto became the default includes every untouched install on a
+   * dark host; same UX as quicktips/uilevel/etc. which all wait for
+   * the same first message.
    */
   const prefersDark =
     typeof window !== 'undefined' && typeof window.matchMedia === 'function'

@@ -2709,7 +2709,7 @@ static int http_file_test(const char *path)
  * The legacy interface ships ExtJS widget themes under these names,
  * and "blue" is the one every Vue theme without an ExtJS counterpart
  * falls back to. It is deliberately not the Vue default (that is
- * "light", see theme_get_ui_list()): this names a stylesheet on
+ * "auto", see theme_get_ui_list()): this names a stylesheet on
  * disk, not a theme a user can pick.
  */
 #define WEBUI_THEME_EXTJS_FALLBACK "blue"
@@ -2718,7 +2718,7 @@ static int http_file_test(const char *path)
  * Serve a per-theme stylesheet as a CSS import, falling back to the
  * ExtJS fallback theme when the active one has no legacy variant.
  *
- * The Vue interface's own themes ("light", "dark", "auto") ship no
+ * The Vue interface's own themes ("auto", "light", "dark") ship no
  * xtheme-<name>.css / ext-<name>.css of their own, because those are
  * full ExtJS widget themes rather than a token palette. Without this
  * fallback the legacy interface would answer its own theme.css

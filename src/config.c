@@ -1814,7 +1814,7 @@ config_boot
   config.epg_cut_window = 5*60;
   config.epg_update_window = 24*3600;
   config_scanfile_ok = 0;
-  config.theme_ui = strdup("light");
+  config.theme_ui = strdup("auto");
   config.chname_num = 1;
   config.iptv_tpool_count = 2;
   config.date_mask = strdup("");
