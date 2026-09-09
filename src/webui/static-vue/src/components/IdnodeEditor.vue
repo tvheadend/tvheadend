@@ -58,7 +58,7 @@ import { apiCall } from '@/api/client'
 import { cometClient } from '@/api/comet'
 import type { IdnodeNotification } from '@/types/comet'
 import type { UiLevel } from '@/types/access'
-import type { IdnodeProp, PropertyGroup } from '@/types/idnode'
+import type { FieldGroupFormContext, IdnodeProp, PropertyGroup } from '@/types/idnode'
 import type { PickerColumn, PickerRow } from '@/types/picker'
 import { levelMatches, propLevel } from '@/types/idnode'
 
@@ -210,6 +210,36 @@ const props = defineProps<{
     keys: ReadonlyArray<string>
     component: Component
   }>
+  /*
+   * Optional gate on single-entry edit saves, called just before the
+   * `idnode/save` POST with the dirty field set (the diff payload,
+   * uuid excluded) and the row's uuid. Returning false aborts the
+   * save; the hook is expected to have interacted with the user (a
+   * confirm dialog) so the abort is silent here. Not consulted on
+   * create (see the confirm-on-create protocol in CreateResponse)
+   * or in multi-edit mode. First consumer: the autorec view's
+   * voluntary match-all warning (the server hard-gates creates only).
+   */
+  preSave?: (dirty: Record<string, unknown>, uuid: string) => Promise<boolean>
+  /*
+   * Optional gate on create saves, the create-mode sibling of
+   * `preSave`: called with the filled-in field set (empty fields
+   * omitted, same shape as the `conf` POST) just before the create
+   * request. Returning false aborts silently — the hook is expected
+   * to have told the user why (a dialog). First consumer: the smart
+   * autorec view, which refuses to create a rule without an
+   * expression (an empty expression would create a flat rule that
+   * belongs to the other view).
+   */
+  preCreate?: (conf: Record<string, unknown>) => Promise<boolean>
+  /*
+   * Width opt-in: widens the drawer beyond the 480 px
+   * brief default (§6.6). For editors hosting large controls — the
+   * smart-autorec expression editor with its JSONC textarea and
+   * preview list. Phone layout is unaffected (full-screen either
+   * way).
+   */
+  wide?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -390,6 +420,14 @@ const fieldProps = ref<IdnodeProp[]>([])
 const propertyGroups = ref<PropertyGroup[]>([])
 const initialValues = ref<Record<string, unknown>>({})
 const currentValues = ref<Record<string, unknown>>({})
+
+/* Whole-form context for fieldGroups components whose behaviour
+ * spans more fields than their own keys (e.g. a preview action
+ * posting the full form state) — see FieldGroupFormContext. */
+const groupFormContext = computed<FieldGroupFormContext>(() => ({
+  uuid: props.uuid ?? null,
+  values: currentValues.value,
+}))
 /* Idnode class identifier ('dvrentry', 'dvrautorec', etc.) populated
  * on each load. Drives the per-class validation rule lookup. Null
  * while the drawer is closed or before the first response lands. */
@@ -1332,6 +1370,24 @@ watch(
 
 interface CreateResponse {
   uuid?: string
+  /*
+   * Confirm-on-create protocol. A create endpoint may decline with
+   * HTTP 200 and this pair instead of creating — e.g.
+   * `dvr/autorec/create`'s match-all safeguard, which rejects a
+   * smart rule matching most of the EPG unless the request carries
+   * `force`. The editor shows `error` in a confirm dialog and
+   * retries with `force: 1` on acceptance.
+   */
+  error?: string
+  force_required?: number
+  /*
+   * Optional context for the confirm dialog. The match-all safeguard
+   * sends the ratio that tripped it; when both are present the
+   * editor formats the same counted message the edit-path preSave
+   * warning uses, instead of the bare `error` string.
+   */
+  matched?: number
+  scanned?: number
 }
 
 async function save({ keepOpen = false }: { keepOpen?: boolean } = {}) {
@@ -1372,6 +1428,11 @@ async function save({ keepOpen = false }: { keepOpen?: boolean } = {}) {
       if (JSON.stringify(currentValues.value[k]) !== JSON.stringify(initialValues.value[k])) {
         node[k] = currentValues.value[k]
       }
+    }
+    if (props.preSave) {
+      const dirty = { ...node }
+      delete dirty.uuid
+      if (!(await props.preSave(dirty, props.uuid))) return
     }
     await apiCall('idnode/save', { node: JSON.stringify(node) })
     emit('saved')
@@ -1440,6 +1501,8 @@ async function saveCreate({ keepOpen = false }: { keepOpen?: boolean } = {}) {
       if (v === null || v === undefined || v === '') continue
       conf[k] = v
     }
+    if (props.preCreate && !(await props.preCreate(conf)))
+      return /* the finally below resets `saving` */
     /* The strategy's createParams carry whatever the per-flow
      * create endpoint needs alongside `conf`:
      *   - single-class:    {} (just conf)
@@ -1451,7 +1514,28 @@ async function saveCreate({ keepOpen = false }: { keepOpen?: boolean } = {}) {
       ...strategy.createParams,
       conf: JSON.stringify(conf),
     }
-    const res = await apiCall<CreateResponse>(strategy.createEndpoint, createPayload)
+    let res = await apiCall<CreateResponse>(strategy.createEndpoint, createPayload)
+    if (res?.force_required && res.error) {
+      /* the server declined pending confirmation (see CreateResponse);
+       * nothing was created yet */
+      const message =
+        res.matched != null && res.scanned != null
+          ? t('The expression matches most of the EPG ({0} of {1} events). Save anyway?')
+              .replace('{0}', String(res.matched))
+              .replace('{1}', String(res.scanned))
+          : res.error
+      const ok = await confirmDialog.ask(message, {
+        header: t('Confirm save'),
+        acceptLabel: t('Save anyway'),
+        rejectLabel: t('Cancel'),
+        severity: 'danger',
+      })
+      if (!ok) return
+      res = await apiCall<CreateResponse>(strategy.createEndpoint, {
+        ...createPayload,
+        force: 1,
+      })
+    }
     emit('saved')
     if (keepOpen && res.uuid) {
       emit('created', res.uuid)
@@ -1618,7 +1702,11 @@ onBeforeUnmount(() => {
     position="right"
     class="idnode-editor"
     :close-on-escape="false"
-    :pt="{ root: { class: 'idnode-editor__root' } }"
+    :pt="{
+      root: {
+        class: wide ? 'idnode-editor__root idnode-editor__root--wide' : 'idnode-editor__root',
+      },
+    }"
   >
     <!--
       Custom header: title left, view-level picker right (just before
@@ -1737,6 +1825,7 @@ onBeforeUnmount(() => {
                     :group-props="groupPropsFor(groupBindingFor(p.id)!.group)"
                     :group-values="groupValuesFor(groupBindingFor(p.id)!.group)"
                     :disabled="false"
+                    :form-context="groupFormContext"
                     @update="(id: string, value: unknown) => onFieldChange(id, value)"
                   />
                 </div>
@@ -2345,6 +2434,13 @@ onBeforeUnmount(() => {
   max-width: 100vw;
   background: var(--tvh-bg-surface);
   color: var(--tvh-text);
+}
+
+/* Per-editor width opt-in (`wide` prop). Must follow the
+ * base rule (same specificity, later wins) and precede the phone
+ * media query below, which overrides both to full width. */
+.idnode-editor__root--wide.p-drawer {
+  width: 760px;
 }
 
 .idnode-editor__root .p-drawer-header {

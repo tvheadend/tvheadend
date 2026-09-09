@@ -350,6 +350,7 @@ SRCS-2 += \
 	src/dvr/dvr_db.c \
 	src/dvr/dvr_rec.c \
 	src/dvr/dvr_autorec.c \
+	src/dvr/dvr_autorec_expr.c \
 	src/dvr/dvr_timerec.c \
 	src/dvr/dvr_vfsmgr.c \
 	src/dvr/dvr_config.c \

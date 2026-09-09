@@ -55,6 +55,7 @@ const ALL_TABS: DvrTab[] = [
   { to: '/dvr/failed', label: t('Failed') },
   { to: '/dvr/removed', label: t('Removed'), requiredLevel: 'expert' },
   { to: '/dvr/autorecs', label: t('Autorecs') },
+  { to: '/dvr/smart-autorecs', label: t('Smart Autorecs') },
   { to: '/dvr/timers', label: t('Timers') },
 ]
 
