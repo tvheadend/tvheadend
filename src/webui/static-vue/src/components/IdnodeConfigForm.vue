@@ -259,33 +259,38 @@ const access = useAccessStore()
 
 /* ---- View-level override (per-view, session-scoped) ---- */
 
-/* Local view level — defaults to the user's effective
+/* Local view level — follows the user's effective
  * `access.uilevel`, but the LevelMenu in the toolbar lets the
  * user widen / narrow it for this page only without touching the
- * global preference. Mirrors the IdnodeEditor drawer's per-session
- * level picker. Honours `access.locked` (config.uilevel_nochange):
- * if the admin pinned the level, the menu's radio is disabled and
- * any active local override gets clamped down to the cap.
+ * global preference. Same three-tier resolution IdnodeGrid's
+ * `effectiveLevel` uses, so grids, drawers and config forms all
+ * answer "what level am I at?" the same way:
  *
- * When `props.lockLevel` is set the page commits to that level —
- * `currentLevel` is initialised to it and a watcher keeps it
- * pinned across access-store mutations. The LevelMenu is `v-if`'d
- * out in the template. */
-const currentLevel = ref<UiLevel>(props.lockLevel ?? access.uilevel)
+ *   1. `props.lockLevel` — the page committed to one level and
+ *      hid the chooser (`v-if`'d out in the template).
+ *   2. `access.locked` (config.uilevel_nochange) — the admin
+ *      pinned the level; the menu's radio is disabled and a local
+ *      override is ignored.
+ *   3. the local override, else the store's level.
+ *
+ * The store is read through on every access rather than
+ * snapshotted, because the level can move under a mounted form:
+ * saving Default View Level re-pulls `access/whoami` instead of
+ * reloading the page (ConfigGeneralBaseView's
+ * ACCESS_REFETCH_FIELDS). */
+const levelOverride = ref<UiLevel | null>(null)
 
-watch([() => access.locked, () => access.uilevel], ([locked, cap]) => {
-  if (props.lockLevel) return
-  if (locked && currentLevel.value !== cap) {
-    currentLevel.value = cap
-  }
+const currentLevel = computed<UiLevel>({
+  get() {
+    if (props.lockLevel) return props.lockLevel
+    if (access.locked) return access.uilevel
+    return levelOverride.value ?? access.uilevel
+  },
+  set(v) {
+    if (props.lockLevel || access.locked) return
+    levelOverride.value = v
+  },
 })
-
-watch(
-  () => props.lockLevel,
-  (lock) => {
-    if (lock) currentLevel.value = lock
-  }
-)
 
 /* ---- Load ---- */
 
@@ -810,9 +815,12 @@ defineExpose({ save, reload: load, loading, saving, currentValues })
  * doesn't change the persisted preference because we never
  * called the LevelMenu's pick.
  *
- * `currentLevel` is the local override ref established earlier in
- * setup; assigning to it triggers `displayedGroups` to recompute
- * and the row to appear (or stay) in the DOM before we scroll.
+ * `currentLevel` is the writable computed established earlier in
+ * setup; assigning to it records a local override and triggers
+ * `displayedGroups` to recompute, so the row is in the DOM before
+ * we scroll. The write is a no-op when the admin pinned the level
+ * (`access.locked`), which is the same answer the LevelMenu's
+ * disabled radio gives.
  *
  * `targetedField` drives the `.ifld-row--targeted` class binding
  * in the template; the keyframe pulse on that class is the visual
