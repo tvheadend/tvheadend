@@ -253,6 +253,78 @@ describe('IdnodeConfigForm — lockLevel', () => {
   })
 })
 
+/*
+ * The store's level can move under a form that is already mounted:
+ * ConfigGeneralBaseView lists `uilevel` in ACCESS_REFETCH_FIELDS, so
+ * saving Default View Level re-pulls `access/whoami` rather than
+ * reloading the page. A form that reads the level once at setup
+ * never sees that, so these cases drive the store after mount.
+ */
+describe('IdnodeConfigForm — access.uilevel reactivity', () => {
+  it('reveals expert fields when access.uilevel rises after mount', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+
+    const wrapper = await mountWithParams(MIXED_PARAMS)
+    expect(wrapper.html()).not.toContain('Expert')
+
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('Expert')
+  })
+
+  it('hides expert fields again when access.uilevel drops after mount', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+
+    const wrapper = await mountWithParams(MIXED_PARAMS)
+    expect(wrapper.html()).toContain('Expert')
+
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+    await flushPromises()
+
+    expect(wrapper.html()).not.toContain('Expert')
+  })
+
+  it('keeps a user-picked level across an access.uilevel change', async () => {
+    /* The LevelMenu pick is a per-page override and outranks the
+     * store — otherwise a stray accessUpdate would yank the page
+     * back under the user mid-edit. */
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+
+    const wrapper = await mountWithParams(MIXED_PARAMS)
+    wrapper.findComponent({ name: 'LevelMenu' }).vm.$emit('set-level', 'expert')
+    await flushPromises()
+    expect(wrapper.html()).toContain('Expert')
+
+    access.data = { admin: true, dvr: true, uilevel: 'advanced' }
+    await flushPromises()
+
+    expect(wrapper.html()).toContain('Expert')
+  })
+
+  it('ignores a local override while the admin has pinned the level', async () => {
+    /* config.uilevel_nochange — the LevelMenu's radio renders
+     * disabled, and a pick that slips through must not widen the
+     * page past the server-set cap. */
+    const access = useAccessStore()
+    access.data = {
+      admin: true,
+      dvr: true,
+      uilevel: 'basic',
+      uilevel_nochange: 1,
+    }
+
+    const wrapper = await mountWithParams(MIXED_PARAMS)
+    wrapper.findComponent({ name: 'LevelMenu' }).vm.$emit('set-level', 'expert')
+    await flushPromises()
+
+    expect(wrapper.html()).not.toContain('Expert')
+  })
+})
+
 describe('IdnodeConfigForm — mandatoryFields', () => {
   /* IdnodeConfigForm synthesises `prop.mandatory: true` on the
    * listed field ids inside effectiveProp. IdnodeFieldEnum reads
