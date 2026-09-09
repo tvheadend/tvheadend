@@ -370,7 +370,13 @@ capmt_oscam_netproto(capmt_t *capmt)
 static inline int
 capmt_include_elementary_stream(streaming_component_type_t type)
 {
-  return SCT_ISAV(type) || type == SCT_DVBSUB || type == SCT_TELETEXT;
+  return SCT_ISAV(type) || type == SCT_DVBSUB || type == SCT_TELETEXT
+#if ENABLE_T2MI
+         /* T2-MI / TS piping carrier PIDs must reach the card server,
+          * e.g. for keys bound to the carrier PID */
+         || type == SCT_T2MI
+#endif
+         ;
 }
 
 static int
@@ -2108,6 +2114,9 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   case SCT_HEVC:       type = 0x24; break;
   case SCT_DVBSUB:     type = 0x06; break;
   case SCT_TELETEXT:   type = 0x06; break;
+#if ENABLE_T2MI
+  case SCT_T2MI:       type = 0x06; break;
+#endif
   default:
     if (SCT_ISVIDEO(st->es_type)) type = 0x02;
     else if (SCT_ISAUDIO(st->es_type)) type = 0x04;
@@ -2121,6 +2130,9 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
     /* mark as valid for !multipid - TELETEXT may be shared */
     ct->ct_type_sok[i] = SCT_ISVIDEO(st->es_type) ||
                          SCT_ISAUDIO(st->es_type) ||
+#if ENABLE_T2MI
+                         st->es_type == SCT_T2MI ||
+#endif
                          st->es_type == SCT_DVBSUB;
     return 1;
   }

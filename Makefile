@@ -471,6 +471,13 @@ SRCS-IPTV = \
 SRCS-${CONFIG_IPTV} += $(SRCS-IPTV)
 I18N-C += $(SRCS-IPTV)
 
+# T2-MI decapsulation
+SRCS-T2MI = \
+	src/input/mpegts/t2mi/t2mi.c \
+	src/input/mpegts/t2mi/t2mi_decap.c
+SRCS-${CONFIG_T2MI} += $(SRCS-T2MI)
+I18N-C += $(SRCS-T2MI)
+
 # TSfile
 SRCS-TSFILE = \
 	src/input/mpegts/tsfile/tsfile.c \
