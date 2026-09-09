@@ -52,6 +52,7 @@ import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { useAccessStore } from '@/stores/access'
 import { useDvrConfigStore } from '@/stores/dvrConfig'
 import { useEpgContentTypeStore } from '@/stores/epgContentTypes'
+import { useEpgRawFetch } from '@/composables/useEpgRawFetch'
 import { useI18n } from '@/composables/useI18n'
 import { useResizableDrawerWidth } from '@/composables/useResizableDrawerWidth'
 
@@ -192,6 +193,21 @@ export interface EpgEventDetail {
    * the server-side `create_by_series` endpoint falls back to a
    * title-based AutoRec. Server emits via `api_epg.c:110`. */
   serieslinkUri?: string
+  /* Episode-link URI (per-episode counterpart of `serieslinkUri`,
+   * used by DVR duplicate detection). The grid payload suppresses
+   * internal `tvh://` URIs (`api_epg.c:108`), so the raw section
+   * renders the unfiltered value from `epg/events/raw` instead of
+   * this field. */
+  episodeUri?: string
+  /* Season number (`epnum.s_num`), emitted only when nonzero
+   * (`api_epg.c:163`) — key absence is the matcher's
+   * season-leaf-passes state. */
+  seasonNumber?: number
+  /* New/repeat broadcast flags (`is_new` / `is_repeat`), each
+   * emitted only when set (`api_epg.c:140-142`) — both keys absent
+   * is the state the `new_or_unknown` broadcast_type matches. */
+  new?: number
+  repeat?: number
 }
 
 interface Props {
@@ -772,8 +788,245 @@ watch(
   () => props.event?.eventId,
   () => {
     imageFailed.value = false
-  },
+  }
 )
+
+/* ---- Raw data (expert view level) ----
+ *
+ * The event's fields as the autorec matcher consumes them. The
+ * normal drawer groups display-process the data — one resolved
+ * language per text field, localised genre labels, `extraText()`
+ * collapsing subtitle/summary/description elsewhere in the EPG —
+ * so a rule author cannot tell which field actually holds the
+ * text to match, or that an event carries no DVB genre at all
+ * (source-dependent: e.g. XMLTV events have none, so content-type
+ * filters silently fail there). Switching a channel's EPG source
+ * can therefore silently break an existing rule; this section
+ * makes that visible.
+ *
+ * Data comes from two places:
+ *   - `api/epg/events/raw` (useEpgRawFetch, one-shot): the delta
+ *     the grid payload cannot provide — originating grabber module,
+ *     all-language variants of the text fields + the unfiltered
+ *     episode-link URI (the grid suppresses internal `tvh://`
+ *     ones). Fetched only
+ *     when the section is first expanded for an event: the payload
+ *     repeats every text field in every language, and the section
+ *     is a niche surface even at expert level.
+ *   - The event object the drawer already holds: raw genre codes,
+ *     episode string, serieslink URI, channel UUID.
+ *
+ * Layout is field-major (all language variants of one field
+ * together — a regex fires if ANY variant matches, so they belong
+ * in one glance). Rows render only when populated; every unset
+ * field, fixed-row or not, is named on the single compact "Not
+ * present" line (`rawAbsentFields`). Seeing which fields are
+ * UNPOPULATED is the point, but per-field `{not set}` markers
+ * proved noisy next to the collected line, and the distinction
+ * they implied is untestable at the matcher anyway.
+ *
+ * Values render verbatim (no KodiText) — this is the matcher's
+ * view, not the display view.
+ *
+ * The catch-all at the end surfaces event-object keys this file
+ * does not know (`KNOWN_EVENT_KEYS`), so a future server-side
+ * field appears here with zero client edits. Same idea on the
+ * text fields: `rawTextBlocks` unions the known four with
+ * whatever field names the raw endpoint returns (its serializer
+ * is table-driven server-side).
+ */
+const rawFetch = useEpgRawFetch()
+const rawOpen = ref(false)
+
+/* Collapse + forget on re-target: the section is a per-event
+ * snapshot, and an open section auto-fetching for every event the
+ * user clicks through would defeat the fetch-on-demand design. */
+watch(
+  () => props.event?.eventId,
+  () => {
+    rawOpen.value = false
+    rawFetch.reset()
+  }
+)
+
+function onRawToggle(e: Event): void {
+  const open = (e.currentTarget as HTMLDetailsElement).open
+  rawOpen.value = open
+  if (!open || !props.event || rawFetch.loading.value) return
+  /* Reuse a held payload only when it belongs to the displayed
+   * event; anything else (null, error retry, other event) fetches.
+   * The composable already discards stale completions — this keyed
+   * reuse just makes the gate correct on its own terms. */
+  if (rawFetch.raw.value?.eventId === props.event.eventId) return
+  rawFetch.fetch(props.event.eventId)
+}
+
+/* The four lang_str-backed text fields the matcher iterates, in
+ * the server's serializer order. Unioned with any additional
+ * field names the endpoint returns; empty ones are listed on the
+ * "Not present" line instead of rendering a row. */
+const RAW_TEXT_FIELDS = ['title', 'subtitle', 'summary', 'description']
+
+interface RawTextBlock {
+  name: string
+  variants: { lang: string; text: string }[]
+}
+
+const rawTextBlocks = computed<RawTextBlock[]>(() => {
+  const texts = rawFetch.raw.value?.texts ?? {}
+  const names = [...RAW_TEXT_FIELDS]
+  for (const k of Object.keys(texts)) {
+    if (!names.includes(k)) names.push(k)
+  }
+  return names
+    .map((name) => ({
+      name,
+      variants: Object.entries(texts[name] ?? {}).map(([lang, text]) => ({ lang, text })),
+    }))
+    .filter((block) => block.variants.length > 0)
+})
+
+/* Row labels are the technical field names — matcher leaf names
+ * where the field is matchable (dvr_autorec_expr.c vocabulary),
+ * payload keys otherwise — untranslated: they are the identifiers
+ * a rule author types, not captions. Text rows therefore render
+ * `block.name` directly (payload key == matcher leaf name for all
+ * four, and a server-added field shows its payload name anyway). */
+
+const rawGrabberLine = computed<{ id: string; name?: string } | null>(() => {
+  const r = rawFetch.raw.value
+  if (!r || (!r.grabberId && !r.grabberName)) return null
+  return {
+    id: r.grabberId ?? r.grabberName ?? '',
+    name: r.grabberName !== r.grabberId ? r.grabberName : undefined,
+  }
+})
+
+/* DVB content-type codes as the matcher compares them (the
+ * Classification group shows only the localised labels). The label
+ * rides along muted for orientation. */
+const rawGenreCodes = computed<{ code: string; label?: string }[]>(() =>
+  (props.event?.genre ?? []).map((c) => ({
+    code: `0x${c.toString(16).padStart(2, '0')}`,
+    label: contentTypes.labels.get(c),
+  }))
+)
+
+/* Compact absence line: every matcher-visible field unset on this
+ * event, named in row order. One row instead of a wall of
+ * per-field `{not set}` markers — on sparse sources (EIT) the
+ * markers would drown the populated fields, and mixing marker
+ * rows with a collected line read as two kinds of absence when
+ * there is only one: set-but-empty and key-absent are
+ * indistinguishable to the matcher (the API emits keys only when
+ * populated), so one line covers all of it.
+ *
+ * Absence tests mirror the matcher's own evaluation
+ * (`dvr_autorec_expr.c`): `present(year|season|star_rating)` test
+ * `!= 0` and the API emits those keys only when nonzero;
+ * `broadcast_type` reads is_new/is_repeat, emitted as `new` /
+ * `repeat` only when set — both keys absent is the
+ * "new_or_unknown"-matches state this row makes visible.
+ *
+ * Names are the matcher's `present` vocabulary (payload keys for
+ * the non-matchable episodeOnscreen/episodeUri). Hence `genre`
+ * here while the populated row is labelled `content_type`: each
+ * is the exact token a rule uses in that situation — codes match
+ * via the `content_type` leaf, absence tests via
+ * `present: "genre"`. */
+const rawAbsentFields = computed<string[]>(() => {
+  const ev = props.event
+  const raw = rawFetch.raw.value
+  if (!ev || !raw) return []
+  const texts = raw.texts ?? {}
+  const out: string[] = []
+  if (!Object.keys(texts.title ?? {}).length) out.push('title')
+  if (!Object.keys(texts.subtitle ?? {}).length) out.push('subtitle')
+  if (!Object.keys(texts.summary ?? {}).length) out.push('summary')
+  if (!Object.keys(texts.description ?? {}).length) out.push('description')
+  if (!ev.genre?.length) out.push('genre')
+  if (!ev.episodeOnscreen) out.push('episodeOnscreen')
+  if (!ev.serieslinkUri) out.push('serieslink')
+  if (!raw.episodeUri) out.push('episodeUri')
+  if (!ev.copyright_year) out.push('year')
+  if (ev.seasonNumber === undefined) out.push('season')
+  if (!ev.starRating) out.push('star_rating')
+  if (ev.new === undefined && ev.repeat === undefined) out.push('broadcast_type')
+  /* Rowless fields last: when populated these live in the pretty
+   * groups (credits, keyword and category are lists shown mostly
+   * verbatim there), so the raw section only tracks their absence. */
+  if (!ev.credits || Object.keys(ev.credits).length === 0) out.push('credits')
+  if (!ev.keyword?.length) out.push('keyword')
+  if (!ev.category?.length) out.push('category')
+  return out
+})
+
+/* broadcast_type leaf vocabulary from the new/repeat payload
+ * flags; null (no row) when neither flag is present — that state
+ * is named on the absence line instead. */
+const rawBroadcastType = computed<string | null>(() => {
+  const ev = props.event
+  if (!ev) return null
+  const parts: string[] = []
+  if (ev.new !== undefined) parts.push('new')
+  if (ev.repeat !== undefined) parts.push('repeat')
+  return parts.length ? parts.join(', ') : null
+})
+
+/* Every key of EpgEventDetail this drawer version knows about —
+ * the catch-all below renders anything else the server put in the
+ * event object. Extend together with the interface. */
+const KNOWN_EVENT_KEYS = new Set([
+  'eventId',
+  'title',
+  'subtitle',
+  'summary',
+  'description',
+  'channelName',
+  'channelNumber',
+  'channelUuid',
+  'channelIcon',
+  'start',
+  'stop',
+  'episodeOnscreen',
+  'genre',
+  'hd',
+  'widescreen',
+  'audiodesc',
+  'dvrState',
+  'dvrUuid',
+  'category',
+  'keyword',
+  'starRating',
+  'ageRating',
+  'ratingLabel',
+  'ratingLabelIcon',
+  'copyright_year',
+  'first_aired',
+  'image',
+  'credits',
+  'serieslinkUri',
+  'episodeUri',
+  'seasonNumber',
+  'new',
+  'repeat',
+])
+
+function formatRawValue(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v)
+  if (Array.isArray(v) && v.every((x) => typeof x === 'string' || typeof x === 'number'))
+    return v.join(', ')
+  return JSON.stringify(v)
+}
+
+const rawExtraEntries = computed<{ key: string; value: string }[]>(() => {
+  const ev = props.event
+  if (!ev) return []
+  return Object.entries(ev as unknown as Record<string, unknown>)
+    .filter(([k, v]) => !KNOWN_EVENT_KEYS.has(k) && v !== undefined && v !== null)
+    .map(([k, v]) => ({ key: k, value: formatRawValue(v) }))
+})
 
 function fmtDuration(start: number | undefined, stop: number | undefined): string {
   if (typeof start !== 'number' || typeof stop !== 'number') return ''
@@ -1102,11 +1355,144 @@ const flags = computed(() => {
           />
         </div>
       </details>
+
+      <!--
+        Raw data — expert view level only, collapsed by default;
+        expanding fetches the raw endpoint once per event. Shows the
+        event as the autorec matcher consumes it (see the script-setup
+        block comment for the full rationale). Values are verbatim —
+        no KodiText, no fallback collapsing, explicit markers for
+        unpopulated fields. Row labels are technical field names
+        (matcher leaves / payload keys), deliberately untranslated.
+      -->
+      <details
+        v-if="access.uilevel === 'expert'"
+        class="epg-event-drawer__group epg-event-drawer__group--readonly"
+        :open="rawOpen"
+        @toggle="onRawToggle"
+      >
+        <summary class="epg-event-drawer__group-title">{{ t('Raw data') }}</summary>
+        <div class="epg-event-drawer__group-body">
+          <p v-if="rawFetch.loading.value" class="epg-event-drawer__raw-note">
+            {{ t('Loading…') }}
+          </p>
+          <p v-else-if="rawFetch.error.value" class="epg-event-drawer__raw-note">
+            {{ t('Failed to load raw event data') }}: {{ rawFetch.error.value.message }}
+          </p>
+          <template v-else-if="rawFetch.raw.value">
+            <!-- Field-major text blocks: every language variant of a
+                 field together. Empty fields have no row; they are
+                 named on the "Not present" line below. -->
+            <div
+              v-for="block in rawTextBlocks"
+              :key="block.name"
+              class="ifld epg-event-drawer__raw-row"
+            >
+              <span class="ifld__label">{{ block.name }}</span>
+              <span class="ifld__value">
+                <span class="epg-event-drawer__raw-variants">
+                  <span
+                    v-for="v in block.variants"
+                    :key="v.lang"
+                    class="epg-event-drawer__raw-variant"
+                  >
+                    <span class="epg-event-drawer__raw-lang">{{ v.lang }}</span>
+                    <span class="epg-event-drawer__raw-text">{{ v.text }}</span>
+                  </span>
+                </span>
+              </span>
+            </div>
+            <div v-if="rawGenreCodes.length" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">content_type</span>
+              <span class="ifld__value">
+                <span
+                  v-for="g in rawGenreCodes"
+                  :key="g.code"
+                  class="epg-event-drawer__raw-variant"
+                >
+                  <span class="epg-event-drawer__raw-mono">{{ g.code }}</span>
+                  <span v-if="g.label" class="epg-event-drawer__raw-empty">{{ g.label }}</span>
+                </span>
+              </span>
+            </div>
+            <div v-if="event.episodeOnscreen" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">episodeOnscreen</span>
+              <span class="ifld__value">{{ event.episodeOnscreen }}</span>
+            </div>
+            <div v-if="event.serieslinkUri" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">serieslink</span>
+              <span class="ifld__value epg-event-drawer__raw-mono">{{ event.serieslinkUri }}</span>
+            </div>
+            <div v-if="rawFetch.raw.value.episodeUri" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">episodeUri</span>
+              <span class="ifld__value epg-event-drawer__raw-mono">
+                {{ rawFetch.raw.value.episodeUri }}
+              </span>
+            </div>
+            <!-- Numeric/flag matcher leaves. Other drawer groups
+                 show these formatted (star rating as N / 10 ★);
+                 here they are the verbatim leaf values, labelled
+                 with the leaf tokens. broadcast_type renders the
+                 leaf vocabulary derived from the new/repeat flags.
+                 Guards mirror the absence checks below exactly. -->
+            <div v-if="event.copyright_year" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">year</span>
+              <span class="ifld__value">{{ event.copyright_year }}</span>
+            </div>
+            <div v-if="event.seasonNumber !== undefined" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">season</span>
+              <span class="ifld__value">{{ event.seasonNumber }}</span>
+            </div>
+            <div v-if="event.starRating" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">star_rating</span>
+              <span class="ifld__value">{{ event.starRating }}</span>
+            </div>
+            <div v-if="rawBroadcastType" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">broadcast_type</span>
+              <span class="ifld__value">{{ rawBroadcastType }}</span>
+            </div>
+            <div v-if="event.channelUuid" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">channel</span>
+              <span class="ifld__value epg-event-drawer__raw-mono">{{ event.channelUuid }}</span>
+            </div>
+            <!-- Grabber module id is the technical value; the human
+                 name rides along muted, same idiom as the
+                 content_type codes above. -->
+            <div v-if="rawGrabberLine" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">grabber</span>
+              <span class="ifld__value">
+                <span class="epg-event-drawer__raw-variant">
+                  <span class="epg-event-drawer__raw-mono">{{ rawGrabberLine.id }}</span>
+                  <span v-if="rawGrabberLine.name" class="epg-event-drawer__raw-empty">
+                    {{ rawGrabberLine.name }}
+                  </span>
+                </span>
+              </span>
+            </div>
+            <!-- Catch-all: event-object keys this drawer version does
+                 not know. A field added server-side appears here with
+                 zero client edits. -->
+            <div
+              v-for="entry in rawExtraEntries"
+              :key="entry.key"
+              class="ifld epg-event-drawer__raw-row"
+            >
+              <span class="ifld__label">{{ entry.key }}</span>
+              <span class="ifld__value epg-event-drawer__raw-text">{{ entry.value }}</span>
+            </div>
+            <!-- Last row by design: absence is the footnote to the
+                 data above, not a data row itself. -->
+            <div v-if="rawAbsentFields.length" class="ifld epg-event-drawer__raw-row">
+              <span class="ifld__label">{{ t('Not present') }}</span>
+              <span class="ifld__value epg-event-drawer__raw-empty">
+                {{ rawAbsentFields.join(', ') }}
+              </span>
+            </div>
+          </template>
+        </div>
+      </details>
     </div>
-    <PlayProfileDialog
-      :channel-uuid="playProfileChannel"
-      @close="playProfileChannel = null"
-    />
+    <PlayProfileDialog :channel-uuid="playProfileChannel" @close="playProfileChannel = null" />
     <!--
       Related / alternative showings browser. `event-selected` (dialog
       row double-click) is intentionally not bound — the user is
@@ -1408,6 +1794,67 @@ const flags = computed(() => {
   width: auto;
   vertical-align: middle;
   margin-right: var(--tvh-space-2);
+}
+
+/* ---- Raw data section ----
+ *
+ * Multi-line values (language variants, long URIs) need the label
+ * top-aligned instead of the default center of the shared .ifld
+ * row. */
+.epg-event-drawer__group-body .epg-event-drawer__raw-row {
+  align-items: start;
+}
+
+/* One field's language variants, stacked. */
+.epg-event-drawer__raw-variants {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* One language row: [lang code] verbatim text. Baseline-aligned
+ * so the small code doesn't float against multi-line text. */
+.epg-event-drawer__raw-variant {
+  display: flex;
+  align-items: baseline;
+  gap: var(--tvh-space-2);
+}
+
+/* Language code as stored in the lang_str tree — plain muted
+ * monospace, not the pretty badge chip: the raw section prints
+ * the technical value, not a display treatment. */
+.epg-event-drawer__raw-lang {
+  font-family: ui-monospace, monospace;
+  color: var(--tvh-text-muted);
+}
+
+/* Verbatim value text — preserve the whitespace the matcher sees. */
+.epg-event-drawer__raw-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Identifier-shaped values (genre codes, serieslink URI, channel
+ * UUID) — monospace, breakable so long URIs can't force a
+ * horizontal scroll in a 320 px drawer. */
+.epg-event-drawer__raw-mono {
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+/* Explicit unpopulated / secondary marker. Making empties visible
+ * is the section's founding purpose — a silent gap would repeat
+ * the exact problem it exists to solve. */
+.epg-event-drawer__raw-empty {
+  color: var(--tvh-text-muted);
+  font-style: italic;
+}
+
+/* Loading / error line inside the group. */
+.epg-event-drawer__raw-note {
+  margin: 0;
+  color: var(--tvh-text-muted);
+  font-size: var(--tvh-text-md);
 }
 
 /* Description body — free-form text inside the Description group. */
