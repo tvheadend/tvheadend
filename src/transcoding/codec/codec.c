@@ -38,6 +38,9 @@ extern TVHCodec tvh_codec_flac;
 #if ENABLE_LIBX264
 extern TVHCodec tvh_codec_libx264;
 #endif
+#if ENABLE_LIBSVTAV1
+extern TVHCodec tvh_codec_libsvtav1;
+#endif
 #if ENABLE_LIBX265
 extern TVHCodec tvh_codec_libx265;
 #endif
@@ -272,6 +275,9 @@ tvh_codecs_register()
 
 #if ENABLE_LIBX264
     tvh_codec_register(&tvh_codec_libx264);
+#endif
+#if ENABLE_LIBSVTAV1
+    tvh_codec_register(&tvh_codec_libsvtav1);
 #endif
 #if ENABLE_LIBX265
     tvh_codec_register(&tvh_codec_libx265);
