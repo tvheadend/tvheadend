@@ -88,7 +88,18 @@ mpegts_mux_instance_create0
   return mmi;
 }
 
-static void
+/*
+ * Arm the scan timeout. Nothing else can take a mux out of
+ * MM_SCAN_STATE_ACTIVE on its own: mpegts_mux_scan_done() is reached
+ * either from here or from mpegts_table_fastswitch() once every
+ * MT_QUICKREQ table is complete, and the latter needs the mux to keep
+ * delivering data. Every transition into the active scan queue must
+ * therefore arm this, or the mux stays active for good.
+ *
+ * `mi` may be NULL - mpegts_input_grace() then falls back to its
+ * lower bound.
+ */
+void
 mpegts_mux_scan_timeout_arm ( mpegts_mux_t *mm, mpegts_input_t *mi )
 {
   mtimer_arm_rel(&mm->mm_scan_timeout, mpegts_mux_scan_timeout, mm,
@@ -1356,8 +1367,7 @@ mpegts_mux_set_tsid ( mpegts_mux_t *mm, uint32_t tsid, int force )
   mm->mm_tsid = tsid;
   tvhtrace(LS_MPEGTS, "%s - set tsid %04X (%d)", mm->mm_nicename, tsid, tsid);
   idnode_changed(&mm->mm_id);
-  if (mpegts_network_scan_mux_reactivate(mm))
-    mpegts_mux_scan_timeout_arm(mm, mm->mm_active->mmi_input);
+  mpegts_network_scan_mux_reactivate(mm);
   return 1;
 }
 
