@@ -25,6 +25,7 @@ struct service;
 
 typedef struct svcbuf svcbuf_t;
 typedef struct svcbuf_gate svcbuf_gate_t;
+typedef struct svcbuf_reader svcbuf_reader_t;
 
 /* Service life cycle, s_stream_mutex held */
 void svcbuf_service_start ( struct service *t );
@@ -43,5 +44,16 @@ streaming_target_t *svcbuf_gate_create
 streaming_target_t *svcbuf_gate_stop ( streaming_target_t *pad );
 /* Free a stopped gate, s_stream_mutex not held */
 void svcbuf_gate_destroy ( streaming_target_t *pad );
+
+/* Readers, for clients timeshifting through the cache.  svcbuf_acquire()
+ * takes a reference (s_stream_mutex held), svcbuf_release() drops it. */
+svcbuf_t *svcbuf_acquire ( struct service *t );
+struct service *svcbuf_service ( svcbuf_t *sb );
+int svcbuf_span ( svcbuf_t *sb, int64_t *oldest, int64_t *newest );
+svcbuf_reader_t *svcbuf_reader_create ( svcbuf_t *sb );
+void svcbuf_reader_destroy ( svcbuf_reader_t *r );
+int64_t svcbuf_reader_seek ( svcbuf_reader_t *r, int64_t mono );
+int svcbuf_reader_read ( svcbuf_reader_t *r, pktbuf_t **pb );
+int svcbuf_reader_lost ( svcbuf_reader_t *r );
 
 #endif /* __TVH_TIMESHIFT_SVCBUF_H__ */

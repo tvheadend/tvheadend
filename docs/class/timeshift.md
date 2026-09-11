@@ -21,9 +21,13 @@ the moment it was requested. It works with every stream profile.
 
 The cache holds the channel's stream as received, in the *Storage path*
 (or in RAM with *RAM only*, bounded by *Maximum RAM size*), and is removed
-once nothing watches or records the channel any more. It is separate from
-a client's own timeshift buffer, so a Kodi client pausing live TV keeps
-using its own as before.
+once nothing watches or records the channel any more.
+
+HTSP clients (Kodi) pausing, rewinding or skipping through live TV then use
+that same cache instead of writing a buffer of their own: one cache per
+channel, however many clients and recordings share it. A client paused
+for longer than the cache holds goes on, when it resumes, from a little
+after the oldest data still there.
 
 ---
 

@@ -59,6 +59,8 @@ typedef struct svcbuf_seg {
   int       fd;
   off_t     size;
   int       nblocks;   ///< Blocks stored in it
+  int       readers;   ///< Readers in the middle of a read from it
+  int       dead;      ///< Close once the last reader is out
   char     *path;
 } svcbuf_seg_t;
 
@@ -123,6 +125,16 @@ struct svcbuf {
   int                       run;
   pthread_t                 writer;
   LIST_HEAD(, svcbuf_gate)  gates;
+  LIST_HEAD(, svcbuf_reader) readers;
+};
+
+struct svcbuf_reader {
+  svcbuf_t            *sb;
+  svcbuf_block_t      *blk;     ///< Position (sb->lock); NULL = unset
+  size_t               off;
+  int                  skipped; ///< Its block expired under it (this read)
+  int                  lost;    ///< ... since svcbuf_reader_lost() last asked
+  LIST_ENTRY(svcbuf_reader) link;
 };
 
 static int svcbuf_index;
@@ -208,12 +220,30 @@ svcbuf_read_all ( int fd, uint8_t *data, size_t size, off_t off )
   return 0;
 }
 
+/* Close a segment no block needs any more, once nobody reads from it */
+static void
+svcbuf_seg_release ( svcbuf_t *sb, svcbuf_seg_t *seg )
+{
+  if (seg->readers)
+    seg->dead = 1;
+  else
+    svcbuf_seg_close(sb, seg);
+}
+
 /* Remove a block (sb->lock held) */
 static void
 svcbuf_block_remove ( svcbuf_t *sb, svcbuf_block_t *b )
 {
   svcbuf_block_t *next = TAILQ_NEXT(b, link);
+  svcbuf_reader_t *r;
 
+  /* readers do not hold data back: one still there moves on */
+  LIST_FOREACH(r, &sb->readers, link)
+    if (r->blk == b) {
+      r->blk = next;
+      r->off = 0;
+      r->skipped = r->lost = 1;
+    }
   TAILQ_REMOVE(&sb->blocks, b, link);
   sb->size -= b->size;
   if (sb->cur == b)
@@ -223,7 +253,7 @@ svcbuf_block_remove ( svcbuf_t *sb, svcbuf_block_t *b )
   if (b->seg) {
     b->seg->nblocks--;
     if (b->seg->nblocks == 0 && b->seg != sb->wr_seg)
-      svcbuf_seg_close(sb, b->seg);
+      svcbuf_seg_release(sb, b->seg);
   }
   free(b->data);
   free(b);
@@ -283,7 +313,7 @@ svcbuf_writer ( void *aux )
         seg = sb->wr_seg;
         if (seg == NULL || seg->size + (off_t)b->size > SVCBUF_SEG_SIZE) {
           if (seg && seg->nblocks == 0)
-            svcbuf_seg_close(sb, seg);
+            svcbuf_seg_release(sb, seg);
           seg = sb->wr_seg = svcbuf_seg_open(sb);
         }
         if (seg) {
@@ -443,6 +473,7 @@ svcbuf_service_start ( service_t *t )
   TAILQ_INIT(&sb->blocks);
   TAILQ_INIT(&sb->segs);
   LIST_INIT(&sb->gates);
+  LIST_INIT(&sb->readers);
   streaming_target_init(&sb->input, &svcbuf_input_ops, sb,
                         ~SMT_TO_MASK(SMT_MPEGTS));
   tvh_thread_create(&sb->writer, NULL, svcbuf_writer, sb, "svcbuf-wr");
@@ -725,4 +756,162 @@ svcbuf_gate_destroy ( streaming_target_t *pad )
   tvh_mutex_unlock(&sb->lock);
   svcbuf_unref(sb);
   free(g);
+}
+
+/* **************************************************************************
+ * Readers (timeshift clients)
+ * *************************************************************************/
+
+/* A reference to the channel cache, NULL when it has none
+ * (s_stream_mutex held) */
+svcbuf_t *
+svcbuf_acquire ( service_t *t )
+{
+  svcbuf_t *sb = t->s_svcbuf;
+  if (sb)
+    atomic_add(&sb->refcount, 1);
+  return sb;
+}
+
+service_t *
+svcbuf_service ( svcbuf_t *sb )
+{
+  return sb->service;
+}
+
+/* Monotonic time of the oldest and newest data held, 0 when empty */
+int
+svcbuf_span ( svcbuf_t *sb, int64_t *oldest, int64_t *newest )
+{
+  const svcbuf_block_t *first;
+  const svcbuf_block_t *last;
+  int r = 0;
+
+  tvh_mutex_lock(&sb->lock);
+  first = TAILQ_FIRST(&sb->blocks);
+  last  = TAILQ_LAST(&sb->blocks, svcbuf_block_queue);
+  if (first) {
+    *oldest = first->mono;
+    *newest = last->mono;
+    r = 1;
+  }
+  tvh_mutex_unlock(&sb->lock);
+  return r;
+}
+
+svcbuf_reader_t *
+svcbuf_reader_create ( svcbuf_t *sb )
+{
+  svcbuf_reader_t *r = calloc(1, sizeof(*r));
+  r->sb = sb;
+  atomic_add(&sb->refcount, 1);
+  tvh_mutex_lock(&sb->lock);
+  LIST_INSERT_HEAD(&sb->readers, r, link);
+  tvh_mutex_unlock(&sb->lock);
+  return r;
+}
+
+void
+svcbuf_reader_destroy ( svcbuf_reader_t *r )
+{
+  svcbuf_t *sb = r->sb;
+  tvh_mutex_lock(&sb->lock);
+  LIST_REMOVE(r, link);
+  tvh_mutex_unlock(&sb->lock);
+  svcbuf_unref(sb);
+  free(r);
+}
+
+/* Position at the block holding monotonic time 'mono', or the oldest one
+ * when the cache does not reach back that far; returns the block's time */
+int64_t
+svcbuf_reader_seek ( svcbuf_reader_t *r, int64_t mono )
+{
+  svcbuf_t *sb = r->sb;
+  svcbuf_block_t *b, *pos;
+  int64_t ret = 0;
+
+  tvh_mutex_lock(&sb->lock);
+  pos = TAILQ_FIRST(&sb->blocks);
+  TAILQ_FOREACH(b, &sb->blocks, link) {
+    if (b->mono > mono)
+      break;
+    pos = b;
+  }
+  r->blk = pos;
+  r->off = 0;
+  r->lost = 0;
+  if (pos)
+    ret = pos->mono;
+  tvh_mutex_unlock(&sb->lock);
+  return ret;
+}
+
+/* Next chunk of whole TS packets: 1 with *pb set, 0 at the head (nothing
+ * more yet, or not positioned), -1 on a read error */
+int
+svcbuf_reader_read ( svcbuf_reader_t *r, pktbuf_t **pb )
+{
+  svcbuf_t *sb = r->sb;
+  svcbuf_block_t *b, *nb;
+  svcbuf_seg_t *seg;
+  size_t n;
+  off_t off;
+  int fd, e;
+
+  *pb = NULL;
+  tvh_mutex_lock(&sb->lock);
+  while ((b = r->blk) != NULL) {
+    if (r->off < b->size) {
+      r->skipped = 0;
+      n = MIN(b->size - r->off, SVCBUF_READ_SIZE);
+      *pb = pktbuf_alloc(NULL, n);
+      if (b->data) {
+        memcpy(pktbuf_ptr(*pb), b->data + r->off, n);
+      } else {
+        /* the block may expire meanwhile: hold its segment open */
+        seg = b->seg;
+        seg->readers++;
+        fd  = seg->fd;
+        off = b->off + r->off;
+        tvh_mutex_unlock(&sb->lock);
+        e = svcbuf_read_all(fd, pktbuf_ptr(*pb), n, off);
+        tvh_mutex_lock(&sb->lock);
+        if (--seg->readers == 0 && seg->dead)
+          svcbuf_seg_close(sb, seg);
+        if (e) {
+          tvherror(LS_TIMESHIFT, "svcbuf: read failed: %s", strerror(errno));
+          pktbuf_ref_dec(*pb);
+          *pb = NULL;
+          tvh_mutex_unlock(&sb->lock);
+          return -1;
+        }
+      }
+      if (!r->skipped)   /* not moved on by an expiry meanwhile */
+        r->off += n;
+      tvh_mutex_unlock(&sb->lock);
+      return 1;
+    }
+    if ((nb = TAILQ_NEXT(b, link)) == NULL)
+      break;
+    r->blk = nb;
+    r->off = 0;
+  }
+  tvh_mutex_unlock(&sb->lock);
+  return 0;
+}
+
+/* Whether data was lost under the reader -- its position expired -- since
+ * the last call: what it reads next does not follow on */
+int
+svcbuf_reader_lost ( svcbuf_reader_t *r )
+{
+  svcbuf_t *sb = r->sb;
+  int lost;
+
+  tvh_mutex_lock(&sb->lock);
+  lost = r->lost;
+  r->lost = 0;
+  tvh_mutex_unlock(&sb->lock);
+  return lost;
 }

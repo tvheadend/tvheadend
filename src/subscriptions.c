@@ -31,6 +31,7 @@
 #include "dbus.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift/timeshift_svcbuf.h"
+#include "timeshift/timeshift_svcts.h"
 #endif
 
 struct th_subscription_list subscriptions;
@@ -106,6 +107,9 @@ subscription_link_service(th_subscription_t *s, service_t *t)
       s->ths_output = s->ths_gate = gate;
     s->ths_backfill_from = 0;
   }
+  /* a client timeshifting through the channel cache */
+  if (s->ths_prch && s->ths_prch->prch_svcts)
+    svcts_attach(s->ths_prch->prch_svcts, t);
 #endif
 
   if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
@@ -165,6 +169,8 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int resched)
 #if ENABLE_TIMESHIFT
   if (s->ths_gate)
     s->ths_output = svcbuf_gate_stop(s->ths_gate);
+  if (s->ths_prch && s->ths_prch->prch_svcts)
+    svcts_detach(s->ths_prch->prch_svcts);
 #endif
   if (s->ths_parser)
     s->ths_output = parser_output(s->ths_parser);

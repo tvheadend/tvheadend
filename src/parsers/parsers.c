@@ -120,7 +120,7 @@ parser_update_service(parser_es_t *st)
   const th_subscription_t *s = st->es_parser->prs_subscription;
   const elementary_stream_t *es;
 
-  if (s && s->ths_replaying) {
+  if (st->es_parser->prs_replay || (s && s->ths_replaying)) {
     es = elementary_stream_find(&st->es_service->s_components, st->es_pid);
     if (es == NULL)
       return;
@@ -171,8 +171,9 @@ deliver:
     pkt->v.pkt_aspect_den = st->es_aspect_den;
   }
 
-  /* Forward packet */
-  if(atomic_get(&st->es_service->s_pending_restart) == 1) {
+  /* Forward packet -- a replay parser gets no restart start message to
+   * flush the restart log, so it never queues there */
+  if(!t->prs_replay && atomic_get(&st->es_service->s_pending_restart) == 1) {
     /* Queue pkt to prs_rstlog if pending restart */
     pkt_trace(LS_PARSER, pkt, "deliver to rstlog");
     parser_rstlog(t, pkt);

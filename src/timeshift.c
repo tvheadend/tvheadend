@@ -306,9 +306,10 @@ const idclass_t timeshift_conf_class = {
       .desc   = N_("Keep the last \"Maximum period\" of every tuned "
                    "channel, so a recording started after its programme "
                    "began also gets the part already broadcast, as far "
-                   "back as the cache reaches. Each tuned channel uses "
-                   "its own cache, within the storage path and the "
-                   "maximum size above."),
+                   "back as the cache reaches. HTSP clients timeshift "
+                   "through the same cache instead of a buffer of their "
+                   "own. Each tuned channel uses one cache, within the "
+                   "storage path and the maximum size above."),
       .off    = offsetof(timeshift_conf_t, record_cache),
     },
     {}
