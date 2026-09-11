@@ -27,6 +27,7 @@
 #include "packet.h"
 #include "streaming.h"
 #include "config.h"
+#include "subscriptions.h"
 
 /* parser states */
 #define PARSER_APPEND 0
@@ -107,6 +108,30 @@ parser_rstlog(parser_t *t, th_pkt_t *pkt)
 }
 
 /**
+ * Report new stream parameters to the service.  Data replayed from the
+ * channel cache is older than what the service carries now: it may fill
+ * in parameters the service does not know yet -- start messages need them
+ * -- but must not change known ones and restart the streams under every
+ * subscriber.
+ */
+static void
+parser_update_service(parser_es_t *st)
+{
+  const th_subscription_t *s = st->es_parser->prs_subscription;
+  const elementary_stream_t *es;
+
+  if (st->es_parser->prs_replay || (s && s->ths_replaying)) {
+    es = elementary_stream_find(&st->es_service->s_components, st->es_pid);
+    if (es == NULL)
+      return;
+    if (SCT_ISVIDEO(es->es_type) ? es->es_width && es->es_height
+                                 : es->es_sri != 0)
+      return;
+  }
+  service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
+}
+
+/**
  *
  */
 static void
@@ -146,8 +171,9 @@ deliver:
     pkt->v.pkt_aspect_den = st->es_aspect_den;
   }
 
-  /* Forward packet */
-  if(atomic_get(&st->es_service->s_pending_restart) == 1) {
+  /* Forward packet -- a replay parser gets no restart start message to
+   * flush the restart log, so it never queues there */
+  if(!t->prs_replay && atomic_get(&st->es_service->s_pending_restart) == 1) {
     /* Queue pkt to prs_rstlog if pending restart */
     pkt_trace(LS_PARSER, pkt, "deliver to rstlog");
     parser_rstlog(t, pkt);
@@ -823,7 +849,7 @@ ok:
         tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
                  st->es_index, layer, st->es_audio_version);
         st->es_audio_version = layer;
-        service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
+        parser_update_service(st);
       }
       makeapkt(t, st, buf + i, fsize, dts, duration,
                channels, mpa_sri[(buf[i+2] >> 2) & 3]);
@@ -1127,7 +1153,7 @@ parser_set_stream_vparam(parser_es_t *st, int width, int height,
     st->es_width = width;
     st->es_height = height;
     st->es_frame_duration = duration;
-    service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
+    parser_update_service(st);
   }
 }
 

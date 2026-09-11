@@ -177,6 +177,13 @@ dvr_rec_subscribe(dvr_entry_t *de)
     goto _return;
   }
 
+  /* Started after the programme began (Kodi's record button, typically):
+   * take what the channel's cache still holds, if it is cached -- for
+   * the first file only, a restarted recording already has that part.
+   * The subscription links later, from the reschedule timer. */
+  if (de->de_files == NULL && dvr_entry_get_start_time(de, 0) + 2 < gclk())
+    de->de_s->ths_backfill_from = dvr_entry_get_start_time(de, 0);
+
   de->de_chain = prch;
 
   atomic_set(&de->de_thread_shutdown, 0);
@@ -1370,6 +1377,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   htsmsg_field_t *f;
   muxer_t *muxer;
   struct stat st;
+  time_t start;
   int i;
 
   if (!cfg) {
@@ -1526,11 +1534,19 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
   streaming_start_unref(ss_copy);
 
-  /* update the info field for a filename */
+  /* update the info field for a filename; backfilled from the channel
+   * cache, the file starts with what the cache held (once: a later file
+   * of the same recording starts when it does) */
   if ((f = htsmsg_field_last(de->de_files)) != NULL &&
       (e = htsmsg_field_get_map(f)) != NULL) {
     htsmsg_set_msg(e, "info", info);
-    htsmsg_set_s64(e, "start", gclk());
+    start = gclk();
+    if (de->de_s && de->de_s->ths_backfill_start &&
+        de->de_s->ths_backfill_start < start)
+      start = de->de_s->ths_backfill_start;
+    if (de->de_s)
+      de->de_s->ths_backfill_start = 0;
+    htsmsg_set_s64(e, "start", start);
   } else {
     htsmsg_destroy(info);
   }

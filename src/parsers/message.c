@@ -370,20 +370,38 @@ parser_output(streaming_target_t *pad)
 /**
  * Parser create
  */
-streaming_target_t *
-parser_create(streaming_target_t *output, th_subscription_t *ts)
+static parser_t *
+parser_create0(streaming_target_t *output, service_t *t)
 {
   parser_t *prs = calloc(1, sizeof(parser_t));
-  service_t *t = ts->ths_service;
 
   prs->prs_output = output;
-  prs->prs_subscription = ts;
   prs->prs_service = t;
   TAILQ_INIT(&prs->prs_rstlog);
   elementary_set_init(&prs->prs_components, LS_PARSER, service_nicename(t), t);
   streaming_target_init(&prs->prs_input, &parser_input_ops, prs, 0);
-  return &prs->prs_input;
+  return prs;
+}
 
+streaming_target_t *
+parser_create(streaming_target_t *output, th_subscription_t *ts)
+{
+  parser_t *prs = parser_create0(output, ts->ths_service);
+  prs->prs_subscription = ts;
+  return &prs->prs_input;
+}
+
+/**
+ * Parser for data replayed from the channel cache outside any
+ * subscription (a client timeshifting through it): like replayed data
+ * reaching a subscription, it must not reconfigure the running service
+ */
+streaming_target_t *
+parser_create_replay(streaming_target_t *output, service_t *t)
+{
+  parser_t *prs = parser_create0(output, t);
+  prs->prs_replay = 1;
+  return &prs->prs_input;
 }
 
 /*

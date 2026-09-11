@@ -29,6 +29,10 @@
 #include "input.h"
 #include "intlconv.h"
 #include "dbus.h"
+#if ENABLE_TIMESHIFT
+#include "timeshift/timeshift_svcbuf.h"
+#include "timeshift/timeshift_svcts.h"
+#endif
 
 struct th_subscription_list subscriptions;
 struct th_subscription_list subscriptions_remove;
@@ -90,6 +94,24 @@ subscription_link_service(th_subscription_t *s, service_t *t)
 
   tvh_mutex_lock(&t->s_stream_mutex);
 
+#if ENABLE_TIMESHIFT
+  /* Joining late: start with what the channel cache still holds.  Only
+   * once -- after a reschedule the output already has that part. */
+  if (s->ths_backfill_from) {
+    streaming_target_t *gate =
+      svcbuf_gate_create(t, s->ths_backfill_from, s->ths_output,
+                         &s->ths_replaying, &s->ths_backfill_start,
+                         s->ths_prch && s->ths_prch->prch_sq_used ?
+                           &s->ths_prch->prch_sq : NULL);
+    if (gate)
+      s->ths_output = s->ths_gate = gate;
+    s->ths_backfill_from = 0;
+  }
+  /* a client timeshifting through the channel cache */
+  if (s->ths_prch && s->ths_prch->prch_svcts)
+    svcts_attach(s->ths_prch->prch_svcts, t);
+#endif
+
   if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
     streaming_msg_free(s->ths_start_message);
     ss = service_build_streaming_start(t);
@@ -144,6 +166,12 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int resched)
     t->s_running = 0;
   }
 
+#if ENABLE_TIMESHIFT
+  if (s->ths_gate)
+    s->ths_output = svcbuf_gate_stop(s->ths_gate);
+  if (s->ths_prch && s->ths_prch->prch_svcts)
+    svcts_detach(s->ths_prch->prch_svcts);
+#endif
   if (s->ths_parser)
     s->ths_output = parser_output(s->ths_parser);
 
@@ -151,6 +179,12 @@ subscription_unlink_service0(th_subscription_t *s, int reason, int resched)
 
   LIST_REMOVE(s, ths_service_link);
 
+#if ENABLE_TIMESHIFT
+  if (s->ths_gate) {
+    svcbuf_gate_destroy(s->ths_gate);
+    s->ths_gate = NULL;
+  }
+#endif
   if (s->ths_parser) {
     parser_destroy(s->ths_parser);
     s->ths_parser = NULL;
