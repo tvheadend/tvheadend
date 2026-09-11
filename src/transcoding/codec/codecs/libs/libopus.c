@@ -25,6 +25,28 @@
 
 /* libopus ================================================================== */
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see libopus_validate_layout_and_get_channel_map() in /ffmpeg-6.1.1/libavcodec/libopusenc.c
+static const AVChannelLayout libopus_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_MONO,
+    AV_CHANNEL_LAYOUT_STEREO,
+    AV_CHANNEL_LAYOUT_SURROUND,
+    AV_CHANNEL_LAYOUT_QUAD,
+    AV_CHANNEL_LAYOUT_5POINT0_BACK,
+    { 0 }
+};
+#else
+// see ....
+static const uint64_t libopus_channel_layouts[] = {
+    AV_CH_LAYOUT_MONO,
+    AV_CH_LAYOUT_STEREO,
+    AV_CH_LAYOUT_SURROUND,
+    AV_CH_LAYOUT_QUAD,
+    AV_CH_LAYOUT_5POINT0_BACK,
+    0
+};
+#endif
+
 typedef struct {
     TVHAudioCodecProfile;
     int vbr;
@@ -130,9 +152,11 @@ static const codec_profile_class_t codec_profile_libopus_class = {
 
 
 TVHAudioCodec tvh_codec_libopus = {
-    .name    = "libopus",
-    .size    = sizeof(tvh_codec_profile_libopus_t),
-    .idclass = &codec_profile_libopus_class,
-    .profile_init = tvh_codec_profile_audio_init,
+    .name            = "libopus",
+    .size            = sizeof(tvh_codec_profile_libopus_t),
+    .idclass         = &codec_profile_libopus_class,
+    .profiles        = NULL,
+    .profile_init    = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
+    .channel_layouts = libopus_channel_layouts,
 };

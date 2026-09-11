@@ -22,6 +22,9 @@
 
 #include "descrambler/descrambler.h"
 #include "input/mpegts/dvb.h"
+#if ENABLE_LIBAV
+#include <libavutil/rational.h>
+#endif
 
 /**
  *
@@ -93,13 +96,23 @@ struct elementary_info {
   int16_t es_pid;
   int es_type;
 
-  int es_frame_duration;
+  int64_t es_frame_duration;
 
+  // temporary used for each field
+  int es_width_2b;
+  int es_height_2b;
+  int es_width_12b;
+  int es_height_12b;
+
+  // store the final width,height (after 2bits+12bits concatenation)
   int es_width;
   int es_height;
 
   uint16_t es_aspect_num;
   uint16_t es_aspect_den;
+#if ENABLE_LIBAV
+  AVRational es_sample_aspect_ratio;
+#endif
 
   char es_lang[4];           /* ISO 639 2B 3-letter language code */
   uint8_t es_audio_type;     /* Audio type */
