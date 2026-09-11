@@ -26,6 +26,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#include <net/if.h>
 #include <netdb.h>
 
 #include "tvheadend.h"
@@ -1014,52 +1015,102 @@ tcp_server_delete(void *server)
 }
 
 /**
+ * Get local IP address that would be used to reach a specific target
+ */
+int
+tcp_get_ip_for_target(struct sockaddr_storage *local_ip, 
+                      const struct sockaddr_storage *target_ip, 
+                      int family)
+{
+  int sock;
+  socklen_t socklen;
+  int target_family;
+
+  if (!target_ip || !local_ip)
+    return -1;
+
+  target_family = target_ip->ss_family;
+  if (family != PF_UNSPEC && family != target_family)
+    return -1;
+
+  /* Create a socket of the same family as the target */
+  sock = tvh_socket(target_family, SOCK_DGRAM, 0);
+  if (sock < 0)
+    return -1;
+
+  /* Connect to the target (UDP connect doesn't actually send packets) */
+  if (connect(sock, (struct sockaddr *)target_ip, IP_IN_ADDRLEN(*target_ip)) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  /* Get the local address that the kernel selected for this route */
+  memset(local_ip, 0, sizeof(*local_ip));
+  socklen = sizeof(*local_ip);
+  if (getsockname(sock, (struct sockaddr *)local_ip, &socklen) < 0) {
+    close(sock);
+    return -1;
+  }
+
+  /* Clear the port */
+  if (local_ip->ss_family == AF_INET)
+    IP_AS_V4(local_ip, port) = 0;
+  else if (local_ip->ss_family == AF_INET6)
+    IP_AS_V6(local_ip, port) = 0;
+
+  close(sock);
+  return 0;
+}
+
+/**
  *
  */
 int
 tcp_default_ip_addr ( struct sockaddr_storage *deflt, int family )
 {
+  struct ifaddrs *iflist, *ifdev;
+  struct sockaddr_storage *ifaddr;
+  int target_family;
 
-  struct sockaddr_storage ss;
-  socklen_t ss_len;
-  int sock;
+  target_family = family == PF_UNSPEC ? tcp_preferred_address_family : family;
 
-  memset(&ss, 0, sizeof(ss));
-  ss.ss_family = family == PF_UNSPEC ? tcp_preferred_address_family : family;
-  if (inet_pton(ss.ss_family,
-                ss.ss_family == AF_INET ?
-                  /* Google name servers */
-                  "8.8.8.8" : "2001:4860:4860::8888",
-                IP_IN_ADDR(ss)) <= 0)
+  if (getifaddrs(&iflist) < 0)
     return -1;
 
-  IP_PORT_SET(ss, htons(53));
+  for (ifdev = iflist; ifdev != NULL; ifdev = ifdev->ifa_next) {
+    ifaddr = (struct sockaddr_storage *)(ifdev->ifa_addr);
+    
+    if (!ifaddr || ifaddr->ss_family != target_family)
+      continue;
+      
+    /* Skip loopback interfaces */
+    if (ifdev->ifa_flags & IFF_LOOPBACK)
+      continue;
+      
+    /* Interface must be up and running */
+    if (!(ifdev->ifa_flags & (IFF_UP | IFF_RUNNING)))
+      continue;
+      
+    /* Check for non-any address */
+    if (ip_check_is_any(ifaddr))
+      continue;
 
-  sock = tvh_socket(ss.ss_family, SOCK_STREAM, 0);
-  if (sock < 0)
-    return -1;
-
-  if (connect(sock, (struct sockaddr *)&ss, IP_IN_ADDRLEN(ss)) < 0) {
-    close(sock);
-    return -1;
+    /* Found suitable interface - copy address and clear port */
+    memset(deflt, 0, sizeof(*deflt));
+    memcpy(deflt, ifaddr, 
+           target_family == AF_INET ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6));
+    
+    if (target_family == AF_INET)
+      IP_AS_V4(deflt, port) = 0;
+    else
+      IP_AS_V6(deflt, port) = 0;
+      
+    freeifaddrs(iflist);
+    return 0;
   }
 
-  ss_len = sizeof(ss);
-  if (getsockname(sock, (struct sockaddr *)&ss, &ss_len) < 0) {
-    close(sock);
-    return -1;
-  }
-
-  if (ss.ss_family == AF_INET)
-    IP_AS_V4(&ss, port) = 0;
-  else
-    IP_AS_V6(&ss, port) = 0;
-
-  memset(deflt, 0, sizeof(*deflt));
-  memcpy(deflt, &ss, ss_len);
-
-  close(sock);
-  return 0;
+  freeifaddrs(iflist);
+  return -1;
 }
 
 /**
