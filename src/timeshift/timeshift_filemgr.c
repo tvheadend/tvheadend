@@ -136,7 +136,7 @@ timeshift_filemgr_dump0 ( timeshift_t *ts )
  *
  * TODO: should this be fixed on startup?
  */
-static int
+int
 timeshift_filemgr_get_root ( char *buf, size_t len )
 {
   const char *path = timeshift_conf.path;

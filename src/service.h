@@ -378,6 +378,11 @@ typedef struct service {
    */
   streaming_pad_t s_streaming_pad;
 
+  /**
+   * Channel cache of the running service (timeshift/timeshift_svcbuf.c)
+   */
+  struct svcbuf *s_svcbuf;
+
   tvhlog_limit_t s_tei_log;
 
   /*

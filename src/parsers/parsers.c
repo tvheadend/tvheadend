@@ -27,6 +27,7 @@
 #include "packet.h"
 #include "streaming.h"
 #include "config.h"
+#include "subscriptions.h"
 
 /* parser states */
 #define PARSER_APPEND 0
@@ -104,6 +105,30 @@ parser_rstlog(parser_t *t, th_pkt_t *pkt)
   streaming_message_t *clone = streaming_msg_clone(sm);
   streaming_msg_free(sm);
   TAILQ_INSERT_TAIL (&t->prs_rstlog, clone, sm_link);
+}
+
+/**
+ * Report new stream parameters to the service.  Data replayed from the
+ * channel cache is older than what the service carries now: it may fill
+ * in parameters the service does not know yet -- start messages need them
+ * -- but must not change known ones and restart the streams under every
+ * subscriber.
+ */
+static void
+parser_update_service(parser_es_t *st)
+{
+  const th_subscription_t *s = st->es_parser->prs_subscription;
+  const elementary_stream_t *es;
+
+  if (s && s->ths_replaying) {
+    es = elementary_stream_find(&st->es_service->s_components, st->es_pid);
+    if (es == NULL)
+      return;
+    if (SCT_ISVIDEO(es->es_type) ? es->es_width && es->es_height
+                                 : es->es_sri != 0)
+      return;
+  }
+  service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
 }
 
 /**
@@ -823,7 +848,7 @@ ok:
         tvhtrace(LS_PARSER, "mpeg audio version change %02d: val=%d (old=%d)",
                  st->es_index, layer, st->es_audio_version);
         st->es_audio_version = layer;
-        service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
+        parser_update_service(st);
       }
       makeapkt(t, st, buf + i, fsize, dts, duration,
                channels, mpa_sri[(buf[i+2] >> 2) & 3]);
@@ -1127,7 +1152,7 @@ parser_set_stream_vparam(parser_es_t *st, int width, int height,
     st->es_width = width;
     st->es_height = height;
     st->es_frame_duration = duration;
-    service_update_elementary_stream(st->es_service, (elementary_stream_t *)st);
+    parser_update_service(st);
   }
 }
 

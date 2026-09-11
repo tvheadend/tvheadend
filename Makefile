@@ -484,7 +484,8 @@ SRCS-TIMESHIFT = \
 	src/timeshift.c \
 	src/timeshift/timeshift_filemgr.c \
 	src/timeshift/timeshift_writer.c \
-	src/timeshift/timeshift_reader.c
+	src/timeshift/timeshift_reader.c \
+	src/timeshift/timeshift_svcbuf.c
 SRCS-${CONFIG_TIMESHIFT} += $(SRCS-TIMESHIFT)
 I18N-C += $(SRCS-TIMESHIFT)
 

@@ -110,6 +110,10 @@ typedef struct th_subscription {
 
   streaming_target_t *ths_output;
   streaming_target_t *ths_parser;
+  streaming_target_t *ths_gate;      ///< Replays the channel cache first
+  time_t ths_backfill_from;          ///< Join from this time if cached
+  int ths_replaying;                 ///< Fed from the channel cache, not live
+  time_t ths_backfill_start;         ///< Where the replayed data begins
 
   int ths_flags;
   int ths_timeout;
