@@ -473,6 +473,9 @@ htsmsg_t        *epg_broadcast_serialize   ( epg_broadcast_t *b );
 epg_broadcast_t *epg_broadcast_deserialize
   ( htsmsg_t *m, int create, int *save );
 
+/* Register every broadcast's image with the image cache (global_lock held) */
+void epg_broadcast_images_register ( void );
+
 /* ************************************************************************
  * Channel - provides mapping from EPG channels to real channels
  * ***********************************************************************/
