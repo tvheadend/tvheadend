@@ -78,44 +78,91 @@ gh_flush(globalheaders_t *gh)
 
 
 /**
+ * @brief Initializes stream metadata and ensures a global header exists for the component.
  *
+ * This function extracts essential stream parameters (frame duration, audio channels, 
+ * sample rate, and video aspect ratio) from an incoming packet if they are not already 
+ * defined in the streaming start component (ssc).
+ * * It is primarily responsible for ensuring the 'ssc_gh' (Global Header/Extradata) is 
+ * populated. If the packet contains metadata (pkt_meta), it increments the reference 
+ * count and assigns it. 
+ * * Special Case: AAC/MP4A
+ * If an AAC stream lacks a global header, this function manually constructs a 2-byte 
+ * (or 5-byte for SBR) AudioSpecificConfig (AAC-LC) using the packet's sample rate 
+ * index and channel configuration. This is required for many decoders to initialize 
+ * correctly.
+ *
+ * @param ssc  The streaming start component context to be updated.
+ * @param pkt  The input packet containing raw media data and technical attributes.
+ *
+ * @note This function returns immediately if ssc->ssc_gh is already set.
  */
 static void
 apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 {
+  /* 1. Set the elementary stream (ES) frame duration if it hasn't been initialized 
+        yet (is 0) and the incoming packet has a valid duration. */
   if(ssc->es_frame_duration == 0 && pkt->pkt_duration != 0)
     ssc->es_frame_duration = pkt->pkt_duration;
-
+  /* 2. Audio-specific initialization: 
+        If the stream is an audio type and the channel count hasn't been set yet, 
+        copy the channel count and Sample Rate Indices (SRI) from the packet. */
   if(SCT_ISAUDIO(ssc->es_type) && !ssc->es_channels) {
     ssc->es_channels = pkt->a.pkt_channels;
     ssc->es_sri      = pkt->a.pkt_sri;
     ssc->es_ext_sri  = pkt->a.pkt_ext_sri;
   }
-
+  /* 3. Video-specific initialization:
+        If the stream is a video type and the packet contains aspect ratio information,
+        copy the Sample Aspect Ratio (SAR) and Elementary Stream Aspect Ratio to the component. */
   if(SCT_ISVIDEO(ssc->es_type)) {
     if(pkt->v.pkt_aspect_num && pkt->v.pkt_aspect_den) {
+#if ENABLE_LIBAV
+      ssc->es_sample_aspect_ratio.num = pkt->v.pkt_sample_aspect_ratio.num;
+      ssc->es_sample_aspect_ratio.den = pkt->v.pkt_sample_aspect_ratio.den;
+#endif
       ssc->es_aspect_num = pkt->v.pkt_aspect_num;
       ssc->es_aspect_den = pkt->v.pkt_aspect_den;
     }
   }
-
+  /* 4. Global Header (Extradata) Check:
+        If the streaming component already has a global header initialized, 
+        there is no further work to do. */
   if(ssc->ssc_gh != NULL)
     return;
-
+  /* 5. Apply existing packet metadata as the global header:
+        If the packet contains metadata, assign it to the component's global header 
+        and increment the reference counter for the packet buffer to prevent it from 
+        being freed prematurely. */
   if(pkt->pkt_meta != NULL) {
     ssc->ssc_gh = pkt->pkt_meta;
     pktbuf_ref_inc(ssc->ssc_gh);
     return;
   }
-
+  /* 6. Synthesize AAC AudioSpecificConfig:
+        If there was no packet metadata, but the stream is AAC/MP4A, we must manually 
+        generate the MPEG-4 AudioSpecificConfig header required by decoders. */
   if (ssc->es_type == SCT_MP4A || ssc->es_type == SCT_AAC) {
+    /* Allocate 5 bytes if an extended Sample Rate Index (SBR/HE-AAC) exists, otherwise 2 bytes. */
     ssc->ssc_gh = pktbuf_alloc(NULL, pkt->a.pkt_ext_sri ? 5 : 2);
     uint8_t *d = pktbuf_ptr(ssc->ssc_gh);
-
+    /* Hardcode the Audio Object Type to 2 (AAC-LC - Low Complexity) */
     const int profile = 2; /* AAC LC */
+    /* Byte 0: 
+       - Top 5 bits: Audio Object Type (profile << 3)
+       - Bottom 3 bits: Top 3 bits of the 4-bit Sample Rate Index (SRI) */
     d[0] = (profile << 3) | ((pkt->a.pkt_sri & 0xe) >> 1);
+    /* Byte 1:
+       - Top 1 bit: Bottom 1 bit of the 4-bit SRI
+       - Next 4 bits: Channel Configuration (channels << 3)
+       - Bottom 3 bits: 0 (Frame length, DependsOnCoreCoder, ExtensionFlag) */
     d[1] = ((pkt->a.pkt_sri & 0x1) << 7) | (pkt->a.pkt_channels << 3);
+    /* Bytes 2-4: SBR (Spectral Band Replication) Extension signaling for HE-AAC */
     if (pkt->a.pkt_ext_sri) { /* SBR extension */
+      /* Byte 4:
+         - Top 1 bit: 1 (signals SBR is present)
+         - Next 4 bits: The extended Sample Rate Index
+         - Bottom 3 bits: 0 */
       d[2] = 0x56;
       d[3] = 0xe5;
       d[4] = 0x80 | ((pkt->a.pkt_ext_sri - 1) << 3);
@@ -125,7 +172,27 @@ apply_header(streaming_start_component_t *ssc, th_pkt_t *pkt)
 
 
 /**
+ * @brief Validates if sufficient metadata has been collected to initialize the stream.
  *
+ * This function checks the streaming start component (ssc) to ensure that all 
+ * critical parameters required by decoders or muxers have been populated. 
+ * It prevents the stream from starting prematurely with incomplete headers.
+ *
+ * @param ssc           The streaming start component context to validate.
+ * @param not_so_picky  Flag to relax validation. If non-zero, the function will 
+ * ignore missing video dimensions (width/height) and aspect 
+ * ratios, which is useful for certain "raw" or passthrough 
+ * scenarios.
+ *
+ * @return int          Returns 1 if the metadata is complete and the stream can 
+ * proceed; returns 0 if more information is required.
+ *
+ * @note Validation criteria include:
+ * - Existence of frame duration for both audio and video.
+ * - Presence of audio channel configuration for audio streams.
+ * - (If picky) Presence of width, height, and aspect ratio for video streams.
+ * - Presence of a Global Header (extradata) if the codec type requires it 
+ * (checked via gh_require_meta).
  */
 static int
 header_complete(streaming_start_component_t *ssc, int not_so_picky)
@@ -153,47 +220,105 @@ header_complete(streaming_start_component_t *ssc, int not_so_picky)
 
 
 /**
+ * @brief Calculates the time duration (delay) represented by packets in the hold queue.
+ * * This function determines the time spread between the earliest and latest queued 
+ * packets for a specific stream component (identified by `index`). It does this by 
+ * scanning the queue from both ends to find the first and last packets belonging to 
+ * the target stream that have valid Decoding Time Stamps (DTS), and computing the 
+ * difference while accounting for timestamp wraparound.
  *
+ * @param gh Pointer to the global headers context containing the packet hold queue.
+ * @param index The elementary stream (ES) index to calculate the delay for.
+ * @return int64_t The calculated time difference (delay) in DTS units. Returns 0 if 
+ * valid timestamps aren't found, or 1 for special payloadless transcode packets.
  */
 static int64_t
 gh_queue_delay(globalheaders_t *gh, int index)
 {
+  /* Initialize pointers to the first (head) and last (tail) elements of the hold queue */
   th_pktref_t *f = TAILQ_FIRST(&gh->gh_holdq);
   th_pktref_t *l = TAILQ_LAST(&gh->gh_holdq, th_pktref_queue);
   streaming_start_component_t *ssc;
   int64_t diff;
+  int8_t found_f = 0, found_l = 0;
 
   /*
    * Find only packets which require the meta data. Ignore others.
    */
+  /*
+   * 1. Forward Search: Find the EARLIEST packet in the queue for this stream.
+   * Iterate from the front of the queue towards the back. We are looking for the 
+   * first packet that has a valid DTS and belongs to the requested stream index.
+   */
   while (f != l) {
     if (f->pr_pkt->pkt_dts != PTS_UNSET) {
+      /* Retrieve the stream component context using the packet's internal component index */
       ssc = streaming_start_component_find_by_index
               (gh->gh_ss, f->pr_pkt->pkt_componentindex);
-      if (ssc && ssc->es_index == index)
+      /* If the packet belongs to the requested elementary stream index, stop searching */
+      if (ssc && ssc->es_index == index){
+        found_f = 1;
         break;
+      }
     }
+    /* Move to the next packet in the queue */
     f = TAILQ_NEXT(f, pr_link);
   }
+  /*
+   * 2. Backward Search: Find the LATEST packet in the queue for this stream.
+   * Iterate from the back of the queue towards the front. Stop when we find the 
+   * last packet matching our stream index with a valid DTS.
+   */
   while (l != f) {
     if (l->pr_pkt->pkt_dts != PTS_UNSET) {
       ssc = streaming_start_component_find_by_index
               (gh->gh_ss, l->pr_pkt->pkt_componentindex);
-      if (ssc && ssc->es_index == index)
+      if (ssc && ssc->es_index == index){
+        found_l = 1;
         break;
+      }
     }
+    /* Move to the previous packet in the queue */
     l = TAILQ_PREV(l, th_pktref_queue, pr_link);
   }
-
+  /* * 3. Calculate Delay Difference:
+   * If both a first and last packet with valid timestamps were found, compute the delay.
+   */
   if (l->pr_pkt->pkt_dts != PTS_UNSET && f->pr_pkt->pkt_dts != PTS_UNSET) {
-    diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
+    /* Mask the DTS values (usually 33-bit for MPEG-TS) to drop overflow bits, 
+       then subtract the early timestamp from the late timestamp. */
+    if (found_f && found_l) {
+      /* Calculate raw difference */
+      diff = (l->pr_pkt->pkt_dts & PTS_MASK) - (f->pr_pkt->pkt_dts & PTS_MASK);
+    } else {
+        return 0;
+    }
+    /* Handle Timestamp Rollover/Wraparound: 
+       If the difference is negative, the timestamp counter rolled over its maximum 
+       value (PTS_MASK+1) between the first and last packet. Add the mask to correct it. */
     if (diff < 0)
-      diff += PTS_MASK;
+      /* When a 33-bit counter overflows (wraps around), it goes from the maximum value back to 0. 
+        The total number of unique values in that clock cycle is 233, which is PTS_MASK + 1.*/
+      diff += (int64_t)PTS_MASK + 1;
+    /*  The V4L2/Discontinuity Fix:
+        If the diff is greater than half the mask (roughly 13 hours),
+        it means f was actually significantly ahead of l. 
+        This is usually a startup discontinuity. */
+    if (diff > (PTS_MASK >> 1)) {
+      diff = 0; 
+    }
   } else {
+    /* If no valid matching packets were found, there is no determinable delay. */
     diff = 0;
   }
 
   /* special noop packet from transcoder, increase decision limit */
+  /* * 4. Edge Case - Empty Transcoder Packet:
+   * special noop packet from transcoder, increase decision limit.
+   * If the queue resolved to a single packet (first == last) and it has no actual 
+   * media payload, artificially return a delay of 1. This prevents the system from 
+   * treating it as a standard zero-delay scenario.
+   */
   if (l == f && l->pr_pkt->pkt_payload == NULL)
     return 1;
 

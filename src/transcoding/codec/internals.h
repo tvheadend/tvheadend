@@ -212,6 +212,11 @@
 #define VAAPI_DEINT_MODE_MADI    3
 #define VAAPI_DEINT_MODE_MCDI    4
 
+#define NVDEC_DEINT_MODE_SEND_FRAME                 0
+#define NVDEC_DEINT_MODE_SEND_FIELD                 1
+#define NVDEC_DEINT_MODE_SEND_FRAME_NONSPATIAL      2
+#define NVDEC_DEINT_MODE_SEND_FIELD_NONSPATIAL      3
+
 
 /* codec_profile_class ====================================================== */
 
@@ -415,6 +420,18 @@ typedef struct tvh_codec_profile_video {
      * 4 - Use the motion compensated deinterlacing algorithm
      */
     int deinterlace_vaapi_mode;
+
+    /**
+     * NVDEC Deinterlace mode [yadif_cuda mode parameter]
+     * https://ffmpeg.org/ffmpeg-filters.html#yadif_005fcuda
+     * @note
+     * int:
+     * 0 - send_frame: (default) Output one frame for each frame.
+     * 1 - send_field: Output one frame for each field. 
+     * 2 - send_frame_nospatial: Like send_frame, but it skips the spatial interlacing check.
+     * 3 - send_field_nospatial: Like send_field, but it skips the spatial interlacing check. 
+     */
+    int deinterlace_nvdec_mode;
 
     int height;
     /**

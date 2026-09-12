@@ -4199,7 +4199,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     htsmsg_add_s64(m, "dts", dts);
   }
 
-  uint32_t dur = hs->hs_90khz ? pkt->pkt_duration : ts_rescale(pkt->pkt_duration, 1000000);
+  uint32_t dur = (uint32_t) (hs->hs_90khz ? ((pkt->pkt_duration > INT_MAX) ? INT_MAX : (int)pkt->pkt_duration) : ts_rescale(pkt->pkt_duration, 1000000));
   htsmsg_add_u32(m, "duration", dur);
 
   /**
@@ -4323,7 +4323,8 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
       if(ssc->es_height)
         htsmsg_add_u32(c, "height", ssc->es_height);
       if(ssc->es_frame_duration)
-        htsmsg_add_u32(c, "duration", hs->hs_90khz ? ssc->es_frame_duration :
+      
+        htsmsg_add_u32(c, "duration", hs->hs_90khz ? ((ssc->es_frame_duration > INT_MAX) ? INT_MAX : (int)ssc->es_frame_duration) :
                        ts_rescale(ssc->es_frame_duration, 1000000));
       if (ssc->es_aspect_num)
         htsmsg_add_u32(c, "aspect_num", ssc->es_aspect_num);
