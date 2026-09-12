@@ -25,7 +25,7 @@
 #include "muxer/muxer_mkv.h"
 #include "muxer/muxer_pass.h"
 #include "muxer/muxer_audioes.h"
-#if CONFIG_LIBAV
+#if ENABLE_LIBAV
 #include "muxer/muxer_libav.h"
 #endif
 
@@ -332,7 +332,7 @@ muxer_create(muxer_config_t *m_cfg, muxer_hints_t *hints)
   if(!m)
     m = audioes_muxer_create(m_cfg, hints);
 
-#if CONFIG_LIBAV
+#if ENABLE_LIBAV
   if(!m)
     m = lav_muxer_create(m_cfg, hints);
 #endif
