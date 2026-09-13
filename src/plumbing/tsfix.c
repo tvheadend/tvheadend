@@ -99,6 +99,18 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
 }
 
 /**
+ * Offset of a timestamp from the 33 bit reference clock, folded into
+ * [0, PTS_MASK]. The wrap of the result is compensated by the
+ * tfs_dts_epoch handling in normalize_ts().
+ */
+static int64_t
+tsfix_ts_offset(int64_t ref, int64_t ts)
+{
+  return (ts - ref) & PTS_MASK;
+}
+
+
+/**
  *
  */
 static void
@@ -238,12 +250,13 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   /* Subtract the transport wide start offset */
   if (tf->dts_offset_apply)
-    dts = pts_diff(ref, pkt->pkt_dts + tf->dts_offset);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts + tf->dts_offset);
   else
-    dts = pts_diff(ref, pkt->pkt_dts);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
-    if (dts < 0 || pkt->pkt_err) {
+    /* Timestamps before the reference clock fold to the top of the range */
+    if (dts > PTS_MASK / 2 || pkt->pkt_err) {
       /* Early packet with negative time stamp, drop those */
       tsfix_packet_drop(tfs, pkt, "negative/error");
       return;
