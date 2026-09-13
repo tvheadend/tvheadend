@@ -90,8 +90,8 @@ void epg_genre_list_destroy   ( epg_genre_list_t *list );
 
 /* Add to list */
 int epg_genre_list_add        ( epg_genre_list_t *list, epg_genre_t *genre );
-int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit );
-int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str, const char *lang );
+int epg_genre_list_add_by_eit ( epg_genre_list_t **list, uint8_t eit );
+int epg_genre_list_add_by_str ( epg_genre_list_t **list, const char *str, const char *lang );
 
 /* Search */
 int epg_genre_list_contains

@@ -1854,14 +1854,14 @@ epg_broadcast_t *epg_broadcast_deserialize
     *save |= epg_broadcast_set_image(ebc, str, &changes);
 
   if ((hm = htsmsg_get_list(m, "genre"))) {
-    epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
+    epg_genre_list_t *egl = NULL;
     HTSMSG_FOREACH(f, hm) {
-      epg_genre_t genre;
-      genre.code = (uint8_t)f->hmf_s64;
-      epg_genre_list_add(egl, &genre);
+      epg_genre_list_add_by_eit(&egl, (uint8_t)f->hmf_s64);
     }
-    *save |= epg_broadcast_set_genre(ebc, egl, &changes);
-    epg_genre_list_destroy(egl);
+    if (egl) {
+      *save |= epg_broadcast_set_genre(ebc, egl, &changes);
+      epg_genre_list_destroy(egl);
+    }
   }
 
   if ((ls = lang_str_deserialize(m, "tit"))) {
@@ -1924,8 +1924,8 @@ epg_broadcast_t *epg_broadcast_deserialize
 // that relates more to broadcast content than what I call a "genre"
 // these will be handled elsewhere as broadcast metadata
 
-// Reference (Sept 2016):
-// http://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.11.01_60/en_300468v011101p.pdf
+// Reference (June 2026):
+// https://www.etsi.org/deliver/etsi_en/300400_300499/300468/01.20.00_20/en_300468v012000a.pdf
 
 #define C_ (const char *[])
 static const char **_epg_genre_names[16][16] = {
@@ -2197,11 +2197,12 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
     g2->code = genre->code;
     LIST_INSERT_HEAD(list, g2, link);
   } else {
-    while (g1) {
-
+    LIST_FOREACH(g2, list, link) {
       /* Already exists */
-      if (g1->code == genre->code) return 0;
-
+      if (g2->code == genre->code) return 0;
+      if ((g2->code & 0xF0) == genre->code) return 0;
+    }
+    while (g1) {
       /* Update a major only entry */
       if (g1->code == (genre->code & 0xF0)) {
         g1->code = genre->code;
@@ -2231,18 +2232,23 @@ int epg_genre_list_add ( epg_genre_list_t *list, epg_genre_t *genre )
   return 1;
 }
 
-int epg_genre_list_add_by_eit ( epg_genre_list_t *list, uint8_t eit )
+int epg_genre_list_add_by_eit ( epg_genre_list_t **list, uint8_t eit )
 {
+  if (eit >= 0xB0) return 0; // 0xB0 is the start of the 'Special Characteristics' block.
   epg_genre_t g;
   g.code = eit;
-  return epg_genre_list_add(list, &g);
+  if (*list == NULL)
+    *list = calloc(1, sizeof(epg_genre_list_t));
+  return epg_genre_list_add(*list, &g);
 }
 
-int epg_genre_list_add_by_str ( epg_genre_list_t *list, const char *str, const char *lang )
+int epg_genre_list_add_by_str ( epg_genre_list_t **list, const char *str, const char *lang )
 {
   epg_genre_t g;
   g.code = _epg_genre_find_by_name(str, lang);
-  return epg_genre_list_add(list, &g);
+  if (*list == NULL)
+    *list = calloc(1, sizeof(epg_genre_list_t));
+  return epg_genre_list_add(*list, &g);
 }
 
 // Note: if partial=1 and genre is a major only category then all minor
@@ -2262,6 +2268,7 @@ int epg_genre_list_contains
 
 void epg_genre_list_destroy ( epg_genre_list_t *list )
 {
+  if (!list) return;
   epg_genre_t *g;
   while ((g = LIST_FIRST(list))) {
     LIST_REMOVE(g, link);
