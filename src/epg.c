@@ -1496,19 +1496,32 @@ int epg_broadcast_set_genre
   ( epg_broadcast_t *b, epg_genre_list_t *genre, epg_changes_t *changed )
 {
   int save = 0;
-  epg_genre_t *g1, *g2;
+  epg_genre_t *g1, *g2, *last = NULL;
 
   if (!b) return 0;
 
   if (changed) *changed |= EPG_CHANGED_GENRE;
 
-  g1 = LIST_FIRST(&b->genre);
+  /* Its own list: nothing to change, and it must not be emptied below
+   * while it is searched */
+  if (genre == &b->genre) return 0;
 
-  /* Remove old */
+  g1 = LIST_FIRST(&b->genre);
+  LIST_INIT(&b->genre);
+
+  /* Remove old: relink the entries still wanted, in order, and free the
+   * others.  Same result as unlinking them in place, but the list head is
+   * rewritten explicitly: static analysers do not follow LIST_REMOVE()
+   * updating it through le_prev, and took the head for a freed entry. */
   while (g1) {
     g2 = LIST_NEXT(g1, link);
-    if (!epg_genre_list_contains(genre, g1, 0)) {
-      LIST_REMOVE(g1, link);
+    if (epg_genre_list_contains(genre, g1, 0)) {
+      if (last)
+        LIST_INSERT_AFTER(last, g1, link);
+      else
+        LIST_INSERT_HEAD(&b->genre, g1, link);
+      last = g1;
+    } else {
       free(g1);
       save = 1;
     }
