@@ -215,6 +215,8 @@ http_xmltv_programme_one_long(const http_connection_t *hc,
       htsbuf_append_and_escape_xml(hq, ebc->image);
       htsbuf_append_str(hq, "\"/>\n");
   }
+  if (ebc->copyright_year > 0)
+    htsbuf_qprintf(hq, "  <date>%04d</date>\n", (int)ebc->copyright_year);
   if (ebc->credits) {
     htsbuf_append_str(hq, "  <credits>\n");
     htsmsg_field_t *f;
@@ -495,3 +497,4 @@ page_xmltv(http_connection_t *hc, const char *remain, void *opaque)
 
   return r;
 }
+
