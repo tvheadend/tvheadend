@@ -202,6 +202,33 @@ const idclass_t tvhdhomerun_device_class =
     },
     {
       .type     = PT_STR,
+      .id       = "fe_override",
+      .name     = N_("Network type"),
+      .opts     = PO_SORTKEY,
+      .set      = tvhdhomerun_device_class_override_set,
+      .notify   = tvhdhomerun_device_class_override_notify,
+      .list     = tvhdhomerun_device_class_override_enum,
+      .off      = offsetof(tvhdhomerun_device_t, hd_type),
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "fullmux_ok",
+      .name     = N_("Full mux RX mode supported"),
+      .desc     = N_("Enable or disable full mux mode."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(tvhdhomerun_device_t, hd_fullmux_ok),
+    },
+    {
+      .type     = PT_INT,
+      .id       = "pids_max",
+      .name     = N_("Maximum PIDs"),
+      .desc     = N_("Set the maxiumum packet identifiers your HDHomeRun "
+                     "server supports."),
+      .opts     = PO_ADVANCED,
+      .off      = offsetof(tvhdhomerun_device_t, hd_pids_max),
+    },
+    {
+      .type     = PT_STR,
       .id       = "networkType",
       .name     = N_("Network"),
       .opts     = PO_RDONLY | PO_NOSAVE,
@@ -234,16 +261,6 @@ const idclass_t tvhdhomerun_device_class =
       .name     = N_("Device model"),
       .opts     = PO_RDONLY | PO_NOSAVE,
       .off      = offsetof(tvhdhomerun_device_t, hd_info.deviceModel),
-    },
-    {
-      .type     = PT_STR,
-      .id       = "fe_override",
-      .name     = N_("Network type"),
-      .opts     = PO_ADVANCED,
-      .set      = tvhdhomerun_device_class_override_set,
-      .notify   = tvhdhomerun_device_class_override_notify,
-      .list     = tvhdhomerun_device_class_override_enum,
-      .off      = offsetof(tvhdhomerun_device_t, hd_type),
     },
     {}
   }
@@ -350,9 +367,7 @@ static void tvhdhomerun_device_create(struct hdhomerun_discover_device_t *dInfo)
 
   /* some sane defaults */
   hd->hd_fullmux_ok  = 1;
-  hd->hd_pids_len    = 127;
-  hd->hd_pids_max    = 32;
-  hd->hd_pids_deladd = 1;
+  hd->hd_pids_max    = 128;
 
   if (!tvh_hardware_create0((tvh_hardware_t*)hd, &tvhdhomerun_device_class,
                             uhex, conf))
