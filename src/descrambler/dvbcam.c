@@ -417,7 +417,8 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
 #endif
   if (r >= 0) {
 #if ENABLE_DDCI
-    if (capmt_len >= 3 && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+    if (capmt_len >= 3 && ac->ca &&
+        ac->ca->lca_transport && ac->ca->lca_transport->lddci)
       linuxdvb_ddci_mtd_arm_eit(ac->ca->lca_transport->lddci,
                                    (service_t *)s, capmt[0],
                                    ((uint16_t)capmt[1] << 8) | capmt[2]);
@@ -451,7 +452,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
         capmt_pid_mapper_t pmap = NULL;
         capmt_sid_mapper_t smap = NULL;
         dvbcam_mtd_remap_ctx_t remap_ctx;
-        linuxdvb_transport_t *lcat = ac->ca->lca_transport;
+        linuxdvb_transport_t *lcat = ac->ca ? ac->ca->lca_transport : NULL;
 
         if (lcat && lcat->lddci) {
           int ctx_idx = linuxdvb_ddci_mtd_ctx_for_service(lcat->lddci, td->td_service);
@@ -480,7 +481,8 @@ dvbcam_service_destroy(th_descrambler_t *td)
 #endif
       if (r >= 0) {
 #if ENABLE_DDCI
-        if (capmt_len >= 3 && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+        if (capmt_len >= 3 && ac->ca &&
+            ac->ca->lca_transport && ac->ca->lca_transport->lddci)
           linuxdvb_ddci_mtd_arm_eit(ac->ca->lca_transport->lddci,
                                        td->td_service, capmt[0],
                                        ((uint16_t)capmt[1] << 8) | capmt[2]);
