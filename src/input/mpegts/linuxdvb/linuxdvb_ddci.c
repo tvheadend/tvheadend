@@ -248,7 +248,7 @@ struct linuxdvb_ddci
  * ------------------------------------------------------------------- */
 
 static int
-linuxdvb_ddci_find_mux_ctx ( linuxdvb_ddci_t *lddci, mpegts_mux_t *mm )
+linuxdvb_ddci_find_mux_ctx ( const linuxdvb_ddci_t *lddci, const mpegts_mux_t *mm )
 {
   int i;
   for (i = 0; i < lddci->lddci_mux_ctx_count; i++)
@@ -273,7 +273,7 @@ linuxdvb_ddci_find_mux_ctx_id ( linuxdvb_ddci_t *lddci, int ctx_id )
  * entry supplies the cadence, and another context takes over automatically if
  * it disappears. */
 static int
-linuxdvb_ddci_cat_emm_owner_ctx_locked ( linuxdvb_ddci_t *lddci )
+linuxdvb_ddci_cat_emm_owner_ctx_locked ( const linuxdvb_ddci_t *lddci )
 {
   return lddci->lddci_mux_ctx_count > 0 ? lddci->lddci_mux_ctx[0].ctx_id : -1;
 }
@@ -312,7 +312,7 @@ linuxdvb_ddci_alloc_mux_slot_locked ( linuxdvb_ddci_t *lddci )
 }
 
 static int
-linuxdvb_ddci_find_svc_ctx ( linuxdvb_ddci_t *lddci, service_t *t )
+linuxdvb_ddci_find_svc_ctx ( const linuxdvb_ddci_t *lddci, const service_t *t )
 {
   int i;
   for (i = 0; i < lddci->lddci_svc_ctx_count; i++)
@@ -547,7 +547,7 @@ linuxdvb_ddci_map_pid_for_service_locked ( linuxdvb_ddci_t *lddci,
  * synthetic PID ownership alone identifies which decrypted packets belong
  * to each real mux. */
 static uint16_t
-linuxdvb_ddci_unmap_pid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t uniq_pid )
+linuxdvb_ddci_unmap_pid ( const linuxdvb_ddci_t *lddci, int ctx_id, uint16_t uniq_pid )
 {
   uint32_t owner;
 
@@ -852,7 +852,7 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
    * version even when its effective descriptor set had not changed. */
   for (j = 1; j <= LDDCI_MTD_SLOT_MAX; j++) {
     int ctx_idx = linuxdvb_ddci_find_mux_ctx_slot(lddci, j);
-    linuxdvb_ddci_cat_reasm_t *r;
+    const linuxdvb_ddci_cat_reasm_t *r;
     int pos;
     int end;
     if (ctx_idx < 0)
@@ -1596,7 +1596,7 @@ linuxdvb_ddci_read_thread ( void *arg )
     if (sb.sb_ptr > 0) {
       int len;
       int skip;
-      uint8_t *tsb;
+      const uint8_t *tsb;
 
       len = sb.sb_ptr;
       if (len < LDDCI_MIN_TS_PKT)
