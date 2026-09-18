@@ -704,7 +704,9 @@ linuxdvb_ddci_cat_process ( linuxdvb_ddci_t *lddci, int ctx_id,
 
   } else {
     const uint8_t *payload;
-    int avail, need, n;
+    int avail;
+    int need;
+    int n;
 
     if (r->npkts == 0 || r->have >= r->seclen) {
       /* nothing in progress - stray continuation packet, forward as-is */
@@ -828,7 +830,11 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
   uint8_t sec[LDDCI_CAT_MAX_SECTION];
   int owner_ctx = linuxdvb_ddci_cat_emm_owner_ctx_locked(lddci);
   int owner_idx = linuxdvb_ddci_find_mux_ctx_id(lddci, owner_ctx);
-  int i, j, n = 8, npkts, off;
+  int i;
+  int j;
+  int n = 8;
+  int npkts;
+  int off;
   uint32_t h = 2166136261U;
 
   if (owner_idx < 0 || !lddci->lddci_mux_ctx[owner_idx].ctx_cat.cache_valid)
@@ -847,7 +853,8 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
   for (j = 1; j <= LDDCI_MTD_SLOT_MAX; j++) {
     int ctx_idx = linuxdvb_ddci_find_mux_ctx_slot(lddci, j);
     linuxdvb_ddci_cat_reasm_t *r;
-    int pos, end;
+    int pos;
+    int end;
     if (ctx_idx < 0)
       continue;
     r = &lddci->lddci_mux_ctx[ctx_idx].ctx_cat;
@@ -1172,7 +1179,8 @@ linuxdvb_ddci_send_buffer_put
     /* Note: This debug output will work only for one DD CI instance! */
     {
       static uint8_t pid_seen[ 8192];
-      int pid, idx = 0;
+      int pid;
+      int idx = 0;
 
       while (idx < len) {
         pid = (tsb[idx+1] & 0x1f) << 8 | tsb[idx+2];
@@ -1564,7 +1572,10 @@ linuxdvb_ddci_read_thread ( void *arg )
   tvhtrace(LS_DDCI, "CAM %s read thread started", ci_id);
   linuxdvb_ddci_thread_signal(ddci_thread);
   while (tvheadend_is_running() && !ddci_thread->lddci_thread_stop) {
-    int nfds, num_pkg, pkg_chk = 0, scrambled = 0;
+    int nfds;
+    int num_pkg;
+    int pkg_chk = 0;
+    int scrambled = 0;
     ssize_t n;
 
     nfds = tvhpoll_wait(efd, ev, 1, 150);
@@ -1583,7 +1594,8 @@ linuxdvb_ddci_read_thread ( void *arg )
     }
 
     if (sb.sb_ptr > 0) {
-      int len, skip;
+      int len;
+      int skip;
       uint8_t *tsb;
 
       len = sb.sb_ptr;
@@ -1653,7 +1665,8 @@ linuxdvb_ddci_read_thread ( void *arg )
           int ctx_id = ctx_snapshot[i].ctx_id;
           int ctx_slot = ctx_snapshot[i].ctx_slot;
           uint8_t *buf = (len <= (int)sizeof(stackbuf)) ? stackbuf : malloc(len);
-          int off, out_len = 0;
+          int off;
+          int out_len = 0;
 
           if (!buf) {
             tvherror(LS_DDCI, "CAM %s: MTD ctx #%d slot %d out of memory demuxing "
@@ -1848,7 +1861,8 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci )
 int
 linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, service_t *t )
 {
-  int svc_idx, ctx_id;
+  int svc_idx;
+  int ctx_id;
 
   if (lddci == NULL)
     return -1;
@@ -2268,7 +2282,10 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
 void
 linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t )
 {
-  int svc_idx, ctx_idx, ctx_id, idle;
+  int svc_idx;
+  int ctx_idx;
+  int ctx_id;
+  int idle;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
 
