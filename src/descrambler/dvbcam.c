@@ -388,7 +388,7 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
     capmt_pid_mapper_t pmap = NULL;
     capmt_sid_mapper_t smap = NULL;
     dvbcam_mtd_remap_ctx_t remap_ctx;
-    linuxdvb_transport_t *lcat = ac->ca->lca_transport;
+    linuxdvb_transport_t *lcat = ac->ca ? ac->ca->lca_transport : NULL;
 
     if (lcat && lcat->lddci) {
       int ctx_idx = linuxdvb_ddci_mtd_ctx_for_service(lcat->lddci, (service_t *)s);
