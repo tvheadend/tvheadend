@@ -1111,7 +1111,9 @@ linuxdvb_ddci_send_buffer_get
 {
   linuxdvb_ddci_send_packet_t *sp = NULL;
   linuxdvb_ddci_send_lane_t *lane = NULL;
-  int native = 0, i, chosen = -1;
+  int native = 0;
+  int i;
+  int chosen = -1;
 
   tvh_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
 
@@ -1642,7 +1644,8 @@ linuxdvb_ddci_read_thread ( void *arg )
         mpegts_input_t *input;
         int ctx_id;
         int ctx_slot;
-      } *ctx_snapshot = NULL;
+      };
+      struct ddci_ctx_snapshot *ctx_snapshot = NULL;
       int ctx_count;
       int i;
 
@@ -1949,7 +1952,8 @@ linuxdvb_ddci_mtd_make_eit ( uint8_t pkt[LDDCI_TS_SIZE], uint16_t mapped_sid,
                               uint8_t version, uint8_t cc )
 {
   uint8_t sec[64];
-  int n = 0, slen;
+  int n = 0;
+  int slen;
 
   memset(pkt, 0xff, LDDCI_TS_SIZE);
   pkt[0] = LDDCI_TS_SYNC_BYTE;
@@ -2070,8 +2074,10 @@ linuxdvb_ddci_put
   {
     uint8_t scratch[LDDCI_TS_SIZE * (LDDCI_CAT_MAX_PACKETS + 1)];
     uint8_t *out = scratch;
-    size_t out_cap = sizeof(scratch), out_len = 0;
-    int out_heap = 0, oom = 0;
+    size_t out_cap = sizeof(scratch);
+    size_t out_len = 0;
+    int out_heap = 0;
+    int oom = 0;
     int off;
     uint8_t eit_pkt[LDDCI_TS_SIZE];
 
