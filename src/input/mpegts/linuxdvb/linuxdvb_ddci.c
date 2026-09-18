@@ -459,7 +459,11 @@ linuxdvb_ddci_map_pid_locked ( linuxdvb_ddci_t *lddci, int ctx_id,
   linuxdvb_ddci_pidmap_t *pm;
   linuxdvb_ddci_mux_ctx_t *ctx;
   uint32_t owner;
-  int ctx_idx, p, local, uniq, slot;
+  int ctx_idx;
+  int p;
+  int local;
+  int uniq;
+  int slot;
 
   if (real_pid > LDDCI_MTD_PID_LAST)
     return real_pid;
@@ -560,7 +564,8 @@ static uint16_t
 linuxdvb_ddci_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_sid )
 {
   linuxdvb_ddci_mux_ctx_t *ctx;
-  int ctx_idx, i;
+  int ctx_idx;
+  int i;
 
   if (ctx_id < 0)
     return real_sid;
@@ -632,7 +637,11 @@ linuxdvb_ddci_cat_process ( linuxdvb_ddci_t *lddci, int ctx_id,
     int ptr = in_pkt[4];
     const uint8_t *sec = in_pkt + 5 + ptr;
     int avail = LDDCI_TS_SIZE - 5 - ptr;
-    int seclen, version, sec_num, last_sec_num, n;
+    int seclen;
+    int version;
+    int sec_num;
+    int last_sec_num;
+    int n;
 
     if (avail < 8 || ptr > 182 || sec[0] != 0x01 /* table_id CAT */) {
       /* not a CAT table start we understand (stuffing, split pointer,
@@ -732,7 +741,9 @@ linuxdvb_ddci_cat_process ( linuxdvb_ddci_t *lddci, int ctx_id,
 
   /* section complete - verify, remap, recompute CRC32, re-emit */
   {
-    int i, off, n;
+    int i;
+    int off;
+    int n;
     linuxdvb_ddci_cat_emm_ctx_t emm_ctx = { lddci, ctx_id };
     uint8_t crc_scratch[LDDCI_CAT_MAX_SECTION];
     int crc_len;
@@ -917,7 +928,9 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
     return 0;
   off = 0;
   for (i = 0; i < npkts; i++) {
-    int hdr, room, take;
+    int hdr;
+    int room;
+    int take;
     memset(out_pkts[i], 0xFF, LDDCI_TS_SIZE);
     out_pkts[i][0] = 0x47;
     out_pkts[i][1] = (uint8_t)(0x00 | (i == 0 ? 0x40 : 0x00));
@@ -1186,7 +1199,9 @@ linuxdvb_ddci_send_buffer_put
     if (ctx_id < 0) {
       TAILQ_INSERT_TAIL(&ddci_snd_buf->lddci_send_buf_native, sp, lddci_send_pkt_link);
     } else {
-      int i, free_lane = -1, lane_idx = -1;
+      int i;
+      int free_lane = -1;
+      int lane_idx = -1;
       for (i = 0; i < LDDCI_MTD_RR_LANES; i++) {
         if (ddci_snd_buf->lddci_send_lanes[i].ctx_id == ctx_id) {
           lane_idx = i;
@@ -1612,7 +1627,8 @@ linuxdvb_ddci_read_thread ( void *arg )
         int ctx_id;
         int ctx_slot;
       } *ctx_snapshot = NULL;
-      int ctx_count, i;
+      int ctx_count;
+      int i;
 
       tvh_mutex_lock(&lddci->lddci_mux_lock);
       ctx_count = lddci->lddci_mux_ctx_count;
@@ -2006,7 +2022,8 @@ void
 linuxdvb_ddci_put
   ( linuxdvb_ddci_t *lddci, service_t *t, const uint8_t *tsb, int len )
 {
-  int svc_idx, ctx_id;
+  int svc_idx;
+  int ctx_id;
 
   /* Suppress duplicate callbacks only within the same MTD mux context.
    * The same TS buffer address may be reused by another context. */
@@ -2163,7 +2180,9 @@ void
 linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
 {
   mpegts_service_t *s = (mpegts_service_t *)t;
-  int ctx_idx, ctx_id, svc_idx;
+  int ctx_idx;
+  int ctx_id;
+  int svc_idx;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
 
