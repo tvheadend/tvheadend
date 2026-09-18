@@ -1250,6 +1250,7 @@ linuxdvb_ddci_send_buffer_clear ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf )
   while ((sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_native))) {
     linuxdvb_ddci_send_buffer_remove(ddci_snd_buf, sp, NULL, 1);
     free(sp);
+    sp = NULL;
   }
   {
     int i;
@@ -1258,6 +1259,7 @@ linuxdvb_ddci_send_buffer_clear ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf )
       while ((sp = TAILQ_FIRST(&lane->queue))) {
         linuxdvb_ddci_send_buffer_remove(ddci_snd_buf, sp, lane, 0);
         free(sp);
+        sp = NULL;
       }
       lane->ctx_id = -1;
       lane->bytes = 0;
