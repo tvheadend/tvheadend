@@ -28,10 +28,29 @@ struct mpegts_service;
 #define EN50221_CAPMT_BUILD_ADD          2
 #define EN50221_CAPMT_BUILD_UPDATE       4
 
+/* Optional PID/SID remap hooks, applied to the CA-PMT's own PID and SID
+ * fields as they're written - not by post-processing the finished
+ * buffer with a second parser, which risks the two layouts diverging as
+ * either side changes. Pass NULL for either (or both) to get the
+ * original, unmapped behaviour byte-for-byte - every existing caller
+ * that has no need to remap anything keeps working unchanged. Added for
+ * DDCI's MTD PID/SID remap (see linuxdvb_ddci.c / dvbcam.c) - a service
+ * whose CI slot shares real PIDs/SIDs with another real transponder
+ * needs its CA-PMT to speak the same remapped numbers the actual TS
+ * packets going to the CAM use. */
+enum capmt_pid_map_kind {
+  CAPMT_PID_MAP_CA = 1,
+  CAPMT_PID_MAP_ES = 2
+};
+typedef uint16_t (*capmt_pid_mapper_t)(void *opaque, uint16_t pid,
+                                       enum capmt_pid_map_kind kind);
+typedef uint16_t (*capmt_sid_mapper_t)(void *opaque, uint16_t sid);
+
 int en50221_capmt_build
   (struct mpegts_service *s,
    int bcmd, uint16_t svcid, const uint16_t *caids, int caids_count,
-   const uint8_t *pmt, size_t pmtlen, uint8_t **capmt, size_t *capmtlen);
+   const uint8_t *pmt, size_t pmtlen, uint8_t **capmt, size_t *capmtlen,
+   capmt_pid_mapper_t pmap, capmt_sid_mapper_t smap, void *opaque);
 
 int en50221_capmt_build_query(const uint8_t *capmt, size_t capmtlen,
                               uint8_t **dst, size_t *dstlen);

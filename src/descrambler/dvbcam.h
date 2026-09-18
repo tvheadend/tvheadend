@@ -36,8 +36,13 @@ void dvbcam_pmt_data(struct mpegts_service *s, const uint8_t *ptr, int len);
 
 #if ENABLE_LINUXDVB_CA && ENABLE_DDCI
 int dvbcam_is_ddci(struct service *t);
+int dvbcam_ddci_emm_put(struct service *t, uint16_t pid,
+                        const uint8_t *tsb, int len);
 #else
 static inline int dvbcam_is_ddci(struct service *t) { return 0; }
+static inline int dvbcam_ddci_emm_put(struct service *t, uint16_t pid,
+                                     const uint8_t *tsb, int len)
+{ return 0; }
 #endif
 
 #endif /* __DVBCAM_H__ */

@@ -22,6 +22,7 @@
 #include "input.h"
 #include "dvb_psi_hbbtv.h"
 #include "tsdemux.h"
+#include "descrambler/dvbcam.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
@@ -179,6 +180,17 @@ ts_recv_packet1
   }
 
   st = elementary_stream_find(&t->s_components, pid);
+
+#if ENABLE_LINUXDVB_CA && ENABLE_DDCI
+  /* CAT-discovered EMM PIDs are not elementary streams. Give the active
+   * DVB-CAM client first refusal before the normal non-component guard. */
+  if (st == NULL && !table &&
+      pid != t->s_components.set_pcr_pid &&
+      dvbcam_ddci_emm_put((service_t *)t, pid, tsb, len)) {
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    return 1;
+  }
+#endif
 
   if((st == NULL) && (pid != t->s_components.set_pcr_pid) && !table) {
     tvh_mutex_unlock(&t->s_stream_mutex);
