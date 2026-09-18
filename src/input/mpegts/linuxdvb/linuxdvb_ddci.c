@@ -1247,19 +1247,21 @@ linuxdvb_ddci_send_buffer_clear ( linuxdvb_ddci_send_buffer_t *ddci_snd_buf )
 
   tvh_mutex_lock(&ddci_snd_buf->lddci_send_buf_lock);
 
-  while ((sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_native))) {
+  sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_native);
+  while (sp) {
     linuxdvb_ddci_send_buffer_remove(ddci_snd_buf, sp, NULL, 1);
     free(sp);
-    sp = NULL;
+    sp = TAILQ_FIRST(&ddci_snd_buf->lddci_send_buf_native);
   }
   {
     int i;
     for (i = 0; i < LDDCI_MTD_RR_LANES; i++) {
       linuxdvb_ddci_send_lane_t *lane = &ddci_snd_buf->lddci_send_lanes[i];
-      while ((sp = TAILQ_FIRST(&lane->queue))) {
+      sp = TAILQ_FIRST(&lane->queue);
+      while (sp) {
         linuxdvb_ddci_send_buffer_remove(ddci_snd_buf, sp, lane, 0);
         free(sp);
-        sp = NULL;
+        sp = TAILQ_FIRST(&lane->queue);
       }
       lane->ctx_id = -1;
       lane->bytes = 0;
