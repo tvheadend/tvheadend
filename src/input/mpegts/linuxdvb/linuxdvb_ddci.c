@@ -258,7 +258,7 @@ linuxdvb_ddci_find_mux_ctx ( const linuxdvb_ddci_t *lddci, const mpegts_mux_t *m
 }
 
 static int
-linuxdvb_ddci_find_mux_ctx_id ( linuxdvb_ddci_t *lddci, int ctx_id )
+linuxdvb_ddci_find_mux_ctx_id ( const linuxdvb_ddci_t *lddci, int ctx_id )
 {
   int i;
   for (i = 0; i < lddci->lddci_mux_ctx_count; i++)
@@ -279,7 +279,7 @@ linuxdvb_ddci_cat_emm_owner_ctx_locked ( const linuxdvb_ddci_t *lddci )
 }
 
 static int
-linuxdvb_ddci_find_mux_ctx_slot ( linuxdvb_ddci_t *lddci, int ctx_slot )
+linuxdvb_ddci_find_mux_ctx_slot ( const linuxdvb_ddci_t *lddci, int ctx_slot )
 {
   int i;
   for (i = 0; i < lddci->lddci_mux_ctx_count; i++)
@@ -532,7 +532,7 @@ static uint16_t
 linuxdvb_ddci_map_pid_for_service_locked ( linuxdvb_ddci_t *lddci,
                                            int svc_idx, uint16_t real_pid )
 {
-  linuxdvb_ddci_svc_ctx_t *svc;
+  const linuxdvb_ddci_svc_ctx_t *svc;
 
   if (real_pid > LDDCI_MTD_PID_LAST)
     return real_pid;
@@ -1866,7 +1866,7 @@ linuxdvb_ddci_open ( linuxdvb_ddci_t *lddci )
 /* Returns this service's stable mux ctx_id, or -1 if it is not assigned here.
  * All contexts are symmetrically mapped; ctx_id is no longer a PID namespace. */
 int
-linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, service_t *t )
+linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, const service_t *t )
 {
   int svc_idx;
   int ctx_id;
@@ -1883,7 +1883,7 @@ linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, service_t *t )
 }
 
 void
-linuxdvb_ddci_mtd_arm_eit ( linuxdvb_ddci_t *lddci, service_t *t,
+linuxdvb_ddci_mtd_arm_eit ( linuxdvb_ddci_t *lddci, const service_t *t,
                                 uint8_t list_management, uint16_t mapped_sid )
 {
   int svc_idx;
@@ -1905,7 +1905,7 @@ linuxdvb_ddci_mtd_arm_eit ( linuxdvb_ddci_t *lddci, service_t *t,
 /* Allocate (or return) this service's PID in its mux slot namespace.
  * Every context, including ctx #0, is mapped symmetrically. */
 uint16_t
-linuxdvb_ddci_mtd_map_pid ( linuxdvb_ddci_t *lddci, service_t *t,
+linuxdvb_ddci_mtd_map_pid ( linuxdvb_ddci_t *lddci, const service_t *t,
                             uint16_t real_pid )
 {
   uint16_t r;
@@ -2024,7 +2024,7 @@ linuxdvb_ddci_mtd_eit_due_locked ( linuxdvb_ddci_t *lddci, int svc_idx,
 }
 
 static int
-linuxdvb_ddci_ctx_owns_cam_pid_locked ( linuxdvb_ddci_t *lddci, int ctx_id,
+linuxdvb_ddci_ctx_owns_cam_pid_locked ( const linuxdvb_ddci_t *lddci, int ctx_id,
                                         uint16_t cam_pid )
 {
   int i;
@@ -2032,7 +2032,7 @@ linuxdvb_ddci_ctx_owns_cam_pid_locked ( linuxdvb_ddci_t *lddci, int ctx_id,
   if (cam_pid > LDDCI_MTD_PID_LAST)
     return 0;
   for (i = 0; i < lddci->lddci_svc_ctx_count; i++) {
-    linuxdvb_ddci_svc_ctx_t *svc = &lddci->lddci_svc_ctx[i];
+    const linuxdvb_ddci_svc_ctx_t *svc = &lddci->lddci_svc_ctx[i];
     if (svc->svc_ctx_id == ctx_id &&
         linuxdvb_ddci_pidbit_test(svc->svc_cam_pids, cam_pid))
       return 1;
@@ -2042,7 +2042,7 @@ linuxdvb_ddci_ctx_owns_cam_pid_locked ( linuxdvb_ddci_t *lddci, int ctx_id,
 
 void
 linuxdvb_ddci_put
-  ( linuxdvb_ddci_t *lddci, service_t *t, const uint8_t *tsb, int len )
+  ( linuxdvb_ddci_t *lddci, const service_t *t, const uint8_t *tsb, int len )
 {
   int svc_idx;
   int ctx_id;
@@ -2134,7 +2134,7 @@ linuxdvb_ddci_put
         continue;
       } else {
         int ctx_idx = linuxdvb_ddci_find_mux_ctx_id(lddci, ctx_id);
-        linuxdvb_ddci_mux_ctx_t *dctx = ctx_idx >= 0 ?
+        const linuxdvb_ddci_mux_ctx_t *dctx = ctx_idx >= 0 ?
           &lddci->lddci_mux_ctx[ctx_idx] : NULL;
         uint16_t uniq_pid = 0;
 
@@ -2370,7 +2370,7 @@ linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t )
 }
 
 int
-linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
+linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, const service_t *t, int multi,
                               int svc_limit )
 {
   (void)t;
