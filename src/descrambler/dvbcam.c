@@ -372,14 +372,15 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
      * announced once with ADD, including the first one.  Existing active
      * programs are left untouched; replaying the whole set on every
      * lifecycle change can disturb a CAM's established ECM/CW state. */
-    if (ac->ca && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+    if (ac->ca && ac->ca->lca_transport && ac->ca->lca_transport->lddci) {
       bcmd = EN50221_CAPMT_BUILD_ADD;
-    else
+    } else
 #endif
-    if (ac->active_programs)
+    if (ac->active_programs) {
       bcmd = EN50221_CAPMT_BUILD_ADD;
-    else
+    } else {
       bcmd = EN50221_CAPMT_BUILD_ONLY;
+    }
     ac->active_programs++;
   }
 

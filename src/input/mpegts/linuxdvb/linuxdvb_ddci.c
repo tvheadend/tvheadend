@@ -608,8 +608,8 @@ linuxdvb_ddci_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_sid )
  * *packets*, which this handles) is supported - if more than one
  * distinct CAT section is seen, this is logged once and the packet is
  * forwarded with its EMM PIDs unmapped. This is the same limitation
- * VDR's own MTD implementation has (see the "TODO: handle multi table
- * CATs!" comment in VDR's ci.c) - not a shortcut unique to this patch.
+ * VDR's own MTD implementation has (see the multi-table CAT handling
+ * note in VDR's ci.c) - not a shortcut unique to this patch.
  *
  * Must be called with lddci->lddci_mux_lock held. Writes up to
  * LDDCI_CAT_MAX_PACKETS 188-byte packets into out_pkts and returns how
