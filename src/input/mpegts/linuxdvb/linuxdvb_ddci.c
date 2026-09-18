@@ -2363,12 +2363,8 @@ int
 linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
                               int svc_limit )
 {
-  mpegts_service_t *s = (mpegts_service_t *)t;
-  int same_ctx;
-
+  (void)t;
   tvh_mutex_lock(&lddci->lddci_mux_lock);
-  same_ctx = linuxdvb_ddci_find_mux_ctx(lddci, s->s_dvb_mux);
-
 
   if (lddci->lddci_svc_ctx_count == 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
@@ -2385,10 +2381,6 @@ linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
     return 1;
   }
 
-  if (same_ctx >= 0) {
-    tvh_mutex_unlock(&lddci->lddci_mux_lock);
-    return 0;
-  }
   tvh_mutex_unlock(&lddci->lddci_mux_lock);
   return 0;
 }
