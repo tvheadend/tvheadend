@@ -276,6 +276,48 @@ dvbcam_ca_lookup(dvbcam_active_cam_t *ac, mpegts_input_t *input, uint16_t caid)
   return 0;
 }
 
+#if ENABLE_DDCI
+/*
+ * Build CA-PMT with PID/SID remap callbacks passed directly into
+ * en50221_capmt_build(), so control messages use the same virtual
+ * namespace as the TS packets sent to the CAM. This avoids a second
+ * parser rewriting an already serialized CA-PMT and keeps descriptor
+ * matching on the real broadcast PID while only the serialized PID is
+ * translated. All assigned MTD contexts use the same mapping rules;
+ * PID and SID translation is symmetric and no context has special
+ * identity semantics.
+ */
+typedef struct dvbcam_mtd_remap_ctx {
+  linuxdvb_ddci_t *lddci;
+  service_t        *service;
+  int               ctx_idx;
+} dvbcam_mtd_remap_ctx_t;
+
+static uint16_t
+dvbcam_mtd_pid_mapper ( void *opaque, uint16_t pid,
+                         enum capmt_pid_map_kind kind )
+{
+  dvbcam_mtd_remap_ctx_t *c = opaque;
+  uint16_t uniq = linuxdvb_ddci_mtd_map_pid(c->lddci, c->service, pid);
+
+  (void)kind;
+
+  /* uniq == 0 means the per-context remap table is exhausted (already
+   * logged inside linuxdvb_ddci_mtd_map_pid()) - leave the real PID in
+   * place rather than write a bogus PID 0 (PAT) into the CA-PMT, which
+   * would be actively misleading to the CAM */
+  return uniq ? uniq : pid;
+}
+
+static uint16_t
+dvbcam_mtd_sid_mapper ( void *opaque, uint16_t sid )
+{
+  dvbcam_mtd_remap_ctx_t *c = opaque;
+  return linuxdvb_ddci_mtd_map_sid(c->lddci, c->ctx_idx, sid);
+}
+
+#endif /* ENABLE_DDCI */
+
 /*
  *
  */
@@ -320,10 +362,20 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
   as->last_pmt_len = len;
 
   /* if this is update just send updated CAPMT to CAM */
+
   if (is_update) {
     tvhtrace(LS_DVBCAM, "CAPMT sent to CAM (update)");
     bcmd = EN50221_CAPMT_BUILD_UPDATE;
   } else {
+#if ENABLE_DDCI
+    /* VDR MCD semantics for DDCI/MTD: each newly active program is
+     * announced once with ADD, including the first one.  Existing active
+     * programs are left untouched; replaying the whole set on every
+     * lifecycle change can disturb a CAM's established ECM/CW state. */
+    if (ac->ca && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+      bcmd = EN50221_CAPMT_BUILD_ADD;
+    else
+#endif
     if (ac->active_programs)
       bcmd = EN50221_CAPMT_BUILD_ADD;
     else
@@ -331,12 +383,45 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
     ac->active_programs++;
   }
 
+#if ENABLE_DDCI
+  {
+    capmt_pid_mapper_t pmap = NULL;
+    capmt_sid_mapper_t smap = NULL;
+    dvbcam_mtd_remap_ctx_t remap_ctx;
+    linuxdvb_transport_t *lcat = ac->ca->lca_transport;
+
+    if (lcat && lcat->lddci) {
+      int ctx_idx = linuxdvb_ddci_mtd_ctx_for_service(lcat->lddci, (service_t *)s);
+      if (ctx_idx >= 0) {
+        remap_ctx.lddci = lcat->lddci;
+        remap_ctx.service = (service_t *)s;
+        remap_ctx.ctx_idx = ctx_idx;
+        pmap = dvbcam_mtd_pid_mapper;
+        smap = dvbcam_mtd_sid_mapper;
+      }
+    }
+    r = en50221_capmt_build(s, bcmd,
+                            service_id16(s),
+                            ac->caids, ac->caids_count,
+                            as->last_pmt, as->last_pmt_len,
+                            &capmt, &capmt_len,
+                            pmap, smap, &remap_ctx);
+  }
+#else
   r = en50221_capmt_build(s, bcmd,
                           service_id16(s),
                           ac->caids, ac->caids_count,
                           as->last_pmt, as->last_pmt_len,
-                          &capmt, &capmt_len);
+                          &capmt, &capmt_len,
+                          NULL, NULL, NULL);
+#endif
   if (r >= 0) {
+#if ENABLE_DDCI
+    if (capmt_len >= 3 && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+      linuxdvb_ddci_mtd_arm_eit(ac->ca->lca_transport->lddci,
+                                   (service_t *)s, capmt[0],
+                                   ((uint16_t)capmt[1] << 8) | capmt[2]);
+#endif
     linuxdvb_ca_enqueue_capmt(ac->ca, capmt, capmt_len, 1);
     free(capmt);
   } else {
@@ -352,7 +437,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
 {
   dvbcam_active_service_t *as = (dvbcam_active_service_t *)td;
   dvbcam_active_cam_t *ac;
-  mpegts_service_t *s;
+  mpegts_service_t *s = (mpegts_service_t *)td->td_service;
   int do_active_programs = 0, r;
   uint8_t *capmt;
   size_t capmt_len;
@@ -361,13 +446,45 @@ dvbcam_service_destroy(th_descrambler_t *td)
   ac = as->ac;
   if (as->last_pmt) {
     if (ac) {
-      s = (mpegts_service_t *)td->td_service;
+#if ENABLE_DDCI
+      {
+        capmt_pid_mapper_t pmap = NULL;
+        capmt_sid_mapper_t smap = NULL;
+        dvbcam_mtd_remap_ctx_t remap_ctx;
+        linuxdvb_transport_t *lcat = ac->ca->lca_transport;
+
+        if (lcat && lcat->lddci) {
+          int ctx_idx = linuxdvb_ddci_mtd_ctx_for_service(lcat->lddci, td->td_service);
+          if (ctx_idx >= 0) {
+            remap_ctx.lddci = lcat->lddci;
+            remap_ctx.service = td->td_service;
+            remap_ctx.ctx_idx = ctx_idx;
+            pmap = dvbcam_mtd_pid_mapper;
+            smap = dvbcam_mtd_sid_mapper;
+          }
+        }
+        r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
+                                service_id16(s),
+                                ac->caids, ac->caids_count,
+                                as->last_pmt, as->last_pmt_len,
+                                &capmt, &capmt_len,
+                                pmap, smap, &remap_ctx);
+      }
+#else
       r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
                               service_id16(s),
                               ac->caids, ac->caids_count,
                               as->last_pmt, as->last_pmt_len,
-                              &capmt, &capmt_len);
+                              &capmt, &capmt_len,
+                              NULL, NULL, NULL);
+#endif
       if (r >= 0) {
+#if ENABLE_DDCI
+        if (capmt_len >= 3 && ac->ca->lca_transport && ac->ca->lca_transport->lddci)
+          linuxdvb_ddci_mtd_arm_eit(ac->ca->lca_transport->lddci,
+                                       td->td_service, capmt[0],
+                                       ((uint16_t)capmt[1] << 8) | capmt[2]);
+#endif
         linuxdvb_ca_enqueue_capmt(ac->ca, capmt, capmt_len, 0);
         free(capmt);
       } else {
@@ -390,6 +507,8 @@ dvbcam_service_destroy(th_descrambler_t *td)
       if (do_active_programs)
         ac->active_programs--;
       ac->allocated_programs--;
+      /* Incremental MCD lifecycle: the DELETE/UPDATE+NOT_SELECTED above
+       * removes only this program.  Do not replay surviving programs. */
       break;
     }
   }
@@ -402,6 +521,27 @@ dvbcam_service_destroy(th_descrambler_t *td)
 }
 
 #if ENABLE_DDCI
+int
+dvbcam_ddci_emm_put(service_t *t, uint16_t pid, const uint8_t *tsb, int len)
+{
+  th_descrambler_runtime_t *dr = ((mpegts_service_t *)t)->s_descramble;
+  dvbcam_active_service_t *as;
+
+  /* EMM PIDs are subscribed as MPS_SERVICE entries but are not elementary
+   * streams, so ts_recv_packet1() does not pass them through the normal
+   * descrambler path. Forward CAT-discovered EMM PIDs into DDCI here so they
+   * use the same MTD PID mapping as the service traffic. */
+  if (dr == NULL || dr->dr_descrambler == NULL)
+    return 0;
+  as = (dvbcam_active_service_t *)dr->dr_descrambler;
+  if (as->ac == NULL || as->lddci == NULL ||
+      !mpegts_pid_rexists(&as->cat_pids, pid))
+    return 0;
+
+  linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, t, tsb, len);
+  return 1;
+}
+
 static int
 dvbcam_descramble_ddci(service_t *t, elementary_stream_t *st, const uint8_t *tsb, int len)
 {
@@ -500,9 +640,13 @@ dvbcam_service_start(caclient_t *cac, service_t *t)
               continue;
 #if ENABLE_DDCI
             lcat = ac->ca->lca_transport;
-            if (lcat->lddci && linuxdvb_ddci_do_not_assign(lcat->lddci, t,
-                                                           dc->multi))
-              continue;
+            if (lcat->lddci) {
+              int reject = linuxdvb_ddci_do_not_assign(lcat->lddci, t,
+                                                        dc->multi,
+                                                        dc->limit);
+              if (reject)
+                continue;
+            }
 #endif
             tvhtrace(LS_DVBCAM, "%s/%p: match CAID %04X PID %d (%04X)",
                                 ac->ca->lca_name, t, c->caid, c->pid, c->pid);
@@ -585,7 +729,7 @@ end_of_search_for_cam:
   lcat = ac->ca->lca_transport;
   if (lcat->lddci) {
     /* assign the service to the DD CI CAM */
-    linuxdvb_ddci_assign(lcat->lddci, t);
+    linuxdvb_ddci_assign(lcat->lddci, t, dc->limit);
     dr->dr_descramble = dvbcam_descramble_ddci;
     as->lddci = lcat->lddci;
   }
@@ -695,7 +839,7 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
 {
 #if ENABLE_DDCI
   __cat_update_t services[32], *sp;
-  int i, services_count;
+  int i, j, services_count;
   dvbcam_active_service_t *as;
   mpegts_apids_t pids;
   mpegts_input_t *mi;
@@ -742,12 +886,19 @@ dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int l
       for (i = 0; i < services_count; i++) {
         sp = &services[i];
         tvh_mutex_lock(&sp->service->s_stream_mutex);
-        for (i = 0; i < sp->to_open.count; i++)
-          mpegts_input_open_pid(mi, mux, sp->to_open.pids[i].pid, MPS_SERVICE,
+        /* Do not reuse the outer service index here.  MTD can have several
+         * active services on different muxes in one CAT update batch, and
+         * clobbering i made us process only a subset of their EMM PID changes.
+         * VDR requires every virtual transponder to receive its own CAT/EMM
+         * path, so each service's real-mux EMM subscriptions must be applied. */
+        for (j = 0; j < sp->to_open.count; j++) {
+          mpegts_input_open_pid(mi, mux, sp->to_open.pids[j].pid, MPS_SERVICE,
                                MPS_WEIGHT_CAT, sp->service, 0);
-        for (i = 0; i < sp->to_close.count; i++)
-          mpegts_input_close_pid(mi, mux, sp->to_close.pids[i].pid, MPS_SERVICE,
+        }
+        for (j = 0; j < sp->to_close.count; j++) {
+          mpegts_input_close_pid(mi, mux, sp->to_close.pids[j].pid, MPS_SERVICE,
                                  sp->service);
+        }
         tvh_mutex_unlock(&sp->service->s_stream_mutex);
         mpegts_pid_done(&sp->to_open);
         mpegts_pid_done(&sp->to_close);
