@@ -841,8 +841,11 @@ static void
 dvbcam_cat_update(caclient_t *cac, mpegts_mux_t *mux, const uint8_t *data, int len)
 {
 #if ENABLE_DDCI
-  __cat_update_t services[32], *sp;
-  int i, j, services_count;
+  __cat_update_t services[32];
+  __cat_update_t *sp;
+  int i;
+  int j;
+  int services_count;
   dvbcam_active_service_t *as;
   mpegts_apids_t pids;
   mpegts_input_t *mi;
