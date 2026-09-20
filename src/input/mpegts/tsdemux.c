@@ -200,6 +200,14 @@ ts_recv_packet1
   if(!error)
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
 
+  /* PAT/PMT packets are signalling, not scrambled elementary-stream data.
+   * Keep them on the service MPEG-TS path while the service is descrambled. */
+  if (pid == DVB_PAT_PID || pid == t->s_components.set_pmt_pid) {
+    ts_recv_packet0(t, st, tsb, len);
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    return 1;
+  }
+
   scrambled = t->s_scrambled_seen;
   if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {
 
