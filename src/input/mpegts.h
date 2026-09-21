@@ -973,6 +973,7 @@ th_subscription_t *mpegts_mux_find_subscription_by_name(mpegts_mux_t *mm, const 
 void mpegts_mux_unsubscribe_linked(mpegts_input_t *mi, service_t *t);
 
 void mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res );
+void mpegts_mux_scan_timeout_arm ( mpegts_mux_t *mm, mpegts_input_t *mi );
 
 void mpegts_mux_bouquet_rescan ( const char *src, const char *extra );
 
