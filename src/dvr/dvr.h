@@ -386,6 +386,7 @@ typedef struct dvr_autorec_entry {
 
   int dae_enabled;
   int dae_error;
+  int dae_transient;
   char *dae_owner;
   char *dae_creator;
   char *dae_comment;
@@ -394,6 +395,9 @@ typedef struct dvr_autorec_entry {
   tvh_regex_t dae_title_regex;
   int dae_fulltext;
   int dae_mergetext;
+
+  char *dae_expression;
+  struct dvr_autorec_expr *dae_expr;
 
   uint32_t dae_content_type;
   /* These categories (mainly from xmltv) such as Cooking, Dog racing, Movie.
@@ -441,6 +445,13 @@ typedef struct dvr_autorec_entry {
   int dae_record;
 
 } dvr_autorec_entry_t;
+
+/* Smart entry: a non-empty expression is the whole predicate (the
+ * flat selectors then sit at their no-constraint defaults). */
+static inline int dvr_autorec_entry_is_smart(const dvr_autorec_entry_t *dae)
+{
+  return dae->dae_expression && dae->dae_expression[0] != '\0';
+}
 
 extern struct dvr_autorec_entry_queue autorec_entries;
 
@@ -707,6 +718,30 @@ int dvr_get_disk_space(int64_t *bfree, int64_t *bused, int64_t *btotal);
 
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf);
+
+/* Transient entries exist for the preview scan only: never inserted
+ * into autorec_entries, never announced over HTSP, torn down with
+ * dvr_autorec_destroy_transient() before the API call returns. */
+dvr_autorec_entry_t *
+dvr_autorec_create_transient(htsmsg_t *conf);
+
+void dvr_autorec_destroy_transient(dvr_autorec_entry_t *dae);
+
+/* Preview-side "Duplicate handling" scan (dvr_db.c): flags the
+ * candidates recording-start dedup would skip. NULL scan = the
+ * effective mode dedups nothing. Caller holds global_lock across
+ * the scan and feeds candidates in start-time order; accept()
+ * registers a candidate whose entry a save would really create. */
+typedef struct dvr_autorec_dedup_scan dvr_autorec_dedup_scan_t;
+
+dvr_autorec_dedup_scan_t *
+dvr_autorec_dedup_scan_create(dvr_autorec_entry_t *dae, dvr_config_t *cfg,
+                              dvr_autorec_entry_t *existing);
+int dvr_autorec_dedup_scan_check(dvr_autorec_dedup_scan_t *das,
+                                 epg_broadcast_t *e);
+void dvr_autorec_dedup_scan_accept(dvr_autorec_dedup_scan_t *das,
+                                   epg_broadcast_t *e);
+void dvr_autorec_dedup_scan_destroy(dvr_autorec_dedup_scan_t *das);
 
 dvr_autorec_entry_t *
 dvr_autorec_create_htsp(htsmsg_t *conf);

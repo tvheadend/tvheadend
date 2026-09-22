@@ -6,7 +6,7 @@
  *
  * Specifically tests the Removed Recordings tab gate (mirrors ExtJS
  * dvr.js:988 + 1207-1213): hidden at basic and advanced, visible at
- * expert. The other five tabs are always visible.
+ * expert. The other six tabs are always visible.
  *
  * The test stubs PageTabs to inspect the tabs prop directly rather
  * than relying on rendered DOM — keeps the test resilient to
@@ -62,12 +62,13 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
     const tabs = getTabs(mountAtLevel('basic'))
     const labels = tabs.map((t) => t.label)
     expect(labels).not.toContain('Removed Recordings')
-    /* Other five tabs always present. */
+    /* Other six tabs always present. */
     expect(labels).toEqual([
       'Upcoming / Current Recordings',
       'Finished Recordings',
       'Failed Recordings',
       'Autorecs',
+      'Smart Autorecs',
       'Timers',
     ])
   })
@@ -89,6 +90,7 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
       'Failed Recordings',
       'Removed Recordings',
       'Autorecs',
+      'Smart Autorecs',
       'Timers',
     ])
   })
