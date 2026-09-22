@@ -38,6 +38,18 @@ static int comet_waiting;
 #define MAILBOX_UNUSED_TIMEOUT      20
 #define MAILBOX_EMPTY_REPLY_TIMEOUT 10
 
+/*
+ * A client that stops collecting - a browser tab put in the background
+ * has its timers frozen, but the websocket stays open, so the mailbox is
+ * not released by comet_flush() - would otherwise accumulate every
+ * notification for as long as it is away.  With one status message per
+ * subscription per second that is unbounded.  Nothing older than this is
+ * of any use to the UI: it wants the current state, not a replay.
+ */
+#define MAILBOX_STALE_TIMEOUT       60
+
+static tvhlog_limit_t comet_stale_loglimit = { .last = 0, .count = 0 };
+
 //#define mbdebug(fmt...) printf(fmt);
 #define mbdebug(fmt...)
 
@@ -58,6 +70,7 @@ typedef struct comet_mailbox {
   int cmb_restricted; /* !admin */
   htsmsg_t *cmb_messages; /* A vector */
   int64_t cmb_last_used;
+  int64_t cmb_last_taken; /* when the client last collected the messages */
   LIST_ENTRY(comet_mailbox) cmb_link;
   int cmb_debug;
 } comet_mailbox_t;
@@ -137,6 +150,7 @@ comet_mailbox_create(const char *lang)
   cmb->cmb_lang = lang ? strdup(lang) : NULL;
   cmb->cmb_refcount = 1;
   cmb->cmb_last_used = mclk();
+  cmb->cmb_last_taken = mclk();
   mailbox_tally++;
 
   LIST_INSERT_HEAD(&mailboxes, cmb, cmb_link);
@@ -288,6 +302,7 @@ comet_message(comet_mailbox_t *cmb, int include_boxid, int ignore_null)
   htsmsg_add_msg(m, "messages", cmb->cmb_messages ?: htsmsg_create_list());
   cmb->cmb_messages = NULL;
   cmb->cmb_last_used = mclk();
+  cmb->cmb_last_taken = mclk();
   return m;
 }
 
@@ -595,7 +610,25 @@ comet_mailbox_add_message(htsmsg_t *m, int isdebug, int isrestricted, int rewrit
 
       if(isdebug && !cmb->cmb_debug)
         continue;
-        
+
+      /* the client has not collected anything for a long time: drop what
+         has piled up, it is stale and the UI only wants current state */
+      if(cmb->cmb_messages != NULL &&
+         cmb->cmb_last_taken + sec2mono(MAILBOX_STALE_TIMEOUT) < mclk()) {
+        htsmsg_field_t *cf;
+        int cnt = 0;
+        HTSMSG_FOREACH(cf, cmb->cmb_messages)
+          cnt++;
+        if (tvhlog_limit(&comet_stale_loglimit, 30))
+          tvhwarn(LS_WEBUI, "comet: dropped %d messages queued for %d seconds "
+                            "without being collected (mailbox %.8s)",
+                  cnt, (int)mono2sec(mclk() - cmb->cmb_last_taken),
+                  cmb->cmb_boxid);
+        htsmsg_destroy(cmb->cmb_messages);
+        cmb->cmb_messages = NULL;
+        cmb->cmb_last_taken = mclk();
+      }
+
       if(cmb->cmb_messages == NULL)
         cmb->cmb_messages = htsmsg_create_list();
       e = htsmsg_copy(m);
