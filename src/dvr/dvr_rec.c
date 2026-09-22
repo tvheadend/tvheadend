@@ -1667,8 +1667,10 @@ dvr_thread_rec_start(dvr_entry_t **_de, streaming_start_t *ss,
     if(code == 0) {
       ret = 1;
       *started = 1;
-    } else
-      dvr_stop_recording(de, code == SM_CODE_NO_SPACE ? SM_CODE_NO_SPACE : SM_CODE_INVALID_TARGET, 1, 0);
+    } else {
+      /* dvr_stop_recording() would join this very thread */
+      dvr_stop_recording_deferred(de, code == SM_CODE_NO_SPACE ? SM_CODE_NO_SPACE : SM_CODE_INVALID_TARGET);
+    }
     dvr_thread_global_unlock(de);
   }
   return ret;

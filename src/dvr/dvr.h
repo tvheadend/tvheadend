@@ -619,6 +619,8 @@ void dvr_destroy_by_channel(channel_t *ch, int delconf);
 
 void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone);
 
+void dvr_stop_recording_deferred(dvr_entry_t *de, int stopcode);
+
 int dvr_rec_subscribe(dvr_entry_t *de);
 
 void dvr_rec_unsubscribe(dvr_entry_t *de);
