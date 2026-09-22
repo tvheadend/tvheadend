@@ -103,8 +103,8 @@ typedef struct th_subscription {
   uint64_t ths_total_bytes_out; /* total bytes since the subscription started */
   uint64_t ths_total_bytes_in_prev; /* total bytes since the subscription started, minus 1 second */
   uint64_t ths_total_bytes_out_prev; /* total bytes since the subscription started, minus 1 second */
-  int ths_bytes_in_avg; /* Average bytes in per second */
-  int ths_bytes_out_avg; /* Average bytes out per second */
+  uint64_t ths_bytes_in_avg; /* Average bytes in per second */
+  uint64_t ths_bytes_out_avg; /* Average bytes out per second */
 
   streaming_target_t ths_input;
 
