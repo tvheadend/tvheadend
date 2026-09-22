@@ -742,6 +742,9 @@ if enabled_or_auto vue_build; then
   if $has_node; then
     enable vue_build
   else
+    if enabled vue_build && disabled vue_cache; then
+      die "--enable-vue_build requested but node + npm not found"
+    fi
     disable vue_build
     if enabled vue_cache; then
       echo "INFO: node + npm not found — using pre-built Vue UI from pcloud cache"
@@ -750,6 +753,7 @@ if enabled_or_auto vue_build; then
       echo "         * install node + npm to build the Vue UI locally, OR"
       echo "         * --enable-vue_cache to download a pre-built dist from pcloud, OR"
       echo "         * --disable-vue_build to skip the Vue UI entirely"
+      echo "WARNING: this build will serve the Vue UI stub page at /gui"
     fi
   fi
 fi

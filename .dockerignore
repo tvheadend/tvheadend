@@ -1,2 +1,4 @@
 .config.mk
 build.*/
+**/node_modules
+src/webui/static-vue/dist
