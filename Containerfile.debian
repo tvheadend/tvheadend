@@ -13,6 +13,8 @@ WORKDIR /src
 
 COPY . /src/
 
+ENV VUE_FILE_CACHE="/src/.vuecache"
+
 RUN apt-get update --yes && apt-get install --yes \
         'build-essential' \
         'bzip2' \
@@ -65,6 +67,8 @@ RUN apt-get update --yes && apt-get install --yes \
                 --enable-nvenc \
                 --enable-pngquant \
                 --enable-qsv \
+                --enable-vue_cache \
+                --disable-vue_build \
                 --python=python3 \
         && \
         make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
