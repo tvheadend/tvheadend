@@ -64,6 +64,16 @@ static const codec_profile_class_t codec_profile_libtheora_class = {
                 .intextra = INTEXTRA_RANGE(0, 10, 1),
                 .def.d    = 0,
             },
+            {
+                .type     = PT_INT,
+                .id       = "encoder_hwaccel_type",
+                .name     = N_("Encoder hardware acceleration type"),
+                .desc     = N_("Encoder hardware acceleration type"),
+                .group    = 2,
+                .opts     = PO_PHIDDEN,
+                .off      = offsetof(TVHVideoCodecProfile, encoder_hwaccel_type),
+                .def.i    = AV_HWDEVICE_TYPE_NONE,
+            },
             {}
         }
     },

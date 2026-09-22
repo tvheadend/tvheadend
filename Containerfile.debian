@@ -62,9 +62,7 @@ RUN apt-get update --yes && apt-get install --yes \
                 --enable-hdhomerun_client \
                 --enable-kqueue \
                 --enable-libav \
-                --enable-nvenc \
                 --enable-pngquant \
-                --enable-qsv \
                 --python=python3 \
         && \
         make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install
