@@ -3132,6 +3132,31 @@ dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
   dvr_create_recording_scene_markers(de);
 }
 
+/**
+ * The recording thread must not call dvr_stop_recording() itself:
+ * dvr_rec_unsubscribe() joins that thread and frees the profile chain
+ * it reads from. Stop it from the timer thread instead.
+ */
+static void
+dvr_timer_stop_recording_error(void *aux)
+{
+  dvr_entry_t *de = aux;
+  if (de->de_sched_state != DVR_RECORDING)
+    return;
+  dvr_stop_recording(de, de->de_last_error, 1, 0);
+}
+
+void
+dvr_stop_recording_deferred(dvr_entry_t *de, int stopcode)
+{
+  lock_assert(&global_lock);
+  de->de_last_error = stopcode;
+  /* a dvr_entry_set_timer() call before the timer fires then stops
+   * the recording instead of re-arming de_timer for the stop time */
+  de->de_dont_reschedule = 1;
+  gtimer_arm_rel(&de->de_timer, dvr_timer_stop_recording_error, de, 0);
+}
+
 
 /**
  *
