@@ -287,8 +287,21 @@ static int tvhpoll_rem0
                                    fd, tvhpoll_get_events(tp, fd));
 #endif
       if (epoll_ctl(tp->fd, EPOLL_CTL_DEL, fd, NULL)) {
-        tvherror(LS_TVHPOLL, "epoll del failed [%s]", strerror(errno));
-        break;
+        /*
+         * EBADF: nothing is open at fd. ENOENT: the file at fd is not in
+         * the set. EPERM: the file at fd cannot be polled, so it was never
+         * added. In all three cases no registration can be reached through
+         * fd any more, usually because fd was closed before it was removed.
+         * The entry is stale then. Forget it, so that it does not block
+         * later calls. Callers must still remove an fd before closing it,
+         * as its number may be reused.
+         */
+        if (errno != EBADF && errno != ENOENT && errno != EPERM) {
+          tvherror(LS_TVHPOLL, "epoll del failed [%s]", strerror(errno));
+          break;
+        }
+        tvhwarn(LS_TVHPOLL, "epoll del: fd %d is not registered any more [%s]",
+                            fd, strerror(errno));
       }
       tvhpoll_set_events(tp, fd, 0);
     }
