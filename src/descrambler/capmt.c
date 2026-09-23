@@ -1667,8 +1667,8 @@ handle_ca0(capmt_t *capmt)
       if (ret == 0) {
         tvhinfo(LS_CAPMT, "%s: normal socket shutdown", capmt_name(capmt));
 
-        close(recvsock);
         capmt_poll_rem(capmt, recvsock);
+        close(recvsock);
         adapter->ca_sock = -1;
         continue;
       }
