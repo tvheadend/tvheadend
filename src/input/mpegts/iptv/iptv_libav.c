@@ -224,7 +224,9 @@ iptv_libav_stop
   im->im_opaque = NULL;
   tvh_thread_kill(la->thread, SIGUSR1);
   pthread_join(la->thread, NULL);
-  tvh_pipe_close(&la->pipe);
+  /* Close only the write end. The read end is im->mm_iptv_fd, which
+   * iptv_input_close_fds() removes from the poll set and closes. */
+  close(la->pipe.wr);
   avformat_close_input(&la->ictx);
   avformat_free_context(la->octx);
   sbuf_free(&la->sbuf);
