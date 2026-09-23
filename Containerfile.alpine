@@ -11,6 +11,8 @@ WORKDIR /src
 
 COPY . /src/
 
+ENV VUE_FILE_CACHE="/src/.vuecache"
+
 RUN apk add --no-cache \
         'avahi-dev' \
         'bash' \
@@ -30,6 +32,7 @@ RUN apk add --no-cache \
         'openssl-dev>3' \
         'pcre2' \
         'pngquant' \
+        'py3-requests' \
         'python3' \
         'uriparser-dev' \
         'wget' \
@@ -56,6 +59,8 @@ RUN apk add --no-cache \
                 --enable-kqueue \
                 --disable-libav \
                 --enable-pngquant \
+                --enable-vue_cache \
+                --disable-vue_build \
                 --python=python3 \
         && \
         make DESTDIR='/tvheadend' -j$(($(nproc) - 1)) install

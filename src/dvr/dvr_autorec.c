@@ -126,9 +126,12 @@ void
 dvr_autorec_purge_obsolete_timers(void)
 {
   dvr_entry_t *de;
+  dvr_entry_t *de_next;
   int num_purged = 0;
 
-  LIST_FOREACH(de, &dvrentries, de_global_link) {
+  de = LIST_FIRST(&dvrentries);
+  while (de != NULL) {
+    de_next = LIST_NEXT(de, de_global_link);
     if (dvr_autorec_entry_can_be_purged(de)) {
       char ubuf[UUID_HEX_SIZE];
       char t1buf[32], t2buf[32];
@@ -142,6 +145,7 @@ dvr_autorec_purge_obsolete_timers(void)
       dvr_entry_destroy(de, 1);
       ++num_purged;
     }
+    de = de_next;
   }
   if (num_purged)
     tvhinfo(LS_DVR, "Purged %d autorec entries that no longer match schedule", num_purged);

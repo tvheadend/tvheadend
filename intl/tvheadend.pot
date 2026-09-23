@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-07 02:13+0000\n"
+"POT-Creation-Date: 2026-09-21 02:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -932,8 +932,8 @@ msgstr ""
 msgid "Authority"
 msgstr ""
 
-#: src/access.c:1512 src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
-#: src/descrambler/capmt.c:2706
+#: src/access.c:1510 src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
+#: src/descrambler/capmt.c:2753
 msgid "Auto"
 msgstr ""
 
@@ -1207,7 +1207,7 @@ msgid ""
 "faster."
 msgstr ""
 
-#: src/descrambler/capmt.c:2707
+#: src/descrambler/capmt.c:2754
 msgid "Byte index tag order"
 msgstr ""
 
@@ -1253,7 +1253,7 @@ msgstr ""
 msgid "CAM slot number."
 msgstr ""
 
-#: src/descrambler/capmt.c:2719
+#: src/descrambler/capmt.c:2766
 msgid "CAPMT (Linux Network DVBAPI)"
 msgstr ""
 
@@ -1333,7 +1333,7 @@ msgstr ""
 msgid "CSA CBC Constant Code Word"
 msgstr ""
 
-#: src/descrambler/capmt.c:2751
+#: src/descrambler/capmt.c:2798
 msgid "CW Mode"
 msgstr ""
 
@@ -1361,7 +1361,7 @@ msgstr ""
 msgid "Callsign"
 msgstr ""
 
-#: src/descrambler/capmt.c:2735
+#: src/descrambler/capmt.c:2782
 msgid "Camd.socket filename / IP Address (TCP mode)"
 msgstr ""
 
@@ -2058,7 +2058,7 @@ msgstr ""
 msgid "Cron multi-line"
 msgstr ""
 
-#: src/descrambler/capmt.c:2752
+#: src/descrambler/capmt.c:2799
 msgid "CryptoWord mode."
 msgstr ""
 
@@ -2363,7 +2363,7 @@ msgstr ""
 msgid "Dance"
 msgstr ""
 
-#: src/access.c:1511
+#: src/access.c:1512
 msgid "Dark"
 msgstr ""
 
@@ -3399,15 +3399,15 @@ msgstr ""
 msgid "Exported Tuner(s) Settings"
 msgstr ""
 
-#: src/descrambler/capmt.c:2695
+#: src/descrambler/capmt.c:2742
 msgid "Extended (OE 2.2)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2696
+#: src/descrambler/capmt.c:2743
 msgid "Extended (OE 2.2), mode follows key"
 msgstr ""
 
-#: src/descrambler/capmt.c:2697
+#: src/descrambler/capmt.c:2744
 msgid "Extended DES (OE 2.0)"
 msgstr ""
 
@@ -4902,7 +4902,7 @@ msgstr ""
 msgid "Leisure hobbies"
 msgstr ""
 
-#: src/access.c:1510
+#: src/access.c:1511
 msgid "Light"
 msgstr ""
 
@@ -4974,7 +4974,7 @@ msgstr ""
 msgid "List subsystems"
 msgstr ""
 
-#: src/descrambler/capmt.c:2743
+#: src/descrambler/capmt.c:2790
 msgid "Listen / Connect port"
 msgstr ""
 
@@ -5463,7 +5463,7 @@ msgstr ""
 msgid "Missing In PAT/SDT"
 msgstr ""
 
-#: src/descrambler/capmt.c:2725
+#: src/descrambler/capmt.c:2772
 msgid "Mode"
 msgstr ""
 
@@ -6067,19 +6067,19 @@ msgstr ""
 msgid "OMX"
 msgstr ""
 
-#: src/descrambler/capmt.c:2627
+#: src/descrambler/capmt.c:2674
 msgid "OSCam (rev >= 9095)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2621
+#: src/descrambler/capmt.c:2668
 msgid "OSCam TCP (rev >= 9574)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2615
+#: src/descrambler/capmt.c:2662
 msgid "OSCam net protocol (rev >= 10389)"
 msgstr ""
 
-#: src/descrambler/capmt.c:2624
+#: src/descrambler/capmt.c:2671
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr ""
 
@@ -6121,7 +6121,7 @@ msgstr ""
 msgid "Offset the mapped channel numbers by x (value here + channel number)."
 msgstr ""
 
-#: src/descrambler/capmt.c:2630
+#: src/descrambler/capmt.c:2677
 msgid "Older OSCam"
 msgstr ""
 
@@ -6227,7 +6227,7 @@ msgstr ""
 msgid "Original network ID"
 msgstr ""
 
-#: src/descrambler/capmt.c:2726
+#: src/descrambler/capmt.c:2773
 msgid "Oscam mode."
 msgstr ""
 
@@ -6348,11 +6348,11 @@ msgstr ""
 msgid "PLS mode"
 msgstr ""
 
-#: src/descrambler/capmt.c:2761
+#: src/descrambler/capmt.c:2808
 msgid "PMT Mode"
 msgstr ""
 
-#: src/descrambler/capmt.c:2762
+#: src/descrambler/capmt.c:2809
 msgid "PMT mode."
 msgstr ""
 
@@ -6584,7 +6584,7 @@ msgstr ""
 msgid "Port to connect to."
 msgstr ""
 
-#: src/descrambler/capmt.c:2744
+#: src/descrambler/capmt.c:2791
 msgid "Port to listen on or to connect to."
 msgstr ""
 
@@ -6748,7 +6748,7 @@ msgstr ""
 msgid "Private"
 msgstr ""
 
-#: src/descrambler/capmt.c:2618
+#: src/descrambler/capmt.c:2665
 msgid "Problematic: OSCam new pc-nodmx (rev >= 10389)"
 msgstr ""
 
@@ -8133,7 +8133,7 @@ msgstr ""
 msgid "Social advisory"
 msgstr ""
 
-#: src/descrambler/capmt.c:2736
+#: src/descrambler/capmt.c:2783
 msgid "Socket or IP Address (when in TCP mode)."
 msgstr ""
 
@@ -8296,7 +8296,7 @@ msgstr ""
 msgid "Standard"
 msgstr ""
 
-#: src/descrambler/capmt.c:2694
+#: src/descrambler/capmt.c:2741
 msgid "Standard / auto"
 msgstr ""
 
@@ -10454,7 +10454,7 @@ msgstr ""
 msgid "Universal LNB only"
 msgstr ""
 
-#: src/descrambler/capmt.c:2708
+#: src/descrambler/capmt.c:2755
 msgid "Universal tag order"
 msgstr ""
 
@@ -11075,7 +11075,7 @@ msgstr ""
 msgid "Wizard"
 msgstr ""
 
-#: src/descrambler/capmt.c:2633
+#: src/descrambler/capmt.c:2680
 msgid "Wrapper (capmt_ca.so)"
 msgstr ""
 
