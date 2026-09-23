@@ -45,6 +45,7 @@ static tvh_mutex_t linuxdvb_ca_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static tvh_mutex_t linuxdvb_capmt_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 static th_pipe_t linuxdvb_ca_pipe;
 static pthread_t linuxdvb_ca_threadid;
+static tvhpoll_t *linuxdvb_ca_poll; /* protected by linuxdvb_ca_mutex */
 static mtimer_t linuxdvb_ca_thread_join_timer;
 static LIST_HEAD(, linuxdvb_transport) linuxdvb_all_transports;
 static LIST_HEAD(, linuxdvb_ca) linuxdvb_all_cas;
@@ -194,12 +195,19 @@ linuxdvb_ca_open_fd( linuxdvb_transport_t *lcat )
   return 0;
 }
 
+/*
+ * Must be called with linuxdvb_ca_mutex held. The CA thread builds and
+ * applies its poll set under the same lock, so once the fd is removed
+ * here it cannot be added back, before or after the close.
+ */
 static void
 linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
 {
   const int fd = lcat->lcat_ca_fd;
   linuxdvb_ca_t *lca;
   linuxdvb_ca_write_t *lcw;
+
+  lock_assert(&linuxdvb_ca_mutex);
 
   tvh_mutex_lock(&linuxdvb_capmt_mutex);
   LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
@@ -222,6 +230,8 @@ linuxdvb_ca_close_fd( linuxdvb_transport_t *lcat, int reset )
   lcat->lcat_ca_fd = -1;
   tvhtrace(LS_EN50221, "%s: close %s (fd %d)",
            lcat->lcat_name, lcat->lcat_ca_path, fd);
+  if (linuxdvb_ca_poll)
+    tvhpoll_rem1(linuxdvb_ca_poll, fd);
   close(fd);
   tvh_mutex_lock(&linuxdvb_capmt_mutex);
   LIST_FOREACH(lca, &lcat->lcat_slots, lca_link) {
@@ -292,6 +302,9 @@ linuxdvb_ca_thread ( void *aux )
   tvhtrace(LS_EN50221, "ca thread start");
   ev = malloc(sizeof(*ev) * evsize);
   poll = tvhpoll_create(evsize + 1);
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
+  linuxdvb_ca_poll = poll;
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   tm = mclk();
   waitms = 250;
   while (tvheadend_is_running() && !quit) {
@@ -344,8 +357,8 @@ linuxdvb_ca_thread ( void *aux )
       evp++;
       evcnt++;
     }
-    tvh_mutex_unlock(&linuxdvb_ca_mutex);
     tvhpoll_set(poll, ev, evcnt);
+    tvh_mutex_unlock(&linuxdvb_ca_mutex);
 
     r = tvhpoll_wait(poll, ev, evcnt, waitms);
     if (r < 0 && ERRNO_AGAIN(errno))
@@ -453,6 +466,9 @@ linuxdvb_ca_thread ( void *aux )
     tvh_mutex_unlock(&linuxdvb_ca_mutex);
   }
 
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
+  linuxdvb_ca_poll = NULL;
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   tvhpoll_destroy(poll);
   free(ev);
   tvhtrace(LS_EN50221, "ca thread end");
@@ -1060,7 +1076,9 @@ void linuxdvb_transport_destroy ( linuxdvb_transport_t *lcat )
 #if ENABLE_DDCI
   linuxdvb_ddci_destroy(lcat->lddci);
 #endif
+  tvh_mutex_lock(&linuxdvb_ca_mutex);
   linuxdvb_ca_close_fd(lcat, 0);
+  tvh_mutex_unlock(&linuxdvb_ca_mutex);
   en50221_transport_destroy(lcat->lcat_transport);
   free(lcat->lcat_ca_path);
   free(lcat->lcat_name);
