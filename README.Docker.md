@@ -415,7 +415,7 @@ services:
     devices:
       - /dev/dvb/
     environment:
-      - TZ: 'Europe/Amsterdam'
+      - TZ='Europe/Amsterdam'
     volumes:
       - tvheadend:/var/lib/tvheadend:rw
       - /export/recordings:/var/lib/tvheadend/recordings:rw
