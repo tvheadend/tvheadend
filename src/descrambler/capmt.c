@@ -497,6 +497,13 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
     if ((pid = o->pid) > 0) {
       o->pid = PID_BLOCKED;
       o->pid_refs = 0;
+      /* ECM pids were opened with the fast table flag (capmt_pid_add),
+       * close them the same way - otherwise the descrambler section and
+       * its last ECM stay on a mux which keeps running, and the same ECM
+       * is not forwarded again on the next start of the service */
+      if (o->ecm > 0)
+        pid = DESCRAMBLER_ECM_PID(pid);
+      o->ecm = -1;
       if (mux) {
         tvh_mutex_unlock(&capmt->capmt_mutex);
         descrambler_close_pid(mux, &ca->ca_pids[i], pid);
