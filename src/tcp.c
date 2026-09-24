@@ -583,7 +583,18 @@ try_again:
   sused = 0;
   LIST_FOREACH(tsl, &tcp_server_active, alink) {
     if (tsl->fd == fd) {
-      res = tsl;
+      /*
+       * tcp_server_active is newest first, and the kernel reuses a
+       * descriptor number only after its previous owner closed it.
+       * The first entry with this fd is therefore the caller's own
+       * connection. An older entry with the same fd belongs to a
+       * connection that already closed its socket and is about to be
+       * freed by tcp_server_loop(); it must not be returned.
+       */
+      if (res == NULL)
+        res = tsl;
+      else
+        tvhwarn(LS_TCP, "ignoring stale connection entry for fd %d", fd);
       if (!aa->aa_conn_limit && !aa->aa_conn_limit_streaming)
         break;
       continue;
