@@ -1202,6 +1202,8 @@ pvr_generate_filename(dvr_entry_t *de, const streaming_start_t *ss)
     *(dirsep - 1) = '\0';
     if (*x) {
       s = cleanup_filename(cfg, x, dir_dosubs);
+      if (s == NULL)
+        return -1;
       tvh_strlcatf(filename, sizeof(filename), j, "%s/", s);
       free(s);
     }
