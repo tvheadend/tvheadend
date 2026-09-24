@@ -671,6 +671,7 @@ void *timeshift_reader ( void *p )
                 /* Release */
                 if (sm)
                   streaming_msg_free(sm);
+                sm = NULL;
 
                 /* Find end */
                 skip_time = 0x7fffffffffffffffLL;

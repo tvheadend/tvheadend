@@ -30,6 +30,7 @@
 #endif
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
+#include "timeshift/timeshift_svcts.h"
 #include "input/mpegts/iptv/iptv_private.h"
 #endif
 #include "dvr/dvr.h"
@@ -1162,6 +1163,10 @@ profile_chain_close(profile_chain_t *prch)
     timeshift_destroy(prch->prch_timeshift);
     prch->prch_timeshift = NULL;
   }
+  if (prch->prch_svcts) {
+    svcts_destroy(prch->prch_svcts);
+    prch->prch_svcts = NULL;
+  }
 #endif
   if (prch->prch_gh) {
     globalheaders_destroy(prch->prch_gh);
@@ -1226,7 +1231,10 @@ profile_htsp_work(profile_chain_t *prch,
   prch->prch_share = prsh->prsh_tsfix;
 
 #if ENABLE_TIMESHIFT
-  if (timeshift_period > 0)
+  /* one cache per channel: timeshift through it when there is one */
+  if (timeshift_period > 0 && svcts_enabled())
+    dst = prch->prch_svcts = svcts_create(dst, timeshift_period);
+  else if (timeshift_period > 0)
     dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
 #endif
 

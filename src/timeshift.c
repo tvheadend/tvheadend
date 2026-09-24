@@ -299,6 +299,19 @@ const idclass_t timeshift_conf_class = {
       .off    = offsetof(timeshift_conf_t, teletext),
       .opts   = PO_EXPERT,
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "record_cache",
+      .name   = N_("Record from cache"),
+      .desc   = N_("Keep the last \"Maximum period\" of every tuned "
+                   "channel, so a recording started after its programme "
+                   "began also gets the part already broadcast, as far "
+                   "back as the cache reaches. HTSP clients timeshift "
+                   "through the same cache instead of a buffer of their "
+                   "own. Each tuned channel uses one cache, within the "
+                   "storage path and the maximum size above."),
+      .off    = offsetof(timeshift_conf_t, record_cache),
+    },
     {}
   }
 };
