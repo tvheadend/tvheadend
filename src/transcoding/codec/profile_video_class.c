@@ -66,6 +66,20 @@ deinterlace_vaapi_mode_get_list( void *o, const char *lang )
 }
 #endif
 
+#if ENABLE_NVENC
+static htsmsg_t *
+deinterlace_nvdec_mode_get_list( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("Send Frame Deinterlacing"),              NVDEC_DEINT_MODE_SEND_FRAME },
+        { N_("Send Field Deinterlacing"),              NVDEC_DEINT_MODE_SEND_FIELD },
+        { N_("Send Frame Nonspatia Deinterlacing"),    NVDEC_DEINT_MODE_SEND_FRAME_NONSPATIAL },
+        { N_("Send Field Nonspatia Deinterlacing"),    NVDEC_DEINT_MODE_SEND_FIELD_NONSPATIAL },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+#endif
+
 static htsmsg_t *
 deinterlace_field_rate_get_list( void *o, const char *lang )
 {
@@ -326,6 +340,19 @@ const codec_profile_class_t codec_profile_video_class = {
                 .opts     = PO_ADVANCED,
                 .off      = offsetof(TVHVideoCodecProfile, deinterlace_vaapi_mode),
                 .list     = deinterlace_vaapi_mode_get_list,
+                .def.i    = VAAPI_DEINT_MODE_DEFAULT,
+            },
+#endif
+#if ENABLE_NVENC
+            {
+                .type     = PT_INT,
+                .id       = "deinterlace_nvdev_mode",
+                .name     = N_("NVDEC Deinterlace mode"),
+                .desc     = N_("Mode to use for NVDEC Deinterlacing."),
+                .group    = 2,
+                .opts     = PO_ADVANCED,
+                .off      = offsetof(TVHVideoCodecProfile, deinterlace_nvdec_mode),
+                .list     = deinterlace_nvdec_mode_get_list,
                 .def.i    = VAAPI_DEINT_MODE_DEFAULT,
             },
 #endif

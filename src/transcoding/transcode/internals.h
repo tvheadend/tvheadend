@@ -48,12 +48,14 @@ typedef struct tvh_context_type TVHContextType;
 typedef struct tvh_context TVHContext;
 typedef struct tvh_context_helper TVHContextHelper;
 
-// post phase _MUST_ be == phase + 1
+
 typedef enum {
+    PREPARE_DECODER,
     OPEN_DECODER,
-    OPEN_DECODER_POST,
-    OPEN_ENCODER,
-    OPEN_ENCODER_POST
+    NOTIFY_GLOBALHEADER,
+    PREPARE_ENCODER,
+    OPEN_FILTERS,
+    OPEN_ENCODER
 } TVHOpenPhase;
 
 #if LIBAVCODEC_VERSION_MAJOR > 59
@@ -169,10 +171,18 @@ struct tvh_context {
     int64_t delta;
     uint8_t sri;
     // hardware acceleration
+    // store the AVHWDeviceType to be used in decide the filters and hwaccels functions calls
+    enum AVHWDeviceType iavhwdevtype;
+    enum AVHWDeviceType oavhwdevtype;
+    // used to transport the sample aspect ratio from packets to filter
+    AVRational sample_aspect_ratio;
     char *hw_accel_device;
     AVBufferRef *hw_device_ref;
     void *hw_accel_ictx;
     AVBufferRef *hw_device_octx;
+    // used as 'temporary storage' to pass dict from one state machine to other
+    // (PREPARE_DECODER --> OPEN_DECODER or PREPARE_ENCODER --> OPEN_ENCODER)
+    AVDictionary *temp_opts;
 };
 
 int
@@ -184,6 +194,43 @@ tvh_context_get_str_opt(AVDictionary **opts, const char *key, char **value);
 void
 tvh_context_close(TVHContext *self, int flush);
 
+#if LIBAVCODEC_VERSION_MAJOR > 59
+/**
+ * @brief Initializes and configures an FFmpeg AVFilterGraph for audio or video processing.
+ *
+ * This function acts as the bridge between the decoder and the encoder. It constructs
+ * a filter graph, configures the input source using parameters from the input codec 
+ * context (`iavctx`), applies a user-specified filter chain, and extracts the negotiated 
+ * output parameters from the sink to configure the output codec context (`oavctx`).
+ *
+ * It handles format extraction, Sample Aspect Ratio (SAR) fallbacks, hardware frame 
+ * contexts (e.g., VAAPI/CUDA), and color space metadata synchronization for modern 
+ * FFmpeg APIs (FFmpeg 6.0/7.0+).
+ *
+ * @param self        Pointer to the main TVH transcoding context.
+ * @param source_name The name of the FFmpeg source filter to use (e.g., "buffer" for video, 
+ * "abuffer" for audio).
+ * @param filters     A string describing the linear filter chain to insert between source 
+ * and sink (e.g., "yadif=1,scale=1920:1080"). If NULL or empty, the 
+ * source is linked directly to the sink.
+ * @param sink_name   The name of the FFmpeg sink filter to use (e.g., "buffersink" for video, 
+ * "abuffersink" for audio).
+ *
+ * @return 0 on successful graph configuration, or a negative FFmpeg AVERROR code on failure.
+ *
+ * @note 
+ * - If the filter graph alters the stream's properties (e.g., changing resolution, pixel 
+ * format, or sample rate), this function automatically updates `self->oavctx` to match 
+ * the new negotiated parameters.
+ * - Hardware frame contexts are properly referenced and mapped if hardware decoding/filtering 
+ * is active.
+ */
+int
+tvh_context_open_filters2(TVHContext *self,
+                         const char *source_name,
+                         const char *filters, 
+                         const char *sink_name);
+#endif
 /* __VA_ARGS__ = NULL terminated list of sink options
    sink option = (const char *name, av_opt_set_type opt_set_type, int size, const uint8_t *value) */
 int

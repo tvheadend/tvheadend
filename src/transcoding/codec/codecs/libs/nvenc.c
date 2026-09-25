@@ -345,6 +345,10 @@ tvh_codec_profile_nvenc_h264_open(tvh_codec_profile_nvenc_t *self,
     AV_DICT_SET_INT(LST_NVENC, opts, "qcomp", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "bf", 0, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "refs", 0, 0);
+
+    // force keyframe at t=0, t=1s and t=2s (used for flashing the encoder)
+    AV_DICT_SET(LST_NVENC, opts, "force_key_frames", "expr:eq(t,0)+eq(t,1)+eq(t,2)", AV_DICT_DONT_OVERWRITE);
+    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
     return 0;
 }
 
@@ -464,6 +468,10 @@ tvh_codec_profile_nvenc_hevc_open(tvh_codec_profile_nvenc_t *self,
     AV_DICT_SET_INT(LST_NVENC, opts, "qcomp", -1, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "bf", 0, 0);
     AV_DICT_SET_INT(LST_NVENC, opts, "refs", 0, 0);
+
+    // force keyframe at t=0, t=1s and t=2s (used for flashing the encoder)
+    AV_DICT_SET(LST_NVENC, opts, "force_key_frames", "expr:eq(t,0)+eq(t,1)+eq(t,2)", AV_DICT_DONT_OVERWRITE);
+    ((TVHCodecProfile *)self)->has_support_for_filter2 = 1;
     return 0;
 }
 
