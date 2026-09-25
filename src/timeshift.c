@@ -41,6 +41,18 @@ struct timeshift_conf timeshift_conf;
 memoryinfo_t timeshift_memoryinfo = { .my_name = "Timeshift" };
 memoryinfo_t timeshift_memoryinfo_ram = { .my_name = "Timeshift RAM buffer" };
 
+void
+timeshift_play_start_set(timeshift_t *ts, streaming_start_t *ss)
+{
+  if (ss == ts->smt_play)
+    return;
+  if (ss)
+    streaming_start_ref(ss);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
+  ts->smt_play = ss;
+}
+
 /*
  * Packet log
  */
@@ -327,6 +339,60 @@ timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
   return 0;
 }
 
+static int64_t
+timeshift_packet_rebase_target(int64_t last_pts, int64_t adjusted_pts)
+{
+  int64_t delta;
+
+  if (adjusted_pts >= last_pts - 90000)
+    return adjusted_pts;
+
+  /* Keep a normal 33-bit wrap unwrapped on the monotonic timeshift axis.
+   * The two-second window matches the discontinuity handling in tsfix. */
+  delta = pts_diff(last_pts, adjusted_pts);
+  if (delta >= 0 && delta <= 2 * 90000)
+    return last_pts + delta;
+
+  return last_pts + 1;
+}
+
+static void
+timeshift_packet_rebase( timeshift_t *ts, streaming_message_t *sm )
+{
+  th_pkt_t *pkt = sm->sm_data;
+  th_pkt_t *pkt2;
+
+  if (ts->pts_rebase_pending &&
+      pkt->pkt_pts != PTS_UNSET &&
+      pkt->pkt_type != SCT_TELETEXT) {
+    int64_t adjusted_pts = pkt->pkt_pts + ts->start_pts;
+    int64_t last_pts = ts_rescale_inv(ts->last_wr_time, 1000000);
+    int64_t target_pts =
+      timeshift_packet_rebase_target(last_pts, adjusted_pts);
+
+    if (target_pts != adjusted_pts) {
+      ts->start_pts = target_pts - pkt->pkt_pts;
+      tvhdebug(LS_TIMESHIFT,
+               "ts %d rebase packet clock after source reconfiguration:"
+               " offset=%"PRId64,
+               ts->id, ts->start_pts);
+    }
+    ts->pts_rebase_pending = 0;
+  }
+
+  if (ts->start_pts) {
+    pkt2 = pkt_copy_shallow(pkt);
+    pkt_ref_dec(pkt);
+    sm->sm_data = pkt2;
+    if (pkt2->pkt_pts != PTS_UNSET)
+      pkt2->pkt_pts += ts->start_pts;
+    if (pkt2->pkt_dts != PTS_UNSET)
+      pkt2->pkt_dts += ts->start_pts;
+    if (pkt2->pkt_pcr != PTS_UNSET)
+      pkt2->pkt_pcr += ts->start_pts;
+  }
+}
+
 /*
  * Receive data
  */
@@ -335,7 +401,6 @@ static void timeshift_input
 {
   int type = sm->sm_type;
   timeshift_t *ts = opaque;
-  th_pkt_t *pkt, *pkt2;
 
   if (ts->exit)
     return;
@@ -349,19 +414,16 @@ static void timeshift_input
     streaming_msg_free(sm);
   } else {
 
-    /* Change PTS/DTS offsets */
-    if (ts->packet_mode && ts->start_pts && type == SMT_PACKET) {
-      pkt = sm->sm_data;
-      pkt2 = pkt_copy_shallow(pkt);
-      pkt_ref_dec(pkt);
-      sm->sm_data = pkt2;
-      if (pkt2->pkt_pts != PTS_UNSET) pkt2->pkt_pts += ts->start_pts;
-      if (pkt2->pkt_dts != PTS_UNSET) pkt2->pkt_dts += ts->start_pts;
-    }
+    /* Keep the packet clock monotonic across a source reconfiguration. */
+    if (ts->packet_mode && type == SMT_PACKET)
+      timeshift_packet_rebase(ts, sm);
 
-    /* Check for exit */
+    /* Check for exit / source reconfiguration. */
+    if (type == SMT_STOP && sm->sm_code == SM_CODE_SOURCE_RECONFIGURED)
+      ts->pts_rebase_pending = 1;
     else if (type == SMT_EXIT ||
-        (type == SMT_STOP && sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
+             (type == SMT_STOP &&
+              sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
       ts->exit = 1;
 
     else if (type == SMT_MPEGTS)
@@ -439,6 +501,8 @@ timeshift_destroy(streaming_target_t *pad)
 
   if (ts->smt_start)
     streaming_start_unref(ts->smt_start);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
 
   if (ts->path)
     free(ts->path);
@@ -479,6 +543,7 @@ streaming_target_t *timeshift_create
   ts->last_wr_time = 0;
   ts->buf_time   = 0;
   ts->start_pts  = 0;
+  ts->pts_rebase_pending = 0;
   ts->ref_time   = 0;
   ts->seek.file  = NULL;
   ts->seek.frame = NULL;
