@@ -93,6 +93,8 @@ struct linuxdvb_ca_write {
   uint8_t  data[0];
 };
 
+
+
 /*
  * CA thread routines
  */
@@ -1075,6 +1077,9 @@ void linuxdvb_transport_destroy ( linuxdvb_transport_t *lcat )
   LIST_REMOVE(lcat, lcat_link);
 #if ENABLE_DDCI
   linuxdvb_ddci_destroy(lcat->lddci);
+    /* linuxdvb_ca_close_fd() may inspect lddci below. Clear the pointer
+     * after destroying the DDCI transport to avoid using freed state. */
+    lcat->lddci = NULL;
 #endif
   tvh_mutex_lock(&linuxdvb_ca_mutex);
   linuxdvb_ca_close_fd(lcat, 0);

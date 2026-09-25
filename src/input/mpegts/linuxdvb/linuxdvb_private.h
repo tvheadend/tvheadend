@@ -473,12 +473,30 @@ void
 linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, service_t *t,
                     const uint8_t *tsb, int len );
 void
-linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t );
+linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit );
 void
 linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t );
 /* return 0, if ddci can be assigned to the given service */
 int
-linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi );
+linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
+                              int svc_limit );
+
+/* MTD: used by dvbcam.c to remap a CA-PMT's SID/PIDs into the same
+ * symmetric virtual-mux namespace used by the TS packets sent to DDCI. */
+int
+linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, service_t *t );
+void
+linuxdvb_ddci_mtd_arm_eit ( linuxdvb_ddci_t *lddci, service_t *t,
+                                uint8_t list_management, uint16_t mapped_sid );
+uint16_t
+linuxdvb_ddci_mtd_map_pid ( linuxdvb_ddci_t *lddci, service_t *t, uint16_t real_pid );
+uint16_t
+linuxdvb_ddci_mtd_map_sid ( linuxdvb_ddci_t *lddci, int ctx_idx, uint16_t real_sid );
+
+/* Shared EN 300 468 CA_descriptor walker used by CAT and CA-PMT rewriting. */
+typedef void (*dvb_cadesc_pid_cb_t)(uint8_t *pid_hi, uint8_t *pid_lo, void *aux);
+int
+dvb_ca_descriptors_foreach ( uint8_t *buf, int len, dvb_cadesc_pid_cb_t cb, void *aux );
 #endif
 
 /*

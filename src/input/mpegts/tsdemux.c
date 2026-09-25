@@ -22,6 +22,7 @@
 #include "input.h"
 #include "dvb_psi_hbbtv.h"
 #include "tsdemux.h"
+#include "descrambler/dvbcam.h"
 
 #define TS_REMUX_BUFSIZE (188 * 100)
 
@@ -180,6 +181,17 @@ ts_recv_packet1
 
   st = elementary_stream_find(&t->s_components, pid);
 
+#if ENABLE_LINUXDVB_CA && ENABLE_DDCI
+  /* CAT-discovered EMM PIDs are not elementary streams. Give the active
+   * DVB-CAM client first refusal before the normal non-component guard. */
+  if (st == NULL && !table &&
+      pid != t->s_components.set_pcr_pid &&
+      dvbcam_ddci_emm_put((service_t *)t, pid, tsb, len)) {
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    return 1;
+  }
+#endif
+
   if((st == NULL) && (pid != t->s_components.set_pcr_pid) && !table) {
     tvh_mutex_unlock(&t->s_stream_mutex);
     return 0;
@@ -187,6 +199,14 @@ ts_recv_packet1
 
   if(!error)
     service_set_streaming_status_flags((service_t*)t, TSS_INPUT_SERVICE);
+
+  /* PAT/PMT packets are signalling, not scrambled elementary-stream data.
+   * Keep them on the service MPEG-TS path while the service is descrambled. */
+  if (pid == DVB_PAT_PID || pid == t->s_components.set_pmt_pid) {
+    ts_recv_packet0(t, st, tsb, len);
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    return 1;
+  }
 
   scrambled = t->s_scrambled_seen;
   if(!t->s_scrambled_pass && ((tsb[3] & 0xc0) || scrambled)) {

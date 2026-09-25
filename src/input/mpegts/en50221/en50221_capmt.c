@@ -63,6 +63,13 @@ put_2byte(uint8_t *dst, uint16_t val)
 }
 
 static inline void
+put_pid(uint8_t *dst, uint16_t val)
+{
+  dst[0] = (dst[0] & 0xE0) | ((val >> 8) & 0x1F);
+  dst[1] = (uint8_t)(val & 0xFF);
+}
+
+static inline void
 put_len12(uint8_t *dst, uint16_t val)
 {
   dst[0] &= 0xf0;
@@ -116,7 +123,8 @@ int en50221_capmt_build
   (mpegts_service_t *s, int bcmd, uint16_t svcid,
    const uint16_t *caids, int caids_count,
    const uint8_t *pmt, size_t pmtlen,
-   uint8_t **capmt, size_t *capmtlen)
+   uint8_t **capmt, size_t *capmtlen,
+   capmt_pid_mapper_t pmap, capmt_sid_mapper_t smap, void *opaque)
 {
   uint8_t *d, *x, *y, dtag, dlen, cmd_id;
   const uint8_t *p;
@@ -142,8 +150,14 @@ int en50221_capmt_build
     goto reterr;
   }
 
-  put_2byte(d + 1, svcid);
-  d[3] = pmt[2]; /* version + current_next_indicator */
+  put_2byte(d + 1, smap ? smap(opaque, svcid) : svcid);
+  /* Preserve the PMT version/current_next_indicator byte. PID/SID mapping
+   * changes only the identifiers serialized into the CA-PMT and does not
+   * alter PMT version semantics. This keeps mapped and native CA-PMTs
+   * consistent with the existing builder behavior while the optional
+   * callbacks translate only fields that belong to the MTD namespace.
+   */
+  d[3] = pmt[2];
   d[4] = 0xf0;
 
   /* common descriptors */
@@ -160,12 +174,17 @@ int en50221_capmt_build
     if (dtag == DVB_DESC_CA && dlen >= 4) {
       caid = extract_2byte(p + 2);
       pid  = extract_pid(p + 4);
+      /* CAID/PID matching below always uses the real, on-air pid - the
+       * remap (if any) only changes what gets written into the CA-PMT
+       * we send to the CAM, never what we match this descriptor against */
       if (en50221_capmt_check_caid(s, pid, caid, caids, caids_count)) {
         if (first) {
           *x++ = cmd_id;
           first = 0;
         }
         memcpy(x, p, dlen + 2);
+        if (pmap)
+          put_pid(x + 4, pmap(opaque, pid, CAPMT_PID_MAP_CA));
         x += dlen + 2;
       }
     }
@@ -186,6 +205,8 @@ int en50221_capmt_build
     tl -= 5;
     if (en50221_capmt_check_pid(s, pid)) {
       memcpy(y = x, p - 5, 3); /* stream type, PID */
+      if (pmap)
+        put_pid(y + 1, pmap(opaque, pid, CAPMT_PID_MAP_ES));
       x += 5;
       first = 1;
       while (l > 1) {
@@ -200,6 +221,8 @@ int en50221_capmt_build
               first = 0;
             }
             memcpy(x, p, dlen + 2);
+            if (pmap)
+              put_pid(x + 4, pmap(opaque, pid, CAPMT_PID_MAP_CA));
             x += dlen + 2;
           }
         }
