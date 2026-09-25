@@ -295,15 +295,6 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         "abuffer", source_args,                           // source
         filters,                                          // filters
         "abuffersink",                                    // sink
-        "ch_layouts",   AV_OPT_SET_STRING,                // sink option: channel_layout
-        sizeof(ch_layout),
-        ch_layout,
-        "sample_fmts",  AV_OPT_SET_BIN,                   // sink option: sample_fmt
-        sizeof(self->oavctx->sample_fmt),
-        &self->oavctx->sample_fmt,
-        "sample_rates", AV_OPT_SET_BIN,                   // sink option: sample_rate
-        sizeof(self->oavctx->sample_rate),
-        &self->oavctx->sample_rate,
         NULL);                                            // _IMPORTANT!_
 #else
     int ret = tvh_context_open_filters(self,
