@@ -44,4 +44,19 @@ describe('SubscriptionsView — column formatting', () => {
     const id = gridColumns().find((c) => c.field === 'id')
     expect(id?.format?.(0x1a2b, {})).toBe('00001A2B')
   })
+
+  it('converts Input/Output from bytes/s to kb/s (kilobits), matching Classic', () => {
+    const cols = gridColumns()
+    const input = cols.find((c) => c.field === 'in')
+    const output = cols.find((c) => c.field === 'out')
+    /* 1,500,000 bytes/s = 12 Mbit/s -> 12000 kb/s (bytes*8/1000),
+     * NOT 1465 (the old bytes/1024). */
+    expect(input?.format?.(1_500_000, {})).toBe('12000')
+    expect(output?.format?.(1_500_000, {})).toBe('12000')
+    expect(input?.format?.(0, {})).toBe('0')
+    expect(input?.format?.('n/a', {})).toBe('')
+    /* malformed data must not render as "NaN" / "Infinity". */
+    expect(input?.format?.(NaN, {})).toBe('')
+    expect(input?.format?.(Infinity, {})).toBe('')
+  })
 })
