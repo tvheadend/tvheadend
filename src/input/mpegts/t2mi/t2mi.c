@@ -1,0 +1,1633 @@
+/*
+ *  Tvheadend - T2-MI / TS piping decapsulation input
+ *
+ *  Copyright (C) 2026 Tvheadend Project
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*
+ * A T2-MI network is a virtual mpegts network whose muxes are carried
+ * inside another mux of this tvheadend instance: either as a T2-MI
+ * stream (ETSI TS 102 773, baseband frames of a DVB-T2 PLP) or as a
+ * plain "TS in TS" data piping stream (ETSI EN 301 192), both delivered
+ * on one carrier PID of the source mux.
+ *
+ * When a T2-MI mux is started, an internal subscription to the source
+ * mux (or to the carrier service of the source mux) is created.  Using
+ * the carrier service is the recommended mode: the packets then pass
+ * through the regular service layer, including the descrambler, which
+ * makes scrambled carriers work exactly like any other scrambled
+ * service.  The decapsulated inner transport stream is fed back into the
+ * standard mpegts input path, so scanning, service discovery, EPG and
+ * streaming of the inner network work as for any other mux.
+ */
+
+#include "t2mi_private.h"
+#include "settings.h"
+#include "streaming.h"
+
+#define T2MI_BUF_SIZE (300 * 188)
+
+static void t2mi_mux_unsubscribe(t2mi_mux_t *tm);
+static void t2mi_reparse_source_pmts(mpegts_mux_t *mm);
+
+static t2mi_input_t *t2mi_input;
+
+/* does this service expose a T2-MI carrier component? */
+static int
+t2mi_service_has_carrier ( mpegts_service_t *s )
+{
+  int r;
+  tvh_mutex_lock(&s->s_stream_mutex);
+  r = elementary_stream_type_find(&s->s_components, SCT_T2MI) != NULL;
+  tvh_mutex_unlock(&s->s_stream_mutex);
+  return r;
+}
+
+/* **************************************************************************
+ * Input class
+ * *************************************************************************/
+
+extern const idclass_t mpegts_input_class;
+const idclass_t t2mi_input_class = {
+  .ic_super      = &mpegts_input_class,
+  .ic_class      = "t2mi_input",
+  .ic_caption    = N_("T2-MI input"),
+  .ic_properties = (const property_t[]){
+    {}
+  }
+};
+
+static int
+t2mi_input_is_enabled
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  mpegts_mux_t *src;
+  mpegts_mux_instance_t *mmi;
+  mpegts_input_t *si;
+
+  int r = mpegts_input_is_enabled(mi, mm, flags, weight);
+  if (r != MI_IS_ENABLED_OK)
+    return r;
+  if (tm->mm_t2mi_src_mux == NULL || tm->mm_t2mi_src_mux[0] == '\0')
+    return MI_IS_ENABLED_NEVER;
+  src = mpegts_mux_find(tm->mm_t2mi_src_mux);
+  if (src == NULL)
+    return MI_IS_ENABLED_NEVER;
+
+  /* Serialize on the real tuner underneath.  If the source transponder
+   * is already tuned, share it - any number of carriers of the same
+   * transponder can run at once.  A capability probe (weight <= 0) is
+   * always allowed.  Otherwise the source needs a real tuner: start only
+   * if a real input can serve it now (enabled for the source mux and not
+   * already busier than this request), else ask the scheduler to retry
+   * later.  That way a carrier on a not-yet-tuned transponder waits its
+   * turn instead of spinning up a source subscription that fights a tuner
+   * busy with another transponder - while a higher-weight request (e.g.
+   * live viewing over a scan) still preempts as usual. */
+  if (src->mm_active || weight <= 0)
+    return MI_IS_ENABLED_OK;
+  int any = 0;
+  LIST_FOREACH(mmi, &src->mm_instances, mmi_mux_link) {
+    si = mmi->mmi_input;
+    r = si->mi_is_enabled(si, src, flags, weight);
+    if (r == MI_IS_ENABLED_NEVER)
+      continue;
+    any = 1;
+    if (r == MI_IS_ENABLED_OK &&
+        si->mi_get_weight(si, src, flags, weight) < weight)
+      return MI_IS_ENABLED_OK;
+  }
+  /* some tuner could serve the source but all are busy -> wait; none can
+   * ever serve it -> do not block, let the normal path report it */
+  return any ? MI_IS_ENABLED_RETRY : MI_IS_ENABLED_OK;
+}
+
+static int
+t2mi_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  if ((flags & SUBSCRIPTION_STREAMING) && tn->tn_streaming_priority > 0)
+    return tn->tn_streaming_priority;
+  return tn->tn_priority;
+}
+
+static int
+t2mi_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
+{
+  /* the input is virtual and never busy: any number of T2-MI muxes can
+   * be active at once (e.g. several carriers of one transponder); the
+   * real capacity limit is the source mux subscription underneath */
+  return 0;
+}
+
+static int
+t2mi_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  /* unlike the default single-tuner implementation, do not stop other
+   * active T2-MI muxes when a new one starts */
+  return 0;
+}
+
+static int
+t2mi_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  return tn->tn_max_timeout ?: 30;
+}
+
+static void
+t2mi_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
+{
+  snprintf(buf, len, "T2-MI");
+}
+
+/*
+ * Streaming target receiving the source mux / carrier service stream
+ */
+
+static void
+t2mi_mux_decap_output ( void *aux, const uint8_t *tsb, int len )
+{
+  t2mi_mux_t *tm = aux;
+  const uint8_t *map;
+  int pid;
+
+  /* Deliver only the PIDs a subscriber or the scan has opened.  The inner
+   * multiplex carries several channels; queueing all of them when only one
+   * service (or, during a scan, just the SI tables) is needed overruns the
+   * shared input queue.  Full-mux subscriptions (e.g. a raw mux stream) ask
+   * for everything, so pass the whole buffer through unchanged. */
+  if (atomic_get(&tm->tm_fullmux)) {
+    sbuf_append(&tm->tm_buffer, tsb, len);
+    return;
+  }
+  map = tm->tm_pidmap[atomic_get(&tm->tm_pidmap_idx)];
+  for ( ; len >= 188; tsb += 188, len -= 188) {
+    pid = ((tsb[1] & 0x1f) << 8) | tsb[2];
+    if (map[pid >> 3] & (1 << (pid & 7)))
+      sbuf_append(&tm->tm_buffer, tsb, 188);
+  }
+}
+
+static void
+t2mi_mux_decap_log ( void *aux, int severity, const char *fmt, ... )
+{
+  t2mi_mux_t *tm = aux;
+  char buf[512];
+  va_list args;
+  static const int sevmap[4] =
+    { LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERR };
+
+  va_start(args, fmt);
+  vsnprintf(buf, sizeof(buf), fmt, args);
+  va_end(args);
+  tvhlog(sevmap[MINMAX(severity, 0, 3)], LS_T2MI, "%s - %s",
+         tm->mm_nicename, buf);
+}
+
+static void
+t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
+{
+  const streaming_start_component_t *ssc;
+  int i, t2mi_pid = 0, data_pid = 0, data_cnt = 0;
+
+  if (tm->mm_t2mi_src_pid) {
+    tm->tm_carrier_pid = tm->mm_t2mi_src_pid;
+    return;
+  }
+  if (tm->tm_carrier_pid > 0)
+    return;
+
+  /* resolve the carrier PID from the service components: prefer an
+   * explicit T2-MI component, else accept a lone data component */
+  for (i = 0; i < ss->ss_num_components; i++) {
+    ssc = &ss->ss_components[i];
+    if (ssc->es_pid <= 0 || ssc->es_pid >= 8191)
+      continue;
+    if (ssc->es_type == SCT_T2MI) {
+      t2mi_pid = ssc->es_pid;
+      break;
+    }
+    if (ssc->es_type != SCT_CA && ssc->es_type != SCT_CAT &&
+        ssc->es_type != SCT_PCR && data_cnt++ == 0)
+      data_pid = ssc->es_pid;
+  }
+  if (t2mi_pid == 0 && data_cnt == 1)
+    t2mi_pid = data_pid;
+  if (t2mi_pid > 0) {
+    tm->tm_carrier_pid = t2mi_pid;
+    tvhinfo(LS_T2MI, "%s - using carrier PID %d", tm->mm_nicename, t2mi_pid);
+  } else {
+    tvhwarn(LS_T2MI, "%s - unable to resolve carrier PID, "
+            "set it in the mux configuration", tm->mm_nicename);
+  }
+}
+
+/* Process one message from the source subscription.  Runs on the mux's
+ * own decap thread (t2mi_mux_thread), not on the source tuner's input
+ * thread, so decapping a busy carrier cannot stall the tuner and overflow
+ * its queue. */
+static void
+t2mi_mux_process ( t2mi_mux_t *tm, streaming_message_t *sm )
+{
+  mpegts_mux_instance_t *mmi;
+  pktbuf_t *pb;
+  const uint8_t *data;
+  size_t len;
+  int pid;
+
+  switch (sm->sm_type) {
+  case SMT_MPEGTS:
+    mmi = tm->mm_active;
+    if (mmi == NULL || tm->tm_decap == NULL || tm->tm_carrier_pid <= 0)
+      break;
+    pb = sm->sm_data;
+    data = pktbuf_ptr(pb);
+    len = pktbuf_len(pb);
+    for ( ; len >= 188; data += 188, len -= 188) {
+      if (data[0] != 0x47)
+        break;
+      pid = ((data[1] & 0x1f) << 8) | data[2];
+      if (pid != tm->tm_carrier_pid)
+        continue;
+      /* skip packets that are still scrambled */
+      if (data[3] & 0xc0)
+        continue;
+      t2mi_decap_input(tm->tm_decap, data);
+    }
+    if (tm->tm_buffer.sb_ptr > 0)
+      mpegts_input_recv_packets(mmi, &tm->tm_buffer, 0, NULL);
+#if ENABLE_TRACE
+    {
+      const t2mi_decap_stats_t *st = t2mi_decap_get_stats(tm->tm_decap);
+      if (st->in_packets && (st->in_packets & 0x3fff) < 8)
+        tvhtrace(LS_T2MI, "%s - stats: in %"PRIu64" t2mi %"PRIu64
+                 " bb %"PRIu64" out %"PRIu64" crc32err %"PRIu64
+                 " crc8err %"PRIu64" ccerr %"PRIu64" resync %"PRIu64
+                 " dnp %"PRIu64,
+                 tm->mm_nicename, st->in_packets, st->t2mi_packets,
+                 st->bb_frames, st->out_packets, st->crc32_errors,
+                 st->crc8_errors, st->cc_errors, st->resyncs,
+                 st->dnp_packets);
+    }
+#endif
+    break;
+  case SMT_START:
+    tvhdebug(LS_T2MI, "%s - source subscription started", tm->mm_nicename);
+    t2mi_mux_stream_start(tm, sm->sm_data);
+    break;
+  case SMT_NOSTART:
+  case SMT_NOSTART_WARN:
+    tvhwarn(LS_T2MI, "%s - source subscription cannot start (%s)",
+            tm->mm_nicename,
+            streaming_code2txt(sm->sm_code));
+    /* The source cannot deliver (parent mux did not lock, carrier service
+     * gone, ...).  Fail our own mux instance now instead of letting a scan
+     * sit idle until its grace timeout.  mpegts_mux_tuning_error takes the
+     * global lock itself and only flags the status, so it is safe from the
+     * streaming thread; it is a no-op once the mux is no longer active. */
+    {
+      char ubuf[UUID_HEX_SIZE];
+      mpegts_mux_tuning_error(idnode_uuid_as_str(&tm->mm_id, ubuf),
+                              tm->mm_active);
+    }
+    break;
+  case SMT_STOP:
+    tvhdebug(LS_T2MI, "%s - source subscription stopped", tm->mm_nicename);
+    break;
+  default:
+    break;
+  }
+}
+
+/* Drain the source subscription queue and decap on this dedicated thread,
+ * decoupled from the source tuner's input thread.  The tuner thread only
+ * enqueues (fast); the queue absorbs bursts and, if this thread ever falls
+ * behind, drops here - per mux - instead of backing up the shared tuner. */
+static void *
+t2mi_mux_thread ( void *aux )
+{
+  t2mi_mux_t *tm = aux;
+  streaming_queue_t *sq = &tm->tm_sq;
+  streaming_message_t *sm;
+
+  while (atomic_get(&tm->tm_thread_run)) {
+    tvh_mutex_lock(&sq->sq_mutex);
+    sm = TAILQ_FIRST(&sq->sq_queue);
+    if (sm == NULL) {
+      tvh_cond_timedwait(&sq->sq_cond, &sq->sq_mutex, mclk() + sec2mono(1));
+      tvh_mutex_unlock(&sq->sq_mutex);
+      continue;
+    }
+    streaming_queue_remove(sq, sm);
+    tvh_mutex_unlock(&sq->sq_mutex);
+    t2mi_mux_process(tm, sm);
+    streaming_msg_free(sm);
+  }
+  return NULL;
+}
+
+/*
+ * Source subscription management
+ */
+
+static int
+t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
+{
+  mpegts_mux_t *src;
+  mpegts_service_t *svc;
+  mpegts_apids_t pids;
+  char buf[256];
+  /* CONTACCESS: keep the source subscription up even when the carrier
+   * cannot be descrambled (scrambled carrier, no key).  Without it the
+   * subscription is marked bad on "No access" and the scheduler retries
+   * it every couple of seconds, flooding the log during a scan.  The
+   * carrier simply yields no decapsulated output and the mux is left
+   * empty instead.  Tuner contention (no free adapter) still retries
+   * normally - that path is independent of this flag. */
+  int flags = SUBSCRIPTION_MPEGTS | SUBSCRIPTION_STREAMING |
+              SUBSCRIPTION_CONTACCESS;
+
+  lock_assert(&global_lock);
+
+  src = mpegts_mux_find(tm->mm_t2mi_src_mux ?: "");
+  if (src == NULL) {
+    tvherror(LS_T2MI, "%s - source mux not found (%s)",
+             tm->mm_nicename, tm->mm_t2mi_src_mux ?: "not set");
+    return SM_CODE_TUNING_FAILED;
+  }
+  if (src == (mpegts_mux_t *)tm) {
+    tvherror(LS_T2MI, "%s - source mux cannot be the mux itself",
+             tm->mm_nicename);
+    return SM_CODE_TUNING_FAILED;
+  }
+
+  tm->tm_carrier_pid = tm->mm_t2mi_src_pid ?: 0;
+
+  if (tm->mm_t2mi_src_sid > 0) {
+    /* carrier service mode - the service layer descrambles for us */
+    svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+    if (svc == NULL) {
+      tvherror(LS_T2MI, "%s - carrier service %d not found on %s",
+               tm->mm_nicename, tm->mm_t2mi_src_sid,
+               src->mm_nicename ?: "source mux");
+      return SM_CODE_TUNING_FAILED;
+    }
+    /* The carrier PID is delivered because the carrier service lists it
+     * as a T2-MI component.  If the PMT was parsed without the carrier
+     * mapping (e.g. a hand-created mux on a source that was never
+     * scanned as a carrier), the service has no such component and only
+     * its PMT would be opened, so enable the mapping and reparse. */
+    if (!t2mi_service_has_carrier(svc) && !src->mm_t2mi_carriers) {
+      tvhinfo(LS_T2MI, "%s - carrier service %d has no T2-MI component, "
+              "enabling carrier mapping on %s",
+              tm->mm_nicename, tm->mm_t2mi_src_sid, src->mm_nicename ?: "");
+      src->mm_t2mi_carriers = 1;
+      idnode_changed(&src->mm_id);
+      if (src->mm_active)
+        t2mi_reparse_source_pmts(src);
+    }
+    profile_chain_init(&tm->tm_prch, NULL, svc, 0);
+    tm->tm_prch.prch_st = &tm->tm_sq.sq_st;
+    tm->tm_prch.prch_flags = SUBSCRIPTION_MPEGTS;
+    tm->tm_sub = subscription_create_from_service
+      (&tm->tm_prch, NULL, weight ?: 10, "t2mi", flags,
+       NULL, NULL, "t2mi", NULL);
+  } else {
+    /* raw carrier PID mode - no descrambling possible */
+    if (tm->tm_carrier_pid <= 0) {
+      tvherror(LS_T2MI, "%s - carrier PID must be set when no carrier "
+               "service is configured", tm->mm_nicename);
+      return SM_CODE_TUNING_FAILED;
+    }
+    profile_chain_init(&tm->tm_prch, NULL, src, 0);
+    tm->tm_prch.prch_st = &tm->tm_sq.sq_st;
+    tm->tm_prch.prch_flags = SUBSCRIPTION_MPEGTS;
+    tm->tm_sub = subscription_create_from_mux
+      (&tm->tm_prch, NULL, weight ?: 10, "t2mi", flags,
+       NULL, NULL, "t2mi", NULL);
+    if (tm->tm_sub) {
+      mpegts_service_t *ms = (mpegts_service_t *)tm->tm_sub->ths_service;
+      mpegts_pid_init(&pids);
+      mpegts_pid_add(&pids, tm->tm_carrier_pid, MPS_WEIGHT_RAW);
+      if (ms->s_update_pids(ms, &pids)) {
+        t2mi_mux_unsubscribe(tm);
+        mpegts_pid_done(&pids);
+        return SM_CODE_TUNING_FAILED;
+      }
+      mpegts_pid_done(&pids);
+    }
+  }
+
+  if (tm->tm_sub == NULL) {
+    tvherror(LS_T2MI, "%s - unable to subscribe to source mux %s",
+             tm->mm_nicename,
+             src->mm_display_name ?
+               (src->mm_display_name(src, buf, sizeof(buf)), buf) : "");
+    profile_chain_close(&tm->tm_prch);
+    return SM_CODE_TUNING_FAILED;
+  }
+  return 0;
+}
+
+static void
+t2mi_mux_unsubscribe ( t2mi_mux_t *tm )
+{
+  lock_assert(&global_lock);
+
+  if (tm->tm_sub) {
+    subscription_unsubscribe(tm->tm_sub, UNSUBSCRIBE_FINAL);
+    tm->tm_sub = NULL;
+  }
+  profile_chain_close(&tm->tm_prch);
+}
+
+/* Keep the source subscription weight in step with the highest-weight
+ * client watching this T2-MI mux, so the source mux (parent tuner) is
+ * arbitrated as if the clients subscribed to it directly - a high
+ * priority recording of an inner service is not preempted by a lower
+ * priority subscription competing for the tuner.  A client that is just
+ * being opened is not yet linked on the mux, so its weight is folded in
+ * explicitly via the caller. */
+static void
+t2mi_mux_reweight_source ( t2mi_mux_t *tm, int opening_weight )
+{
+  mpegts_mux_instance_t *mmi = tm->mm_active;
+  int w;
+
+  lock_assert(&global_lock);
+  if (tm->tm_sub == NULL || mmi == NULL)
+    return;
+  tvh_mutex_lock(&mmi->mmi_input->mi_output_lock);
+  w = mpegts_mux_instance_weight(mmi);
+  tvh_mutex_unlock(&mmi->mmi_input->mi_output_lock);
+  if (opening_weight > w)
+    w = opening_weight;
+  if (w > 0 && tm->tm_sub->ths_weight != w) {
+    tvhtrace(LS_T2MI, "%s - source subscription weight -> %d",
+             tm->mm_nicename, w);
+    subscription_set_weight(tm->tm_sub, w);
+  }
+}
+
+static void
+t2mi_input_open_service
+  ( mpegts_input_t *mi, mpegts_service_t *s, int flags, int first, int weight )
+{
+  mpegts_input_open_service(mi, s, flags, first, weight);
+  t2mi_mux_reweight_source((t2mi_mux_t *)s->s_dvb_mux, weight);
+}
+
+static void
+t2mi_input_close_service ( mpegts_input_t *mi, mpegts_service_t *s )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)s->s_dvb_mux;
+  mpegts_input_close_service(mi, s);
+  t2mi_mux_reweight_source(tm, 0);
+}
+
+/* Rebuild the delivery PID bitmap from the currently opened PIDs.  Called
+ * (via a zero-delay timer) whenever a PID is opened or closed, so the
+ * decap thread only queues what is actually wanted.  Written into the
+ * inactive bitmap and published with an atomic index flip so the decap
+ * thread never sees a half-updated map. */
+static void
+t2mi_input_update_pids ( mpegts_input_t *mi, mpegts_mux_t *mm )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  mpegts_pid_t *mp;
+  int idx = atomic_get(&tm->tm_pidmap_idx) ^ 1;
+  uint8_t *map = tm->tm_pidmap[idx];
+  int fullmux = 0;
+
+  lock_assert(&global_lock);
+  memset(map, 0, sizeof(tm->tm_pidmap[0]));
+  RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+    if (mp->mp_pid == MPEGTS_FULLMUX_PID)
+      fullmux = 1;
+    else if (mp->mp_pid >= 0 && mp->mp_pid < 8192)
+      map[mp->mp_pid >> 3] |= 1 << (mp->mp_pid & 7);
+  }
+  atomic_set(&tm->tm_pidmap_idx, idx);
+  atomic_set(&tm->tm_fullmux, fullmux);
+}
+
+static int
+t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weight )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mmi->mmi_mux;
+  int ret;
+
+  if (tm->tm_running)
+    return 0;
+
+  sbuf_reset_and_alloc(&tm->tm_buffer, T2MI_BUF_SIZE);
+  tm->tm_decap = t2mi_decap_create(tm->mm_t2mi_format,
+                                   tm->mm_t2mi_plp < 0 ?
+                                     T2MI_DECAP_PLP_AUTO : tm->mm_t2mi_plp,
+                                   t2mi_mux_decap_output, tm,
+                                   t2mi_mux_decap_log, tm);
+  if (tm->tm_decap == NULL)
+    return SM_CODE_TUNING_FAILED;
+
+  /* deliver everything until the first PID update narrows the filter, so
+   * the initial SI tables are never dropped */
+  atomic_set(&tm->tm_fullmux, 1);
+
+  /* accept pid open calls before the subscription starts delivering */
+  tm->mm_active = mmi;
+
+  /* Decouple decapping from the source tuner's input thread: the source
+   * subscription delivers into tm_sq and a dedicated thread drains it and
+   * runs the decap.  The queue is bounded so, if this thread ever falls
+   * behind, packets drop here (per mux) rather than backing up the shared
+   * tuner queue. */
+  streaming_queue_init(&tm->tm_sq, 0, 4 * 1024 * 1024);
+  atomic_set(&tm->tm_thread_run, 1);
+  if (tvh_thread_create(&tm->tm_thread, NULL, t2mi_mux_thread, tm,
+                        "t2mi-decap")) {
+    atomic_set(&tm->tm_thread_run, 0);
+    streaming_queue_deinit(&tm->tm_sq);
+    tm->mm_active = NULL;
+    t2mi_decap_destroy(tm->tm_decap);
+    tm->tm_decap = NULL;
+    sbuf_free(&tm->tm_buffer);
+    return SM_CODE_TUNING_FAILED;
+  }
+
+  ret = t2mi_mux_subscribe(tm, mi, weight);
+  if (ret) {
+    atomic_set(&tm->tm_thread_run, 0);
+    tvh_cond_signal(&tm->tm_sq.sq_cond, 0);
+    pthread_join(tm->tm_thread, NULL);
+    streaming_queue_deinit(&tm->tm_sq);
+    tm->mm_active = NULL;
+    t2mi_decap_destroy(tm->tm_decap);
+    tm->tm_decap = NULL;
+    sbuf_free(&tm->tm_buffer);
+    return ret;
+  }
+
+  tm->tm_running = 1;
+
+  psi_tables_install(mi, (mpegts_mux_t *)tm, DVB_SYS_DVBT);
+
+  return 0;
+}
+
+static void
+t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mmi->mmi_mux;
+  const t2mi_decap_stats_t *st;
+
+  t2mi_mux_unsubscribe(tm);
+
+  /* Stop the decap thread (and drop its queue) before touching the decap
+   * and buffer it uses.  Guarded so a mux that never fully started does
+   * not try to join a thread that was never created. */
+  if (atomic_get(&tm->tm_thread_run)) {
+    atomic_set(&tm->tm_thread_run, 0);
+    tvh_cond_signal(&tm->tm_sq.sq_cond, 0);
+    pthread_join(tm->tm_thread, NULL);
+    streaming_queue_deinit(&tm->tm_sq);
+  }
+
+  if (tm->tm_decap) {
+    st = t2mi_decap_get_stats(tm->tm_decap);
+    tvhinfo(LS_T2MI, "%s - stopped (in %"PRIu64" out %"PRIu64" packets, "
+            "%"PRIu64" T2-MI packets, %"PRIu64" BB frames, "
+            "%"PRIu64" CRC errors)",
+            tm->mm_nicename, st->in_packets, st->out_packets,
+            st->t2mi_packets, st->bb_frames,
+            st->crc32_errors + st->crc8_errors);
+    /* A discovered carrier that received carrier data but never yielded a
+     * single inner packet, and has no services, is not really a carrier -
+     * typically an SI or network pseudo-service whose lone private stream
+     * looks like one.  Disable it so it stops being scanned and is hidden
+     * by default; the user can re-enable it.  Do NOT disable when nothing
+     * was received at all (in_packets == 0): that is a tuning failure (no
+     * free tuner, source not locked), not an empty carrier, and the mux
+     * must stay enabled to be retried. */
+    if (tm->mm_t2mi_auto && st->in_packets > 0 && st->out_packets == 0 &&
+        LIST_FIRST(&tm->mm_services) == NULL &&
+        tm->mm_enabled == MM_ENABLE) {
+      tvhinfo(LS_T2MI, "%s - no inner stream decapsulated, disabling",
+              tm->mm_nicename);
+      tm->mm_enabled = MM_DISABLE;
+      idnode_changed(&tm->mm_id);
+    }
+    t2mi_decap_destroy(tm->tm_decap);
+    tm->tm_decap = NULL;
+  }
+  sbuf_free(&tm->tm_buffer);
+  tm->tm_running = 0;
+}
+
+static t2mi_input_t *
+t2mi_input_create ( void )
+{
+  t2mi_input_t *mi = calloc(1, sizeof(*mi));
+  mpegts_network_t *mn;
+
+  mpegts_input_create0((mpegts_input_t *)mi, &t2mi_input_class, NULL, NULL);
+  mi->mi_start_mux      = t2mi_input_start_mux;
+  mi->mi_stop_mux       = t2mi_input_stop_mux;
+  mi->mi_is_enabled     = t2mi_input_is_enabled;
+  mi->mi_get_priority   = t2mi_input_get_priority;
+  mi->mi_get_weight     = t2mi_input_get_weight;
+  mi->mi_warm_mux       = t2mi_input_warm_mux;
+  mi->mi_open_service   = t2mi_input_open_service;
+  mi->mi_close_service  = t2mi_input_close_service;
+  mi->mi_update_pids    = t2mi_input_update_pids;
+  mi->mi_get_grace      = t2mi_input_get_grace;
+  mi->mi_display_name   = t2mi_input_display_name;
+  mi->mi_enabled        = 1;
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+    if (idnode_is_instance(&mn->mn_id, &t2mi_network_class))
+      mpegts_input_add_network((mpegts_input_t *)mi, mn);
+
+  return mi;
+}
+
+/* **************************************************************************
+ * Mux class
+ * *************************************************************************/
+
+/* enumerate all muxes that can act as a T2-MI / piping source
+ * (any mux of this instance except muxes of a T2-MI network), sorted so
+ * the list is grouped by network and alphabetically ordered */
+typedef struct {
+  char key[UUID_HEX_SIZE];
+  char val[384];
+  char sort[384 + 256];
+} t2mi_srcmux_ent_t;
+
+static int
+t2mi_srcmux_cmp ( const void *a, const void *b )
+{
+  return strcasecmp(((const t2mi_srcmux_ent_t *)a)->sort,
+                    ((const t2mi_srcmux_ent_t *)b)->sort);
+}
+
+static htsmsg_t *
+t2mi_src_mux_enum ( void *o, const char *lang )
+{
+  mpegts_network_t *mn;
+  mpegts_mux_t *mm;
+  htsmsg_t *l, *e;
+  t2mi_srcmux_ent_t *ents = NULL;
+  int n = 0, alloc = 0, i;
+  char nbuf[256];
+
+  LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+    if (idnode_is_instance(&mn->mn_id, &t2mi_network_class))
+      continue;
+    nbuf[0] = '\0';
+    if (mn->mn_display_name)
+      mn->mn_display_name(mn, nbuf, sizeof(nbuf));
+    LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link) {
+      if (n >= alloc) {
+        alloc = alloc ? alloc * 2 : 32;
+        ents = realloc(ents, alloc * sizeof(*ents));
+      }
+      idnode_uuid_as_str(&mm->mm_id, ents[n].key);
+      idnode_get_title(&mm->mm_id, lang, ents[n].val, sizeof(ents[n].val));
+      /* sort by network then mux title, so muxes group by network */
+      snprintf(ents[n].sort, sizeof(ents[n].sort), "%s\x1f%s",
+               nbuf, ents[n].val);
+      n++;
+    }
+  }
+  if (n > 1)
+    qsort(ents, n, sizeof(*ents), t2mi_srcmux_cmp);
+
+  l = htsmsg_create_list();
+  for (i = 0; i < n; i++) {
+    e = htsmsg_create_map();
+    htsmsg_add_str(e, "key", ents[i].key);
+    htsmsg_add_str(e, "val", ents[i].val);
+    htsmsg_add_msg(l, NULL, e);
+  }
+  free(ents);
+  return l;
+}
+
+static htsmsg_t *
+t2mi_mux_class_format_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("Auto-detect"),               T2MI_DECAP_FORMAT_AUTO },
+    { N_("T2-MI (TS 102 773)"),        T2MI_DECAP_FORMAT_T2MI },
+    { N_("Plain TS data piping"),      T2MI_DECAP_FORMAT_PIPE },
+  };
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+/* is the source carrier of this T2-MI mux scrambled? */
+static const void *
+t2mi_mux_class_get_scrambled ( void *o )
+{
+  static int b;
+  t2mi_mux_t *tm = o;
+  mpegts_mux_t *src;
+  mpegts_service_t *svc;
+
+  b = 0;
+  if (tm->mm_t2mi_src_sid && tm->mm_t2mi_src_mux &&
+      (src = mpegts_mux_find(tm->mm_t2mi_src_mux)) != NULL &&
+      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL)
+    b = service_is_encrypted((service_t *)svc);
+  return &b;
+}
+
+const idclass_t t2mi_mux_class =
+{
+  .ic_super      = &mpegts_mux_class,
+  .ic_class      = "t2mi_mux",
+  .ic_caption    = N_("T2-MI Multiplex"),
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .id       = "t2mi_src_mux",
+      .name     = N_("Source mux"),
+      .desc     = N_("The mux carrying this stream (e.g. the DVB-S2 "
+                     "transponder)."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_src_mux),
+      .list     = t2mi_src_mux_enum,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "t2mi_src_sid",
+      .name     = N_("Carrier service ID"),
+      .desc     = N_("Service ID of the carrier service inside the source "
+                     "mux. Using the carrier service enables descrambling "
+                     "of scrambled carriers. Set to 0 to read the carrier "
+                     "PID directly without a service (clear carriers "
+                     "only)."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_src_sid),
+      .def.u32  = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "carrier_scrambled",
+      .name     = N_("Encrypted carrier"),
+      .desc     = N_("The carrier is scrambled: a CA client and the correct "
+                     "key are needed to decapsulate it. A clear carrier "
+                     "needs no key."),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = t2mi_mux_class_get_scrambled,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "t2mi_src_pid",
+      .name     = N_("Carrier PID"),
+      .desc     = N_("PID inside the source mux carrying the T2-MI or "
+                     "piped stream (often 4096). 0 = detect from the "
+                     "carrier service components."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_src_pid),
+      .def.u32  = 0,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "t2mi_format",
+      .name     = N_("Carrier format"),
+      .desc     = N_("Format of the carrier stream: T2-MI baseband "
+                     "frames or plain TS data piping."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_format),
+      .list     = t2mi_mux_class_format_list,
+      .def.i    = T2MI_DECAP_FORMAT_AUTO,
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "t2mi_plp",
+      .name     = N_("PLP ID"),
+      .desc     = N_("Physical Layer Pipe to extract from a T2-MI "
+                     "stream. -1 = first data PLP."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_plp),
+      .def.i    = -1,
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "t2mi_auto",
+      .name     = N_("Automatically created"),
+      .desc     = N_("This mux was created automatically from a discovered "
+                     "carrier and is removed when its source mux is removed."),
+      .off      = offsetof(t2mi_mux_t, mm_t2mi_auto),
+      .opts     = PO_RDONLY | PO_HIDDEN,
+    },
+    {}
+  }
+};
+
+/* carrier PID for display: the running value if resolved, else the
+ * explicit config PID, else the T2-MI component PID from the source
+ * carrier service's PMT (so idle SID-mode muxes still show the PID) */
+static int
+t2mi_mux_carrier_pid ( t2mi_mux_t *tm, mpegts_mux_t *src )
+{
+  mpegts_service_t *svc;
+  elementary_stream_t *es;
+  int pid = 0;
+
+  if (tm->tm_carrier_pid > 0)
+    return tm->tm_carrier_pid;
+  if (tm->mm_t2mi_src_pid)
+    return tm->mm_t2mi_src_pid;
+  if (src && tm->mm_t2mi_src_sid &&
+      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL) {
+    tvh_mutex_lock(&svc->s_stream_mutex);
+    if ((es = elementary_stream_type_find(&svc->s_components, SCT_T2MI)) != NULL)
+      pid = es->es_pid;
+    tvh_mutex_unlock(&svc->s_stream_mutex);
+  }
+  return pid;
+}
+
+static void
+t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  mpegts_mux_t *src;
+  char sbuf[128];
+  int pid;
+
+  src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+  if (src && src->mm_display_name) {
+    src->mm_display_name(src, sbuf, sizeof(sbuf));
+  } else {
+    strlcpy(sbuf, "?", sizeof(sbuf));
+  }
+  /* Identify the carrier by its source mux, carrier PID and SID, all taken
+   * straight from the source PAT/PMT scan (e.g. "T2MI-p8001-s1001"). We
+   * deliberately do NOT append the carrier service's SDT name: that field
+   * (s_dvb_svcname) is not unique across transponders, so when two muxes
+   * reuse the same SID it can carry a name that leaked from an unrelated
+   * transponder, which is misleading. */
+  pid = t2mi_mux_carrier_pid(tm, src);
+  if (pid > 0 && tm->mm_t2mi_src_sid)
+    snprintf(buf, len, "%s/T2MI-p%d-s%u", sbuf, pid, tm->mm_t2mi_src_sid);
+  else if (tm->mm_t2mi_src_sid)
+    snprintf(buf, len, "%s/T2MI-s%u", sbuf, tm->mm_t2mi_src_sid);
+  else
+    snprintf(buf, len, "%s/T2MI-p%d", sbuf, pid);
+}
+
+static htsmsg_t *
+t2mi_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
+{
+  char ubuf1[UUID_HEX_SIZE];
+  char ubuf2[UUID_HEX_SIZE];
+  htsmsg_t *c = htsmsg_create_map();
+  if (filename == NULL) {
+    mpegts_mux_save(mm, c, 1);
+  } else {
+    mpegts_mux_save(mm, c, 0);
+    snprintf(filename, fsize, "input/t2mi/networks/%s/muxes/%s",
+             idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
+             idnode_uuid_as_str(&mm->mm_id, ubuf2));
+  }
+  return c;
+}
+
+static void
+t2mi_mux_delete ( mpegts_mux_t *mm, int delconf )
+{
+  char ubuf1[UUID_HEX_SIZE];
+  char ubuf2[UUID_HEX_SIZE];
+
+  if (delconf)
+    hts_settings_remove("input/t2mi/networks/%s/muxes/%s",
+                        idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
+                        idnode_uuid_as_str(&mm->mm_id, ubuf2));
+
+  mpegts_mux_delete(mm, delconf);
+}
+
+static void
+t2mi_mux_free ( mpegts_mux_t *mm )
+{
+  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
+  free(tm->mm_t2mi_src_mux);
+  mpegts_mux_free(mm);
+}
+
+/* OTA EPG on carrier muxes tunes and decapsulates each one, which is
+ * heavy on feeds with many carriers; let the network opt out.  Inner EPG
+ * is still gathered while a channel is watched. */
+static int
+t2mi_mux_is_epg ( mpegts_mux_t *mm )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  if (tn && tn->tn_epg_exclude)
+    return MM_EPG_DISABLE;
+  return mm->mm_epg;
+}
+
+static t2mi_mux_t *
+t2mi_mux_create0 ( t2mi_network_t *tn, const char *uuid, htsmsg_t *conf )
+{
+  htsmsg_t *c, *c2, *e;
+  htsmsg_field_t *f;
+  char ubuf1[UUID_HEX_SIZE];
+  char ubuf2[UUID_HEX_SIZE];
+
+  t2mi_mux_t *tm =
+    mpegts_mux_create(t2mi_mux, uuid, (mpegts_network_t *)tn,
+                      MPEGTS_ONID_NONE, MPEGTS_TSID_NONE, conf);
+  if (tm == NULL)
+    return NULL;
+
+  tm->mm_display_name  = t2mi_mux_display_name;
+  tm->mm_config_save   = t2mi_mux_config_save;
+  tm->mm_delete        = t2mi_mux_delete;
+  tm->mm_free          = t2mi_mux_free;
+  tm->mm_is_epg        = t2mi_mux_is_epg;
+
+  sbuf_init(&tm->tm_buffer);
+
+  /* services */
+  c2 = NULL;
+  c = htsmsg_get_map(conf, "services");
+  if (c == NULL) {
+    c2 = hts_settings_load_r(1, "input/t2mi/networks/%s/muxes/%s/services",
+                             idnode_uuid_as_str(&tn->mn_id, ubuf1),
+                             idnode_uuid_as_str(&tm->mm_id, ubuf2));
+    c = c2;
+  }
+  if (c) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f))) continue;
+      mpegts_service_create1(htsmsg_field_name(f), (mpegts_mux_t *)tm,
+                             0, 0, e);
+    }
+  }
+  htsmsg_destroy(c2);
+
+  return tm;
+}
+
+/* **************************************************************************
+ * Network class
+ *
+ * A T2-MI network references a set of source muxes and discovers the
+ * T2-MI / piping carriers among their services, creating one inner mux
+ * per carrier.  Muxes can also be added by hand; discovery and manual
+ * muxes coexist in the same network.
+ * *************************************************************************/
+
+static void t2mi_network_discover ( t2mi_network_t *tn );
+
+static void
+t2mi_network_delete ( mpegts_network_t *mn, int delconf )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mn;
+
+  mtimer_disarm(&tn->tn_disc_timer);
+  /* drop the source mux mappings before the network memory goes away;
+   * silent at shutdown (delconf == 0) */
+  idnode_list_destroy(&tn->tn_src_muxes, delconf ? tn : NULL);
+  mpegts_network_delete(mn, delconf);
+}
+
+static void
+t2mi_network_class_delete ( idnode_t *in )
+{
+  mpegts_network_t *mn = (mpegts_network_t *)in;
+  char ubuf[UUID_HEX_SIZE];
+
+  hts_settings_remove("input/t2mi/networks/%s",
+                      idnode_uuid_as_str(&mn->mn_id, ubuf));
+  t2mi_network_delete(mn, 1);
+}
+
+/*
+ * Discovery timer / triggering
+ */
+
+static void
+t2mi_network_timer_cb ( void *aux )
+{
+  t2mi_network_t *tn = aux;
+  t2mi_network_discover(tn);
+  if (tn->tn_scan_period)
+    mtimer_arm_rel(&tn->tn_disc_timer, t2mi_network_timer_cb, tn,
+                   sec2mono(tn->tn_scan_period * 60));
+}
+
+static void
+t2mi_network_trigger ( t2mi_network_t *tn )
+{
+  mtimer_arm_rel(&tn->tn_disc_timer, t2mi_network_timer_cb, tn, sec2mono(2));
+}
+
+/* a PMT on a source mux produced a T2-MI carrier component - reconcile
+ * the networks that selected the mux (called from dvb_psi_pmt.c) */
+void
+t2mi_carrier_seen ( struct mpegts_mux *mm )
+{
+  idnode_list_mapping_t *ilm;
+
+  lock_assert(&global_lock);
+  LIST_FOREACH(ilm, &mm->mm_t2mi_networks, ilm_in2_link)
+    t2mi_network_trigger((t2mi_network_t *)ilm->ilm_in1);
+}
+
+/* a source mux is being deleted: at a real deletion (delconf) cascade to
+ * the inner muxes it produced, otherwise (shutdown) just unlink silently */
+void
+t2mi_source_mux_deleting ( struct mpegts_mux *mm, int delconf )
+{
+  mpegts_network_t *mn;
+  mpegts_mux_t *tmm, *tmm_next;
+  t2mi_mux_t *tm;
+  char ubuf[UUID_HEX_SIZE];
+
+  lock_assert(&global_lock);
+
+  if (delconf) {
+    idnode_uuid_as_str(&mm->mm_id, ubuf);
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
+      if (!idnode_is_instance(&mn->mn_id, &t2mi_network_class))
+        continue;
+      for (tmm = LIST_FIRST(&mn->mn_muxes); tmm; tmm = tmm_next) {
+        tmm_next = LIST_NEXT(tmm, mm_network_link);
+        tm = (t2mi_mux_t *)tmm;
+        if (tm->mm_t2mi_auto && tm->mm_t2mi_src_mux &&
+            !strcmp(tm->mm_t2mi_src_mux, ubuf)) {
+          tvhinfo(LS_T2MI, "source mux removed, removing %s", tmm->mm_nicename);
+          tmm->mm_delete(tmm, 1);
+        }
+      }
+    }
+  }
+  idnode_list_destroy(&mm->mm_t2mi_networks, delconf ? mm : NULL);
+}
+
+/*
+ * Carrier discovery
+ */
+
+/* A genuine T2-MI / piping carrier service has exactly one data stream
+ * (the carrier PID) and no audio or video.  Requiring that avoids false
+ * positives from network/SI pseudo-services whose private streams were
+ * flagged by the private-stream mapping (e.g. SID 65534 on Abertis). */
+static int
+t2mi_service_is_carrier ( mpegts_service_t *s )
+{
+  elementary_stream_t *es;
+  int t2mi = 0, av = 0;
+
+  /* Only a live service is a carrier.  A source mux keeps services that
+   * used to be broadcast but are gone after the feed was re-provisioned
+   * with different service IDs; those keep their old T2-MI components and
+   * would otherwise show up as phantom carriers.  tvheadend disables a
+   * service that falls behind in the PAT/SDT (mpegts_mux_scan_service_
+   * check), so skipping disabled services keeps stale carriers out of
+   * both discovery and the carrier count. */
+  if (!s->s_enabled)
+    return 0;
+
+  tvh_mutex_lock(&s->s_stream_mutex);
+  TAILQ_FOREACH(es, &s->s_components.set_all, es_link) {
+    if (es->es_type == SCT_T2MI)
+      t2mi++;
+    else if (SCT_ISVIDEO(es->es_type) || SCT_ISAUDIO(es->es_type))
+      av++;
+  }
+  tvh_mutex_unlock(&s->s_stream_mutex);
+
+  if (t2mi > 0 && (t2mi != 1 || av)) {
+    tvhtrace(LS_T2MI, "service %s (%u) not a carrier "
+             "(%d T2-MI streams, %d A/V streams)",
+             s->s_nicename ?: "", service_id16(s), t2mi, av);
+    return 0;
+  }
+  return t2mi == 1;
+}
+
+int
+t2mi_mux_count_carriers ( mpegts_mux_t *mm )
+{
+  mpegts_service_t *s;
+  int count = 0;
+
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link)
+    if (t2mi_service_is_carrier(s))
+      count++;
+  return count;
+}
+
+/* Re-parse the PMTs of an already-tuned source mux so the just-enabled
+ * private-stream mapping takes effect.  The mux is held open, so a queued
+ * rescan would not run until it goes idle; instead drop the stale
+ * NULL-opaque one-shot PMT tables left by the scan (they would make
+ * mpegts_table_add a no-op) and install fresh ones. */
+static void
+t2mi_reparse_source_pmts ( mpegts_mux_t *mm )
+{
+  mpegts_table_t *mt, *stale[64];
+  mpegts_service_t *s;
+  int n = 0, i;
+
+  tvh_mutex_lock(&mm->mm_tables_lock);
+  LIST_FOREACH(mt, &mm->mm_tables, mt_link)
+    if (mt->mt_callback == &dvb_pmt_callback && mt->mt_opaque == NULL &&
+        !mt->mt_destroyed && n < ARRAY_SIZE(stale)) {
+      mpegts_table_grab(mt);
+      stale[n++] = mt;
+    }
+  tvh_mutex_unlock(&mm->mm_tables_lock);
+
+  for (i = 0; i < n; i++) {
+    mpegts_table_destroy(stale[i]);
+    mpegts_table_release(stale[i]);
+  }
+
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+    uint16_t pid = s->s_components.set_pmt_pid;
+    if (pid > 0 && pid < 8191)
+      mpegts_table_add(mm, DVB_PMT_BASE, DVB_PMT_MASK, dvb_pmt_callback,
+                       NULL, "pmt", LS_TBL_BASE,
+                       MT_CRC | MT_QUICKREQ | MT_ONESHOT,
+                       pid, MPS_WEIGHT_PMT_SCAN);
+  }
+}
+
+/* is there already an inner mux for this (source mux, carrier SID)? */
+static t2mi_mux_t *
+t2mi_network_find_mux ( t2mi_network_t *tn, const char *src_uuid, uint16_t sid )
+{
+  mpegts_mux_t *mm;
+  t2mi_mux_t *tm;
+
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link) {
+    tm = (t2mi_mux_t *)mm;
+    if (tm->mm_t2mi_src_sid == sid && tm->mm_t2mi_src_mux &&
+        !strcmp(tm->mm_t2mi_src_mux, src_uuid))
+      return tm;
+  }
+  return NULL;
+}
+
+static t2mi_mux_t *
+t2mi_network_add_mux ( t2mi_network_t *tn, const char *src_uuid, uint16_t sid )
+{
+  htsmsg_t *conf = htsmsg_create_map();
+  t2mi_mux_t *tm;
+
+  htsmsg_add_str(conf, "t2mi_src_mux", src_uuid);
+  htsmsg_add_u32(conf, "t2mi_src_sid", sid);
+  htsmsg_add_s32(conf, "t2mi_format", T2MI_DECAP_FORMAT_AUTO);
+  htsmsg_add_s32(conf, "t2mi_plp", T2MI_DECAP_PLP_AUTO);
+  htsmsg_add_bool(conf, "t2mi_auto", 1);
+  htsmsg_add_bool(conf, "enabled", 1);
+  tm = t2mi_mux_create0(tn, NULL, conf);
+  htsmsg_destroy(conf);
+  if (tm)
+    mpegts_mux_post_create((mpegts_mux_t *)tm);
+  return tm;
+}
+
+static void
+t2mi_network_discover ( t2mi_network_t *tn )
+{
+  idnode_list_mapping_t *ilm;
+  mpegts_mux_t *mm, *mm_next, *src;
+  mpegts_service_t *s;
+  t2mi_mux_t *tm;
+  char src_ubuf[UUID_HEX_SIZE];
+  int created = 0, retired = 0;
+  uint16_t sid;
+
+  lock_assert(&global_lock);
+
+  /* mark all discovered muxes unseen so we can spot the vanished ones */
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link)
+    ((t2mi_mux_t *)mm)->tm_seen = 0;
+
+  LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link) {
+    mm = (mpegts_mux_t *)ilm->ilm_in2;
+
+    /* Mark the mux as a T2-MI source and apply the network's private
+     * stream policy.  Private data streams without a T2MI descriptor are
+     * scanned as carriers by default (needed for feeds like Abertis);
+     * the network's "ignore private" setting turns that off.  Reparse
+     * the PMTs when the effective policy changes so it takes effect. */
+    {
+      int changed = 0;
+      if (!mm->mm_t2mi_carriers) {
+        mm->mm_t2mi_carriers = 1;
+        changed = 1;
+      }
+      if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
+        mm->mm_t2mi_ignore_private = tn->tn_ignore_private;
+        changed = 1;
+      }
+      if (changed) {
+        idnode_changed(&mm->mm_id);
+        if (mm->mm_active)
+          t2mi_reparse_source_pmts(mm);
+        else
+          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+      }
+    }
+
+    idnode_uuid_as_str(&mm->mm_id, src_ubuf);
+    LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+      sid = service_id16(s);
+      if (sid == 0 || !t2mi_service_is_carrier(s))
+        continue;
+      if ((tm = t2mi_network_find_mux(tn, src_ubuf, sid)) != NULL) {
+        tm->tm_seen = 1;
+        continue;
+      }
+      /* honor the network discovery setting for new carriers */
+      if (tn->mn_autodiscovery == MN_DISCOVERY_DISABLE)
+        continue;
+      if ((tm = t2mi_network_add_mux(tn, src_ubuf, sid)) != NULL) {
+        tm->tm_seen = 1;
+        created++;
+        tvhinfo(LS_T2MI, "discovered carrier on %s SID %u", src_ubuf, sid);
+      }
+    }
+  }
+
+  /* Retire auto-discovered muxes whose carrier is confirmed gone.  A
+   * carrier is confirmed gone when its source service was deleted, or
+   * disabled by tvheadend's stale-service check because it vanished from
+   * the source PAT/SDT (24h without being seen).  This clears phantom
+   * carriers that a transponder no longer emits - or never did, when a
+   * stale service lingered from an earlier feed layout.  A mux whose
+   * source mux has simply not been (re)scanned keeps an enabled service
+   * and is left untouched, so mux/service UUIDs and channel mappings
+   * survive a short carrier outage or feed rotation. */
+  for (mm = LIST_FIRST(&tn->mn_muxes); mm; mm = mm_next) {
+    mm_next = LIST_NEXT(mm, mm_network_link);
+    tm = (t2mi_mux_t *)mm;
+    if (!tm->mm_t2mi_auto || tm->tm_seen)
+      continue;
+    src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+    if (src == NULL)
+      continue;
+    s = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+    if (s == NULL || !s->s_enabled) {
+      tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or disabled)",
+              mm->mm_nicename);
+      mm->mm_delete(mm, 1);
+      retired++;
+    }
+  }
+
+  if (created || retired)
+    tvhinfo(LS_T2MI, "%s: %d carrier(s) added, %d retired",
+            tn->mn_network_name ?: "", created, retired);
+}
+
+/*
+ * Class
+ */
+
+static void
+t2mi_network_scan ( mpegts_network_t *mn )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)mn;
+  idnode_list_mapping_t *ilm;
+  mpegts_mux_t *mm;
+
+  /* rescan the source muxes so new carriers are (re)discovered ... */
+  LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link)
+    mpegts_mux_scan_state_set((mpegts_mux_t *)ilm->ilm_in2,
+                              MM_SCAN_STATE_PEND);
+  /* ... and rescan the carrier muxes themselves so their inner services are
+   * (re)discovered, the way a normal network scan scans its own muxes.  The
+   * source-mux serialization keeps this from tuning every transponder at
+   * once. */
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link)
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+  t2mi_network_trigger(tn);
+}
+
+static void
+t2mi_network_class_changed ( idnode_t *in )
+{
+  t2mi_network_trigger((t2mi_network_t *)in);
+}
+
+static int
+t2mi_network_src_mux_link ( idnode_t *in1, idnode_t *in2, void *origin )
+{
+  t2mi_network_t *tn = (t2mi_network_t *)in1;
+  mpegts_mux_t *mm = (mpegts_mux_t *)in2;
+
+  /* a T2-MI mux cannot be the source of another T2-MI mux */
+  if (idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class))
+    return 0;
+  return idnode_list_link(in1, &tn->tn_src_muxes,
+                          in2, &mm->mm_t2mi_networks, origin, 1) ? 1 : 0;
+}
+
+static int
+t2mi_network_class_src_muxes_set ( void *o, const void *v )
+{
+  t2mi_network_t *tn = o;
+  return idnode_list_set1(&tn->mn_id, &tn->tn_src_muxes,
+                          &mpegts_mux_class, (htsmsg_t *)v,
+                          t2mi_network_src_mux_link);
+}
+
+static const void *
+t2mi_network_class_src_muxes_get ( void *o )
+{
+  return idnode_list_get1(&((t2mi_network_t *)o)->tn_src_muxes);
+}
+
+static char *
+t2mi_network_class_src_muxes_rend ( void *o, const char *lang )
+{
+  return idnode_list_get_csv1(&((t2mi_network_t *)o)->tn_src_muxes, lang);
+}
+
+PROP_DOC(priority)
+PROP_DOC(streaming_priority)
+
+extern const idclass_t mpegts_network_class;
+const idclass_t t2mi_network_class = {
+  .ic_super      = &mpegts_network_class,
+  .ic_class      = "t2mi_network",
+  .ic_caption    = N_("T2-MI Network"),
+  .ic_delete     = t2mi_network_class_delete,
+  .ic_changed    = t2mi_network_class_changed,
+  .ic_properties = (const property_t[]){
+    {
+      .type     = PT_STR,
+      .islist   = 1,
+      .id       = "src_muxes",
+      .name     = N_("Source muxes"),
+      .desc     = N_("The muxes carrying the T2-MI / piped streams (e.g. "
+                     "the DVB-S transponders). Their services are checked "
+                     "for carriers and a T2-MI mux is created for each "
+                     "carrier found (unless network discovery is disabled). "
+                     "A mux whose carrier disappears is kept - its scan "
+                     "fails - and resumes when the carrier returns; muxes "
+                     "are only removed when their source mux is removed "
+                     "from Tvheadend."),
+      .set      = t2mi_network_class_src_muxes_set,
+      .get      = t2mi_network_class_src_muxes_get,
+      .list     = t2mi_src_mux_enum,
+      .rend     = t2mi_network_class_src_muxes_rend,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "ignore_private",
+      .name     = N_("Ignore private-stream carriers"),
+      .desc     = N_("By default, private data streams on the source muxes "
+                     "are also scanned as possible T2-MI / piping carriers, "
+                     "which is needed for feeds without a T2MI descriptor "
+                     "(such as Abertis/Cellnex). Enable this to consider "
+                     "only streams with proper T2-MI signalling."),
+      .off      = offsetof(t2mi_network_t, tn_ignore_private),
+      .def.i    = 0,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "epg_exclude",
+      .name     = N_("Exclude carriers from OTA EPG"),
+      .desc     = N_("Do not grab over-the-air EPG from the T2-MI carrier "
+                     "muxes. Grabbing EPG from every carrier tunes and "
+                     "decapsulates each one in turn, which can tie up the "
+                     "tuner for a long time on feeds with many carriers. "
+                     "Inner-service EPG is still collected while a channel "
+                     "is being watched."),
+      .off      = offsetof(t2mi_network_t, tn_epg_exclude),
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_U32,
+      .id       = "scan_period",
+      .name     = N_("Rediscovery period (minutes)"),
+      .desc     = N_("How often to re-scan the source muxes for new or "
+                     "removed carriers."),
+      .off      = offsetof(t2mi_network_t, tn_scan_period),
+      .def.i    = 60,
+      .opts     = PO_ADVANCED,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "priority",
+      .name     = N_("Priority"),
+      .desc     = N_("The network's priority. The network with the "
+                     "highest priority value will be used out of "
+                     "preference if available. See Help for details."),
+      .off      = offsetof(t2mi_network_t, tn_priority),
+      .doc      = prop_doc_priority,
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_INT,
+      .id       = "spriority",
+      .name     = N_("Streaming priority"),
+      .desc     = N_("When streaming a service (via http or htsp) "
+                     "Tvheadend will use the network with the highest "
+                     "streaming priority set here. See Help for details."),
+      .doc      = prop_doc_streaming_priority,
+      .off      = offsetof(t2mi_network_t, tn_streaming_priority),
+      .def.i    = 1,
+      .opts     = PO_ADVANCED
+    },
+    {
+      .type     = PT_U32,
+      .id       = "max_timeout",
+      .name     = N_("Maximum timeout (seconds)"),
+      .desc     = N_("Maximum time to wait (in seconds) for a stream "
+                     "before a timeout. The source mux may need to tune "
+                     "and descramble first."),
+      .off      = offsetof(t2mi_network_t, tn_max_timeout),
+      .def.i    = 30,
+      .opts     = PO_ADVANCED
+    },
+    {}
+  }
+};
+
+static mpegts_service_t *
+t2mi_network_create_service
+  ( mpegts_mux_t *mm, uint16_t sid, uint16_t pmt_pid )
+{
+  return mpegts_service_create1(NULL, mm, sid, pmt_pid, NULL);
+}
+
+static const idclass_t *
+t2mi_network_mux_class ( mpegts_network_t *mn )
+{
+  return &t2mi_mux_class;
+}
+
+static mpegts_mux_t *
+t2mi_network_create_mux2 ( mpegts_network_t *mn, htsmsg_t *conf )
+{
+  t2mi_mux_t *tm = t2mi_mux_create0((t2mi_network_t *)mn, NULL, conf);
+  return mpegts_mux_post_create((mpegts_mux_t *)tm);
+}
+
+static htsmsg_t *
+t2mi_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
+{
+  htsmsg_t *c = htsmsg_create_map();
+  char ubuf[UUID_HEX_SIZE];
+  idnode_save(&mn->mn_id, c);
+  if (filename)
+    snprintf(filename, fsize, "input/t2mi/networks/%s/config",
+             idnode_uuid_as_str(&mn->mn_id, ubuf));
+  return c;
+}
+
+/* migrate a pre-mux-selection config (source network by UUID) to the
+ * equivalent selection of all that network's muxes */
+static void
+t2mi_network_migrate ( t2mi_network_t *tn, htsmsg_t *conf )
+{
+  const char *legacy;
+  mpegts_network_t *src;
+  mpegts_mux_t *mm;
+
+  if (conf == NULL || LIST_FIRST(&tn->tn_src_muxes) != NULL)
+    return;
+  legacy = htsmsg_get_str(conf, "src_network");
+  if (legacy == NULL)
+    return;
+  src = mpegts_network_find(legacy);
+  if (src == NULL || src == (mpegts_network_t *)tn)
+    return;
+  LIST_FOREACH(mm, &src->mn_muxes, mm_network_link)
+    t2mi_network_src_mux_link(&tn->mn_id, &mm->mm_id, NULL);
+  idnode_changed(&tn->mn_id);
+  tvhinfo(LS_T2MI, "%s: migrated source network %s to a mux selection",
+          tn->mn_network_name ?: "", legacy);
+}
+
+static t2mi_network_t *
+t2mi_network_create0 ( const char *uuid, htsmsg_t *conf )
+{
+  t2mi_network_t *tn = calloc(1, sizeof(*tn));
+  t2mi_mux_t *tm;
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+  char ubuf[UUID_HEX_SIZE];
+
+  tn->tn_priority           = 1;
+  tn->tn_streaming_priority = 1;
+  tn->tn_max_timeout        = 30;
+  tn->tn_ignore_private     = 0;
+  tn->tn_scan_period        = 60;
+  tn->mn_autodiscovery      = MN_DISCOVERY_NEW;
+  if (!mpegts_network_create0((mpegts_network_t *)tn, &t2mi_network_class,
+                              uuid, NULL, conf)) {
+    free(tn);
+    return NULL;
+  }
+  tn->mn_create_service = t2mi_network_create_service;
+  tn->mn_mux_class      = t2mi_network_mux_class;
+  tn->mn_mux_create2    = t2mi_network_create_mux2;
+  tn->mn_config_save    = t2mi_network_config_save;
+  tn->mn_delete         = t2mi_network_delete;
+  tn->mn_scan           = t2mi_network_scan;
+
+  if (!conf)
+    tn->mn_skipinitscan = 1;
+
+  t2mi_network_migrate(tn, conf);
+
+  /* Load muxes */
+  if ((c = hts_settings_load_r(1, "input/t2mi/networks/%s/muxes",
+                               idnode_uuid_as_str(&tn->mn_id, ubuf)))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_get_map_by_field(f)))  continue;
+      if (!(e = htsmsg_get_map(e, "config"))) continue;
+      tm = t2mi_mux_create0(tn, htsmsg_field_name(f), e);
+      mpegts_mux_post_create((mpegts_mux_t *)tm);
+    }
+    htsmsg_destroy(c);
+  }
+
+  t2mi_network_trigger(tn);
+  return tn;
+}
+
+static mpegts_network_t *
+t2mi_network_builder ( const idclass_t *idc, htsmsg_t *conf )
+{
+  mpegts_network_t *mn = (mpegts_network_t *)t2mi_network_create0(NULL, conf);
+  if (mn && t2mi_input)
+    mpegts_input_add_network((mpegts_input_t *)t2mi_input, mn);
+  return mn;
+}
+
+/* **************************************************************************
+ * Initialise
+ * *************************************************************************/
+
+void t2mi_init ( void )
+{
+  htsmsg_t *c, *e;
+  htsmsg_field_t *f;
+
+  /* Register class + builder */
+  idclass_register(&t2mi_mux_class);
+  mpegts_network_register_builder(&t2mi_network_class, t2mi_network_builder);
+
+#if !ENABLE_TVHCSA
+  tvhwarn(LS_T2MI, "built without libdvbcsa (--disable-tvhcsa): scrambled "
+          "T2-MI carriers cannot be descrambled");
+#endif
+
+  /* Load settings */
+  if ((c = hts_settings_load_r(1, "input/t2mi/networks"))) {
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_get_map_by_field(f)))  continue;
+      if (!(e = htsmsg_get_map(e, "config"))) continue;
+      t2mi_network_create0(htsmsg_field_name(f), e);
+    }
+    htsmsg_destroy(c);
+  }
+
+  /* Input */
+  t2mi_input = t2mi_input_create();
+}
+
+void t2mi_done ( void )
+{
+  tvh_mutex_lock(&global_lock);
+  if (t2mi_input) {
+    mpegts_input_stop_all((mpegts_input_t *)t2mi_input);
+    mpegts_input_delete((mpegts_input_t *)t2mi_input, 0);
+    t2mi_input = NULL;
+  }
+  mpegts_network_unregister_builder(&t2mi_network_class);
+  mpegts_network_class_delete(&t2mi_network_class, 0);
+  tvh_mutex_unlock(&global_lock);
+}
+
+/******************************************************************************
+ * Editor Configuration
+ *
+ * vim:sts=2:ts=2:sw=2:et
+ *****************************************************************************/

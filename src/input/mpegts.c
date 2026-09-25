@@ -68,6 +68,11 @@ mpegts_init ( int linuxdvb_mask, int nosatip, str_list_t *satip_client,
   iptv_init();
 #endif
 
+  /* T2-MI decapsulation */
+#if ENABLE_T2MI
+  t2mi_init();
+#endif
+
   /* Linux DVB */
 #if ENABLE_LINUXDVB
   linuxdvb_init(linuxdvb_mask);
@@ -97,6 +102,9 @@ mpegts_done ( void )
   tvhftrace(LS_MAIN, mpegts_mux_sched_done);
 #if ENABLE_MPEGTS_DVB
   tvhftrace(LS_MAIN, dvb_network_done);
+#endif
+#if ENABLE_T2MI
+  tvhftrace(LS_MAIN, t2mi_done);
 #endif
 #if ENABLE_IPTV
   tvhftrace(LS_MAIN, iptv_done);

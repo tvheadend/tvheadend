@@ -174,6 +174,9 @@ void tvh_input_instance_clear_stats ( tvh_input_instance_t *tii );
 #if ENABLE_IPTV
 #include "input/mpegts/iptv.h"
 #endif
+#if ENABLE_T2MI
+#include "input/mpegts/t2mi.h"
+#endif
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb.h"
 #endif
