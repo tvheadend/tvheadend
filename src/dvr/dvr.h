@@ -77,6 +77,7 @@ typedef struct dvr_config {
   int dvr_pri;
   int dvr_clone;
   int dvr_complex_scheduling;
+  int dvr_cache_only;          ///< DVR config produces cache warmup only
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_max_data_errors;
   uint32_t dvr_retention_days;
@@ -230,6 +231,7 @@ typedef struct dvr_entry {
   LIST_ENTRY(dvr_entry) de_config_link;
 
   int de_enabled;
+  int de_cache_only;           ///< Persisted cache-only timer mode
   time_t de_create;             ///< Time entry was created
   time_t de_watched;            ///< Time entry was last watched
   time_t de_start;
@@ -342,6 +344,10 @@ typedef struct dvr_entry {
    * Stream worker chain
    */
   profile_chain_t *de_chain;
+
+#if ENABLE_TIMESHIFT
+  struct streaming_target *de_cache_sink;
+#endif
 
   /**
    * Entry change notification timer
