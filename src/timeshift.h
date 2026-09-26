@@ -40,6 +40,8 @@ typedef struct timeshift_conf {
   int       teletext;
   int       record_cache;
   uint32_t  cache_keepalive;
+  uint32_t  cache_keepalive_min_period;
+  uint32_t  cache_keepalive_max;
 } timeshift_conf_t;
 
 extern struct timeshift_conf timeshift_conf;

@@ -98,9 +98,11 @@ void timeshift_init ( void )
   /* Defaults */
   memset(&timeshift_conf, 0, sizeof(timeshift_conf));
   timeshift_conf.idnode.in_class = &timeshift_conf_class;
-  timeshift_conf.max_period       = 60;
-  timeshift_conf.cache_keepalive  = 15;                      // Hr (60mins)
-  timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
+  timeshift_conf.max_period                 = 60;
+  timeshift_conf.cache_keepalive            = 15;
+  timeshift_conf.cache_keepalive_min_period = 60;
+  timeshift_conf.cache_keepalive_max        = 4;
+  timeshift_conf.max_size                   = 10000 * (size_t)1048576; // 10G
 
   idclass_register(&timeshift_conf_class);
 
@@ -335,6 +337,29 @@ const idclass_t timeshift_conf_class = {
                    "subscription priority, so tuners remain available for "
                    "live TV and recordings. Zero disables this feature."),
       .off    = offsetof(timeshift_conf_t, cache_keepalive),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_min_period",
+      .name   = N_("Minimum cache for keepalive (secs)"),
+      .desc   = N_("Only keep an idle tuned channel after the last normal "
+                   "subscription leaves when its shared cache already "
+                   "contains at least this many seconds of history. This "
+                   "avoids prolonged cache writes after brief channel "
+                   "zapping. Zero disables this minimum."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_min_period),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_max",
+      .name   = N_("Maximum cache keepalives"),
+      .desc   = N_("Maximum number of idle channel-cache keepalives. When "
+                   "the limit is full, the caches with the longest retained "
+                   "history are preferred. Active live TV and recording "
+                   "subscriptions do not count. Zero means unlimited."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_max),
       .opts   = PO_ADVANCED,
     },
     {}
