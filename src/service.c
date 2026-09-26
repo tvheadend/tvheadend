@@ -35,6 +35,9 @@
 #include "bouquet.h"
 #include "memoryinfo.h"
 #include "config.h"
+#if ENABLE_TIMESHIFT
+#include "timeshift/timeshift_svcbuf.h"
+#endif
 
 static void service_data_timeout(void *aux);
 static void service_class_delete(struct idnode *self);
@@ -255,6 +258,10 @@ const idclass_t service_raw_class = {
 void
 service_stop(service_t *t)
 {
+#if ENABLE_TIMESHIFT
+  svcbuf_t *sb;
+#endif
+
   mtimer_disarm(&t->s_receive_timer);
 
   t->s_stop_feed(t);
@@ -270,10 +277,18 @@ service_stop(service_t *t)
    */
   elementary_set_clean_streams(&t->s_components);
 
+#if ENABLE_TIMESHIFT
+  sb = svcbuf_service_stop(t);
+#endif
+
   t->s_status = SERVICE_IDLE;
   tvhlog_limit_reset(&t->s_tei_log);
 
   tvh_mutex_unlock(&t->s_stream_mutex);
+
+#if ENABLE_TIMESHIFT
+  svcbuf_release(sb);
+#endif
 }
 
 
@@ -342,6 +357,10 @@ service_start(service_t *t, int instance, int weight, int flags,
    * Initialize stream
    */
   elementary_set_init_filter_streams(&t->s_components);
+
+#if ENABLE_TIMESHIFT
+  svcbuf_service_start(t);
+#endif
 
   tvh_mutex_unlock(&t->s_stream_mutex);
 
@@ -563,13 +582,35 @@ service_find_instance
         if (si->si_weight < weight)
           next = si;
       } else {
-        if ((si->si_weight < next->si_weight) ||
-            (si->si_weight == next->si_weight && si->si_prio > next->si_prio))
+        if (si->si_weight < next->si_weight) {
           next = si;
+        } else if (si->si_weight == next->si_weight) {
+          /*
+           * Two otherwise equally disposable channel-cache holds:
+           * sacrifice the input which contains less useful rewind
+           * history.  For every other kind of subscription preserve
+           * the existing input-priority behaviour exactly.
+           */
+          if (si->si_cache_only && next->si_cache_only) {
+            if (si->si_cache_time < next->si_cache_time)
+              next = si;
+            else if (si->si_cache_time == next->si_cache_time &&
+                     si->si_prio > next->si_prio)
+              next = si;
+          } else if (si->si_prio > next->si_prio) {
+            next = si;
+          }
+        }
       }
     }
     si = next;
   }
+
+  if (si && si->si_cache_only)
+    tvhdebug(LS_SERVICE,
+             "selected cache-only input %s for replacement, "
+             "retained cache %"PRId64" seconds",
+             si->si_source, mono2sec(si->si_cache_time));
 
   /* Failed */
   if(si == NULL) {

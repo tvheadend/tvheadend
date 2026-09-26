@@ -182,6 +182,7 @@ void timeshift_play_start_set ( timeshift_t *ts, streaming_start_t *ss );
  */
 void timeshift_filemgr_init     ( void );
 void timeshift_filemgr_term     ( void );
+int  timeshift_filemgr_get_root ( char *buf, size_t len );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );
 
 static inline void timeshift_file_get0 ( timeshift_file_t *tsf )
