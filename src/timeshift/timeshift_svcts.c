@@ -100,6 +100,7 @@ typedef struct svcts {
   int64_t              live_time;   ///< us of the newest live packet
   int64_t              live_mono;
   streaming_start_t   *live_start;  ///< Current live map after globalheaders
+  uint64_t             live_start_seq; ///< Cache generation of live_start
   streaming_start_t   *out_start;   ///< Map last sent to the client
   uint64_t             out_start_seq;
   int                  live_rebase_pending;
@@ -423,6 +424,7 @@ svcts_live_reset ( svcts_t *st )
   st->live_last_dts = PTS_UNSET;
   st->live_last_video_dts = PTS_UNSET;
   svcts_start_set(&st->live_start, NULL);
+  st->live_start_seq = 0;
   svcts_start_set(&st->out_start, NULL);
   st->out_start_seq = 0;
 }
@@ -622,6 +624,15 @@ svcts_input ( void *opaque, streaming_message_t *sm )
     }
 
     svcts_start_set(&st->live_start, ss);
+
+    /*
+     * Remember the cache generation together with this particular
+     * globalheaders START. Do not look the generation up later when
+     * returning to live: the raw cache may already have advanced to
+     * another START while globalheaders is still preparing it.
+     */
+    st->live_start_seq = st->sb ? svcbuf_start_seq(st->sb) : 0;
+
     memset(st->ring, 0, sizeof(st->ring));
     memset(st->is_video, 0, sizeof(st->is_video));
     st->ring_pos = 0;
@@ -634,7 +645,7 @@ svcts_input ( void *opaque, streaming_message_t *sm )
 
     if (st->state == SVCTS_LIVE) {
       svcts_start_set(&st->out_start, ss);
-      st->out_start_seq = 0;
+      st->out_start_seq = st->live_start_seq;
       streaming_target_deliver2(st->output, sm);
     } else {
       /* This START belongs to the live head, not to the historical
@@ -1280,18 +1291,39 @@ svcts_go_live ( svcts_t *st )
 static void
 svcts_sync_live_start ( svcts_t *st )
 {
+  uint64_t seq;
+
+  if (st->live_start == NULL)
+    return;
+
   /*
-   * Returning from historical replay to the live head is a source
-   * reconfiguration from the client's point of view.  This is
-   * particularly important when an elementary PID changed while the
-   * client was rewound: START alone is not sufficient to make all
-   * HTSP clients discard the old audio/video stream state.
-   *
-   * The caller sends any pending SKIP reply before reaching here, so
-   * the STOP/START flush cannot discard that reply.
+   * Compare against the generation captured when this exact live START
+   * arrived from globalheaders. The svcbuf itself may already have seen a
+   * newer raw START, so looking up sb->start_seq here would race with a
+   * source reconfiguration.
    */
-  if (st->live_start)
-    svcts_output_start(st, st->live_start, 1);
+  seq = st->live_start_seq;
+
+  if (seq && st->out_start_seq == seq) {
+    tvhdebug(LS_TIMESHIFT,
+             "svcts: live map generation %"PRId64
+             " already delivered by replay; keeping decoder state",
+             (int64_t)seq);
+
+    /*
+     * Replay has already delivered the same stream-map generation.
+     * Switch the internal reference back to the live map without sending
+     * a redundant START and forcing downstream decoders to reinitialise.
+     */
+    svcts_start_set(&st->out_start, st->live_start);
+    return;
+  }
+
+  /*
+   * The client has not seen this live generation. This includes jumping
+   * directly to live across a PID/PMT or other stream-map change.
+   */
+  svcts_output_start(st, st->live_start, seq);
 }
 
 /* Start of the cache reached going back: pause there */
