@@ -593,11 +593,24 @@ svcbuf_gate_set_state ( svcbuf_gate_t *g, int state )
 /* s_stream_mutex held; ownership of ss is transferred to the message. */
 static void
 svcbuf_gate_deliver_start ( svcbuf_gate_t *g, streaming_start_t *ss,
-                            uint64_t seq, int reconfigured )
+                            uint64_t seq, int reconfigured, int replay )
 {
+  streaming_start_t *out;
+
   if (ss == NULL) {
     g->start_seq = seq;
     return;
+  }
+
+  /*
+   * Cached maps are shared by blocks/readers and therefore immutable.
+   * Add replay context only to the START sent down this consumer's chain.
+   */
+  if (replay) {
+    out = streaming_start_copy(ss);
+    out->ss_flags |= STREAMING_START_CACHE_REPLAY;
+    streaming_start_unref(ss);
+    ss = out;
   }
 
   if (reconfigured)
@@ -610,6 +623,7 @@ svcbuf_gate_deliver_start ( svcbuf_gate_t *g, streaming_start_t *ss,
 
   g->start_seq = seq;
 }
+
 
 /* s_stream_mutex held */
 static void
@@ -630,7 +644,7 @@ svcbuf_gate_sync_live_start ( svcbuf_gate_t *g )
   tvh_mutex_unlock(&sb->lock);
 
   if (seq != g->start_seq)
-    svcbuf_gate_deliver_start(g, ss, seq, 1);
+    svcbuf_gate_deliver_start(g, ss, seq, 1, 0);
 }
 
 /* Finish a bounded historical replay.  s_stream_mutex held. */
@@ -711,7 +725,7 @@ svcbuf_gate_thread ( void *aux )
       tvh_mutex_lock(&t->s_stream_mutex);
 
       if (g->state == GATE_REPLAY)
-        svcbuf_gate_deliver_start(g, ss, start_seq, 1);
+        svcbuf_gate_deliver_start(g, ss, start_seq, 1, 1);
       else if (ss)
         streaming_start_unref(ss);
 
@@ -964,7 +978,7 @@ svcbuf_gate_start ( svcbuf_gate_t *g )
    * Replace the subscription's current START with the historical map
    * valid at the beginning of the backfill.
    */
-  svcbuf_gate_deliver_start(g, ss, start_seq, 0);
+  svcbuf_gate_deliver_start(g, ss, start_seq, 0, 1);
 
   tvh_thread_create(&g->thread, NULL,
                     svcbuf_gate_thread, g, "svcbuf-rd");

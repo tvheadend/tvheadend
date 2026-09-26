@@ -1085,11 +1085,20 @@ svcts_fill ( svcts_t *st )
     st->replay_prev_seq = 0;
 
     /*
-     * svcbuf_reader_read_map() gave us one reference.  Transfer that
-     * reference directly to the START message.
+     * svcbuf_reader_read_map() gave us a shared historical map.
+     * Never mutate it: mark a private copy as random-access cache replay
+     * so private globalheaders does not mistake a late codec-header
+     * repetition for a missing stream.
      */
-    start_sm = streaming_msg_create_data(SMT_START, ss);
-    ss = NULL;
+    {
+      streaming_start_t *rss = streaming_start_copy(ss);
+      rss->ss_flags |= STREAMING_START_CACHE_REPLAY;
+
+      streaming_start_unref(ss);
+      ss = NULL;
+
+      start_sm = streaming_msg_create_data(SMT_START, rss);
+    }
   }
 
   tvh_mutex_unlock(&st->lock);
