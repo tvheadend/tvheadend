@@ -72,6 +72,14 @@ typedef struct service_instance {
                          */
   time_t si_error_time;
   int si_weight;        /* Highest weight that holds this cand */
+
+  /*
+   * Aggregate retained channel-cache history on this input.
+   * Used only as a tie-breaker between pure cache keepalive candidates.
+   */
+  int64_t si_cache_time;
+  int     si_cache_only;
+
   int si_mark;          /* For mark & sweep */
 
   char si_source[128];
@@ -377,6 +385,11 @@ typedef struct service {
    * Delivery pad, this is were we finally deliver all streaming output
    */
   streaming_pad_t s_streaming_pad;
+
+  /**
+   * Channel cache of the running service (timeshift/timeshift_svcbuf.c)
+   */
+  struct svcbuf *s_svcbuf;
 
   tvhlog_limit_t s_tei_log;
 
