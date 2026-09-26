@@ -51,6 +51,7 @@ void svcbuf_gate_destroy ( streaming_target_t *pad );
  * takes a reference (s_stream_mutex held), svcbuf_release() drops it. */
 svcbuf_t *svcbuf_acquire ( struct service *t );
 struct service *svcbuf_service ( svcbuf_t *sb );
+uint64_t svcbuf_start_seq ( svcbuf_t *sb );
 int svcbuf_span ( svcbuf_t *sb, int64_t *oldest, int64_t *newest );
 svcbuf_reader_t *svcbuf_reader_create ( svcbuf_t *sb );
 void svcbuf_reader_destroy ( svcbuf_reader_t *r );
