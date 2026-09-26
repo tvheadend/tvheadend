@@ -1453,6 +1453,8 @@ htsp_build_event
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
       if (de->de_bcast != e)
         continue;
+      if (de->de_cache_only)
+        continue;
       if (dvr_entry_verify(de, htsp->htsp_granted_access, 1))
         continue;
       htsmsg_add_u32(out, "dvrId", idnode_get_short_uuid(&de->de_id));
@@ -1729,17 +1731,20 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all autorecs */
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
+    if ((!dae->dae_config || !dae->dae_config->dvr_cache_only) &&
+        !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_autorecentry(htsp, dae, "autorecEntryAdd"), NULL);
 
   /* Send all timerecs */
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
+    if ((!dte->dte_config || !dte->dte_config->dvr_cache_only) &&
+        !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_timerecentry(htsp, dte, "timerecEntryAdd"), NULL);
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1))
+    if (!de->de_cache_only &&
+        !dvr_entry_verify(de, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_dvrentry(htsp, de, "dvrEntryAdd", htsp->htsp_language, 0), NULL);
 
   /* Send EPG updates */
@@ -2005,7 +2010,7 @@ htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
   l = htsmsg_create_list();
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
-    if (cfg->dvr_enabled) {
+    if (cfg->dvr_enabled && !cfg->dvr_cache_only) {
       uuid = idnode_uuid_as_str(&cfg->dvr_id, ubuf);
       if (htsp->htsp_granted_access->aa_dvrcfgs) {
         HTSMSG_FOREACH(f, htsp->htsp_granted_access->aa_dvrcfgs) {
@@ -2352,7 +2357,8 @@ htsp_findDvrEntry(htsp_connection_t *htsp, htsmsg_t *in, htsmsg_t **out, int rea
     return NULL;
   }
 
-  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL) {
+  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL ||
+     de->de_cache_only) {
     *out = htsp_error(htsp, N_("DVR entry not found"));
     return NULL;
   }
@@ -4099,6 +4105,9 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
 void
 htsp_dvr_entry_add(dvr_entry_t *de)
 {
+  if (de->de_cache_only)
+    return;
+
   _htsp_dvr_entry_update(de, "dvrEntryAdd", NULL);
 }
 
@@ -4108,6 +4117,11 @@ htsp_dvr_entry_add(dvr_entry_t *de)
 void
 htsp_dvr_entry_update(dvr_entry_t *de)
 {
+  if (de->de_cache_only) {
+    htsp_dvr_entry_delete(de);
+    return;
+  }
+
   _htsp_dvr_entry_update(de, "dvrEntryUpdate", NULL);
 }
 
@@ -4118,6 +4132,9 @@ void
 htsp_dvr_entry_update_stats(dvr_entry_t *de)
 {
   htsp_connection_t *htsp;
+
+  if (de->de_cache_only)
+    return;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON){
       if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
@@ -4165,6 +4182,9 @@ _htsp_autorec_entry_update(dvr_autorec_entry_t *dae, const char *method, htsmsg_
 void
 htsp_autorec_entry_add(dvr_autorec_entry_t *dae)
 {
+  if (dae->dae_config && dae->dae_config->dvr_cache_only)
+    return;
+
   _htsp_autorec_entry_update(dae, "autorecEntryAdd", NULL);
 }
 
@@ -4174,6 +4194,11 @@ htsp_autorec_entry_add(dvr_autorec_entry_t *dae)
 void
 htsp_autorec_entry_update(dvr_autorec_entry_t *dae)
 {
+  if (dae->dae_config && dae->dae_config->dvr_cache_only) {
+    htsp_autorec_entry_delete(dae);
+    return;
+  }
+
   _htsp_autorec_entry_update(dae, "autorecEntryUpdate", NULL);
 }
 
@@ -4219,6 +4244,9 @@ _htsp_timerec_entry_update(dvr_timerec_entry_t *dte, const char *method, htsmsg_
 void
 htsp_timerec_entry_add(dvr_timerec_entry_t *dte)
 {
+  if (dte->dte_config && dte->dte_config->dvr_cache_only)
+    return;
+
   _htsp_timerec_entry_update(dte, "timerecEntryAdd", NULL);
 }
 
@@ -4228,6 +4256,11 @@ htsp_timerec_entry_add(dvr_timerec_entry_t *dte)
 void
 htsp_timerec_entry_update(dvr_timerec_entry_t *dte)
 {
+  if (dte->dte_config && dte->dte_config->dvr_cache_only) {
+    htsp_timerec_entry_delete(dte);
+    return;
+  }
+
   _htsp_timerec_entry_update(dte, "timerecEntryUpdate", NULL);
 }
 
