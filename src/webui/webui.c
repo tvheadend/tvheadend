@@ -2471,7 +2471,7 @@ http_serve_file(http_connection_t *hc, const char *fname,
   ret = 0;
   if(!hc->hc_no_output) {
     while(content_len > 0) {
-      chunk = MIN(1024 * ((stats ? 128 : 1024) * 1024), content_len);
+      chunk = MIN(1024 * ((stats ? 1 : 1024) * 1024), content_len);
 #if defined(PLATFORM_LINUX)
       r = sendfile(hc->hc_fd, fd, NULL, chunk);
       if (r < 0) {
