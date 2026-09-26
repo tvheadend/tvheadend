@@ -510,6 +510,15 @@ typedef struct epg_retro_event {
 } epg_retro_event_t;
 
 static LIST_HEAD(, epg_retro_event) epg_retro_events;
+static uint32_t epg_retro_count;
+
+/*
+ * With "Unlimited time" retention the holds below have no expiry of their
+ * own, so bound their number: only the most recent ones can still overlap
+ * what the channel caches actually hold.  Generous enough for a day of
+ * programmes on a large channel list, small next to an EPG database.
+ */
+#define EPG_RETRO_MAX 2048
 
 static void
 _epg_retro_release ( epg_retro_event_t *r )
@@ -518,19 +527,34 @@ _epg_retro_release ( epg_retro_event_t *r )
 
   LIST_REMOVE(r, link);
   free(r);
+  epg_retro_count--;
   ebc->ops->putref(ebc);
 }
 
 static void
 _epg_retro_purge ( void )
 {
-  epg_retro_event_t *r, *next;
+  epg_retro_event_t *r, *next, *oldest;
   time_t now = gclk();
 
   for (r = LIST_FIRST(&epg_retro_events); r != NULL; r = next) {
     next = LIST_NEXT(r, link);
     if (r->expires && r->expires <= now)
       _epg_retro_release(r);
+  }
+
+  /* over the cap, the programme which ended first goes */
+  while (epg_retro_count > EPG_RETRO_MAX) {
+    oldest = LIST_FIRST(&epg_retro_events);
+    LIST_FOREACH(r, &epg_retro_events, link)
+      if (r->ebc->stop < oldest->ebc->stop)
+        oldest = r;
+    tvhdebug(LS_EPG,
+             "drop retained event %u (%s): %u retained events is the limit",
+             oldest->ebc->id,
+             epg_broadcast_get_title(oldest->ebc, NULL),
+             EPG_RETRO_MAX);
+    _epg_retro_release(oldest);
   }
 }
 
@@ -587,6 +611,7 @@ _epg_retro_hold ( epg_broadcast_t *ebc )
   r->ebc = ebc;
   r->expires = expires;
   LIST_INSERT_HEAD(&epg_retro_events, r, link);
+  epg_retro_count++;
 
   if (expires)
     tvhdebug(LS_EPG,
