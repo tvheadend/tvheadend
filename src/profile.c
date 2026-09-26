@@ -30,6 +30,7 @@
 #endif
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
+#include "timeshift/timeshift_svcts.h"
 #include "input/mpegts/iptv/iptv_private.h"
 #endif
 #include "dvr/dvr.h"
@@ -813,6 +814,16 @@ profile_sharer_input(void *opaque, streaming_message_t *sm)
   }
   for (prch = LIST_FIRST(&prsh->prsh_chains); prch; prch = next) {
     next = LIST_NEXT(prch, prch_sharer_link);
+
+    /*
+     * tsfix starts a new normalized clock at every START.  Late joiners
+     * have a per-chain delta relative to the previous normalized clock,
+     * so recalibrate that delta before packets from the new stream arrive.
+     * The zero-delta master keeps using the shared clock directly.
+     */
+    if (sm->sm_type == SMT_START && prch->prch_ts_delta != 0)
+      prch->prch_ts_delta = PTS_UNSET;
+
     if (prch == prsh->prsh_master) {
       if (sm->sm_type == SMT_START) {
         if (prsh->prsh_start_msg)
@@ -1162,6 +1173,10 @@ profile_chain_close(profile_chain_t *prch)
     timeshift_destroy(prch->prch_timeshift);
     prch->prch_timeshift = NULL;
   }
+  if (prch->prch_svcts) {
+    svcts_destroy(prch->prch_svcts);
+    prch->prch_svcts = NULL;
+  }
 #endif
   if (prch->prch_gh) {
     globalheaders_destroy(prch->prch_gh);
@@ -1226,7 +1241,10 @@ profile_htsp_work(profile_chain_t *prch,
   prch->prch_share = prsh->prsh_tsfix;
 
 #if ENABLE_TIMESHIFT
-  if (timeshift_period > 0)
+  /* one cache per channel: timeshift through it when there is one */
+  if (timeshift_period > 0 && svcts_enabled())
+    dst = prch->prch_svcts = svcts_create(dst, timeshift_period);
+  else if (timeshift_period > 0)
     dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
 #endif
 
