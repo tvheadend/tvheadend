@@ -54,6 +54,7 @@
 #define SVCBUF_SEG_SIZE   (64 * 1024 * 1024)  ///< Segment file size
 #define SVCBUF_READ_SIZE  (188 * 348)         ///< Replay chunk, whole TS packets
 #define SVCBUF_QUEUE_MAX  (32 * 1024 * 1024)  ///< Consumer backlog to wait on
+#define SVCBUF_STAGING_MAX (32 * 1024 * 1024)  ///< Global disk write-behind RAM
 
 typedef struct svcbuf_seg {
   TAILQ_ENTRY(svcbuf_seg) link;
@@ -75,6 +76,8 @@ typedef struct svcbuf_block {
   uint8_t      *data;     ///< RAM copy, NULL once only on disk
   size_t        alloc;
   size_t        size;
+  size_t        staging;  ///< Bytes charged to global disk staging budget
+  int           keep_ram; ///< Retain payload in configured Timeshift RAM
   int           sealed;   ///< Complete, no more appends
   int           settled;  ///< Passed by the writer (on disk, or kept in RAM)
   svcbuf_seg_t *seg;
@@ -83,6 +86,52 @@ typedef struct svcbuf_block {
 
 TAILQ_HEAD(svcbuf_block_queue, svcbuf_block);
 TAILQ_HEAD(svcbuf_seg_queue, svcbuf_seg);
+
+/*
+ * Disk-backed cache blocks must live in RAM until their writer has
+ * completed. Keep that transient write-behind memory separate from the
+ * configured retained Timeshift RAM, but bound it globally across all
+ * services so several caches can move to disk at the same time without
+ * each acquiring an unbounded private backlog.
+ */
+static tvh_mutex_t svcbuf_staging_lock =
+  TVH_THREAD_MUTEX_INITIALIZER;
+static uint64_t svcbuf_staging_size;
+
+static int
+svcbuf_staging_reserve ( size_t size )
+{
+  int ok = 0;
+
+  if (size == 0)
+    return 1;
+
+  tvh_mutex_lock(&svcbuf_staging_lock);
+
+  if ((uint64_t)size <= SVCBUF_STAGING_MAX &&
+      svcbuf_staging_size <=
+        SVCBUF_STAGING_MAX - (uint64_t)size) {
+    svcbuf_staging_size += size;
+    ok = 1;
+  }
+
+  tvh_mutex_unlock(&svcbuf_staging_lock);
+  return ok;
+}
+
+static void
+svcbuf_staging_release ( size_t size )
+{
+  if (size == 0)
+    return;
+
+  tvh_mutex_lock(&svcbuf_staging_lock);
+
+  assert(svcbuf_staging_size >= (uint64_t)size);
+  svcbuf_staging_size -= size;
+
+  tvh_mutex_unlock(&svcbuf_staging_lock);
+}
 
 enum {
   GATE_WAIT,     ///< Waiting for the start message
@@ -105,6 +154,7 @@ struct svcbuf_gate {
   streaming_queue_t   *sq;      ///< Consumer queue to pace on, or NULL
   svcbuf_block_t      *blk;     ///< Replay position, pins it (sb->lock)
   size_t               off;
+  int                  no_space;  ///< Hard cache limit requires replay stop
   uint64_t             start_seq; ///< Last stream map sent downstream
   pthread_t            thread;
   int                  thread_started;
@@ -132,6 +182,9 @@ struct svcbuf {
   int                       ram_only;
   int                       wr_error;
   int                       run;
+  int                       gap;        ///< Cache input was discontinuous
+  int                       limit_warned;
+  uint64_t                  limit_dropped;
   pthread_t                 writer;
   LIST_HEAD(, svcbuf_gate)  gates;
   LIST_HEAD(, svcbuf_reader) readers;
@@ -256,9 +309,18 @@ svcbuf_block_remove ( svcbuf_t *sb, svcbuf_block_t *b )
   TAILQ_REMOVE(&sb->blocks, b, link);
   sb->size -= b->size;
 
-  atomic_dec_u64(&timeshift_total_size, b->size);
+  timeshift_size_release(b->size);
+
+  if (b->keep_ram)
+    timeshift_ram_release(b->size);
+
+  if (b->staging) {
+    svcbuf_staging_release(b->staging);
+    b->staging = 0;
+  }
+
   if (b->data)
-    atomic_dec_u64(&timeshift_total_ram_size, b->size);
+    memoryinfo_free(&timeshift_memoryinfo_ram, b->alloc);
   if (sb->cur == b)
     sb->cur = NULL;
   if (sb->wr_next == b)
@@ -286,6 +348,140 @@ svcbuf_pinned ( svcbuf_t *sb )
   return pin;
 }
 
+/*
+ * Make room for another cache payload.
+ *
+ * svcbuf_size_lock and sb->lock are held by the caller.  Returning zero
+ * means that satisfying the hard configured limit would require removing
+ * data which is not yet settled or which is pinned by an active DVR replay.
+ */
+static int
+svcbuf_make_room_locked ( svcbuf_t *sb, size_t reserve )
+{
+  svcbuf_block_t *b;
+  const uint64_t pin = svcbuf_pinned(sb);
+
+  /*
+   * Reserve the global Classic + shared Timeshift budget atomically.
+   * If it is full, roll this service cache from its chronological head
+   * and retry. The successful reservation remains charged until the
+   * retained bytes are removed again by svcbuf_block_remove().
+   */
+  for (;;) {
+    if (timeshift_size_reserve(reserve))
+      return 1;
+
+    /*
+     * Cache history is chronological. Only evict from its head; never
+     * punch a silent hole in the middle of a service cache.
+     *
+     * An unsettled block cannot be discarded yet. A DVR backfill gate
+     * may also pin the oldest block until its replay advances.
+     */
+    b = TAILQ_FIRST(&sb->blocks);
+
+    if (b == NULL ||
+        !b->settled ||
+        b->seq >= pin)
+      return 0;
+
+    svcbuf_block_remove(sb, b);
+  }
+}
+
+
+/*
+ * A DVR cache gate pins historical blocks.  If the configured hard size
+ * limit cannot be satisfied without deleting those blocks, terminate the
+ * affected replay explicitly.  Its worker will emit SM_CODE_NO_SPACE
+ * rather than producing a recording containing a silent cache gap.
+ *
+ * Called from svcbuf_input() while s_stream_mutex and sb->lock are held.
+ */
+static int
+svcbuf_mark_replays_no_space_locked ( svcbuf_t *sb )
+{
+  svcbuf_gate_t *g;
+  int n = 0;
+
+  LIST_FOREACH(g, &sb->gates, link) {
+    if (g->state == GATE_REPLAY && g->blk != NULL) {
+      g->no_space = 1;
+      n++;
+    }
+  }
+
+  return n;
+}
+
+
+
+/*
+ * A dropped cache payload creates a timeline discontinuity.  Never append
+ * later data to the old retained history and pretend that it is contiguous.
+ */
+static void
+svcbuf_enter_gap_locked ( svcbuf_t *sb, size_t dropped, const char *reason )
+{
+  svcbuf_block_t *b;
+  int stopped;
+
+  b = sb->cur;
+  if (b) {
+    b->sealed = 1;
+    sb->cur = NULL;
+  }
+
+  sb->gap = 1;
+  sb->limit_dropped += dropped;
+  stopped = svcbuf_mark_replays_no_space_locked(sb);
+
+  if (!sb->limit_warned) {
+    tvhwarn(LS_TIMESHIFT,
+            "svcbuf: %s: cache retention interrupted (%s); "
+            "dropping new cache data%s",
+            sb->service->s_nicename, reason,
+            stopped ? " and stopping active cache replay" : "");
+    sb->limit_warned = 1;
+  }
+
+  tvh_cond_signal(&sb->cond, 0);
+}
+
+
+/*
+ * Resume only with a fresh contiguous history.  Wait until the writer has
+ * settled everything and no DVR replay still pins the old timeline, then
+ * discard that old timeline completely.  svcbuf readers are moved forward
+ * by svcbuf_block_remove() and observe their existing 'lost' indication.
+ */
+static int
+svcbuf_reset_gap_locked ( svcbuf_t *sb )
+{
+  svcbuf_block_t *b;
+  svcbuf_seg_t *seg;
+
+  if (!sb->gap)
+    return 1;
+
+  if (sb->wr_next != NULL ||
+      svcbuf_pinned(sb) != UINT64_MAX)
+    return 0;
+
+  while ((b = TAILQ_FIRST(&sb->blocks)) != NULL)
+    svcbuf_block_remove(sb, b);
+
+  seg = sb->wr_seg;
+  if (seg && seg->nblocks == 0) {
+    sb->wr_seg = NULL;
+    svcbuf_seg_release(sb, seg);
+  }
+
+  sb->gap = 0;
+  return 1;
+}
+
+
 /* Drop what is beyond the configured period or size (sb->lock held) */
 static void
 svcbuf_expire ( svcbuf_t *sb )
@@ -303,9 +499,7 @@ svcbuf_expire ( svcbuf_t *sb )
 
   for (b = TAILQ_FIRST(&sb->blocks); b != NULL && b->settled && b->seq < pin;
        b = nb) {
-    used = atomic_pre_add_u64(sb->ram_only ?
-                                &timeshift_total_ram_size :
-                                &timeshift_total_size, 0);
+    used = timeshift_size_used();
 
     if (!(limit && b->wall < limit) &&
         !(max_size && used > max_size))
@@ -330,7 +524,13 @@ svcbuf_writer ( void *aux )
   while (sb->run) {
     while (sb->run && sb->wr_next != NULL && sb->wr_next->sealed) {
       b = sb->wr_next;
-      if (!sb->ram_only && !sb->wr_error) {
+
+      if (b->keep_ram) {
+        /*
+         * Retained RAM block.  Nothing to write: settling merely makes
+         * it eligible for normal period/size expiration.
+         */
+      } else if (!sb->ram_only && !sb->wr_error) {
         seg = sb->wr_seg;
         if (seg == NULL || seg->size + (off_t)b->size > SVCBUF_SEG_SIZE) {
           if (seg && seg->nblocks == 0)
@@ -349,14 +549,19 @@ svcbuf_writer ( void *aux )
             b->seg  = seg;
             b->off  = off;
             seg->nblocks++;
-
-            atomic_dec_u64(&timeshift_total_ram_size, b->size);
+            memoryinfo_free(&timeshift_memoryinfo_ram, b->alloc);
 
             free(b->data);
             b->data = NULL;
+
+            if (b->staging) {
+              svcbuf_staging_release(b->staging);
+              b->staging = 0;
+            }
           } else {
-            tvherror(LS_TIMESHIFT, "svcbuf: write to '%s' failed: %s, "
-                     "keeping the cache in RAM", seg->path, strerror(errno));
+            tvherror(LS_TIMESHIFT, "svcbuf: write to '%s' failed: %s; "
+                     "stopping new cache retention",
+                     seg->path, strerror(errno));
             sb->wr_error = 1;
           }
         } else {
@@ -378,23 +583,40 @@ svcbuf_writer ( void *aux )
  * *************************************************************************/
 
 static svcbuf_block_t *
-svcbuf_block_new ( svcbuf_t *sb, size_t size )
+svcbuf_block_new
+  ( svcbuf_t *sb, size_t size, int keep_ram, size_t staging )
 {
   svcbuf_block_t *b = calloc(1, sizeof(*b));
 
-  b->data      = malloc(size);
+  if (b == NULL)
+    return NULL;
+
+  b->data = malloc(size);
+  if (b->data == NULL) {
+    free(b);
+    return NULL;
+  }
+
   b->alloc     = size;
+  b->staging   = staging;
+  b->keep_ram  = keep_ram;
   b->seq       = sb->next_seq++;
   b->start_seq = sb->start_seq;
   b->start     = sb->start;
+
   if (b->start)
     streaming_start_ref(b->start);
-  b->wall      = gclk();
-  b->mono      = mclk();
+
+  b->wall = gclk();
+  b->mono = mclk();
+
+  memoryinfo_alloc(&timeshift_memoryinfo_ram, b->alloc);
 
   TAILQ_INSERT_TAIL(&sb->blocks, b, link);
+
   if (sb->wr_next == NULL)
     sb->wr_next = b;
+
   return sb->cur = b;
 }
 
@@ -435,13 +657,30 @@ svcbuf_input ( void *opaque, streaming_message_t *sm )
       streaming_start_unref(old);
 
   } else if (sm->sm_type == SMT_MPEGTS) {
+    int keep_ram = 0;
+    int ram_reserved = 0;
+    size_t alloc, staging_reserved = 0;
+
     pb  = sm->sm_data;
     len = pktbuf_len(pb);
 
     if (len > 0) {
       tvh_mutex_lock(&sb->lock);
 
+      /*
+       * After a dropped payload, do not pretend later data is contiguous
+       * with the retained history.  A previous disk error does not by
+       * itself prevent a fresh RAM-backed timeline from starting later.
+       */
+      if (!svcbuf_reset_gap_locked(sb)) {
+        sb->limit_dropped += len;
+        tvh_mutex_unlock(&sb->lock);
+        streaming_msg_free(sm);
+        return;
+      }
+
       b = sb->cur;
+
       if (b && (b->size + len > b->alloc ||
                 mclk() - b->mono >= SVCBUF_BLOCK_AGE)) {
         b->sealed = 1;
@@ -449,15 +688,130 @@ svcbuf_input ( void *opaque, streaming_message_t *sm )
         tvh_cond_signal(&sb->cond, 0);
       }
 
-      if (b == NULL)
-        b = svcbuf_block_new(sb, MAX(len, SVCBUF_BLOCK_SIZE));
+      /*
+       * Reserve the combined logical Classic + shared Timeshift size
+       * before retaining these bytes.
+       */
+      if (!svcbuf_make_room_locked(sb, len)) {
+        svcbuf_enter_gap_locked
+          (sb, len, "combined timeshift size limit");
+
+        tvh_mutex_unlock(&sb->lock);
+        streaming_msg_free(sm);
+        return;
+      }
+
+      /*
+       * A retained-RAM block stays a RAM block for its whole lifetime.
+       * If the RAM budget becomes full while filling it, seal it and let
+       * the next block choose disk instead.
+       */
+      if (b && b->keep_ram) {
+        if (timeshift_ram_reserve(len)) {
+          ram_reserved = 1;
+        } else {
+          b->sealed = 1;
+          sb->cur = b = NULL;
+          tvh_cond_signal(&sb->cond, 0);
+        }
+      }
+
+      /*
+       * A disk block remains disk-backed until its normal block boundary.
+       * We do not migrate a partially filled block merely because RAM
+       * became available in the meantime.
+       */
+      if (b == NULL) {
+        if (!ram_reserved)
+          ram_reserved = timeshift_ram_reserve(len);
+
+        keep_ram = ram_reserved;
+
+        if (!keep_ram && (sb->ram_only || sb->wr_error)) {
+          timeshift_size_release(len);
+
+          svcbuf_enter_gap_locked
+            (sb, len,
+             sb->ram_only ? "RAM-only timeshift RAM limit" :
+                            "storage write error");
+
+          tvh_mutex_unlock(&sb->lock);
+          streaming_msg_free(sm);
+          return;
+        }
+
+        /*
+         * Disk staging is transient write-behind RAM, not retained cache
+         * RAM. Reserve the complete allocation globally before malloc()
+         * so simultaneous RAM-to-disk transitions from several services
+         * share one bounded backlog instead of each hitting a tiny
+         * per-service block-count limit.
+         */
+        alloc = MAX(len, SVCBUF_BLOCK_SIZE);
+
+        if (!keep_ram) {
+          if (!svcbuf_staging_reserve(alloc)) {
+            timeshift_size_release(len);
+
+            svcbuf_enter_gap_locked
+              (sb, len, "storage writer backlog");
+
+            tvh_mutex_unlock(&sb->lock);
+            streaming_msg_free(sm);
+            return;
+          }
+
+          staging_reserved = alloc;
+        }
+
+        b = svcbuf_block_new
+              (sb, alloc, keep_ram, staging_reserved);
+
+        if (b == NULL) {
+          timeshift_size_release(len);
+
+          if (ram_reserved)
+            timeshift_ram_release(len);
+
+          if (staging_reserved)
+            svcbuf_staging_release(staging_reserved);
+
+          svcbuf_enter_gap_locked
+            (sb, len, "memory allocation failure");
+
+          tvh_mutex_unlock(&sb->lock);
+          streaming_msg_free(sm);
+          return;
+        }
+
+      } else if (!b->keep_ram) {
+        /*
+         * Existing disk-staging block: no retained RAM reservation.
+         */
+        ram_reserved = 0;
+      }
+
+      if (sb->limit_warned) {
+        tvhinfo(LS_TIMESHIFT,
+                "svcbuf: %s: cache retention resumed with a fresh "
+                "timeline after dropping %"PRIu64" kB",
+                sb->service->s_nicename,
+                sb->limit_dropped / 1024);
+
+        sb->limit_warned  = 0;
+        sb->limit_dropped = 0;
+      }
 
       memcpy(b->data + b->size, pktbuf_ptr(pb), len);
-      b->size += len;
+
+      b->size  += len;
       sb->size += len;
 
-      atomic_add_u64(&timeshift_total_size, len);
-      atomic_add_u64(&timeshift_total_ram_size, len);
+      /*
+       * For keep_ram blocks the retained RAM budget was reserved above.
+       * Disk staging is deliberately outside that retained-cache budget
+       * and remains bounded by the global SVCBUF_STAGING_MAX budget.
+       */
 
       tvh_mutex_unlock(&sb->lock);
     }
@@ -677,6 +1031,23 @@ svcbuf_gate_thread ( void *aux )
   tvh_mutex_lock(&sb->lock);
 
   while (g->state == GATE_REPLAY) {
+    if (g->no_space) {
+      tvh_mutex_unlock(&sb->lock);
+      tvh_mutex_lock(&t->s_stream_mutex);
+
+      if (g->state == GATE_REPLAY) {
+        tvherror(LS_TIMESHIFT,
+                 "svcbuf: %s: stopping cache replay because the "
+                 "timeshift size limit was reached",
+                 t->s_nicename);
+        svcbuf_gate_finish_history(g, SM_CODE_NO_SPACE);
+      }
+
+      tvh_mutex_unlock(&t->s_stream_mutex);
+      tvh_mutex_lock(&sb->lock);
+      break;
+    }
+
     if (g->sq) {
       tvh_mutex_lock(&g->sq->sq_mutex);
       n = g->sq->sq_size;
@@ -1145,6 +1516,19 @@ service_t *
 svcbuf_service ( svcbuf_t *sb )
 {
   return sb->service;
+}
+
+/* Current service stream-map generation. */
+uint64_t
+svcbuf_start_seq ( svcbuf_t *sb )
+{
+  uint64_t seq;
+
+  tvh_mutex_lock(&sb->lock);
+  seq = sb->start_seq;
+  tvh_mutex_unlock(&sb->lock);
+
+  return seq;
 }
 
 /* Monotonic time of the oldest and newest data held, 0 when empty */
