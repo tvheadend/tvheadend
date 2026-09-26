@@ -32,6 +32,9 @@
 #include "compat.h"
 #include "string_list.h"
 #include "epggrab.h" //Needed to get the epggrab_conf.epgdb_processparentallabels flag.
+#if ENABLE_TIMESHIFT
+#include "timeshift.h"
+#endif
 
 struct dvr_entry_list dvrentries;
 static int dvr_in_init;
@@ -859,6 +862,20 @@ dvr_entry_set_timer(dvr_entry_t *de)
 
   dvr_entry_trace_time2(de, "start", start, "stop", stop, "set timer");
 
+#if ENABLE_TIMESHIFT
+  if (de->de_cache_retro &&
+      now >= stop &&
+      !de->de_dont_reschedule &&
+      de->de_channel &&
+      de->de_channel->ch_enabled) {
+    dvr_entry_trace_time2(de, "start", dvr_entry_get_start_time(de, 0),
+                         "stop", stop,
+                         "starting retrospective channel-cache recording");
+    dvr_timer_start_recording(de);
+    return;
+  }
+#endif
+
   if (now >= stop || de->de_dont_reschedule) {
 
     /* EPG thinks that the program is running */
@@ -1069,6 +1086,45 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   idnode_load(&de->de_id, conf);
 
+#if ENABLE_TIMESHIFT
+  /*
+   * Internal one-shot marker used by HTSP historical playback.
+   * It is not an idnode property and is therefore never persisted.
+   */
+  if (!clone &&
+      htsmsg_get_u32_or_default(conf, "__cache_full", 0) &&
+      timeshift_conf.enabled &&
+      timeshift_conf.record_cache)
+    de->de_cache_full = 1;
+
+  /*
+   * Retrospective recording must be explicitly requested by the caller.
+   * In particular, DVR entries loaded from the database at startup must
+   * never become retrospective merely because their stop time is past.
+   */
+  if (htsmsg_get_u32_or_default(conf, "__cache_retro", 0) &&
+      de->de_bcast != NULL &&
+      timeshift_conf.enabled &&
+      timeshift_conf.record_cache &&
+      gclk() >= de->de_bcast->stop &&
+      (timeshift_conf.unlimited_period ||
+       (timeshift_conf.max_period > 0 &&
+        dvr_entry_get_stop_time(de) + 2 >=
+          gclk() - (time_t)timeshift_conf.max_period * 60))) {
+    de->de_cache_retro = 1;
+
+    tvhinfo(LS_DVR,
+            "retrospective cache DVR armed for \"%s\" on \"%s\": "
+            "from=%"PRItime_t" to=%"PRItime_t,
+            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+            dvr_entry_get_start_time(de, 0),
+            dvr_entry_get_stop_time(de));
+  }
+#endif
+
+
+
+
   /* Time the node was created. */
   if (!htsmsg_get_s64(conf, "create", &create)) {
       de->de_create = create;
@@ -1123,7 +1179,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
    * Note: this check has to be done _after_ insert in to de_global_link
    * otherwise the destroy will abort.
    */
-  if (_dvr_duplicate_event(de)) {
+  if (!de->de_cache_retro && _dvr_duplicate_event(de)) {
       tvhtrace(LS_DVR, "Entry was duplicate for %s \"%s\" on \"%s\" start time %"PRId64", "
           "scheduled for recording by \"%s\"",
           idnode_uuid_as_str(&de->de_id, ubuf),
@@ -1151,6 +1207,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
         return NULL;
       }
   }
+
 
   if (!clone)
     dvr_entry_set_timer(de);
@@ -1379,6 +1436,9 @@ dvr_entry_clone(dvr_entry_t *de)
   htsmsg_destroy(conf);
 
   if (n) {
+    n->de_cache_retro = de->de_cache_retro;
+    n->de_cache_full  = de->de_cache_full;
+
     if(de->de_sched_state == DVR_RECORDING) {
       dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
       dvr_rec_migrate(de, n);
@@ -3171,6 +3231,30 @@ dvr_timer_stop_recording(void *aux)
                         "rstart", de->de_running_start,
                         "rstop", de->de_running_stop,
                         "stop recording timer called");
+
+#if ENABLE_TIMESHIFT
+  /*
+   * Full-cache replay may still be processing historical bytes when the
+   * current programme reaches its wall-clock stop.  The gate knows the
+   * exact historical stop boundary, so keep the subscription alive until
+   * the gate reaches it.
+   */
+  if (de->de_cache_full && de->de_s && de->de_s->ths_replaying) {
+    dvr_entry_trace(de,
+                    "full-cache replay active at DVR stop; "
+                    "waiting for cache stop boundary");
+    gtimer_arm_rel(&de->de_timer, dvr_timer_stop_recording, de, 1);
+    return;
+  }
+
+  /*
+   * If full-cache already caught live, the ordinary DVR timer is again
+   * authoritative.  Clear the transient marker before final stop.
+   */
+  if (de->de_cache_full)
+    de->de_cache_full = 0;
+#endif
+
   /* EPG thinks that the program is running */
   if (de->de_segment_stop_extra) {
     const time_t stop = dvr_entry_get_stop_time(de);
@@ -3186,6 +3270,38 @@ dvr_timer_stop_recording(void *aux)
   dvr_stop_recording(aux, SM_CODE_OK, 1, 0);
 }
 
+
+
+/*
+ * Complete a cache-owned recording after its DVR worker consumed the
+ * gate's terminal STOP.  The zero-delay global timer is intentional:
+ * dvr_stop_recording() joins the worker thread, so it cannot be called
+ * synchronously by that worker.
+ */
+static void
+dvr_timer_cache_replay_done(void *aux)
+{
+  dvr_entry_t *de = aux;
+
+  if (de->de_sched_state != DVR_RECORDING ||
+      (!de->de_cache_retro && !de->de_cache_full))
+    return;
+
+  de->de_cache_retro = 0;
+  de->de_cache_full  = 0;
+
+  dvr_stop_recording(de, de->de_last_error, 1, 0);
+}
+
+void
+dvr_entry_cache_replay_done(dvr_entry_t *de)
+{
+  lock_assert(&global_lock);
+
+  if (de->de_sched_state == DVR_RECORDING &&
+      (de->de_cache_retro || de->de_cache_full))
+    gtimer_arm_rel(&de->de_timer, dvr_timer_cache_replay_done, de, 0);
+}
 
 
 /**
@@ -3237,6 +3353,13 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
   de->de_segment_stop_extra = 0;
   stop = dvr_entry_get_stop_time(de);
 
+  if (de->de_cache_retro) {
+    dvr_entry_trace_time2(de, "start", dvr_entry_get_start_time(de, 0),
+                         "stop", stop,
+                         "cache replay owns retrospective stop boundary");
+    return;
+  }
+
   dvr_entry_trace_time2(de, "original stop", de->de_stop, "stop", stop, "stop timer set");
 
   gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de, stop);
@@ -3257,7 +3380,7 @@ dvr_timer_start_recording(void *aux)
   }
 
   // if duplicate, then delete it now, don't record!
-  if (_dvr_duplicate_event(de)) {
+  if (!de->de_cache_retro && _dvr_duplicate_event(de)) {
     dvr_entry_cancel_delete(de, 1);
     return;
   }
