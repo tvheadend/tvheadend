@@ -102,6 +102,7 @@ void timeshift_init ( void )
   timeshift_conf.cache_keepalive            = 15;
   timeshift_conf.cache_keepalive_min_period = 60;
   timeshift_conf.cache_keepalive_max        = 4;
+  timeshift_conf.cache_staging              = 32;
   timeshift_conf.max_size                   = 10000 * (size_t)1048576; // 10G
 
   idclass_register(&timeshift_conf_class);
@@ -361,6 +362,18 @@ const idclass_t timeshift_conf_class = {
                    "subscriptions do not count. Zero means unlimited."),
       .off    = offsetof(timeshift_conf_t, cache_keepalive_max),
       .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_staging",
+      .name   = N_("Channel cache write-behind RAM (MB)"),
+      .desc   = N_("RAM the shared channel caches may use together to hold "
+                   "blocks on their way to storage. Raise it when the log "
+                   "reports cache gaps from a \"storage writer backlog\" on "
+                   "a busy server or slow storage. This is transient memory, "
+                   "separate from the retained \"Maximum RAM size\"."),
+      .off    = offsetof(timeshift_conf_t, cache_staging),
+      .opts   = PO_EXPERT,
     },
     {}
   }

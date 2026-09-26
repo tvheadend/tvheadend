@@ -54,7 +54,7 @@
 #define SVCBUF_SEG_SIZE   (64 * 1024 * 1024)  ///< Segment file size
 #define SVCBUF_READ_SIZE  (188 * 348)         ///< Replay chunk, whole TS packets
 #define SVCBUF_QUEUE_MAX  (32 * 1024 * 1024)  ///< Consumer backlog to wait on
-#define SVCBUF_STAGING_MAX (32 * 1024 * 1024)  ///< Global disk write-behind RAM
+#define SVCBUF_STAGING_DEFAULT (32 * 1024 * 1024) ///< Global disk write-behind RAM
 
 typedef struct svcbuf_seg {
   TAILQ_ENTRY(svcbuf_seg) link;
@@ -98,9 +98,19 @@ static tvh_mutex_t svcbuf_staging_lock =
   TVH_THREAD_MUTEX_INITIALIZER;
 static uint64_t svcbuf_staging_size;
 
+/* Configured budget, or the default when unset */
+static uint64_t
+svcbuf_staging_max ( void )
+{
+  const uint64_t mb = timeshift_conf.cache_staging;
+
+  return mb ? mb * (uint64_t)1048576 : SVCBUF_STAGING_DEFAULT;
+}
+
 static int
 svcbuf_staging_reserve ( size_t size )
 {
+  const uint64_t max = svcbuf_staging_max();
   int ok = 0;
 
   if (size == 0)
@@ -108,9 +118,8 @@ svcbuf_staging_reserve ( size_t size )
 
   tvh_mutex_lock(&svcbuf_staging_lock);
 
-  if ((uint64_t)size <= SVCBUF_STAGING_MAX &&
-      svcbuf_staging_size <=
-        SVCBUF_STAGING_MAX - (uint64_t)size) {
+  if ((uint64_t)size <= max &&
+      svcbuf_staging_size <= max - (uint64_t)size) {
     svcbuf_staging_size += size;
     ok = 1;
   }
@@ -810,7 +819,7 @@ svcbuf_input ( void *opaque, streaming_message_t *sm )
       /*
        * For keep_ram blocks the retained RAM budget was reserved above.
        * Disk staging is deliberately outside that retained-cache budget
-       * and remains bounded by the global SVCBUF_STAGING_MAX budget.
+       * and remains bounded by the configured write-behind budget.
        */
 
       tvh_mutex_unlock(&sb->lock);
