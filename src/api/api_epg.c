@@ -183,7 +183,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
   /* Image */
   s = eb->image;
   if (!strempty(s)) {
-    s = imagecache_get_propstr(s, buf, sizeof(buf));
+    s = imagecache_get_propstr_prio(s, buf, sizeof(buf), (int64_t)eb->start);
     if (s)
       htsmsg_add_str(m, "image", s);
   }

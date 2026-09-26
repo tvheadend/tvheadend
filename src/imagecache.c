@@ -39,15 +39,21 @@ typedef struct imagecache_image
   int         ref;      ///< Number of references
   const char *url;      ///< Upstream URL
   uint8_t     failed;   ///< Last update failed
+  uint8_t     attempts; ///< Consecutive transient fetch failures
   uint8_t     savepend; ///< Pending save
+  uint8_t     deleted;  ///< Destroyed with its on-disk record
   time_t      accessed; ///< Last time the file was accessed
   time_t      updated;  ///< Last time the file was checked
+  int64_t     airtime;  ///< Earliest known airing (epoch; 0 = fetch asap,
+                        ///< IMAGECACHE_AIRTIME_UNSET = not known yet)
+  int64_t     retry_at; ///< Monotonic clock for the next transient retry
   uint8_t     sha1[20]; ///< Contents hash
   enum {
     IDLE,
     SAVE,
     QUEUED,
-    FETCHING
+    FETCHING,
+    RETRY     ///< waiting (in imagecache_retry_queue) for a short retry
   }           state;    ///< save/fetch status
 
   TAILQ_ENTRY(imagecache_image) q_link;   ///< Fetch Q link
@@ -103,6 +109,17 @@ const idclass_t imagecache_class = {
       .off    = offsetof(struct imagecache_config, ignore_sslcert),
     },
     {
+      .type   = PT_BOOL,
+      .id     = "reuse_conn",
+      .name   = N_("Reuse HTTP connection"),
+      .desc   = N_("Keep the HTTP connection to the image server open "
+                   "between downloads (one TCP/TLS handshake for many "
+                   "images) instead of opening a new connection per "
+                   "image. Disable only if a server misbehaves with "
+                   "persistent connections."),
+      .off    = offsetof(struct imagecache_config, reuse_conn),
+    },
+    {
       .type   = PT_U32,
       .id     = "expire",
       .name   = N_("Expire time"),
@@ -134,6 +151,20 @@ const idclass_t imagecache_class = {
 
 static tvh_cond_t                     imagecache_cond;
 static TAILQ_HEAD(, imagecache_image) imagecache_queue;
+
+/* Images whose last fetch failed transiently (network error, HTTP 5xx/429),
+ * waiting for a short per-image retry -- unlike the hours-coarse fail_period
+ * which handles persistent failures.  Sorted by retry_at. */
+static TAILQ_HEAD(, imagecache_image) imagecache_retry_queue;
+#define IMAGECACHE_TRANSIENT_RETRIES 3
+
+/* Priority of an image nothing has asked for yet -- entries reloaded from disk
+ * at start-up, before the EPG is loaded and re-references them.  It sorts after
+ * every real airtime, so such entries neither jump ahead of guide artwork nor
+ * block it, and the first real reference replaces it.  Kept distinct from 0,
+ * which means "fetch asap" (channel icons and other non-EPG images). */
+#define IMAGECACHE_AIRTIME_UNSET INT64_MAX
+#define IMAGECACHE_RETRY_DELAY(attempts) sec2mono(60 << ((attempts) - 1))
 
 static void
 imagecache_incref(imagecache_image_t *img)
@@ -196,7 +227,8 @@ static void
 imagecache_image_save ( imagecache_image_t *img )
 {
   img->savepend = 1;
-  if (img->state != SAVE && img->state != QUEUED && img->state != FETCHING) {
+  if (img->state != SAVE && img->state != QUEUED &&
+      img->state != FETCHING && img->state != RETRY) {
     img->state = SAVE;
     TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
     tvh_cond_signal(&imagecache_cond, 1);
@@ -215,15 +247,53 @@ imagecache_new_id ( imagecache_image_t *i )
   } while (j);
 }
 
+/* Insert into the fetch queue ordered by earliest airing first (airtime 0 =
+ * asap: channel icons and other non-EPG images jump the queue; entries with no
+ * known priority yet sort last).  The EPG enqueues images roughly
+ * chronologically, so the forward scan is cheap. */
+static void
+imagecache_image_enqueue ( imagecache_image_t *img )
+{
+  imagecache_image_t *i;
+
+  TAILQ_FOREACH(i, &imagecache_queue, q_link)
+    if (i->airtime > img->airtime)
+      break;
+  if (i)
+    TAILQ_INSERT_BEFORE(i, img, q_link);
+  else
+    TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
+}
+
+/* Schedule a short retry after a transient fetch failure (lock held). */
+static void
+imagecache_image_retry_later ( imagecache_image_t *img )
+{
+  imagecache_image_t *i;
+
+  img->state = RETRY;
+  img->retry_at = mclk() + IMAGECACHE_RETRY_DELAY(img->attempts);
+  TAILQ_FOREACH(i, &imagecache_retry_queue, q_link)
+    if (i->retry_at > img->retry_at)
+      break;
+  if (i)
+    TAILQ_INSERT_BEFORE(i, img, q_link);
+  else
+    TAILQ_INSERT_TAIL(&imagecache_retry_queue, img, q_link);
+  tvh_cond_signal(&imagecache_cond, 1);
+}
+
 static void
 imagecache_image_add ( imagecache_image_t *img )
 {
   int oldstate = img->state;
   if (!imagecache_conf.enabled) return;
   if (strncasecmp("file://", img->url, 7)) {
+    if (oldstate == RETRY)
+      TAILQ_REMOVE(&imagecache_retry_queue, img, q_link);
     img->state = QUEUED;
     if (oldstate != SAVE && oldstate != QUEUED)
-      TAILQ_INSERT_TAIL(&imagecache_queue, img, q_link);
+      imagecache_image_enqueue(img);
     tvh_cond_signal(&imagecache_cond, 1);
   } else {
     time(&img->updated);
@@ -289,10 +359,62 @@ imagecache_new_contents ( imagecache_image_t *img,
   return r;
 }
 
+/*
+ * Persistent fetch connection ("Reuse HTTP connection" setting).
+ *
+ * Guide artwork typically lives on a single CDN; re-using one kept-alive
+ * client turns thousands of TCP+TLS handshakes into one.  The cached client
+ * is owned by whoever grabs it under imagecache_lock (the fetch thread or a
+ * direct fetch from imagecache_filename); concurrent fetches simply fall
+ * back to a one-shot connection.  It is dropped whenever the fetch queue
+ * drains, so no idle socket is kept open.
+ */
+static http_client_t *imagecache_fetch_hc   = NULL;
+static tvhpoll_t     *imagecache_fetch_efd  = NULL;
+static int            imagecache_fetch_busy = 0;
+
+/* Close the cached fetch connection (imagecache_lock held).  Returns 1 when
+ * the lock had to be released to do it, so the caller knows its view of the
+ * queues may be stale. */
+static int
+imagecache_fetch_conn_close ( void )
+{
+  http_client_t *hc = imagecache_fetch_hc;
+  tvhpoll_t *efd = imagecache_fetch_efd;
+
+  imagecache_fetch_hc  = NULL;
+  imagecache_fetch_efd = NULL;
+  if (hc == NULL && efd == NULL)
+    return 0;
+  tvh_mutex_unlock(&imagecache_lock);
+  if (hc)  http_client_close(hc);
+  if (efd) tvhpoll_destroy(efd);
+  tvh_mutex_lock(&imagecache_lock);
+  return 1;
+}
+
+/* Request headers for a reusable fetch connection.  http_client_simple() and
+ * http_client_simple_reconnect() both ask the header builder for keepalive = 0,
+ * which adds "Connection: close" -- and http_client_send() clears hc_keepalive
+ * when it sees that header.  Left alone, no connection could ever be kept, so
+ * ask for keep-alive explicitly when reuse is enabled. */
+static void
+imagecache_fetch_hdr_create ( http_client_t *hc, http_arg_list_t *h,
+                              const url_t *url, int keepalive )
+{
+  http_client_basic_args(hc, h, url, 1);
+}
+
 static int
 imagecache_image_fetch ( imagecache_image_t *img )
 {
-  int res = 1, r;
+  int res = 1;
+  int r;
+  int reuse = 0;
+  int conn_ok = 0;
+  int keep;
+  int attempted = 0;
+  int http_code = 0;
   url_t url;
   char tpath[PATH_MAX + 4] = "", path[PATH_MAX];
   tvhpoll_event_t ev;
@@ -314,6 +436,15 @@ imagecache_image_fetch ( imagecache_image_t *img )
     goto error;
   snprintf(tpath, sizeof(tpath), "%s.tmp", path);
 
+  /* Take ownership of the cached kept-alive connection (when enabled and
+   * not in use by a concurrent fetch) */
+  if (imagecache_conf.reuse_conn && !imagecache_fetch_busy) {
+    reuse = 1;
+    imagecache_fetch_busy = 1;
+    hc  = imagecache_fetch_hc;  imagecache_fetch_hc  = NULL;
+    efd = imagecache_fetch_efd; imagecache_fetch_efd = NULL;
+  }
+
   /* Fetch (release lock, incase of delays) */
   tvh_mutex_unlock(&imagecache_lock);
 
@@ -325,20 +456,61 @@ imagecache_image_fetch ( imagecache_image_t *img )
     goto error_lock;
   }
 
-  hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
-                           url.host, url.port, NULL);
-  if (hc == NULL)
-    goto error_lock;
+  /* The certificate policy is fixed when a client is created, and a reconnect
+   * to another origin re-applies that stored value.  If "ignore invalid SSL
+   * certificate" changed since, drop the cached client rather than carry the
+   * old policy forward. */
+  if (hc != NULL &&
+      hc->hc_verify_peer != (imagecache_conf.ignore_sslcert ? 0 : 1)) {
+    http_client_close(hc);
+    hc = NULL;
+    if (efd != NULL) {
+      tvhpoll_destroy(efd);
+      efd = NULL;
+    }
+  }
 
-  http_client_ssl_peer_verify(hc, imagecache_conf.ignore_sslcert ? 0 : 1);
-  hc->hc_handle_location = 1;
-  hc->hc_data_limit  = 256*1024;
-  efd = tvhpoll_create(1);
-  hc->hc_efd = efd;
+  attempted = 1;
+  if (hc != NULL) {
+    /* Re-issue on the kept-alive client: same origin reuses the open
+     * connection, a different origin transparently reconnects. */
+    hc->hc_handle_location = 1;
+    hc->hc_data_limit  = 256*1024;
+    /* unlike http_client_simple(), the reconnect entry point expects the
+     * client lock to be held by the caller */
+    tvh_mutex_lock(&hc->hc_mutex);
+    r = http_client_simple_reconnect(hc, &url, HTTP_VERSION_1_1);
+    tvh_mutex_unlock(&hc->hc_mutex);
+    if (r < 0) {
+      /* stale or broken cached connection: start completely afresh,
+       * including the poll set */
+      http_client_close(hc);
+      hc = NULL;
+      if (efd != NULL) {
+        tvhpoll_destroy(efd);
+        efd = NULL;
+      }
+    }
+  }
+  if (hc == NULL) {
+    hc = http_client_connect(NULL, HTTP_VERSION_1_1, url.scheme,
+                             url.host, url.port, NULL);
+    if (hc == NULL)
+      goto error_lock;
 
-  r = http_client_simple(hc, &url);
-  if (r < 0)
-    goto error_lock;
+    http_client_ssl_peer_verify(hc, imagecache_conf.ignore_sslcert ? 0 : 1);
+    if (reuse)
+      hc->hc_hdr_create = imagecache_fetch_hdr_create;
+    hc->hc_handle_location = 1;
+    hc->hc_data_limit  = 256*1024;
+    if (efd == NULL)
+      efd = tvhpoll_create(1);
+    hc->hc_efd = efd;
+
+    r = http_client_simple(hc, &url);
+    if (r < 0)
+      goto error_lock;
+  }
 
   while (tvheadend_is_running()) {
     r = tvhpoll_wait(efd, &ev, 1, -1);
@@ -350,6 +522,8 @@ imagecache_image_fetch ( imagecache_image_t *img )
     if (r < 0)
       break;
     if (r == HTTP_CON_DONE) {
+      conn_ok = 1;
+      http_code = hc->hc_code;
       if (hc->hc_code == HTTP_STATUS_OK && hc->hc_data_size > 0)
         res = imagecache_new_contents(img, tpath, path,
                                       (uint8_t *)hc->hc_data, hc->hc_data_size);
@@ -359,25 +533,76 @@ imagecache_image_fetch ( imagecache_image_t *img )
 
   /* Process */
 error_lock:
-  if (NULL != hc) http_client_close(hc);
+  /* Keep the healthy kept-alive connection for the next fetch,
+   * dispose of anything else */
+  keep = (hc != NULL && reuse && conn_ok && hc->hc_keepalive);
+  if (!keep) {
+    if (hc != NULL) http_client_close(hc);
+    if (efd != NULL) tvhpoll_destroy(efd);
+    hc = NULL;
+    efd = NULL;
+  }
   tvh_mutex_lock(&imagecache_lock);
+  if (reuse) {
+    imagecache_fetch_busy = 0;
+    if (keep) {
+      imagecache_fetch_hc  = hc;
+      imagecache_fetch_efd = efd;
+    }
+  }
 error:
   urlreset(&url);
-  tvhpoll_destroy(efd);
   time(&img->updated); // even if failed (possibly request sooner?)
   if (res) {
+    /* Transient failures (no HTTP response, or 5xx/429: typically a cold
+     * CDN edge or a hiccup, not a property of the image) get a short
+     * per-image retry before falling back to the hours-coarse
+     * fail_period. */
+    /* http_code stays 0 both when the server never answered and when the
+     * fetch failed before any request -- a malformed URL, or the cache
+     * directory unwritable.  Only the former is worth retrying soon. */
+    if (((attempted && http_code == 0) || http_code == 429 || http_code >= 500) &&
+        img->attempts < IMAGECACHE_TRANSIENT_RETRIES) {
+      img->attempts++;
+      tvhdebug(LS_IMAGECACHE, "transient failure (%d) for %s, retry %d/%d",
+               http_code, img->url, img->attempts,
+               IMAGECACHE_TRANSIENT_RETRIES);
+      imagecache_image_retry_later(img);
+      return res;
+    }
+    img->attempts = 0;
     if (!img->failed) {
       img->failed = 1;
       imagecache_image_save(img);
     }
     tvhwarn(LS_IMAGECACHE, "failed to download %s", img->url);
   } else {
+    img->attempts = 0;
     tvhdebug(LS_IMAGECACHE, "downloaded %s", img->url);
   }
   tvh_cond_signal(&imagecache_cond, 1);
 
   return res;
 };
+
+/* Move due transient retries into the fetch queue and return the earlier of
+ * `deadline` and the next pending retry (thread wake-up time). Lock held. */
+static int64_t
+imagecache_retry_promote ( int64_t deadline )
+{
+  imagecache_image_t *img;
+
+  while ((img = TAILQ_FIRST(&imagecache_retry_queue)) != NULL &&
+         img->retry_at <= mclk()) {
+    TAILQ_REMOVE(&imagecache_retry_queue, img, q_link);
+    img->state = IDLE;
+    imagecache_image_add(img);
+  }
+  img = TAILQ_FIRST(&imagecache_retry_queue);
+  if (img != NULL && img->retry_at < deadline)
+    deadline = img->retry_at;
+  return deadline;
+}
 
 static void
 imagecache_timer ( void )
@@ -396,7 +621,7 @@ imagecache_timer ( void )
         continue;
       }
     }
-    if (img->state != IDLE) continue;
+    if (img->state != IDLE) continue; /* RETRY has its own schedule */
     when = img->failed ? imagecache_conf.fail_period
                        : imagecache_conf.ok_period;
     when = img->updated + (when * 3600);
@@ -410,6 +635,7 @@ imagecache_thread ( void *p )
 {
   imagecache_image_t *img;
   int64_t timer_expire = mclk() + sec2mono(600);
+  int64_t wake;
 
   tvh_mutex_lock(&imagecache_lock);
   while (tvheadend_is_running()) {
@@ -420,9 +646,19 @@ imagecache_thread ( void *p )
       imagecache_timer();
     }
 
+    /* Promote due transient retries into the fetch queue */
+    wake = imagecache_retry_promote(timer_expire);
+
     /* Get entry */
     if (!(img = TAILQ_FIRST(&imagecache_queue))) {
-      tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, timer_expire);
+      /* queue drained: no need to keep an idle connection open.  Closing
+       * drops the lock, and anything queued meanwhile -- a fetch or a
+       * transient retry, whose due time 'wake' does not reflect -- had its
+       * signal sent before we wait.  Start over rather than sleep on a stale
+       * deadline; the next pass finds no connection and waits normally. */
+      if (imagecache_fetch_conn_close())
+        continue;
+      tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, wake);
       continue;
     }
 
@@ -434,10 +670,18 @@ retry:
       htsmsg_t *m = imagecache_image_htsmsg(img);
       img->state = IDLE;
       img->savepend = 0;
+      imagecache_incref(img);
       tvh_mutex_unlock(&imagecache_lock);
       hts_settings_save(m, "imagecache/meta/%d", img->id);
       htsmsg_destroy(m);
       tvh_mutex_lock(&imagecache_lock);
+      /* "Clean image cache" can destroy the image while its record is being
+       * written, leaving that record orphaned on disk.  The reference taken
+       * above keeps img valid to check; ids only ever increase, so the
+       * record cannot belong to another image yet. */
+      if (img->deleted)
+        hts_settings_remove("imagecache/meta/%d", img->id);
+      imagecache_decref(img);
 
     } else if (img->state == QUEUED) {
       /* Fetch */
@@ -445,6 +689,11 @@ retry:
       if (imagecache_conf.enabled) {
         img->state = FETCHING;
         (void)imagecache_image_fetch(img);
+      }
+      if (img->state == RETRY) {
+        /* transient failure: parked in the retry queue, leave it there */
+        imagecache_decref(img);
+        continue;
       }
       if (img->savepend) {
         img->state = SAVE;
@@ -484,12 +733,14 @@ imagecache_init ( void )
   imagecache_conf.ok_period      = 24 * 7; // weekly
   imagecache_conf.fail_period    = 24;     // daily
   imagecache_conf.ignore_sslcert = 0;
+  imagecache_conf.reuse_conn     = 1;
 
   idclass_register(&imagecache_class);
 
   /* Create threads */
   tvh_cond_init(&imagecache_cond, 1);
   TAILQ_INIT(&imagecache_queue);
+  TAILQ_INIT(&imagecache_retry_queue);
 
   /* Load settings */
   if ((m = hts_settings_load("imagecache/config"))) {
@@ -507,6 +758,10 @@ imagecache_init ( void )
       img->url      = strdup(url);
       img->accessed = htsmsg_get_s64_or_default(e, "accessed", 0);
       img->updated  = htsmsg_get_s64_or_default(e, "updated", 0);
+      /* the worker starts before the EPG is loaded: until something
+       * re-references this image its priority is unknown, so keep it behind
+       * the guide artwork rather than let it default to "asap" */
+      img->airtime  = IMAGECACHE_AIRTIME_UNSET;
       sha1 = htsmsg_get_str(e, "sha1");
       if (sha1 && strlen(sha1) == 40)
         hex2bin(img->sha1, 20, sha1);
@@ -543,7 +798,15 @@ imagecache_init ( void )
 static void
 imagecache_destroy ( imagecache_image_t *img, int delconf )
 {
+  /* unlink from whichever queue holds it: destroying a QUEUED/SAVE image
+   * (e.g. "Clean image cache" while the fetch queue is filling) left a
+   * dangling entry in the fetch queue behind */
+  if (img->state == RETRY)
+    TAILQ_REMOVE(&imagecache_retry_queue, img, q_link);
+  else if (img->state == QUEUED || img->state == SAVE)
+    TAILQ_REMOVE(&imagecache_queue, img, q_link);
   if (delconf) {
+    img->deleted = 1;
     hts_settings_remove("imagecache/meta/%d", img->id);
     hts_settings_remove("imagecache/data/%d", img->id);
   }
@@ -565,6 +828,7 @@ imagecache_done ( void )
   tvh_mutex_unlock(&imagecache_lock);
   pthread_join(imagecache_tid, NULL);
   tvh_mutex_lock(&imagecache_lock);
+  imagecache_fetch_conn_close();
   while ((img = RB_FIRST(&imagecache_by_id)) != NULL) {
     if (img->state == SAVE) {
       htsmsg_t *m = imagecache_image_htsmsg(img);
@@ -667,6 +931,17 @@ imagecache_trigger( void )
 int
 imagecache_get_id ( const char *url )
 {
+  return imagecache_get_id_prio(url, 0);
+}
+
+/*
+ * As above, but with the earliest known airing time of the content the
+ * image illustrates: the fetch queue is drained in ascending airtime order
+ * so artwork for soon-airing events is downloaded first.
+ */
+int
+imagecache_get_id_prio ( const char *url, int64_t airtime )
+{
   int id = 0;
   imagecache_image_t *i;
   int save = 0;
@@ -692,10 +967,22 @@ imagecache_get_id ( const char *url )
     i = imagecache_skel;
     i->ref = 1;
     i->url = strdup(url);
+    i->airtime = airtime;
     SKEL_USED(imagecache_skel);
     save = 1;
     imagecache_new_id(i);
     imagecache_image_add(i);
+  } else if (airtime < i->airtime) {
+    /* Re-referenced with a higher priority: a sooner airing, or 0 (asap) for a
+     * channel icon.  0 is the top priority and never gets replaced by a later
+     * airing; an entry reloaded at start-up holds IMAGECACHE_AIRTIME_UNSET,
+     * which any real reference replaces.  Reposition it when still waiting in
+     * the fetch queue. */
+    i->airtime = airtime;
+    if (i->state == QUEUED) {
+      TAILQ_REMOVE(&imagecache_queue, i, q_link);
+      imagecache_image_enqueue(i);
+    }
   }
 
   /* Do file:// to imagecache ID mapping even if imagecache is not enabled */
@@ -721,7 +1008,19 @@ imagecache_get_id ( const char *url )
 const char *
 imagecache_get_propstr ( const char *image, char *buf, size_t buflen )
 {
-  int id = imagecache_get_id(image);
+  return imagecache_get_propstr_prio(image, buf, buflen, 0);
+}
+
+/*
+ * As above, for the image of an EPG event: rendering the event registers its
+ * artwork at the event's airing time rather than as asap, so the order in
+ * which clients walk the guide cannot reorder the fetch queue.
+ */
+const char *
+imagecache_get_propstr_prio ( const char *image, char *buf, size_t buflen,
+                              int64_t airtime )
+{
+  int id = imagecache_get_id_prio(image, airtime);
   if (id == 0) return image;
   snprintf(buf, buflen, "imagecache/%d", id);
   return buf;
@@ -730,6 +1029,52 @@ imagecache_get_propstr ( const char *image, char *buf, size_t buflen )
 /*
  * Get data
  */
+/* Make a remote image available on disk for imagecache_filename(): wait for
+ * an in-flight fetch, or fetch it directly when only queued. Lock held.
+ * Returns 0 when the data file can be served. */
+static int
+imagecache_image_ready ( imagecache_image_t *i )
+{
+  int e;
+  int64_t mono;
+
+  /* Use existing */
+  if (i->updated)
+    return 0;
+
+  /* Wait for the in-flight fetch */
+  if (i->state == FETCHING) {
+    mono = mclk() + sec2mono(5);
+    do {
+      e = tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, mono);
+      if (e == ETIMEDOUT)
+        return -1;
+    } while (ERRNO_AGAIN(e));
+    return 0;
+  }
+
+  /* Attempt to fetch directly */
+  if (i->state == QUEUED) {
+    i->state = FETCHING;
+    TAILQ_REMOVE(&imagecache_queue, i, q_link);
+    e = imagecache_image_fetch(i);
+    /* fetch may have parked the image for a transient retry; otherwise
+     * return it to IDLE (it was left as FETCHING forever, so the
+     * periodic re-check never considered it again) */
+    if (i->state == FETCHING) {
+      i->state = IDLE;
+      /* the fetch recorded new metadata (url/updated/sha1) while FETCHING,
+       * which only marks it pending; the worker persists that on its own
+       * path, this one has to queue the write itself */
+      if (i->savepend)
+        imagecache_image_save(i);
+    }
+    return e ? -1 : 0;
+  }
+
+  return 0;
+}
+
 int
 imagecache_filename ( int id, char *name, size_t len )
 {
@@ -754,29 +1099,8 @@ imagecache_filename ( int id, char *name, size_t len )
 
   /* Remote file */
   else if (imagecache_conf.enabled) {
-    int e;
-    int64_t mono;
-
-    /* Use existing */
-    if (i->updated) {
-
-    /* Wait */
-    } else if (i->state == FETCHING) {
-      mono = mclk() + sec2mono(5);
-      do {
-        e = tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, mono);
-        if (e == ETIMEDOUT)
-          goto out_error;
-      } while (ERRNO_AGAIN(e));
-
-    /* Attempt to fetch */
-    } else if (i->state == QUEUED) {
-      i->state = FETCHING;
-      TAILQ_REMOVE(&imagecache_queue, i, q_link);
-      e = imagecache_image_fetch(i);
-      if (e)
-        goto out_error;
-    }
+    if (imagecache_image_ready(i))
+      goto out_error;
     if (hts_settings_buildpath(name, len, "imagecache/data/%d", i->id))
       goto out_error;
   }
