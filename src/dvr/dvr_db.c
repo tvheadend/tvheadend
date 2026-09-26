@@ -3577,14 +3577,17 @@ dvr_timer_stop_recording(void *aux)
 
 /*
  * Complete a cache-owned recording after its DVR worker consumed the
- * gate's terminal STOP.  The zero-delay global timer is intentional:
- * dvr_stop_recording() joins the worker thread, so it cannot be called
- * synchronously by that worker.
+ * gate's terminal STOP.  The stop is deferred because dvr_stop_recording()
+ * joins the worker thread and so cannot be called by that worker itself --
+ * which is what dvr_stop_recording_deferred() exists for.
+ *
+ * Clearing the cache flags first keeps dvr_entry_set_timer() from starting
+ * the historical replay over again in the meantime.
  */
-static void
-dvr_timer_cache_replay_done(void *aux)
+void
+dvr_entry_cache_replay_done(dvr_entry_t *de)
 {
-  dvr_entry_t *de = aux;
+  lock_assert(&global_lock);
 
   if (de->de_sched_state != DVR_RECORDING ||
       (!de->de_cache_retro && !de->de_cache_full))
@@ -3593,17 +3596,7 @@ dvr_timer_cache_replay_done(void *aux)
   de->de_cache_retro = 0;
   de->de_cache_full  = 0;
 
-  dvr_stop_recording(de, de->de_last_error, 1, 0);
-}
-
-void
-dvr_entry_cache_replay_done(dvr_entry_t *de)
-{
-  lock_assert(&global_lock);
-
-  if (de->de_sched_state == DVR_RECORDING &&
-      (de->de_cache_retro || de->de_cache_full))
-    gtimer_arm_rel(&de->de_timer, dvr_timer_cache_replay_done, de, 0);
+  dvr_stop_recording_deferred(de, de->de_last_error);
 }
 
 
