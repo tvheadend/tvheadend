@@ -897,8 +897,82 @@ subscription_cache_keepalive_has_real
   return 0;
 }
 
+/* Amount of useful rewind history currently retained for this service. */
+static int64_t
+subscription_cache_keepalive_span ( service_t *t )
+{
+  int64_t oldest, newest;
+
+  if (t == NULL || t->s_svcbuf == NULL ||
+      !svcbuf_span(t->s_svcbuf, &oldest, &newest) ||
+      newest <= oldest)
+    return 0;
+
+  return newest - oldest;
+}
+
 static void
 subscription_cache_keepalive_timeout ( void *aux );
+
+/*
+ * End an existing helper just after the current unlink operation has
+ * completed. If a real subscriber returns first, the timeout callback
+ * sees it and re-arms the helper instead.
+ */
+static void
+subscription_cache_keepalive_drop_soon ( th_subscription_t *s )
+{
+  mtimer_arm_rel(&s->ths_remove_timer,
+                 subscription_cache_keepalive_timeout,
+                 s, sec2mono(1));
+}
+
+/*
+ * Check the idle keepalive limit without counting 'candidate' itself.
+ * Return the shortest existing idle keepalive when the candidate is more
+ * valuable and may replace it. Ties keep the existing hold.
+ */
+static th_subscription_t *
+subscription_cache_keepalive_select_victim
+  ( th_subscription_t *candidate, int64_t span,
+    int *admit, int64_t *victim_span )
+{
+  th_subscription_t *s;
+  th_subscription_t *victim = NULL;
+  int64_t sspan;
+  uint32_t count = 0;
+
+  *admit = 1;
+  *victim_span = 0;
+
+  if (timeshift_conf.cache_keepalive_max == 0)
+    return NULL;
+
+  LIST_FOREACH(s, &subscriptions, ths_global_link) {
+    if (s == candidate ||
+        !s->ths_cache_keepalive ||
+        s->ths_service == NULL ||
+        subscription_cache_keepalive_has_real(s->ths_service, s))
+      continue;
+
+    count++;
+    sspan = subscription_cache_keepalive_span(s->ths_service);
+
+    if (victim == NULL || sspan < *victim_span) {
+      victim = s;
+      *victim_span = sspan;
+    }
+  }
+
+  if (count < timeshift_conf.cache_keepalive_max)
+    return NULL;
+
+  if (victim != NULL && span > *victim_span)
+    return victim;
+
+  *admit = 0;
+  return NULL;
+}
 
 /*
  * Arm/re-arm the hold.  If the administrator disabled the option while
@@ -964,7 +1038,10 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
 {
   th_subscription_t *s;
   th_subscription_t *keep = NULL;
+  th_subscription_t *victim = NULL;
   service_instance_t *si;
+  int64_t span, victim_span;
+  int admit;
   int error = 0;
 
   if (t == NULL ||
@@ -976,8 +1053,8 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
 
   /*
    * If another real user/recording still uses this service, there is
-   * nothing to hold.  If an existing keepalive is the only one left,
-   * refresh its timeout from this latest departure.
+   * nothing to decide. If an existing keepalive is the only one left,
+   * subject it to the same retention limits as a newly-created hold.
    */
   LIST_FOREACH(s, &t->s_subscriptions, ths_service_link) {
     if (s->ths_cache_keepalive)
@@ -986,16 +1063,67 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
       return;
   }
 
+  if (timeshift_conf.cache_keepalive == 0) {
+    if (keep)
+      subscription_cache_keepalive_drop_soon(keep);
+    return;
+  }
+
+  span = subscription_cache_keepalive_span(t);
+
+  if (timeshift_conf.cache_keepalive_min_period &&
+      span < sec2mono(timeshift_conf.cache_keepalive_min_period)) {
+    tvhdebug(LS_TIMESHIFT,
+             "not keeping cache for %s: retained history %"PRId64
+             " seconds is below %u second minimum",
+             t->s_nicename,
+             mono2sec(span),
+             timeshift_conf.cache_keepalive_min_period);
+    if (keep)
+      subscription_cache_keepalive_drop_soon(keep);
+    return;
+  }
+
+  victim = subscription_cache_keepalive_select_victim
+             (keep, span, &admit, &victim_span);
+
+  if (!admit) {
+    tvhdebug(LS_TIMESHIFT,
+             "not keeping cache for %s: maximum of %u idle cache "
+             "keepalives reached; retained history %"PRId64
+             " seconds is not longer than the shortest existing cache "
+             "(%"PRId64" seconds)",
+             t->s_nicename,
+             timeshift_conf.cache_keepalive_max,
+             mono2sec(span),
+             mono2sec(victim_span));
+    if (keep)
+      subscription_cache_keepalive_drop_soon(keep);
+    return;
+  }
+
   if (keep) {
     subscription_cache_keepalive_arm(keep, 0);
+
+    if (victim) {
+      tvhinfo(LS_TIMESHIFT,
+              "replacing cache keepalive for %s (%"PRId64
+              " seconds) with %s (%"PRId64" seconds)",
+              victim->ths_service ?
+                victim->ths_service->s_nicename : "<detached>",
+              mono2sec(victim_span),
+              t->s_nicename,
+              mono2sec(span));
+
+      subscription_unsubscribe
+        (victim, UNSUBSCRIBE_QUIET | UNSUBSCRIBE_FINAL);
+    }
+
     tvhdebug(LS_TIMESHIFT,
              "cache keepalive refreshed for %s (%u min)",
              t->s_nicename, timeshift_conf.cache_keepalive);
     return;
   }
-
-  if (timeshift_conf.cache_keepalive == 0)
-    return;
 
   /*
    * ONESHOT is deliberate: this subscription may use the already
@@ -1042,6 +1170,24 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
 
   subscription_link_service(keep, t);
   subscription_cache_keepalive_arm(keep, 0);
+
+  /*
+   * Attach the new helper before sacrificing an existing cache. If
+   * attaching failed above, the old cache remains untouched.
+   */
+  if (victim) {
+    tvhinfo(LS_TIMESHIFT,
+            "replacing cache keepalive for %s (%"PRId64
+            " seconds) with %s (%"PRId64" seconds)",
+            victim->ths_service ?
+              victim->ths_service->s_nicename : "<detached>",
+            mono2sec(victim_span),
+            t->s_nicename,
+            mono2sec(span));
+
+    subscription_unsubscribe
+      (victim, UNSUBSCRIBE_QUIET | UNSUBSCRIBE_FINAL);
+  }
 
   tvhinfo(LS_TIMESHIFT,
           "keeping %s and its channel cache for %u minute%s "
