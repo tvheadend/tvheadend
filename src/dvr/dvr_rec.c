@@ -177,6 +177,32 @@ dvr_rec_subscribe(dvr_entry_t *de)
     goto _return;
   }
 
+  /*
+   * First file only.
+   *
+   * Normal Record during the current programme:
+   *   replay from the programme's ordinary DVR start.
+   *
+   * Record while shared timeshift is still in an older programme:
+   *   replay the complete channel cache, then catch live.
+   *
+   * In both cases the DVR itself remains the current programme and its
+   * ordinary stop timer remains authoritative.
+   */
+  if (de->de_files == NULL) {
+    if (de->de_cache_full) {
+      de->de_s->ths_backfill_all = 1;
+      de->de_s->ths_backfill_to = dvr_entry_get_stop_time(de);
+    } else if (dvr_entry_get_start_time(de, 0) + 2 < gclk()) {
+      de->de_s->ths_backfill_from = dvr_entry_get_start_time(de, 0);
+
+      /* Kept for the old bounded-retro infrastructure; HTSP no longer
+       * enters this mode for the Record-button semantics above. */
+      if (de->de_cache_retro)
+        de->de_s->ths_backfill_to = dvr_entry_get_stop_time(de);
+    }
+  }
+
   de->de_chain = prch;
 
   atomic_set(&de->de_thread_shutdown, 0);
@@ -1372,6 +1398,7 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
   htsmsg_field_t *f;
   muxer_t *muxer;
   struct stat st;
+  time_t start;
   int i;
 
   if (!cfg) {
@@ -1528,11 +1555,19 @@ dvr_rec_start(dvr_entry_t *de, const streaming_start_t *ss)
 
   streaming_start_unref(ss_copy);
 
-  /* update the info field for a filename */
+  /* update the info field for a filename; backfilled from the channel
+   * cache, the file starts with what the cache held (once: a later file
+   * of the same recording starts when it does) */
   if ((f = htsmsg_field_last(de->de_files)) != NULL &&
       (e = htsmsg_field_get_map(f)) != NULL) {
     htsmsg_set_msg(e, "info", info);
-    htsmsg_set_s64(e, "start", gclk());
+    start = gclk();
+    if (de->de_s && de->de_s->ths_backfill_start &&
+        de->de_s->ths_backfill_start < start)
+      start = de->de_s->ths_backfill_start;
+    if (de->de_s)
+      de->de_s->ths_backfill_start = 0;
+    htsmsg_set_s64(e, "start", start);
   } else {
     htsmsg_destroy(info);
   }
@@ -1731,6 +1766,7 @@ dvr_thread(void *aux)
   th_pkt_t *pkt, *pkt2, *pkt3;
   streaming_start_t *ss = NULL;
   int run = 1, started = 0, muxing = 0, comm_skip, rs;
+  int cache_retro = 0, cache_full = 0;
   int epg_running = 0, old_epg_running, epg_pause = 0;
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
@@ -1743,7 +1779,9 @@ dvr_thread(void *aux)
     return NULL;
   comm_skip = de->de_config->dvr_skip_commercials;
   postproc  = de->de_config->dvr_postproc ? strdup(de->de_config->dvr_postproc) : NULL;
-  running_disabled = dvr_entry_get_epg_running(de) <= 0;
+  running_disabled =
+    de->de_cache_retro || de->de_cache_full ||
+    dvr_entry_get_epg_running(de) <= 0;
   real_start = dvr_entry_get_start_time(de, 0);
   tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
            idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
@@ -1966,17 +2004,36 @@ dvr_thread(void *aux)
 
 fin:
         streaming_queue_clear(&backlog);
+
+        /*
+         * A retrospective cache recording ends when the cache gate reaches
+         * its historical stop boundary.  Do not call dvr_stop_recording()
+         * from this thread: that routine joins this very thread.
+         */
+        cache_retro = de->de_cache_retro;
+        cache_full  = de->de_cache_full;
+
         if (!dvr_thread_global_lock(de, &run))
           break;
+
         dvr_thread_epilog(de, postproc);
+
+        if (cache_retro || cache_full)
+          dvr_entry_cache_replay_done(de);
+
         dvr_thread_global_unlock(de);
+
 	start_time = 0;
 	started = 0;
 	muxing = 0;
+
 	if (ss) {
 	  streaming_start_unref(ss);
 	  ss = NULL;
         }
+
+        if (cache_retro || cache_full)
+          run = 0;
       }
       break;
 

@@ -96,6 +96,7 @@ typedef struct profile_chain {
   struct streaming_target  *prch_tsfix;
 #if ENABLE_TIMESHIFT
   struct streaming_target  *prch_timeshift;
+  struct streaming_target  *prch_svcts;   ///< Timeshift through the channel cache
 #endif
   struct streaming_target   prch_input;
   struct streaming_target  *prch_share;

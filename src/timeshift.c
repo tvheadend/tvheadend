@@ -98,7 +98,8 @@ void timeshift_init ( void )
   /* Defaults */
   memset(&timeshift_conf, 0, sizeof(timeshift_conf));
   timeshift_conf.idnode.in_class = &timeshift_conf_class;
-  timeshift_conf.max_period       = 60;                      // Hr (60mins)
+  timeshift_conf.max_period       = 60;
+  timeshift_conf.cache_keepalive  = 15;                      // Hr (60mins)
   timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
 
   idclass_register(&timeshift_conf_class);
@@ -310,6 +311,31 @@ const idclass_t timeshift_conf_class = {
                    "teletext DTS is invalid."),
       .off    = offsetof(timeshift_conf_t, teletext),
       .opts   = PO_EXPERT,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "record_cache",
+      .name   = N_("Record from cache"),
+      .desc   = N_("Keep the last \"Maximum period\" of every tuned "
+                   "channel, so a recording started after its programme "
+                   "began also gets the part already broadcast, as far "
+                   "back as the cache reaches. HTSP clients timeshift "
+                   "through the same cache instead of a buffer of their "
+                   "own. Each tuned channel uses one cache, within the "
+                   "storage path and the maximum size above."),
+      .off    = offsetof(timeshift_conf_t, record_cache),
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive",
+      .name   = N_("Keep tuned channels (mins)"),
+      .desc   = N_("Keep a recently tuned channel and its shared cache "
+                   "active for this many minutes after the last normal "
+                   "subscription leaves. The keepalive uses the lowest "
+                   "subscription priority, so tuners remain available for "
+                   "live TV and recordings. Zero disables this feature."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive),
+      .opts   = PO_ADVANCED,
     },
     {}
   }
