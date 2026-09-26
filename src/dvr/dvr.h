@@ -191,6 +191,20 @@ typedef struct dvr_entry {
   int de_refcnt;   /* Modification is protected under global_lock */
   int de_in_unsubscribe;
 
+  /*
+   * Newly-created manual recording of a programme which has already
+   * finished.  It is satisfied entirely from the channel cache.
+   * Transient: never stored in the DVR database.
+   */
+  int de_cache_retro;
+
+  /*
+   * First subscription starts at the oldest available shared channel
+   * cache, catches live and then follows the ordinary DVR lifecycle.
+   * Transient: never persisted.
+   */
+  int de_cache_full;
+
 
   /**
    * Upon dvr_entry_remove() this fields will be invalidated (and pointers
@@ -620,6 +634,9 @@ void dvr_destroy_by_channel(channel_t *ch, int delconf);
 void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone);
 
 void dvr_stop_recording_deferred(dvr_entry_t *de, int stopcode);
+
+/* Finish a cache-owned recording from outside the DVR thread. */
+void dvr_entry_cache_replay_done(dvr_entry_t *de);
 
 int dvr_rec_subscribe(dvr_entry_t *de);
 
