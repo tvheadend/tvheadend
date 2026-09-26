@@ -204,6 +204,12 @@ gh_queue_delay(globalheaders_t *gh, int index)
 /**
  *
  */
+enum {
+  GH_HEADERS_WAIT = 0,
+  GH_HEADERS_READY,
+  GH_HEADERS_ROLL
+};
+
 static int
 headers_complete(globalheaders_t *gh)
 {
@@ -211,9 +217,12 @@ headers_complete(globalheaders_t *gh)
   streaming_start_component_t *ssc;
   int64_t *qd = alloca(ss->ss_num_components * sizeof(int64_t));
   int64_t qd_max = 0;
-  int i, threshold = 0;
+  int i, threshold = 0, roll = 0;
+  int replay;
 
   assert(ss != NULL);
+
+  replay = !!(ss->ss_flags & STREAMING_START_CACHE_REPLAY);
 
   for(i = 0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
@@ -224,7 +233,7 @@ headers_complete(globalheaders_t *gh)
   }
 
   if (qd_max <= 0)
-    return 0;
+    return GH_HEADERS_WAIT;
 
   threshold = qd_max > MAX_SCAN_TIME * 90;
 
@@ -233,36 +242,85 @@ headers_complete(globalheaders_t *gh)
 
     if(!header_complete(ssc, threshold)) {
       /*
-       * disable stream only when
-       * - half timeout is reached without any packets seen
-       * - maximal timeout is reached without metadata
+       * No packets for an A/V component is different from packets being
+       * present while codec initialization data has not recurred yet.
+       *
+       * The former remains the existing "stream absent" case.
        */
-      if(threshold || (qd[i] <= 0 && qd_max > (MAX_NOPKT_TIME * 90))) {
-	ssc->ssc_disabled = 1;
-        tvhdebug(LS_GLOBALHEADERS, "gh disable stream %d %s%s%s (PID %i) threshold %d qd %"PRId64" qd_max %"PRId64,
-             ssc->es_index, streaming_component_type2txt(ssc->es_type),
-             ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid,
-             threshold, qd[i], qd_max);
+      if(qd[i] <= 0 && qd_max > (MAX_NOPKT_TIME * 90)) {
+        ssc->ssc_disabled = 1;
+
+        tvhdebug(LS_GLOBALHEADERS,
+                 "gh disable stream %d %s%s%s (PID %i) "
+                 "no packets qd_max %"PRId64,
+                 ssc->es_index,
+                 streaming_component_type2txt(ssc->es_type),
+                 ssc->es_lang[0] ? " " : "",
+                 ssc->es_lang,
+                 ssc->es_pid,
+                 qd_max);
+
+      } else if(threshold) {
+
+        if(replay) {
+          /*
+           * Random access into cached MPEG-TS may begin between codec
+           * header repetitions.  The stream is demonstrably present, so
+           * declaring it absent here would produce a START without that
+           * stream while its packets immediately follow.
+           *
+           * Keep metadata learned so far and request another bounded
+           * scan window instead.
+           */
+          ssc->ssc_disabled = 0;
+          roll = 1;
+
+        } else {
+          /*
+           * Preserve ordinary live/globalheaders behaviour exactly.
+           */
+          ssc->ssc_disabled = 1;
+
+          tvhdebug(LS_GLOBALHEADERS,
+                   "gh disable stream %d %s%s%s (PID %i) "
+                   "threshold %d qd %"PRId64" qd_max %"PRId64,
+                   ssc->es_index,
+                   streaming_component_type2txt(ssc->es_type),
+                   ssc->es_lang[0] ? " " : "",
+                   ssc->es_lang,
+                   ssc->es_pid,
+                   threshold, qd[i], qd_max);
+        }
+
       } else {
-	return 0;
+        return GH_HEADERS_WAIT;
       }
+
     } else {
       ssc->ssc_disabled = 0;
     }
   }
 
+  if (roll)
+    return GH_HEADERS_ROLL;
+
   if (tvhtrace_enabled()) {
     for(i = 0; i < ss->ss_num_components; i++) {
       ssc = &ss->ss_components[i];
-      tvhtrace(LS_GLOBALHEADERS, "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
-               ssc->es_index, streaming_component_type2txt(ssc->es_type),
-               ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid,
+
+      tvhtrace(LS_GLOBALHEADERS,
+               "stream %d %s%s%s (PID %i) complete time %"PRId64"%s",
+               ssc->es_index,
+               streaming_component_type2txt(ssc->es_type),
+               ssc->es_lang[0] ? " " : "",
+               ssc->es_lang,
+               ssc->es_pid,
                gh_queue_delay(gh, ssc->es_index),
                ssc->ssc_disabled ? " disabled" : "");
     }
   }
 
-  return 1;
+  return GH_HEADERS_READY;
 }
 
 
@@ -311,8 +369,28 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
     if(!gh_is_audiovideo(ssc->es_type))
       break;
 
-    if(!headers_complete(gh))
-      break;
+    {
+      int h = headers_complete(gh);
+
+      if(h == GH_HEADERS_WAIT)
+        break;
+
+      if(h == GH_HEADERS_ROLL) {
+        /*
+         * Keep gh_ss: apply_header() has already accumulated any codec
+         * metadata found in this window.  Only packet payload references
+         * are discarded, bounding replay startup memory to the same
+         * window used by ordinary globalheaders.
+         */
+        tvhdebug(LS_GLOBALHEADERS,
+                 "gh cache replay: codec headers incomplete after %d ms, "
+                 "continuing scan",
+                 MAX_SCAN_TIME);
+
+        pktref_clear_queue(&gh->gh_holdq);
+        break;
+      }
+    }
 
     // Send our modified start
     sm = streaming_msg_create_data(SMT_START,
