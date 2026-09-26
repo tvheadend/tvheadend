@@ -495,6 +495,15 @@ static void _epg_channel_rem_broadcast
   ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
   RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
+  /*
+   * The broadcast can outlive its place in the schedule (for example a
+   * recording that is already running keeps its reference, see
+   * dvr_event_replaced()), and it can still be looked up by id. Clear the
+   * stale links so that epg_broadcast_get_next()/get_prev() return NULL
+   * for it instead of following pointers to neighbours that may already
+   * have been freed.
+   */
+  memset(&ebc->sched_link, 0, sizeof(ebc->sched_link));
   if (ch->ch_epg_now  == ebc) ch->ch_epg_now  = NULL;
   if (ch->ch_epg_next == ebc) ch->ch_epg_next = NULL;
   if (ebc_new) {
