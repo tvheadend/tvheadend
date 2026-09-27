@@ -2398,8 +2398,8 @@ static void
 dvr_entry_watched_timer_arm(dvr_entry_t* de)
 {
   if (!de || !de->de_watched ||
-      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER ||
-      !de->de_config || !de->de_config->dvr_removal_after_playback)
+      !de->de_config || !de->de_config->dvr_removal_after_playback ||
+      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER)
     return;
 
   char t1buf[32];
