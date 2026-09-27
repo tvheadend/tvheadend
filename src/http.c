@@ -615,8 +615,10 @@ http_get_header_value(const char *hdr, const char *name)
     } else {
       val = s;
       while (*s && *s != ',') s++;
-      *s = '\0';
-      s++;
+      if (*s == ',') {
+        *s = '\0';
+        s++;
+      }
     }
     if (*start && strcmp(name, start) == 0)
       return strdup(val);
