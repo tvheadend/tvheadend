@@ -385,6 +385,95 @@ htsp_image(htsp_connection_t *htsp, const char *image,
   return ret;
 }
 
+#if ENABLE_TIMESHIFT
+
+/*
+ * Where the viewer of this subscription is, in wall clock.
+ *
+ * Watching live is the common case and counts just as much: the viewer is at
+ * the live edge, which in a recording backfilled from the cache is however far
+ * the programme has got.  A position behind live is taken from what svcts
+ * reports, as long as it reported recently enough to be trusted.
+ */
+static int
+htsp_cache_playhead ( htsp_subscription_t *hs, time_t *when )
+{
+  int64_t shift_us = 0;
+
+  if (hs->hs_s == NULL || hs->hs_s->ths_channel == NULL)
+    return 0;
+
+  if (hs->hs_timeshift_status_mono &&
+      mclk() - hs->hs_timeshift_status_mono <= sec2mono(5))
+    shift_us = ts_rescale(hs->hs_timeshift_shift, 1000000);
+  if (shift_us < 0)
+    shift_us = 0;
+
+  *when = gclk() - (time_t)(shift_us / 1000000);
+  return 1;
+}
+
+/*
+ * Remember inside the recording where the viewer had got to.
+ *
+ * Record pressed half an hour into a film, then the television goes off: the
+ * recording carries on, and the next day the client should resume where the
+ * viewer stopped rather than at the programme's start.  tvheadend already
+ * keeps that as de_playposition and hands it to clients over HTSP -- what was
+ * missing is writing it while the channel cache is what feeds the recording.
+ *
+ * 'only' restricts the update to one entry (just created, so not recording
+ * yet); NULL updates whatever is recording that channel around the playhead.
+ * global_lock held.
+ *
+ * A viewer who only passed through leaves a position a few seconds in, which
+ * is what "resume where I stopped" means for it as much as for a film.
+ */
+static void
+htsp_cache_record_position
+  ( htsp_connection_t *htsp, htsp_subscription_t *hs, dvr_entry_t *only )
+{
+  dvr_entry_t *de;
+  channel_t *ch;
+  time_t when, start, file_start, file_stop;
+  int filecount;
+  uint32_t pos;
+
+  lock_assert(&global_lock);
+
+  if (!htsp_cache_playhead(hs, &when))
+    return;
+  ch = hs->hs_s->ths_channel;
+
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    if (only && de != only)
+      continue;
+    if (!only && de->de_sched_state != DVR_RECORDING)
+      continue;
+    start = dvr_entry_get_start_time(de, 0);
+    if (when < start || when > dvr_entry_get_stop_time(de))
+      continue;
+    /*
+     * The position counts from the start of the file, and a backfilled
+     * recording begins where the cache reached, which is the scheduled
+     * start only when the cache went back that far.
+     */
+    if (!dvr_get_files_details(de, &file_start, &file_stop, &filecount) &&
+        filecount == 1 && file_start > 0 && file_start <= when)
+      start = file_start;
+    pos = when - start;
+    if (de->de_playposition == pos)
+      continue;
+    de->de_playposition = pos;
+    idnode_changed(&de->de_id);
+    tvhdebug(LS_HTSP, "%s: play position of \"%s\" set to %u s",
+             htsp->htsp_logname, lang_str_get(de->de_title, NULL) ?: "",
+             pos);
+  }
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
 /**
  *
  */
@@ -392,6 +481,11 @@ static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   th_subscription_t *ts = hs->hs_s;
+
+#if ENABLE_TIMESHIFT
+  /* the viewer is leaving: keep its place in whatever it was recording */
+  htsp_cache_record_position(htsp, hs, NULL);
+#endif
 
   hs->hs_s = NULL;
   mtimer_disarm(&hs->hs_s_bytes_out_timer);
@@ -2321,6 +2415,21 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     tvhinfo(LS_HTSP,
             "%s: addDvrEntry: DVR entry created, state=%d",
             htsp->htsp_logname, (int)de->de_sched_state);
+
+#if ENABLE_TIMESHIFT
+  /*
+   * Recording what is being watched from the cache: start the entry with the
+   * viewer's place in it, so a client resumes there instead of at the start.
+   */
+  if (de != NULL) {
+    htsp_subscription_t *hs;
+    LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+      if (hs->hs_s && hs->hs_s->ths_channel == de->de_channel) {
+        htsp_cache_record_position(htsp, hs, de);
+        break;
+      }
+  }
+#endif
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
