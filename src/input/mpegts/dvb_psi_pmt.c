@@ -327,6 +327,7 @@ dvb_psi_parse_pmt
     len -= dlen; ptr += dlen; dllen -= dlen;
   }
 
+  position = 0;
   while(len >= 5) {
     estype  = ptr[0];
     pid     = extract_pid(ptr + 1);
@@ -342,7 +343,6 @@ dvb_psi_parse_pmt
     ancillary_id = -1;
     rds_uecp = 0;
     ac4 = 0;
-    position = 0;
     tt_position = 1000;
     lang = NULL;
     supp_lang = NULL;
