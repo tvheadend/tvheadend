@@ -332,12 +332,17 @@ http_alive(http_connection_t *hc)
 static void
 http_auth_header
   (htsbuf_queue_t *hdrs, const char *realm, const char *algo,
-   const char *nonce, const char *opaque)
+   const char *nonce, const char *opaque, int stale)
 {
   htsbuf_qprintf(hdrs, "WWW-Authenticate: Digest realm=\"%s\", qop=auth", realm);
   if (algo)
     htsbuf_qprintf(hdrs, ", algorithm=%s", algo);
   htsbuf_qprintf(hdrs, ", nonce=\"%s\"", nonce);
+  /* the credentials were fine, only the nonce had expired: RFC 7616 asks for
+   * stale=true, without which a browser takes the 401 for a wrong password
+   * and asks the user again -- every 30 seconds, as nonces live that long */
+  if (stale)
+    htsbuf_qprintf(hdrs, ", stale=true");
   htsbuf_qprintf(hdrs, ", opaque=\"%s\"\r\n", opaque);
 }
 
@@ -417,8 +422,9 @@ http_send_header(http_connection_t *hc, int rc, const char *content,
 #else
                              "SHA-256",
 #endif
-                           hc->hc_nonce, opaque);
-      http_auth_header(&hdrs, realm, NULL, hc->hc_nonce, opaque);
+                           hc->hc_nonce, opaque, hc->hc_nonce_stale);
+      http_auth_header(&hdrs, realm, NULL, hc->hc_nonce, opaque,
+                       hc->hc_nonce_stale);
       free(opaque);
     } else {
       htsbuf_qprintf(&hdrs, "WWW-Authenticate: Basic realm=\"%s\"\r\n", realm);
@@ -1455,6 +1461,7 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
   hc->hc_password = NULL;
   hc->hc_authhdr  = NULL;
   hc->hc_session  = NULL;
+  hc->hc_nonce_stale = 0;
 
   /* Set keep-alive status */
   v = http_arg_get(&hc->hc_args, "connection");
@@ -1515,6 +1522,9 @@ process_request(http_connection_t *hc, htsbuf_queue_t *spill)
             config.http_auth == HTTP_AUTH_PLAIN_DIGEST) {
           v = http_get_header_value(argv[1], "nonce");
           if (v == NULL || !http_nonce_exists(v)) {
+            /* tell the client to retry with the fresh nonce this 401 carries
+             * instead of asking the user for a password again */
+            hc->hc_nonce_stale = v != NULL;
             free(v);
             http_error(hc, HTTP_STATUS_UNAUTHORIZED);
             return -1;
