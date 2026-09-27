@@ -215,16 +215,23 @@ headers_complete(globalheaders_t *gh)
 {
   streaming_start_t *ss = gh->gh_ss;
   streaming_start_component_t *ssc;
-  int64_t *qd = alloca(ss->ss_num_components * sizeof(int64_t));
+  int64_t *qd;
   int64_t qd_max = 0;
-  int i, threshold = 0, roll = 0;
+  int i, ncomp, threshold = 0, roll = 0;
   int replay;
 
   assert(ss != NULL);
 
+  /* the component count bounds the array below: name it once, so that it
+   * cannot be read as unrelated to the allocation */
+  ncomp = ss->ss_num_components;
+  if (ncomp <= 0)
+    return GH_HEADERS_WAIT;
+  qd = alloca((size_t)ncomp * sizeof(*qd));
+
   replay = !!(ss->ss_flags & STREAMING_START_CACHE_REPLAY);
 
-  for(i = 0; i < ss->ss_num_components; i++) {
+  for(i = 0; i < ncomp; i++) {
     ssc = &ss->ss_components[i];
     qd[i] = gh_is_audiovideo(ssc->es_type) ?
               gh_queue_delay(gh, ssc->es_index) : 0;
@@ -237,7 +244,7 @@ headers_complete(globalheaders_t *gh)
 
   threshold = qd_max > MAX_SCAN_TIME * 90;
 
-  for(i = 0; i < ss->ss_num_components; i++) {
+  for(i = 0; i < ncomp; i++) {
     ssc = &ss->ss_components[i];
 
     if(!header_complete(ssc, threshold)) {
@@ -305,7 +312,7 @@ headers_complete(globalheaders_t *gh)
     return GH_HEADERS_ROLL;
 
   if (tvhtrace_enabled()) {
-    for(i = 0; i < ss->ss_num_components; i++) {
+    for(i = 0; i < ncomp; i++) {
       ssc = &ss->ss_components[i];
 
       tvhtrace(LS_GLOBALHEADERS,
