@@ -30,11 +30,18 @@
  * `tvh-config:dvb:adapters:expand` and restored on the next visit:
  * the restore replays the lazy child fetches for each still-present
  * node, reusing the comet-refresh walk.
+ *
+ * Nodes whose class has the read-only `active` property (adapters,
+ * frontends, CA slots, satconf entries) get a green / red dot next
+ * to the label, as in the classic tree (tvadapters.js). The value is
+ * read on each fetch, so the tree reloads after a save in the editor
+ * drawer as well as on the `hardware` notification.
  */
 import { onMounted, onBeforeUnmount, ref, computed, watch } from 'vue'
 import Tree from 'primevue/tree'
-import type { TreeExpandedKeys, TreeSelectionKeys } from 'primevue/tree'
+import type { TreeExpandedKeys, TreePassThroughOptions, TreeSelectionKeys } from 'primevue/tree'
 import type { TreeNode } from 'primevue/treenode'
+import { Circle } from 'lucide-vue-next'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import { apiCall } from '@/api/client'
 import { cometClient } from '@/api/comet'
@@ -47,8 +54,8 @@ const { t } = useI18n()
  * api_input.c + ExtJS's idnode_tree consumption). Each node has a
  * uuid (the idnode UUID), a text label, an optional `children` array
  * (omitted when not yet fetched), and idnode metadata we mostly
- * ignore here — only `uuid`, the human label, and the structural
- * `leaf` flag are used. */
+ * ignore here — only `uuid`, the human label, the structural
+ * `leaf` flag and the `active` entry of `params` are used. */
 interface HardwareNode {
   uuid: string
   text?: string
@@ -65,15 +72,28 @@ interface HardwareNode {
    * yet fetched. Empty array means "fetched, no children" (terminal
    * leaf — render without expand caret). */
   children?: HardwareNode[]
+  /* Every property of the node's class with its value
+   * (idnode_serialize0, idnode.c:1542). */
+  params?: Array<{ id?: unknown; value?: unknown }>
   /* Free-form idnode metadata. We don't need it here; passed through
    * to IdnodeEditor implicitly via the uuid lookup. */
   [key: string]: unknown
 }
 
+/* The read-only `active` property (PO_RDONLY | PO_NOSAVE | PO_NOUI),
+ * a PT_BOOL serialised as JSON true / false: an enabled frontend or
+ * CA slot, an adapter with at least one of those. Undefined when the
+ * class has no such property, so no marker is drawn for it. */
+function activeOf(h: HardwareNode): boolean | undefined {
+  const value = h.params?.find((p) => p?.id === 'active')?.value
+  return typeof value === 'boolean' ? value : undefined
+}
+
 /* PrimeVue Tree expects `key`, `label`, `children`, plus `leaf?` to
  * suppress the expand caret on terminal nodes. We map from the
  * server's HardwareNode shape into this. The `data` slot carries the
- * uuid back through to the click handler. */
+ * uuid back through to the click handler and the active state to
+ * the node template. */
 function toTreeNode(h: HardwareNode): TreeNode {
   /* If the server sent a populated children array, recurse; otherwise
    * present the node as expandable (children load lazily) — UNLESS
@@ -98,8 +118,29 @@ function toTreeNode(h: HardwareNode): TreeNode {
     label: (h.text ?? h.name ?? h.uuid) as string,
     leaf: serverLeaf || fetchedEmpty,
     children,
-    data: { uuid: h.uuid },
+    data: { uuid: h.uuid, active: activeOf(h) },
   }
+}
+
+function nodeActive(node: TreeNode): boolean | undefined {
+  return (node.data as { active?: boolean } | undefined)?.active
+}
+
+function activeLabel(active: boolean): string {
+  return active ? t('Active') : /* i18n: new string */ t('Inactive')
+}
+
+/* PrimeVue sets the treeitem's `aria-label` to the bare node label,
+ * which hides the marker from screen readers. The `node` pass-through
+ * is bound after it (TreeNode.vue), so the state is appended here. */
+const treePt: TreePassThroughOptions = {
+  node: ({ context }) => {
+    const node = context?.node
+    if (!node) return {}
+    const active = nodeActive(node)
+    const label = node.label ?? ''
+    return { 'aria-label': active === undefined ? label : `${label}, ${activeLabel(active)}` }
+  },
 }
 
 const nodes = ref<TreeNode[]>([])
@@ -146,6 +187,8 @@ watch(expandedKeys, persistExpansion)
  * adapter add/remove — dual-port adapters emit two in quick
  * succession — so we subscribe to that class and rebuild the tree,
  * matching the Classic UI (tvadapters.js subscribes `comet: 'hardware'`).
+ * The editor's `saved` event runs the same refresh, so a frontend
+ * enabled or disabled in the drawer updates its dot and its adapter's.
  *
  * The handler debounces (one refresh per burst), reloads the root and
  * re-fetches children for nodes that were expanded so the tree does
@@ -165,26 +208,24 @@ let isUnmounted = false
  * callback (api_input_hw_tree) to enumerate the top-level adapter
  * list; any real UUID returns that node's children via
  * idnode_get_childs(). */
-async function loadRoot(silent = false) {
-  /* A silent refresh (comet-driven) skips the loading/error toggles:
-   * it neither flashes the "Loading…" status nor replaces the visible
-   * tree with an error screen on a transient failure. The initial
-   * load (silent = false) still surfaces both. */
-  if (!silent) {
-    loading.value = true
-    error.value = null
-  }
+async function fetchRoot(): Promise<TreeNode[]> {
+  const result = await apiCall<HardwareNode[]>('hardware/tree', {
+    uuid: 'root',
+  })
+  return (result ?? []).map(toTreeNode)
+}
+
+/* Initial load: shows the "Loading…" status and, on failure, the
+ * error screen. Later reloads go through the silent `refreshTree`. */
+async function loadRoot() {
+  loading.value = true
+  error.value = null
   try {
-    const result = await apiCall<HardwareNode[]>('hardware/tree', {
-      uuid: 'root',
-    })
-    nodes.value = (result ?? []).map(toTreeNode)
-    if (silent) error.value = null
+    nodes.value = await fetchRoot()
   } catch (err) {
-    if (silent) console.error('hardware/tree refresh failed:', err)
-    else error.value = err as Error
+    error.value = err as Error
   } finally {
-    if (!silent) loading.value = false
+    loading.value = false
   }
 }
 
@@ -208,9 +249,14 @@ async function loadChildren(node: TreeNode) {
 }
 
 /* Rebuild the tree from the server while preserving expansion:
- * snapshot the expanded keys, silently reload the adapter list, then
- * hand off to `restoreExpansion` (re-fetch children parents-first +
- * prune adapters that have gone away).
+ * snapshot the expanded keys, fetch the adapter list and the
+ * children of every still-expanded node into a detached tree, then
+ * swap it in and prune adapters that have gone away. Swapping once
+ * keeps the expanded subtrees on screen during the round trips, so
+ * a tree taller than the page keeps its scroll position.
+ *
+ * The refresh is silent: a failed root fetch keeps the current tree
+ * rather than showing the error screen.
  *
  * `refreshing` serialises runs; a notification arriving mid-run sets
  * `refreshPending`, and the do/while re-runs once so the tree ends on
@@ -225,14 +271,22 @@ async function refreshTree() {
   try {
     do {
       refreshPending = false
-      /* Snapshot expansion before loadRoot rebuilds `nodes`. */
       const wasExpanded = Object.keys(expandedKeys.value).filter(
         (k) => expandedKeys.value[k],
       )
-      await loadRoot(true)
+      let fresh: TreeNode[]
+      try {
+        fresh = await fetchRoot()
+      } catch (err) {
+        console.error('hardware/tree refresh failed:', err)
+        continue
+      }
       if (isUnmounted) return
-      await restoreExpansion(wasExpanded)
+      const live = await refetchExpandedChildren(wasExpanded, fresh)
       if (isUnmounted) return
+      nodes.value = fresh
+      error.value = null
+      expandedKeys.value = pruneExpanded(wasExpanded, live)
     } while (refreshPending && !isUnmounted)
   } finally {
     refreshing = false
@@ -246,13 +300,16 @@ function wasNodeExpanded(node: TreeNode, wasExpanded: string[]): boolean {
   return key !== '' && !node.leaf && wasExpanded.includes(key)
 }
 
-/* Parents-first walk over the freshly-loaded tree: re-fetch the
+/* Parents-first walk over a freshly-loaded tree: re-fetch the
  * children of every still-expanded node, enqueuing freshly loaded
  * children so deeper expanded nodes are covered in the same pass.
  * Returns the set of node keys that still exist on the server; stops
  * early (returning what it has) if the view unmounts mid-walk. */
-async function refetchExpandedChildren(wasExpanded: string[]): Promise<Set<string>> {
-  const queue: TreeNode[] = [...nodes.value]
+async function refetchExpandedChildren(
+  wasExpanded: string[],
+  roots: TreeNode[],
+): Promise<Set<string>> {
+  const queue: TreeNode[] = [...roots]
   const live = new Set<string>()
   while (queue.length > 0) {
     const node = queue.shift() as TreeNode
@@ -266,19 +323,24 @@ async function refetchExpandedChildren(wasExpanded: string[]): Promise<Set<strin
   return live
 }
 
-/* Apply a set of expanded node keys to the freshly-loaded tree:
- * replay the lazy child fetches parents-first (`refetchExpandedChildren`),
- * then set `expandedKeys` to the keys whose nodes still exist —
- * pruning any adapter that has gone away. Shared by the comet refresh
- * and the on-mount restore. */
-async function restoreExpansion(wasExpanded: string[]) {
-  const live = await refetchExpandedChildren(wasExpanded)
-  if (isUnmounted) return
+/* The expanded keys whose nodes still exist, pruning any adapter
+ * that has gone away. */
+function pruneExpanded(wasExpanded: string[], live: Set<string>): TreeExpandedKeys {
   const pruned: TreeExpandedKeys = {}
   for (const key of wasExpanded) {
     if (live.has(key)) pruned[key] = true
   }
-  expandedKeys.value = pruned
+  return pruned
+}
+
+/* On-mount restore of the saved expansion over the tree `loadRoot`
+ * just loaded: replay the lazy child fetches parents-first
+ * (`refetchExpandedChildren`), then set `expandedKeys` to the keys
+ * whose nodes still exist. */
+async function restoreExpansion(wasExpanded: string[]) {
+  const live = await refetchExpandedChildren(wasExpanded, nodes.value)
+  if (isUnmounted) return
+  expandedKeys.value = pruneExpanded(wasExpanded, live)
 }
 
 /* Debounced so a burst of `hardware` notifications (e.g. a dual-port
@@ -364,13 +426,32 @@ onBeforeUnmount(() => {
       selection-mode="single"
       :meta-key-selection="false"
       class="adapters__tree"
+      :pt="treePt"
       @node-expand="loadChildren"
       @node-select="onNodeSelect"
-    />
+    >
+      <template #default="{ node }">
+        <span
+          class="adapters__node"
+          :class="{ 'adapters__node--inactive': nodeActive(node) === false }"
+        >
+          <span
+            v-if="nodeActive(node) !== undefined"
+            class="adapters__state"
+            :class="nodeActive(node) ? 'adapters__state--on' : 'adapters__state--off'"
+            :title="activeLabel(nodeActive(node) === true)"
+          >
+            <Circle :size="10" fill="currentColor" aria-hidden="true" />
+          </span>
+          {{ node.label }}
+        </span>
+      </template>
+    </Tree>
     <IdnodeEditor
       :uuid="editingUuid"
       :level="'expert'"
       :title="t('Adapter / Frontend')"
+      @saved="refreshTree"
       @close="closeEditor"
     />
   </section>
@@ -390,6 +471,32 @@ onBeforeUnmount(() => {
   background: var(--tvh-bg-surface);
   border: 1px solid var(--tvh-border);
   border-radius: var(--tvh-radius-md);
+}
+
+/* Leading on/off dot: green for an active node, red for an inactive
+ * one, as in the classic tree. The inactive label is also muted so the
+ * state does not rest on the dot colour alone. */
+.adapters__node {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--tvh-space-2);
+}
+
+.adapters__node--inactive {
+  color: var(--tvh-text-muted);
+}
+
+.adapters__state {
+  display: inline-flex;
+  flex: none;
+}
+
+.adapters__state--on {
+  color: var(--tvh-success);
+}
+
+.adapters__state--off {
+  color: var(--tvh-error);
 }
 
 .adapters__status {
