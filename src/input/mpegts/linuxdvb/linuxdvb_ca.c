@@ -1073,12 +1073,12 @@ void linuxdvb_transport_destroy ( linuxdvb_transport_t *lcat )
   while ((ca = LIST_FIRST(&lcat->lcat_slots)) != NULL)
     linuxdvb_ca_destroy(ca);
   LIST_REMOVE(lcat, lcat_link);
-#if ENABLE_DDCI
-  linuxdvb_ddci_destroy(lcat->lddci);
-#endif
   tvh_mutex_lock(&linuxdvb_ca_mutex);
   linuxdvb_ca_close_fd(lcat, 0);
   tvh_mutex_unlock(&linuxdvb_ca_mutex);
+#if ENABLE_DDCI
+  linuxdvb_ddci_destroy(lcat->lddci);
+#endif
   en50221_transport_destroy(lcat->lcat_transport);
   free(lcat->lcat_ca_path);
   free(lcat->lcat_name);
