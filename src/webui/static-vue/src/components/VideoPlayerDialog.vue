@@ -303,12 +303,16 @@ function onPlaying(): void {
     <div class="video-player-dialog__body">
       <!-- The <video> stays mounted across errors and switches so
            teardown / reload always target a stable element; the
-           error and switching states render as overlays. -->
+           error and switching states render as overlays.
+           controlslist hides Chrome's Download and Playback speed
+           items. A download of a live stream never ends, and a
+           speed makes no sense for live TV. -->
       <video
         ref="videoEl"
         class="video-player-dialog__video"
         :src="videoSrc"
         controls
+        controlslist="nodownload noplaybackrate"
         autoplay
         playsinline
         @error="onError"

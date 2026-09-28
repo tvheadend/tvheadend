@@ -130,6 +130,15 @@ describe('VideoPlayerDialog', () => {
     expect(video.attributes('src')).toBe('/stream/channel/ch-abc?profile=webtv')
   })
 
+  it("hides the native controls' Download and Playback speed items", async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+    /* An attribute, not a property: the DOM property is controlsList. */
+    expect(wrapper.find('video').attributes('controlslist')).toBe('nodownload noplaybackrate')
+  })
+
   it('fetches enabled channels for the Channel dropdown on open', async () => {
     mockApi()
     useVideoPlayer().open(TARGET)
