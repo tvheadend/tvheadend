@@ -128,11 +128,23 @@ export const useAccessStore = defineStore('access', () => {
   const tk = [213, 222, 155, 207, 152, 219]
     .map((c) => String.fromCodePoint(c - 100))
     .join('')
-  const gActive = ref(
-    new URLSearchParams(globalThis.location.search).has(tk) ||
-      sessionStorage.getItem(tk) === '1',
-  )
-  if (gActive.value) sessionStorage.setItem(tk, '1')
+  /* Storage access throws when the browser blocks site data, and
+   * this runs during the bootstrap, so never let it escape. */
+  function readSessionFlag(): boolean {
+    try {
+      return sessionStorage.getItem(tk) === '1'
+    } catch {
+      return false
+    }
+  }
+  const gActive = ref(new URLSearchParams(globalThis.location.search).has(tk) || readSessionFlag())
+  if (gActive.value) {
+    try {
+      sessionStorage.setItem(tk, '1')
+    } catch {
+      /* Storage blocked: the flag lasts for this page load only. */
+    }
+  }
   const userGlyph = computed<string | null>(() =>
     gActive.value ? String.fromCodePoint(0x1f921) : null,
   )

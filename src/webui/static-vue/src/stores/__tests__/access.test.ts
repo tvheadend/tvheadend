@@ -197,3 +197,30 @@ describe('access store — Auto theme', () => {
     expect(document.documentElement.dataset.theme).not.toBe('auto')
   })
 })
+
+describe('access store — blocked browser storage', () => {
+  /* A browser that blocks site data for the server throws a
+   * SecurityError from the sessionStorage getter. The store is
+   * created during the app bootstrap, so a throw there left the
+   * whole UI blank. */
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage')
+
+  beforeEach(() => {
+    Object.defineProperty(globalThis, 'sessionStorage', {
+      configurable: true,
+      get() {
+        throw new DOMException('The operation is insecure.', 'SecurityError')
+      },
+    })
+  })
+
+  afterEach(() => {
+    if (original) Object.defineProperty(globalThis, 'sessionStorage', original)
+  })
+
+  it('creates the store when storage access throws', () => {
+    const store = useAccessStore()
+    expect(store.loaded).toBe(false)
+    expect(store.userGlyph).toBeNull()
+  })
+})
