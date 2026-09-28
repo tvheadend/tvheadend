@@ -385,11 +385,12 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
       action: () => discoverSatipServers(deps.toast),
     },
     /* Channels-page singleton toolbar actions surfaced for quick
-     * keyboard access. Both navigate to /configuration/channel/channels
+     * keyboard access. All navigate to /configuration/channel/channels
      * with a query param the page's existing route-query watcher
      * picks up. Reorganise opens the dedicated manage drawer (drag-
      * to-reorder, bulk tag, bulk enable/disable); Map services
-     * opens the Service Mapper modal. */
+     * opens the Service Mapper modal, empty or, for Map all
+     * services, with every service preselected. */
     {
       id: 'action:channels-reorganize',
       label: 'Reorganize channels',
@@ -409,6 +410,16 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
       keywords: ['channels', 'services', 'map', 'mapper', 'add'],
       requires: 'admin',
       action: () => openChannelsMapper(deps.router),
+    },
+    {
+      id: 'action:channels-map-all-services',
+      label: 'Map all services',
+      description: 'Open the Service Mapper with every service preselected.',
+      section: 'Actions',
+      icon: LinkIcon,
+      keywords: ['channels', 'services', 'map', 'mapper', 'all', 'add'],
+      requires: 'admin',
+      action: () => openChannelsMapper(deps.router, true),
     },
     /* DVB services housekeeping — drop services missing from PAT/SDT
      * or every service unseen for 7+ days. Destructive (services

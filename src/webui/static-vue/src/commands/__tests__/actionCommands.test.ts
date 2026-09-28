@@ -76,6 +76,7 @@ describe('buildActionCommands', () => {
       'action:satip-discover',
       'action:channels-reorganize',
       'action:channels-map-services',
+      'action:channels-map-all-services',
       'action:services-remove-unseen-pat',
       'action:services-remove-unseen-all',
       'action:logout',
@@ -108,6 +109,7 @@ describe('buildActionCommands', () => {
     expect(byId['action:satip-discover'].requires).toBe('admin')
     expect(byId['action:channels-reorganize'].requires).toBe('admin')
     expect(byId['action:channels-map-services'].requires).toBe('admin')
+    expect(byId['action:channels-map-all-services'].requires).toBe('admin')
     expect(byId['action:services-remove-unseen-pat'].requires).toBe('admin')
     expect(byId['action:services-remove-unseen-all'].requires).toBe('admin')
   })
@@ -130,21 +132,21 @@ describe('buildActionCommands', () => {
     expect(commands.find((c) => c.id === 'action:logout')).toBeUndefined()
   })
 
-  it('scan-channels.action invokes scanAllNetworks with the toast dependency', () => {
+  it('scan-channels.action invokes scanAllNetworks with the toast dependency', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:scan-channels')!.action()
+    await commands.find((c) => c.id === 'action:scan-channels')!.action()
     expect(handlerSpies.scanAllNetworks).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('refresh-epg.action invokes refreshEpg with the toast dependency', () => {
+  it('refresh-epg.action invokes refreshEpg with the toast dependency', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:refresh-epg')!.action()
+    await commands.find((c) => c.id === 'action:refresh-epg')!.action()
     expect(handlerSpies.refreshEpg).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('start-wizard.action invokes startSetupWizard with wizard + router + toast', () => {
+  it('start-wizard.action invokes startSetupWizard with wizard + router + toast', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:start-wizard')!.action()
+    await commands.find((c) => c.id === 'action:start-wizard')!.action()
     expect(handlerSpies.startSetupWizard).toHaveBeenCalledWith(
       fakeWizard,
       fakeRouter,
@@ -152,71 +154,77 @@ describe('buildActionCommands', () => {
     )
   })
 
-  it('logout.action invokes openLogout', () => {
+  it('logout.action invokes openLogout', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:logout')!.action()
+    await commands.find((c) => c.id === 'action:logout')!.action()
     expect(handlerSpies.openLogout).toHaveBeenCalled()
   })
 
-  it('epg-rerun-internal.action invokes rerunInternalEpg with the toast', () => {
+  it('epg-rerun-internal.action invokes rerunInternalEpg with the toast', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:epg-rerun-internal')!.action()
+    await commands.find((c) => c.id === 'action:epg-rerun-internal')!.action()
     expect(handlerSpies.rerunInternalEpg).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('epg-trigger-ota.action invokes triggerOtaEpg with the toast', () => {
+  it('epg-trigger-ota.action invokes triggerOtaEpg with the toast', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:epg-trigger-ota')!.action()
+    await commands.find((c) => c.id === 'action:epg-trigger-ota')!.action()
     expect(handlerSpies.triggerOtaEpg).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('imagecache-clean.action invokes cleanImageCache with toast + confirm', () => {
+  it('imagecache-clean.action invokes cleanImageCache with toast + confirm', async () => {
     /* Threaded confirm dep — the destructive action shares its
      * confirm-then-clean flow with the Image Cache page button. */
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:imagecache-clean')!.action()
+    await commands.find((c) => c.id === 'action:imagecache-clean')!.action()
     expect(handlerSpies.cleanImageCache).toHaveBeenCalledWith({
       toast: fakeToast,
       confirm: fakeConfirm,
     })
   })
 
-  it('imagecache-refetch.action invokes refetchImages with the toast', () => {
+  it('imagecache-refetch.action invokes refetchImages with the toast', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:imagecache-refetch')!.action()
+    await commands.find((c) => c.id === 'action:imagecache-refetch')!.action()
     expect(handlerSpies.refetchImages).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('satip-discover.action invokes discoverSatipServers with the toast', () => {
+  it('satip-discover.action invokes discoverSatipServers with the toast', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:satip-discover')!.action()
+    await commands.find((c) => c.id === 'action:satip-discover')!.action()
     expect(handlerSpies.discoverSatipServers).toHaveBeenCalledWith(fakeToast)
   })
 
-  it('channels-reorganize.action invokes openChannelsReorganize with the router', () => {
+  it('channels-reorganize.action invokes openChannelsReorganize with the router', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:channels-reorganize')!.action()
+    await commands.find((c) => c.id === 'action:channels-reorganize')!.action()
     expect(handlerSpies.openChannelsReorganize).toHaveBeenCalledWith(fakeRouter)
   })
 
-  it('channels-map-services.action invokes openChannelsMapper with the router', () => {
+  it('channels-map-services.action invokes openChannelsMapper with the router', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:channels-map-services')!.action()
+    await commands.find((c) => c.id === 'action:channels-map-services')!.action()
     expect(handlerSpies.openChannelsMapper).toHaveBeenCalledWith(fakeRouter)
   })
 
-  it('services-remove-unseen-pat.action invokes removeUnseenServices with scope "pat"', () => {
+  it('channels-map-all-services.action opens the mapper with every service', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:services-remove-unseen-pat')!.action()
+    await commands.find((c) => c.id === 'action:channels-map-all-services')!.action()
+    expect(handlerSpies.openChannelsMapper).toHaveBeenCalledWith(fakeRouter, true)
+  })
+
+  it('services-remove-unseen-pat.action invokes removeUnseenServices with scope "pat"', async () => {
+    const commands = buildActionCommands(deps)
+    await commands.find((c) => c.id === 'action:services-remove-unseen-pat')!.action()
     expect(handlerSpies.removeUnseenServices).toHaveBeenCalledWith(
       { toast: fakeToast, confirm: fakeConfirm },
       'pat',
     )
   })
 
-  it('services-remove-unseen-all.action invokes removeUnseenServices with scope "all"', () => {
+  it('services-remove-unseen-all.action invokes removeUnseenServices with scope "all"', async () => {
     const commands = buildActionCommands(deps)
-    commands.find((c) => c.id === 'action:services-remove-unseen-all')!.action()
+    await commands.find((c) => c.id === 'action:services-remove-unseen-all')!.action()
     expect(handlerSpies.removeUnseenServices).toHaveBeenCalledWith(
       { toast: fakeToast, confirm: fakeConfirm },
       'all',

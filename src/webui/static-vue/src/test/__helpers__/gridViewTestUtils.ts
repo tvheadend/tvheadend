@@ -35,6 +35,8 @@ export const captured = {
   actions: [] as ActionDef[],
   /* The props ServiceMapperDialog was last rendered with. */
   mapper: {} as Record<string, unknown>,
+  /* The route query the view reads. */
+  query: {} as Record<string, string>,
 }
 
 function gridStub(withToolbar: boolean) {
@@ -95,9 +97,14 @@ export const emptyComponent = {
   default: defineComponent({ name: 'EmptyStub', render: () => null }),
 }
 
+export const router = {
+  push: vi.fn(() => Promise.resolve()),
+  replace: vi.fn(() => Promise.resolve()),
+}
+
 export const vueRouter = {
-  useRoute: () => ({ query: {}, hash: '', fullPath: '/' }),
-  useRouter: () => ({ push: vi.fn(() => Promise.resolve()), replace: vi.fn() }),
+  useRoute: () => ({ query: captured.query, hash: '', fullPath: '/' }),
+  useRouter: () => router,
 }
 
 export const confirmDialog = {
@@ -134,5 +141,8 @@ export function resetEachTest(): void {
     captured.selection = []
     captured.actions = []
     captured.mapper = {}
+    captured.query = {}
+    router.push.mockClear()
+    router.replace.mockClear()
   })
 }

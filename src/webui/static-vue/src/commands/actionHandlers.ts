@@ -270,13 +270,15 @@ export function openChannelsReorganize(router: Router): void {
  * the in-page "Map services…" submenu opens, but reachable from
  * anywhere via Cmd-K. The `?openMapper=true` query is read by a
  * watcher in ChannelsView (added alongside this handler) that
- * opens the modal + clears the param.
+ * opens the modal + clears the param. `all` asks for "Map all
+ * services" instead (`?openMapper=all`), which preselects every
+ * service.
  */
-export function openChannelsMapper(router: Router): void {
+export function openChannelsMapper(router: Router, all = false): void {
   router
     .push({
       name: 'config-channel-channels',
-      query: { openMapper: 'true' },
+      query: { openMapper: all ? 'all' : 'true' },
     })
     .catch(() => undefined)
 }
