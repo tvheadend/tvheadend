@@ -12,6 +12,8 @@
  *     date mask + phone smart-relative form), matching
  *     ConnectionsView's Started column.
  *   - The Id column keeps the ExtJS zero-padded uppercase hex look.
+ *   - Input / Output turn the server's bytes/s into kbit/s, the
+ *     same unit the bandwidth chart plots for these rows.
  */
 
 import { describe, expect, it } from 'vitest'
@@ -43,5 +45,13 @@ describe('SubscriptionsView — column formatting', () => {
   it('renders the Id column as zero-padded uppercase hex', () => {
     const id = gridColumns().find((c) => c.field === 'id')
     expect(id?.format?.(0x1a2b, {})).toBe('00001A2B')
+  })
+
+  it('renders Input / Output bytes per second as kbit/s', () => {
+    const cols = gridColumns()
+    for (const field of ['in', 'out']) {
+      const col = cols.find((c) => c.field === field)
+      expect(col?.format?.(1_000_000, {})).toBe('8000')
+    }
   })
 })
