@@ -13,7 +13,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, inject, ref, type Ref } from 'vue'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import type { Option } from '@/components/idnode-fields/deferredEnum'
 
@@ -101,6 +101,14 @@ const stubbedVisibleRows = ref<Array<{ uuid: string; number?: number | string }>
  * exposed Vue computed; tests flip it to assert the popover's
  * disabled state. */
 const stubbedIsAtDefaults = ref<boolean>(true)
+/* Every loaded row (`store.entries`), including the ones the
+ * Enabled filter hides. Undefined leaves the drawer on its
+ * `effectiveEntries` fallback. */
+const stubbedAllRows = ref<Array<{ uuid: string; number?: number; enabled?: boolean }> | undefined>(
+  undefined,
+)
+/* The duplicate-number map the drawer provides to its cells. */
+let injectedDupCounts: Ref<Map<string, number>> | null = null
 const resetGridPrefsMock = vi.fn()
 
 /* Production IdnodeGrid exposes `inlineEdit.dirtyMap` as a
@@ -132,6 +140,7 @@ vi.mock('@/components/IdnodeGrid.vue', () => ({
     },
     setup(props, { slots, expose }) {
       gridProps.value = props as Record<string, unknown>
+      injectedDupCounts = inject<Ref<Map<string, number>>>('numberDuplicateCounts') ?? null
       editingSlotRef.value = (slots.editingActions ?? null) as
         | ((p: { selection: unknown[] }) => unknown)
         | null
@@ -142,7 +151,12 @@ vi.mock('@/components/IdnodeGrid.vue', () => ({
            * aren't auto-unwrapped); see the const above. */
           dirtyMap: stubbedDirtyMap,
         },
-        store: { update: storeUpdateMock },
+        store: {
+          update: storeUpdateMock,
+          get entries() {
+            return stubbedAllRows.value
+          },
+        },
         /* Stub the displayed-rows accessor so the Renumber
          * actions can iterate over a predictable test set.
          * Plain array (post-auto-unwrap shape). */
@@ -179,6 +193,8 @@ beforeEach(() => {
   storeUpdateMock.mockReset()
   resetGridPrefsMock.mockReset()
   stubbedVisibleRows.value = []
+  stubbedAllRows.value = undefined
+  injectedDupCounts = null
   stubbedIsAtDefaults.value = true
   stubbedDirtyMap.value.clear()
   confirmAskMock.mockReset()
@@ -418,6 +434,36 @@ describe('ChannelManageDrawer — Renumber actions (R1)', () => {
     expect(commitCellMock).toHaveBeenCalledWith('b', 'number', 2)
     expect(commitCellMock).toHaveBeenCalledWith('c', 'number', 2.1)
     expect(commitCellMock).toHaveBeenCalledWith('d', 'number', 3)
+  })
+})
+
+describe('ChannelManageDrawer — duplicate numbers', () => {
+  it('counts a number held by a hidden disabled channel', async () => {
+    stubbedVisibleRows.value = [{ uuid: 'a', number: 5 }]
+    stubbedAllRows.value = [
+      { uuid: 'a', number: 5, enabled: true },
+      { uuid: 'hidden', number: 5, enabled: false },
+      { uuid: 'b', number: 6, enabled: true },
+    ]
+    mountDrawer()
+    await flushPromises()
+    const counts = injectedDupCounts!.value
+    expect(counts.get('5')).toBe(2)
+    expect(counts.get('6')).toBe(1)
+  })
+
+  it('flags a visible row dirtied to the number of a hidden one', async () => {
+    stubbedVisibleRows.value = [{ uuid: 'a', number: 3 }]
+    stubbedAllRows.value = [
+      { uuid: 'a', number: 3, enabled: true },
+      { uuid: 'hidden', number: 7, enabled: false },
+    ]
+    stubbedDirtyMap.value.set('a', new Map([['number', 7]]))
+    mountDrawer()
+    await flushPromises()
+    const counts = injectedDupCounts!.value
+    expect(counts.get('7')).toBe(2)
+    expect(counts.has('3')).toBe(false)
   })
 })
 
