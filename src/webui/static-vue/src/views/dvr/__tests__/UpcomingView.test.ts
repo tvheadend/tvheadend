@@ -135,3 +135,20 @@ describe('UpcomingView — dedup-skipped entries', () => {
     )
   })
 })
+
+describe('UpcomingView — start-time columns', () => {
+  it('sorts on the visible start column by default', () => {
+    mount(UpcomingView)
+    expect(gridProps.current?.['default-sort']).toEqual({ key: 'start', dir: 'ASC' })
+  })
+
+  it('hides the padded start_real / stop_real pair by default', () => {
+    mount(UpcomingView)
+    const cols = gridProps.current?.columns as ColumnDef[]
+    const byField = (f: string) => cols.find((c) => c.field === f)!
+    expect(byField('start').hiddenByDefault).not.toBe(true)
+    expect(byField('stop').hiddenByDefault).not.toBe(true)
+    expect(byField('start_real').hiddenByDefault).toBe(true)
+    expect(byField('stop_real').hiddenByDefault).toBe(true)
+  })
+})
