@@ -122,6 +122,16 @@ describe('useServiceMapperStore', () => {
     expect(store.status.active).toBeNull()
   })
 
+  it('fetchInitial resolves the name of a service mapped right now', async () => {
+    const { useServiceMapperStore } = await import('../serviceMapper')
+    apiMock.mockResolvedValueOnce({ total: 10, ok: 2, active: 'svc-9' })
+    apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'svc-9', text: 'ZDF' }] })
+    const store = useServiceMapperStore()
+    await store.fetchInitial()
+    await vi.waitFor(() => expect(store.activeServiceName).toBe('ZDF'))
+    expect(apiMock).toHaveBeenCalledWith('idnode/load', { uuid: 'svc-9' })
+  })
+
   it('records fetchInitial errors on the store', async () => {
     const { useServiceMapperStore } = await import('../serviceMapper')
     apiMock.mockRejectedValueOnce(new Error('boom'))

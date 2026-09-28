@@ -134,6 +134,9 @@ export const useServiceMapperStore = defineStore('serviceMapper', () => {
     try {
       const res = await apiCall<StatusResponse>('service/mapper/status', {})
       status.value = applyStatusUpdate(res)
+      /* Opened during a job: resolve the name now. The next Comet
+       * update can be up to 30 s away (one per service). */
+      void resolveActiveName()
     } catch (e) {
       error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
     }
