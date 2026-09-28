@@ -257,6 +257,36 @@ describe('BandwidthChartView — desktop (docked) branch', () => {
     expect(closeBtn).toBeDefined()
   })
 
+  it('resizes the panel from the keyboard through a focusable separator', async () => {
+    localStorage.removeItem('tvh-bandwidth-panel-width')
+    const rows = ref<Row[]>([{ uuid: 'a', input: 'A', bps: 1_000_000 }])
+    const visible = ref(true)
+    const w = mountView(rows, visible)
+    const splitter = w.find('.bandwidth-dock__splitter')
+    expect(splitter.attributes('role')).toBe('separator')
+    expect(splitter.attributes('tabindex')).toBe('0')
+    expect(splitter.attributes('aria-orientation')).toBe('vertical')
+    expect(splitter.attributes('aria-valuemin')).toBe('300')
+    expect(splitter.attributes('aria-valuemax')).toBe('900')
+    expect(splitter.attributes('aria-valuenow')).toBe('420')
+    expect(splitter.attributes('aria-valuetext')).toBe('420 px')
+
+    /* The panel sits on the right, so moving the splitter left
+     * widens it. */
+    await splitter.trigger('keydown', { key: 'ArrowLeft' })
+    expect(splitter.attributes('aria-valuenow')).toBe('440')
+    expect(splitter.attributes('aria-valuetext')).toBe('440 px')
+    expect(w.find('.bandwidth-dock').attributes('style')).toContain('width: 440px')
+    await splitter.trigger('keydown', { key: 'ArrowRight' })
+    expect(splitter.attributes('aria-valuenow')).toBe('420')
+    await splitter.trigger('keydown', { key: 'Home' })
+    expect(splitter.attributes('aria-valuenow')).toBe('300')
+    await splitter.trigger('keydown', { key: 'End' })
+    expect(splitter.attributes('aria-valuenow')).toBe('900')
+    expect(localStorage.getItem('tvh-bandwidth-panel-width')).toBe('900')
+    localStorage.removeItem('tvh-bandwidth-panel-width')
+  })
+
   it('does not render the Drawer branch when desktop-sized', () => {
     const rows = ref<Row[]>([{ uuid: 'a', input: 'A', bps: 1_000_000 }])
     const visible = ref(true)
