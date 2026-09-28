@@ -113,27 +113,38 @@ describe('useStreamProfilesStore', () => {
     expect(apiMock).toHaveBeenCalledTimes(1)
   })
 
-  it('markProfileFailed flags a profile for the session', async () => {
+  it('markProfileFailed flags a profile on a channel for the session', async () => {
     mockProfileList([{ key: 'p1', val: 'webtv' }])
     const store = await importStore()
     await store.ensure()
-    expect(store.failedProfiles.has('webtv')).toBe(false)
-    store.markProfileFailed('webtv')
-    expect(store.failedProfiles.has('webtv')).toBe(true)
+    expect(store.failedProfiles.get('ch-1')?.has('webtv')).toBeFalsy()
+    store.markProfileFailed('webtv', 'ch-1')
+    expect(store.failedProfiles.get('ch-1')?.has('webtv')).toBe(true)
   })
 
-  it('markProfileFailed ignores an empty name', async () => {
+  it('markProfileFailed keeps the flag to the channel it failed on', async () => {
+    /* matroska fails on an MPEG-2 channel but plays an H.264 one. */
     const store = await importStore()
-    store.markProfileFailed('')
+    store.markProfileFailed('matroska', 'ch-mpeg2')
+    store.markProfileFailed('pass', 'ch-mpeg2')
+    expect(store.failedProfiles.get('ch-mpeg2')).toEqual(new Set(['matroska', 'pass']))
+    expect(store.failedProfiles.get('ch-h264')?.has('matroska')).toBeFalsy()
+  })
+
+  it('markProfileFailed ignores an empty name or channel', async () => {
+    const store = await importStore()
+    store.markProfileFailed('', 'ch-1')
+    store.markProfileFailed('webtv', '')
     expect(store.failedProfiles.size).toBe(0)
   })
 
-  it('clearProfileFailed removes a profile flag', async () => {
+  it('clearProfileFailed removes a profile flag on that channel only', async () => {
     const store = await importStore()
-    store.markProfileFailed('webtv')
-    expect(store.failedProfiles.has('webtv')).toBe(true)
-    store.clearProfileFailed('webtv')
-    expect(store.failedProfiles.has('webtv')).toBe(false)
+    store.markProfileFailed('webtv', 'ch-1')
+    store.markProfileFailed('webtv', 'ch-2')
+    store.clearProfileFailed('webtv', 'ch-1')
+    expect(store.failedProfiles.get('ch-1')?.has('webtv')).toBe(false)
+    expect(store.failedProfiles.get('ch-2')?.has('webtv')).toBe(true)
   })
 
   it('re-fetches profile/list on a "profile" Comet notification', async () => {
