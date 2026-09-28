@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /* eslint-disable vue/one-component-per-file -- stand-ins for IdnodeGrid,
- * its toolbar menu, the Service Mapper and the components a grid view
- * test does not look at. */
+ * its toolbar menu, the editor drawer, the Service Mapper and the
+ * components a grid view test does not look at. */
 
 /*
  * Stubs for the tests that mount a grid view and check what it hands
@@ -19,9 +19,9 @@
  * Each stub is a module: `default` for a component, the hooks for
  * vue-router and the composables. What they see goes to `captured`.
  */
-import { afterEach, beforeEach, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
-import { enableAutoUnmount } from '@vue/test-utils'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
+import { defineComponent, h, nextTick, type Component } from 'vue'
+import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import type { ActionDef } from '@/types/action'
 import type { ColumnDef } from '@/types/column'
@@ -34,6 +34,8 @@ export const captured = {
   selection: [] as Array<Record<string, unknown>>,
   /* The actions the view handed to ActionMenu. */
   actions: [] as ActionDef[],
+  /* The rows IdnodeEditor was last rendered for. */
+  editor: { uuid: null as unknown, uuids: null as unknown },
   /* The props ServiceMapperDialog was last rendered with. */
   mapper: {} as Record<string, unknown>,
   /* The route query the view reads. */
@@ -69,6 +71,20 @@ export const actionMenu = {
     setup(props) {
       return () => {
         captured.actions = props.actions as ActionDef[]
+        return null
+      }
+    },
+  }),
+}
+
+/* IdnodeEditor, recording the rows it was opened for. */
+export const idnodeEditor = {
+  default: defineComponent({
+    name: 'IdnodeEditor',
+    props: { uuid: { type: String, default: null }, uuids: { type: Array, default: null } },
+    setup(props) {
+      return () => {
+        captured.editor = { uuid: props.uuid, uuids: props.uuids }
         return null
       }
     },
@@ -147,9 +163,46 @@ export function resetEachTest(): void {
     captured.gridProps = null
     captured.selection = []
     captured.actions = []
+    captured.editor = { uuid: null, uuids: null }
     captured.mapper = {}
     captured.query = {}
     router.push.mockClear()
     router.replace.mockClear()
+  })
+}
+
+/* Mount `view` with rows of these uuids selected in the grid. */
+export function mountSelected(view: Component, uuids: string[] = []) {
+  captured.selection = uuids.map((uuid) => ({ uuid }))
+  return mount(view)
+}
+
+/* Edit is disabled with nothing selected, opens the plain editor for
+ * one row and the multi-edit drawer for several. `tooltips` are the
+ * texts for one and for several rows. The test file mocks IdnodeGrid
+ * with the toolbar, ActionMenu and IdnodeEditor with these stubs. */
+export function runEditActionTests(view: Component, tooltips: [string, string]): void {
+  it('is disabled with nothing selected', () => {
+    mountSelected(view)
+    expect(toolbarAction('edit').disabled).toBe(true)
+  })
+
+  it('edits several rows at once', async () => {
+    mountSelected(view, ['r1', 'r2', 'r3'])
+    const edit = toolbarAction('edit')
+    expect(edit.disabled).toBe(false)
+    expect(edit.tooltip).toBe(tooltips[1])
+    await edit.onClick?.()
+    await nextTick()
+    expect(captured.editor.uuids).toEqual(['r1', 'r2', 'r3'])
+  })
+
+  it('keeps the singular tooltip and the plain editor for one row', async () => {
+    mountSelected(view, ['r1'])
+    const edit = toolbarAction('edit')
+    expect(edit.tooltip).toBe(tooltips[0])
+    await edit.onClick?.()
+    await nextTick()
+    expect(captured.editor.uuid).toBe('r1')
   })
 }
