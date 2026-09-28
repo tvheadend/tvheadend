@@ -1123,9 +1123,9 @@ describe('IdnodeGrid', () => {
     expect(vm.selection).toHaveLength(1)
     const summary = wrapper.find('.idnode-grid__list-header-summary')
     expect(summary.exists()).toBe(true)
-    /* "All 1 selected" because the only row is selected → all
+    /* "All selected: 1" because the only row is selected → all
      * visible selected. */
-    expect(summary.text()).toContain('All 1')
+    expect(summary.text()).toContain('All selected: 1')
 
     vm.clearSelection()
     await wrapper.vm.$nextTick()
@@ -1163,7 +1163,7 @@ describe('IdnodeGrid', () => {
     const wrapper = mountGrid()
     const summary = wrapper.find('.idnode-grid__list-header-summary')
     expect(summary.exists()).toBe(true)
-    expect(summary.text()).toContain('2 entries')
+    expect(summary.text()).toContain('Entries: 2')
   })
 
   it('phone list-header strip tristate select-all toggles all visible rows', async () => {
@@ -1186,7 +1186,7 @@ describe('IdnodeGrid', () => {
     const vm = wrapper.vm as unknown as ExposedVm
     expect(vm.selection).toHaveLength(2)
     expect(wrapper.find('.idnode-grid__list-header-summary').text()).toContain(
-      'All 2 entries selected'
+      'All selected: 2'
     )
 
     // Toggle off — clears selection.

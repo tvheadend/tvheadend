@@ -2151,7 +2151,7 @@ defineExpose({
         <template #empty>
           <div class="data-grid__empty-frame" :style="emptyFrameStyle">
             <slot name="empty">
-              <p :class="['data-grid__empty', `${bemPrefix}__empty`]">No entries.</p>
+              <p :class="['data-grid__empty', `${bemPrefix}__empty`]">{{ t('No entries.') }}</p>
             </slot>
           </div>
         </template>

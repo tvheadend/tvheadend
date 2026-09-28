@@ -174,7 +174,7 @@ const triggerDisplay = computed<{ display: string; full?: string }>(() => {
       option-value="key"
       :filter="true"
       :show-toggle-all="true"
-      :placeholder="`Select ${prop.caption ?? prop.id}…`"
+      :placeholder="t('Select {0} ...', prop.caption ?? prop.id)"
       :disabled="isReadonly"
       :virtual-scroller-options="{ itemSize: 36 }"
       class="ifld__multiselect"

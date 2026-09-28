@@ -5,10 +5,19 @@ import { describe, expect, it } from 'vitest'
 import { summaryText } from '../gridSummary'
 
 describe('summaryText — no selection', () => {
-  it('renders "<n> entries" by default with no total', () => {
+  it('renders "Entries: <n>" by default with no total', () => {
     expect(summaryText({ entries: 147, selected: 0, allVisibleSelected: false })).toBe(
-      '147 entries'
+      'Entries: 147'
     )
+  })
+
+  it('never pairs a count of one with a plural noun', () => {
+    /* The label is a plural noun and useI18n has no plural forms,
+     * so the count goes after the label: "Profiles: 1", not
+     * "1 profiles". */
+    expect(
+      summaryText({ entries: 1, selected: 0, allVisibleSelected: false, label: 'profiles' })
+    ).toBe('Profiles: 1')
   })
 
   it('uses caller-supplied label', () => {
@@ -19,18 +28,18 @@ describe('summaryText — no selection', () => {
         allVisibleSelected: false,
         label: 'recordings',
       })
-    ).toBe('147 recordings')
+    ).toBe('Recordings: 147')
   })
 
   it('renders zero rows cleanly', () => {
     expect(
       summaryText({ entries: 0, selected: 0, allVisibleSelected: false, label: 'channels' })
-    ).toBe('0 channels')
+    ).toBe('Channels: 0')
   })
 
   it('drops the M/N split form when total === entries', () => {
     /* No filter active — total matches entries. The split form
-     * would just look like `147 / 147 recordings`, which is
+     * would just look like `Recordings: 147 / 147`, which is
      * noise. Collapse to the simple form. */
     expect(
       summaryText({
@@ -40,10 +49,10 @@ describe('summaryText — no selection', () => {
         allVisibleSelected: false,
         label: 'recordings',
       })
-    ).toBe('147 recordings')
+    ).toBe('Recordings: 147')
   })
 
-  it('renders "<m> / <n> <label>" when filter narrowed the visible subset', () => {
+  it('renders "<Label>: <m> / <n>" when filter narrowed the visible subset', () => {
     /* Filter active — the loaded set contains 147 rows but only
      * 42 match the filter. Show both so the user sees the
      * pool size. */
@@ -55,7 +64,7 @@ describe('summaryText — no selection', () => {
         allVisibleSelected: false,
         label: 'recordings',
       })
-    ).toBe('42 / 147 recordings')
+    ).toBe('Recordings: 42 / 147')
   })
 
   it('does not render the split form when total is undefined', () => {
@@ -68,7 +77,7 @@ describe('summaryText — no selection', () => {
         allVisibleSelected: false,
         label: 'recordings',
       })
-    ).toBe('42 recordings')
+    ).toBe('Recordings: 42')
   })
 })
 
@@ -116,7 +125,7 @@ describe('summaryText — partial selection', () => {
 })
 
 describe('summaryText — all visible selected', () => {
-  it('renders "All <n> <label> selected" when every visible row is selected', () => {
+  it('renders "All selected: <n>" when every visible row is selected', () => {
     expect(
       summaryText({
         entries: 147,
@@ -124,22 +133,22 @@ describe('summaryText — all visible selected', () => {
         allVisibleSelected: true,
         label: 'recordings',
       })
-    ).toBe('All 147 recordings selected')
+    ).toBe('All selected: 147')
   })
 
-  it('uses default label when none supplied', () => {
+  it('needs no label when every row is selected', () => {
     expect(
       summaryText({
         entries: 5,
         selected: 5,
         allVisibleSelected: true,
       })
-    ).toBe('All 5 entries selected')
+    ).toBe('All selected: 5')
   })
 
   it('"all visible selected" wins over the filter-narrowed split form', () => {
     /* When the user has filtered down to 42 rows AND selected all
-     * 42, render "All 42 selected" — not the unfiltered total,
+     * 42, render "All selected: 42" — not the unfiltered total,
      * because they don't have access to those non-visible rows. */
     expect(
       summaryText({
@@ -149,10 +158,11 @@ describe('summaryText — all visible selected', () => {
         allVisibleSelected: true,
         label: 'recordings',
       })
-    ).toBe('All 42 recordings selected')
+    ).toBe('All selected: 42')
   })
 
   it('handles single-row "all selected" cleanly', () => {
+    /* Used to read "All 1 autorecs selected". */
     expect(
       summaryText({
         entries: 1,
@@ -160,7 +170,7 @@ describe('summaryText — all visible selected', () => {
         allVisibleSelected: true,
         label: 'autorecs',
       })
-    ).toBe('All 1 autorecs selected')
+    ).toBe('All selected: 1')
   })
 })
 
@@ -173,22 +183,20 @@ describe('summaryText — label edge cases', () => {
         allVisibleSelected: false,
         label: 'rating labels',
       })
-    ).toBe('5 rating labels')
+    ).toBe('Rating labels: 5')
     expect(
       summaryText({
         entries: 5,
-        selected: 5,
-        allVisibleSelected: true,
+        selected: 0,
+        allVisibleSelected: false,
         label: 'IP blocks',
       })
-    ).toBe('All 5 IP blocks selected')
+    ).toBe('IP blocks: 5')
   })
 
-  it('passes empty-string label through unchanged', () => {
+  it('renders the bare count for an empty-string label', () => {
     /* Defensive — caller must explicitly opt for label-less
-     * output. The empty result reads as `5 ` (trailing space),
-     * which is uglier than the default but it's the caller's
-     * choice. */
+     * output. */
     expect(
       summaryText({
         entries: 5,
@@ -196,6 +204,6 @@ describe('summaryText — label edge cases', () => {
         allVisibleSelected: false,
         label: '',
       })
-    ).toBe('5 ')
+    ).toBe('5')
   })
 })

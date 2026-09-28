@@ -165,3 +165,27 @@ describe('IdnodeFieldEnumMulti — collapsed-trigger display', () => {
     expect(span.attributes('title')).toBe('Apples, Bananas, Cherries')
   })
 })
+
+describe('IdnodeFieldEnumMulti — placeholder', () => {
+  /* Reuses Classic's "Select {0} ..." msgid (static/app/idnode.js),
+   * so the placeholder is translated wherever Classic's is. */
+  const PLACEHOLDER_STUB = {
+    template: '<div class="ms-stub" :data-placeholder="placeholder" />',
+    props: ['modelValue', 'options', 'optionLabel', 'optionValue', 'placeholder'],
+  }
+
+  it('uses the Classic msgid with the field caption', () => {
+    const g = globalThis as { tvh_locale?: Record<string, string> }
+    const saved = g.tvh_locale
+    g.tvh_locale = { 'Select {0} ...': 'Vyberte {0} ...' }
+    try {
+      const w = mount(IdnodeFieldEnumMulti, {
+        props: { prop: SORTABLE_PROP, modelValue: [] },
+        global: { stubs: { MultiSelect: PLACEHOLDER_STUB } },
+      })
+      expect(w.find('.ms-stub').attributes('data-placeholder')).toBe('Vyberte Tags ...')
+    } finally {
+      g.tvh_locale = saved
+    }
+  })
+})
