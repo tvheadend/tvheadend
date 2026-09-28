@@ -27,6 +27,7 @@ import { serverUrl } from '@/utils/base'
 
 type Listener = (msg: NotificationMessage) => void
 type StateListener = (state: ConnectionState) => void
+type BoxIdListener = (boxid: string) => void
 type Unsubscribe = () => void
 
 /* Reconnect backoff: progressively slower, capped at 10s. */
@@ -35,6 +36,7 @@ const RECONNECT_BACKOFF_MS = [1000, 2000, 5000, 10000]
 class CometClient {
   private readonly listeners = new Map<string, Set<Listener>>()
   private readonly stateListeners = new Set<StateListener>()
+  private readonly boxIdListeners = new Set<BoxIdListener>()
   private state: ConnectionState = 'idle'
   private pollAbort?: AbortController
   private boxid?: string
@@ -58,6 +60,20 @@ class CometClient {
     this.stateListeners.add(listener)
     return () => {
       this.stateListeners.delete(listener)
+    }
+  }
+
+  /**
+   * Called with the new id whenever the server hands out a mailbox
+   * id different from the current one: the first poll, a poll after
+   * reset(), and a poll after the server dropped the old mailbox (a
+   * restart, or no poll for a minute, `src/webui/comet.c` comet_flush).
+   * Per-mailbox state such as the debug log flag starts over then.
+   */
+  onBoxIdChange(listener: BoxIdListener): Unsubscribe {
+    this.boxIdListeners.add(listener)
+    return () => {
+      this.boxIdListeners.delete(listener)
     }
   }
 
@@ -183,7 +199,7 @@ class CometClient {
      * Subsequent reconnects pass it back so the server can resume the same
      * mailbox; messages buffered during the disconnect window get delivered.
      */
-    if (env.boxid) this.boxid = env.boxid
+    if (env.boxid) this.setBoxId(env.boxid)
 
     for (const msg of env.messages ?? []) {
       const klass = msg.notificationClass
@@ -211,6 +227,18 @@ class CometClient {
       if (this.userDisconnected) return
       this.connectPoll()
     }, delay)
+  }
+
+  private setBoxId(boxid: string): void {
+    if (boxid === this.boxid) return
+    this.boxid = boxid
+    for (const l of this.boxIdListeners) {
+      try {
+        l(boxid)
+      } catch (err) {
+        console.error('Comet: boxid listener threw:', err)
+      }
+    }
   }
 
   private setState(s: ConnectionState): void {

@@ -41,7 +41,10 @@
  * call fails (network / lost mailbox), we don't flip and return
  * false so the caller can toast. Persists across LogView mounts
  * since the store outlives the component — matches the server
- * side, which is also per-mailbox not per-mount.
+ * side, which is also per-mailbox not per-mount. A new mailbox
+ * starts with debug off, so the flag resets whenever Comet moves to
+ * a new mailbox id, and a late answer for the old mailbox does not
+ * set it again.
  */
 
 import { defineStore } from 'pinia'
@@ -221,6 +224,13 @@ export const useLogStore = defineStore('log', () => {
     pushLine(msg)
   })
 
+  /* A new mailbox (server restart, idle expiry, re-login) has debug
+   * off. Parsing the localized confirmation line instead would break
+   * in every non-English locale. */
+  cometClient.onBoxIdChange(() => {
+    debugEnabled.value = false
+  })
+
   function clear(): void {
     lines.value = []
     bufferFull.value = false
@@ -232,6 +242,7 @@ export const useLogStore = defineStore('log', () => {
   async function toggleDebug(): Promise<boolean> {
     const boxid = cometClient.getBoxId()
     if (!boxid) return false
+    const wanted = !debugEnabled.value
     try {
       const body = new URLSearchParams()
       body.append('boxid', boxid)
@@ -241,6 +252,11 @@ export const useLogStore = defineStore('log', () => {
         body,
         credentials: 'include',
       })
+      /* Whatever the answer says, it is about the old mailbox if
+       * Comet has moved to a new one meanwhile. The flag was reset to
+       * off then, which is where the new mailbox stands, so the toggle
+       * worked only if the user asked for off. */
+      if (cometClient.getBoxId() !== boxid) return debugEnabled.value === wanted
       if (!res.ok) return false
       /* Server is the source of truth (the flag flips on its side
        * regardless of what the client thinks). Mirror it locally

@@ -21,6 +21,7 @@ import { useLogStore } from '../log'
 
 type Listener = (msg: Record<string, unknown>) => void
 const cometListeners = new Map<string, Set<Listener>>()
+const boxIdListeners = new Set<(boxid: string) => void>()
 let lastBoxId: string | undefined = 'BOX123'
 
 vi.mock('@/api/comet', () => ({
@@ -35,6 +36,10 @@ vi.mock('@/api/comet', () => ({
       return () => cometListeners.get(klass)?.delete(fn)
     },
     getBoxId: () => lastBoxId,
+    onBoxIdChange: (fn: (boxid: string) => void) => {
+      boxIdListeners.add(fn)
+      return () => boxIdListeners.delete(fn)
+    },
   },
 }))
 
@@ -44,8 +49,27 @@ function fireLog(payload: Record<string, unknown>): void {
   for (const l of set) l({ notificationClass: 'logmessage', ...payload })
 }
 
+/* Comet got a new mailbox id from the server. */
+function moveToMailbox(boxid: string): void {
+  lastBoxId = boxid
+  for (const l of boxIdListeners) l(boxid)
+}
+
+/* Make /comet/debug hang until the test answers it. */
+function holdDebugAnswer(): (res: Response) => void {
+  let answer: (res: Response) => void = () => undefined
+  globalThis.fetch = vi.fn(
+    () =>
+      new Promise<Response>((resolve) => {
+        answer = resolve
+      }),
+  ) as typeof fetch
+  return (res) => answer(res)
+}
+
 beforeEach(() => {
   cometListeners.clear()
+  boxIdListeners.clear()
   lastBoxId = 'BOX123'
   setActivePinia(createPinia())
 })
@@ -192,6 +216,40 @@ describe('useLogStore — debug toggle', () => {
     const log = useLogStore()
     const ok = await log.toggleDebug()
     expect(ok).toBe(false)
+    expect(log.debugEnabled).toBe(false)
+  })
+
+  it('resets to off when Comet moves to a new mailbox', async () => {
+    /* The server creates a fresh mailbox, with debug off, after a
+     * restart or after the old one sat idle for a minute. */
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('ok', { status: 200 })) as typeof fetch
+    const log = useLogStore()
+    await log.toggleDebug()
+    expect(log.debugEnabled).toBe(true)
+    moveToMailbox('BOX456')
+    expect(log.debugEnabled).toBe(false)
+  })
+
+  it('does not turn the flag on from an answer for the old mailbox', async () => {
+    const answer = holdDebugAnswer()
+    const log = useLogStore()
+    const pending = log.toggleDebug()
+    moveToMailbox('BOX456')
+    answer(new Response('ok', { status: 200 }))
+    /* Debug went on for BOX123, not for BOX456, so Enable failed. */
+    expect(await pending).toBe(false)
+    expect(log.debugEnabled).toBe(false)
+  })
+
+  it('reports Disable as done when the new mailbox has debug off', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('ok', { status: 200 })) as typeof fetch
+    const log = useLogStore()
+    await log.toggleDebug()
+    const answer = holdDebugAnswer()
+    const pending = log.toggleDebug()
+    moveToMailbox('BOX456')
+    answer(new Response('', { status: 404 }))
+    expect(await pending).toBe(true)
     expect(log.debugEnabled).toBe(false)
   })
 
