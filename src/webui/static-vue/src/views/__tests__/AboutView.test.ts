@@ -2,8 +2,8 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * AboutView — the serverinfo-driven capabilities list and the
- * theme-dependent TMDb / TheTVDB marks.
+ * AboutView — the serverinfo-driven capabilities list, the credits
+ * and the theme-dependent TMDb / TheTVDB marks.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -27,7 +27,7 @@ async function mountWith(info: Record<string, unknown>) {
   return wrapper
 }
 
-describe('AboutView capabilities and logos', () => {
+describe('AboutView capabilities, credits and logos', () => {
   beforeEach(() => {
     apiCallMock.mockReset()
     delete document.documentElement.dataset.theme
@@ -68,6 +68,17 @@ describe('AboutView capabilities and logos', () => {
   it('has no Capabilities row when only the UI setting is listed', async () => {
     const wrapper = await mountWith({ capabilities: ['caclient_advanced'] })
     expect(wrapper.findAll('dt').map((d) => d.text())).not.toContain('Capabilities')
+  })
+
+  it('credits the help page icons and not the classic UI stack', async () => {
+    const wrapper = await mountWith({})
+    const text = wrapper.text()
+    expect(text).toContain('Help page icons from')
+    expect(wrapper.find('a[href="https://www.famfamfam.com/lab/icons/silk/"]').text()).toBe(
+      'FamFamFam Silk'
+    )
+    expect(text).not.toContain('ExtJS')
+    expect(text).not.toContain('Noto')
   })
 
   function logoSources(wrapper: Awaited<ReturnType<typeof mountWith>>): string[] {
