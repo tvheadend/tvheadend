@@ -160,6 +160,43 @@ async function failWith(wrapper: ReturnType<typeof mountDialog>, code: number) {
  * lingering instance would react to a later test's open()/close(). */
 enableAutoUnmount(afterEach)
 
+/* Plant the media time and, unless `counters` is false, Chromium's
+ * decoded-byte counters on the <video> (happy-dom has neither
+ * counter), for the "No sound" check. */
+function setMedia(
+  wrapper: ReturnType<typeof mountDialog>,
+  time: number,
+  audioBytes: number,
+  videoBytes: number,
+  counters = true,
+) {
+  const el = wrapper.find('video').element
+  Object.defineProperty(el, 'currentTime', { configurable: true, value: time })
+  if (!counters) return
+  Object.defineProperty(el, 'webkitAudioDecodedByteCount', {
+    configurable: true,
+    value: audioBytes,
+  })
+  Object.defineProperty(el, 'webkitVideoDecodedByteCount', {
+    configurable: true,
+    value: videoBytes,
+  })
+}
+
+/* Start playback at media time 0, then report the counters at `time`. */
+async function playFor(
+  wrapper: ReturnType<typeof mountDialog>,
+  time: number,
+  audioBytes: number,
+  videoBytes: number,
+  counters = true,
+) {
+  setMedia(wrapper, 0, 0, 0, counters)
+  await wrapper.find('video').trigger('playing')
+  setMedia(wrapper, time, audioBytes, videoBytes, counters)
+  await wrapper.find('video').trigger('timeupdate')
+}
+
 describe('VideoPlayerDialog', () => {
   it('renders nothing while closed', () => {
     const wrapper = mountDialog()
@@ -183,6 +220,152 @@ describe('VideoPlayerDialog', () => {
     await flushPromises()
     /* An attribute, not a property: the DOM property is controlsList. */
     expect(wrapper.find('video').attributes('controlslist')).toBe('nodownload noplaybackrate')
+  })
+
+  /* The "No sound" notice: best effort, Chromium's counters only. */
+  it('says when the browser plays the picture without sound', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+    /* The live region is there, empty, before the notice. */
+    const region = wrapper.find('[aria-live="polite"]')
+    expect(region.exists()).toBe(true)
+    expect(region.text()).toBe('')
+
+    /* Chrome with MP2 audio: video bytes grow, audio bytes stay 0. */
+    await playFor(wrapper, 3.5, 0, 5000)
+
+    expect(region.text()).toMatch(/No sound/)
+    /* The profile did play, so it is not flagged. */
+    expect(useStreamProfilesStore().failedProfiles.get('ch-abc')?.has('webtv')).toBeFalsy()
+  })
+
+  it('shows no notice without the Chromium counters', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    /* Safari, Firefox: no counters, so the check cannot tell. */
+    await playFor(wrapper, 3.5, 0, 5000, false)
+
+    expect(wrapper.text()).not.toMatch(/No sound/)
+  })
+
+  it('waits 3 s of media time before checking the audio', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 2.5, 0, 5000)
+
+    expect(wrapper.text()).not.toMatch(/No sound/)
+  })
+
+  it('shows no notice when the browser decodes audio', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 3.5, 10, 5000)
+
+    expect(wrapper.text()).not.toMatch(/No sound/)
+  })
+
+  it('hides the notice behind the error overlay', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 3.5, 0, 5000)
+    expect(wrapper.text()).toMatch(/No sound/)
+
+    await failWith(wrapper, 3)
+    expect(wrapper.text()).not.toMatch(/No sound/)
+  })
+
+  it('clears the notice on a profile switch and checks again', async () => {
+    mockApi(['matroska', 'pass'])
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 3.5, 0, 5000)
+    expect(wrapper.text()).toMatch(/No sound/)
+
+    await wrapper.find('.video-player-dialog__profile-select').setValue('pass')
+    await flushPromises()
+    expect(wrapper.text()).not.toMatch(/No sound/)
+
+    /* Once the new stream plays, the old notice is gone. */
+    await playFor(wrapper, 1, 0, 5000)
+    expect(wrapper.text()).not.toMatch(/No sound/)
+
+    /* The new profile gets its own check. */
+    setMedia(wrapper, 3.5, 0, 9000)
+    await wrapper.find('video').trigger('timeupdate')
+    expect(wrapper.text()).toMatch(/No sound/)
+  })
+
+  it('clears the notice when reopened without a channel', async () => {
+    mockApi()
+    const player = useVideoPlayer()
+    player.open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 3.5, 0, 5000)
+    expect(wrapper.text()).toMatch(/No sound/)
+
+    /* Without a channel the stream URL stays empty, so only the reset
+     * on open clears the notice. */
+    player.close()
+    await flushPromises()
+    player.open()
+    await flushPromises()
+
+    expect(wrapper.text()).toMatch(/Select a channel to watch/)
+    expect(wrapper.text()).not.toMatch(/No sound/)
+  })
+
+  it('counts the 3 s from the media time playback started at', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    setMedia(wrapper, 100, 0, 0)
+    await wrapper.find('video').trigger('playing')
+    setMedia(wrapper, 102.5, 0, 5000)
+    await wrapper.find('video').trigger('timeupdate')
+    expect(wrapper.text()).not.toMatch(/No sound/)
+
+    setMedia(wrapper, 103.5, 0, 6000)
+    await wrapper.find('video').trigger('timeupdate')
+    expect(wrapper.text()).toMatch(/No sound/)
+  })
+
+  it('checks once per load, not again after a stall', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await playFor(wrapper, 3.5, 10, 5000)
+    expect(wrapper.text()).not.toMatch(/No sound/)
+
+    /* Chrome fires `playing` again after a stall. That must not arm a
+     * second check, even if the counters would now read as silence. */
+    setMedia(wrapper, 10, 0, 9000)
+    await wrapper.find('video').trigger('playing')
+    setMedia(wrapper, 20, 0, 10000)
+    await wrapper.find('video').trigger('timeupdate')
+
+    expect(wrapper.text()).not.toMatch(/No sound/)
   })
 
   it('fetches enabled channels for the Channel dropdown on open', async () => {

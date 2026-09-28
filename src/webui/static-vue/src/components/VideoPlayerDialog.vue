@@ -22,15 +22,23 @@
  * A live stream holds a server-side subscription open for as long as
  * the HTTP connection lasts; dropping the connection deterministically
  * releases the subscription without waiting for element GC.
+ *
+ * A "No sound" notice below the video says when the browser plays
+ * the picture but none of the stream's audio. It is best effort and
+ * Chromium-only: it reads Chromium's non-standard decoded-byte
+ * counters (see utils/audioPresence.ts) and does nothing in other
+ * browsers. It cannot name the codecs, because the channel's stream
+ * list is admin-only, and it does not flag the profile.
  */
 import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
-import { TriangleAlert } from 'lucide-vue-next'
+import { TriangleAlert, VolumeX } from 'lucide-vue-next'
 import { useI18n } from '@/composables/useI18n'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { channelStreamUrl } from '@/utils/playUrl'
+import { audioPresence } from '@/utils/audioPresence'
 import { apiCall } from '@/api/client'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import type { GridResponse, FilterDef } from '@/types/grid'
@@ -118,6 +126,27 @@ const MEDIA_ERROR_LABELS: Record<number, string> = {
   4: 'format not supported',
 }
 
+/* True when the audio check found the browser decoding the picture
+ * but no audio (see onTimeUpdate). */
+const noAudio = ref(false)
+/* currentTime when the check was armed, null while not armed. */
+let audioCheckFrom: number | null = null
+/* The check runs once per load. Chrome re-fires `playing` after
+ * every stall, so this stops it re-arming. */
+let audioChecked = false
+/* Seconds of media time played before the check reads the counters. */
+const AUDIO_CHECK_AFTER_S = 3
+
+/* The "No sound" notice gives way to the error and switching
+ * overlays. */
+const showNoAudio = computed(() => noAudio.value && !playbackError.value && !switching.value)
+/* i18n: new string */
+const noAudioText = computed(() =>
+  t(
+    "No sound: this browser is not playing any of this stream's audio. Use the external player, or ask the administrator for a stream profile that converts the audio.",
+  ),
+)
+
 /* Two-way bind PrimeVue's `visible` to the composable's `isOpen`. */
 const visibleProxy = computed({
   get: () => player.isOpen.value,
@@ -198,6 +227,7 @@ watch(
       playbackErrorDetail.value = ''
       switching.value = false
       hasPlayed.value = false
+      resetAudioCheck()
       void pickInitialProfile()
       void loadChannels()
       return
@@ -221,6 +251,7 @@ watch(
     /* Show the "switching" hint only for a genuine switch, not the
      * first load (the <video> shows its own loading UI). */
     switching.value = hasPlayed.value
+    resetAudioCheck()
     writeLastProfile(player.profile.value)
     el.load()
   },
@@ -256,6 +287,29 @@ function onPlaying(): void {
   switching.value = false
   hasPlayed.value = true
   streamProfiles.clearProfileFailed(player.profile.value, player.current.value?.channelUuid ?? '')
+  /* Arm the audio check from the current media time. */
+  if (!audioChecked && audioCheckFrom === null) audioCheckFrom = videoEl.value?.currentTime ?? 0
+}
+
+/* Forget the audio check of the previous load. */
+function resetAudioCheck(): void {
+  noAudio.value = false
+  audioCheckFrom = null
+  audioChecked = false
+}
+
+/* A few seconds of media time after `playing`, check once whether
+ * the browser decodes any audio. Gated on media time, not wall-clock
+ * time, so a stall never triggers it. No muted gate: Chrome counts
+ * decoded audio while muted too. The profile did play, so it is not
+ * flagged. Outside Chromium audioPresence() reads 'unknown' and the
+ * notice stays hidden. */
+function onTimeUpdate(): void {
+  const el = videoEl.value
+  if (!el || audioChecked || audioCheckFrom === null) return
+  if (el.currentTime - audioCheckFrom < AUDIO_CHECK_AFTER_S) return
+  audioChecked = true
+  noAudio.value = audioPresence(el) === 'none'
 }
 </script>
 
@@ -354,6 +408,7 @@ function onPlaying(): void {
         playsinline
         @error="onError"
         @playing="onPlaying"
+        @timeupdate="onTimeUpdate"
       />
       <div v-if="!hasChannel" class="video-player-dialog__overlay">
         <p>{{ t('Select a channel to watch.') }}</p>
@@ -369,6 +424,20 @@ function onPlaying(): void {
       <div v-else-if="switching" class="video-player-dialog__overlay">
         <p>{{ t('Switching…') }}</p>
       </div>
+    </div>
+    <!-- Below the 16:9 frame, so it never covers the native controls.
+         The live region stays mounted so screen readers announce the
+         notice when it appears. -->
+    <div class="video-player-dialog__notice-region" aria-live="polite">
+      <p v-if="showNoAudio" class="video-player-dialog__notice">
+        <VolumeX
+          :size="14"
+          :stroke-width="2"
+          aria-hidden="true"
+          class="video-player-dialog__notice-icon"
+        />
+        <span>{{ noAudioText }}</span>
+      </p>
     </div>
   </Dialog>
 </template>
@@ -452,6 +521,23 @@ function onPlaying(): void {
 
 .video-player-dialog__overlay p {
   margin: 0;
+}
+
+/* "No sound" notice under the video. The live region around it has
+ * no styles, so it takes no space while empty. */
+.video-player-dialog__notice {
+  display: flex;
+  align-items: center;
+  gap: var(--tvh-space-2);
+  margin: 0;
+  padding-top: var(--tvh-space-2);
+  font-size: var(--tvh-text-sm);
+  color: var(--tvh-text-muted);
+}
+
+.video-player-dialog__notice-icon {
+  flex: none;
+  color: var(--tvh-warning);
 }
 
 /* The MediaError code/message — smaller, dimmer. */
