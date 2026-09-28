@@ -68,6 +68,8 @@ function mountDialog() {
         PlayerRecordButton: RecordStub,
         Dialog: DIALOG_PASSTHROUGH_STUB,
         Select: true,
+        /* The Status → Log link, tested in VideoPlayerDialog.test.ts. */
+        'router-link': true,
       },
     },
   })
