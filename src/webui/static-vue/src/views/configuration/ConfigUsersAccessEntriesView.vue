@@ -263,7 +263,7 @@ const cols: ColumnDef[] = [
  * useEditorMode's createList equals editList. */
 const ACCESS_LIST =
   'enabled,username,password,prefix,change,' +
-  'lang,webui,themeui,langui,uilevel,uilevel_nochange,admin,' +
+  'lang,webui,themeui,langui,default_tab,uilevel,uilevel_nochange,admin,' +
   'streaming,profile,conn_limit_type,conn_limit,' +
   'dvr,htsp_anonymize,dvr_config,' +
   'channel_min,channel_max,channel_tag_exclude,' +
