@@ -84,6 +84,10 @@ export interface UseStatusStore<Row extends StatusEntry = StatusEntry> {
    * path passes it so the table doesn't flash the spinner overlay
    * every notification. Default (silent: false) is for initial
    * mount and any user-initiated retry.
+   *
+   * A failed silent fetch keeps the current rows and only sets
+   * `error`, which stays until a fetch succeeds. A failed
+   * non-silent fetch clears the rows.
    */
   fetch: (options?: { silent?: boolean }) => Promise<void>
   /*
@@ -156,8 +160,10 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
 
       async function fetch(options: { silent?: boolean } = {}) {
         const myReqId = ++reqId
-        if (!options.silent) loading.value = true
-        error.value = null
+        if (!options.silent) {
+          loading.value = true
+          error.value = null
+        }
         try {
           const res = await apiCall<StatusResponse<Row>>(endpoint)
           if (myReqId !== reqId) return /* superseded */
@@ -169,10 +175,15 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
            * The cast is safe by construction.
            */
           entries.value = mergeByKey(entries.value as Row[], res.entries ?? [])
+          error.value = null
         } catch (e) {
           if (myReqId !== reqId) return
           error.value = e instanceof Error ? e : new Error(String(e))
-          entries.value = []
+          /* A background refresh that fails once (server busy, a
+           * dropped request) must not blank the grid. Emptying it
+           * drops the selection and the bandwidth chart history,
+           * and they do not come back with the rows. */
+          if (!options.silent) entries.value = []
         } finally {
           if (myReqId === reqId && !options.silent) loading.value = false
         }
