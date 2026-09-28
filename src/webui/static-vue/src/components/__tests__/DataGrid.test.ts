@@ -696,4 +696,60 @@ describe('DataGrid', () => {
       expect(dataTable.props('metaKeySelection')).toBe(true)
     })
   })
+
+  describe('desktop empty state on a grid wider than its viewport', () => {
+    /* PrimeVue renders the empty message in one cell spanning every
+     * column, so a centred message sat in the middle of the full
+     * table width, mostly off-screen. The frame around it takes the
+     * scroll viewport's width (and sticks to its left edge in CSS). */
+    const RealResizeObserver = globalThis.ResizeObserver
+    let roCallbacks: Array<() => void> = []
+    const observe = vi.fn()
+    const unobserve = vi.fn()
+    const disconnect = vi.fn()
+
+    beforeEach(() => {
+      roCallbacks = []
+      observe.mockClear()
+      unobserve.mockClear()
+      disconnect.mockClear()
+      globalThis.ResizeObserver = class {
+        observe = observe
+        unobserve = unobserve
+        disconnect = disconnect
+        constructor(cb: () => void) {
+          roCallbacks.push(cb)
+        }
+      } as unknown as typeof ResizeObserver
+    })
+
+    afterEach(() => {
+      globalThis.ResizeObserver = RealResizeObserver
+    })
+
+    it('observes the table shell until the grid unmounts', async () => {
+      const wrapper = mountGrid({ entries: [] })
+      await nextTick()
+      expect(observe).toHaveBeenCalledWith(wrapper.find('.data-grid__table-shell').element)
+      expect(disconnect).not.toHaveBeenCalled()
+      wrapper.unmount()
+      expect(disconnect).toHaveBeenCalledTimes(1)
+    })
+
+    it('sizes the empty-state frame to the scroll viewport', async () => {
+      const wrapper = mountGrid(
+        { entries: [] },
+        { empty: '<p class="my-empty">Nothing here yet</p>' }
+      )
+      await nextTick()
+      const scroller = wrapper.find('.p-datatable-table-container').element
+      Object.defineProperty(scroller, 'clientWidth', { configurable: true, value: 640 })
+      for (const cb of roCallbacks) cb()
+      await nextTick()
+      const frame = wrapper.find('.data-grid__empty-frame')
+      expect(frame.exists()).toBe(true)
+      expect(frame.find('.my-empty').exists()).toBe(true)
+      expect((frame.element as HTMLElement).style.width).toBe('640px')
+    })
+  })
 })

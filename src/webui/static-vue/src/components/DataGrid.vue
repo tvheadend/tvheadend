@@ -27,7 +27,7 @@
  * via `:deep()`). This avoids changing every existing test selector
  * while keeping DataGrid's scoped styles applicable.
  */
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
 import { useIsPhone } from '@/composables/useIsPhone'
 import DataTable, {
@@ -1559,6 +1559,43 @@ function onTableColumnReorder(event: unknown) {
 
 const tableShellEl = ref<HTMLElement | null>(null)
 
+/* Width of the table's scroll viewport. PrimeVue renders the empty
+ * message in one cell spanning every column, so on a grid wider
+ * than its viewport a centred message sat in the middle of the full
+ * table width, mostly off-screen. The empty-state frame takes this
+ * width and sticks to the left edge (see `.data-grid__empty-frame`).
+ * The scroller is `.p-virtualscroller` on virtualised grids and
+ * `.p-datatable-table-container` otherwise. */
+const scrollViewportWidth = ref<number | null>(null)
+let shellResizeObserver: ResizeObserver | null = null
+
+function measureScrollViewport(): void {
+  const shell = tableShellEl.value
+  const scroller =
+    shell?.querySelector('.p-virtualscroller') ??
+    shell?.querySelector('.p-datatable-table-container')
+  scrollViewportWidth.value =
+    scroller instanceof HTMLElement && scroller.clientWidth > 0 ? scroller.clientWidth : null
+}
+
+watch(tableShellEl, (el) => {
+  shellResizeObserver?.disconnect()
+  shellResizeObserver = null
+  if (!el || typeof ResizeObserver === 'undefined') return
+  shellResizeObserver = new ResizeObserver(measureScrollViewport)
+  shellResizeObserver.observe(el)
+  measureScrollViewport()
+})
+
+onBeforeUnmount(() => {
+  shellResizeObserver?.disconnect()
+  shellResizeObserver = null
+})
+
+const emptyFrameStyle = computed(() =>
+  scrollViewportWidth.value === null ? undefined : { width: `${scrollViewportWidth.value}px` }
+)
+
 /* Scroll a specific row index into the centre of the viewport.
  * Used by parent grids that drive imperative reorderings (e.g.
  * AccessEntries Move Up / Down) so the moved rows stay visible
@@ -2112,9 +2149,11 @@ defineExpose({
           <ChevronRightIcon v-else :size="14" :stroke-width="2" />
         </template>
         <template #empty>
-          <slot name="empty">
-            <p :class="['data-grid__empty', `${bemPrefix}__empty`]">No entries.</p>
-          </slot>
+          <div class="data-grid__empty-frame" :style="emptyFrameStyle">
+            <slot name="empty">
+              <p :class="['data-grid__empty', `${bemPrefix}__empty`]">No entries.</p>
+            </slot>
+          </div>
         </template>
         <!--
           Drag-handle column for PrimeVue's row-reorder mode.
@@ -2303,6 +2342,27 @@ defineExpose({
   padding: var(--tvh-space-3) var(--tvh-space-4);
   margin-bottom: var(--tvh-space-3);
   color: var(--tvh-text);
+}
+
+/* Empty state on desktop: the cell spans the whole table, which can
+ * be far wider than the viewport. The frame is as wide as the
+ * scroll viewport (inline width from the script) and sticks to its
+ * left edge, so a centred message stays in view. The cell padding
+ * moves into the frame, or the frame would overhang the viewport by
+ * that much, and the cell must not clip (PrimeVue's resizable-table
+ * rule sets `overflow: hidden`, which would turn off the sticky
+ * offset). */
+.data-grid__table :deep(.p-datatable-empty-message > td) {
+  padding: 0;
+  overflow: visible;
+  white-space: normal;
+}
+
+.data-grid__empty-frame {
+  position: sticky;
+  left: 0;
+  box-sizing: border-box;
+  padding: var(--p-datatable-body-cell-padding);
 }
 
 .data-grid__empty {
