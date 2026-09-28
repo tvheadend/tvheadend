@@ -40,11 +40,11 @@ Click a type to see its properties (below).
 The icon next to each entry within the grid indicates the clients 
 connection status.
 
-Icon                                         | Description
----------------------------------------------|------------
-!['Accept/OK Icon'](icons/accept.png)        | The client is connected.
-!['Error Icon'](icons/exclamation.png)       | There was an error.
-!['Stop/Disabled Icon'](icons/stop.png)      | The client is disabled.
+Icon                                           | Description
+-----------------------------------------------|------------
+!['Accept/OK Icon'](static/icons/accept.png)   | The client is connected.
+!['Error Icon'](static/icons/exclamation.png)  | There was an error.
+!['Stop/Disabled Icon'](static/icons/stop.png) | The client is disabled.
 
 ---
 
