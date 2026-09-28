@@ -105,6 +105,7 @@ async function mountWithParams(
     saveTooltip: string
     preselect: Record<string, unknown>
     alwaysDirty: boolean
+    saveDisabled: boolean
     mandatoryFields: ReadonlyArray<string>
   }> = {},
   meta?: { groups?: ReadonlyArray<Record<string, unknown>> }
@@ -795,6 +796,41 @@ describe('IdnodeConfigForm — alwaysDirty (trigger forms)', () => {
 
     const saveBtn = wrapper.find('.idnode-config-form__btn--save')
     expect(saveBtn.attributes('disabled')).toBeDefined()
+  })
+})
+
+describe('IdnodeConfigForm — saveDisabled', () => {
+  /* A trigger form can still have nothing to act on (Service
+   * Mapper with no service picked). `saveDisabled` lets the host
+   * hold Save back even with alwaysDirty. */
+  it('keeps Save disabled with alwaysDirty on', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+
+    const wrapper = await mountWithParams(
+      [{ id: 'name', type: 'str', caption: 'Name', value: 'unchanged' }],
+      { alwaysDirty: true, saveDisabled: true },
+    )
+
+    const saveBtn = wrapper.find('.idnode-config-form__btn--save')
+    expect(saveBtn.attributes('disabled')).toBeDefined()
+  })
+
+  it('save() posts nothing while saveDisabled is set', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+
+    const wrapper = await mountWithParams(
+      [{ id: 'name', type: 'str', caption: 'Name', value: 'unchanged' }],
+      { alwaysDirty: true, saveDisabled: true },
+    )
+
+    await (wrapper.vm as unknown as { save: () => Promise<void> }).save()
+    await flushPromises()
+
+    /* Only the initial load went out. */
+    expect(apiMock.mock.calls.length).toBe(1)
+    expect(wrapper.emitted('saved')).toBeFalsy()
   })
 })
 

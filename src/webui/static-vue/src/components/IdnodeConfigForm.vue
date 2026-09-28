@@ -172,6 +172,12 @@ const props = withDefaults(
      * CA drawer) is unchanged because they don't pass this
      * prop. */
     alwaysDirty?: boolean
+    /* When true, Save stays disabled and `save()` does nothing,
+     * whatever the dirty state. For trigger forms that can have
+     * nothing to act on — Service Mapper with no service picked,
+     * where the server would accept the POST but start no job.
+     * Default false. */
+    saveDisabled?: boolean
     /* Allowlist of multi-select enum field IDs to render as
      * inline checkboxes instead of the default MultiSelect
      * dropdown. Right for known-small fixed sets (e.g. days of
@@ -233,6 +239,7 @@ const props = withDefaults(
     saveTooltip: undefined,
     preselect: undefined,
     alwaysDirty: false,
+    saveDisabled: false,
     inlineEnumMultiFields: () => [],
     hideToolbar: false,
     mandatoryFields: () => [],
@@ -700,7 +707,7 @@ async function save() {
   /* `alwaysDirty` bypasses the dirty-state guard for trigger
    * forms (Service Mapper). Saving in-flight still gates so a
    * user can't double-fire while a previous post is pending. */
-  if ((!isDirty.value && !props.alwaysDirty) || saving.value) return
+  if ((!isDirty.value && !props.alwaysDirty) || saving.value || props.saveDisabled) return
   /* Validation gate. Promote every error to visible so the user
    * sees what's wrong even on fields they haven't touched yet,
    * mirroring IdnodeEditor's submit-attempt behaviour. The Save
@@ -927,6 +934,7 @@ onBeforeUnmount(() => {
           (!isDirty && !alwaysDirty)
             || saving
             || loading
+            || saveDisabled
             || (isDirty && hasErrors)
         "
         @click="save"
