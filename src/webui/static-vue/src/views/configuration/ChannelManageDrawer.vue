@@ -142,6 +142,9 @@ const gridRef = ref<{
     dirtyMap: { value: Map<string, Map<string, unknown>> }
   } | null
   effectiveEntries?: BaseRow[]
+  /* The grid's store. `entries` holds every loaded channel,
+   * including the disabled ones the Enabled filter hides. */
+  store?: { entries?: BaseRow[] }
   /* Exposed by IdnodeGrid so the drawer's "View options" popover can
    * disable Reset when the layout already matches defaults, and call
    * the same reset path the in-grid GridSettingsMenu uses. */
@@ -277,12 +280,13 @@ function commitCell(uuid: string, field: string, value: unknown): void {
  * instances so each cell can light its warning badge when its
  * value isn't unique.
  *
- * Reactivity: depends on the grid's effectiveEntries (post-
- * filter, post-dirty-aware-sort) AND the dirtyMap. A user
- * dirtying a row to a number another row already holds lights
- * up BOTH rows' badges on the next tick. Unnumbered rows (0 /
- * null / non-finite) are excluded — twenty just-scanned
- * channels mustn't all flag each other.
+ * Reactivity: depends on every loaded row AND the dirtyMap. A
+ * user dirtying a row to a number another row already holds
+ * lights up BOTH rows' badges on the next tick. Rows the
+ * Enabled filter hides count too, so a number held by a
+ * disabled channel still flags the visible row that takes it.
+ * Unnumbered rows (0 / null / non-finite) are excluded —
+ * twenty just-scanned channels mustn't all flag each other.
  *
  * Computed eagerly per change; provide as a Ref so injected
  * cells track only the .value, not us, and the parent's
@@ -290,9 +294,10 @@ function commitCell(uuid: string, field: string, value: unknown): void {
 const numberDuplicateCounts = computed<Map<string, number>>(() => {
   const counts = new Map<string, number>()
   const grid = gridRef.value
-  if (!grid?.effectiveEntries) return counts
-  const dirty = grid.inlineEdit?.dirtyMap?.value
-  for (const row of grid.effectiveEntries) {
+  const rows = grid?.store?.entries ?? grid?.effectiveEntries
+  if (!rows) return counts
+  const dirty = grid?.inlineEdit?.dirtyMap?.value
+  for (const row of rows) {
     if (typeof row.uuid !== 'string') continue
     /* Effective number: dirty wins over server value (mirrors
      * cellModelValue's read). */
