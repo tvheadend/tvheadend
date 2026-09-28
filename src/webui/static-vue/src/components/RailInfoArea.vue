@@ -53,8 +53,14 @@ const KNOWN_INFO_ITEMS = new Set(['login', 'storage', 'time'])
 const DEFAULT_INFO_ITEMS = ['login', 'storage', 'time']
 
 const infoItems = computed<string[]>(() => {
-  const raw = access.data?.info_area
-  if (!raw) return DEFAULT_INFO_ITEMS
+  /* Nothing loaded yet: show the server's default set. */
+  if (!access.data) return DEFAULT_INFO_ITEMS
+  /* Loaded without the key: the admin cleared the setting. The
+   * server stores an empty list as '' and then leaves the key out
+   * (comet_access_info_build in src/webui/comet.c), and Classic shows
+   * nothing either. */
+  const raw = access.data.info_area
+  if (!raw) return []
   const parsed = raw
     .split(',')
     .map((s) => s.trim())

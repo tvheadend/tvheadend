@@ -796,6 +796,11 @@ async function onLoginClick() {
   gap: var(--tvh-space-1);
 }
 
+/* The admin cleared Information area: no empty bordered box. */
+.nav-rail__footer:empty {
+  display: none;
+}
+
 @media (max-width: 767px) {
   .nav-rail {
     position: absolute;

@@ -194,4 +194,9 @@ onBeforeUnmount(() => {
   gap: var(--tvh-space-3);
   flex-shrink: 0;
 }
+
+/* No info items configured: drop the trailing gap too. */
+.top-bar__info:empty {
+  display: none;
+}
 </style>
