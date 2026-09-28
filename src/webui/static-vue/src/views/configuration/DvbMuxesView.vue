@@ -52,7 +52,7 @@ const { t } = useI18n()
 
 /* "Hide" filter — three-option dropdown surfaced in the
  * GridSettingsMenu (above View level). Mirrors the legacy ExtJS
- * picklist (`idnode.js:1992-2020`) and feeds the server's
+ * picklist (`idnode.js:1998-2026`) and feeds the server's
  * `hidemode` param (`api/api_mpegts.c:236-252`). The keys + the
  * mapping rules are hardcoded both in ExtJS and the server's
  * `if (!strcmp(s, "all"))` branches; if a future tvheadend release
@@ -67,7 +67,13 @@ const { t } = useI18n()
  *     themselves disabled, even when their network is enabled.
  *     Strictest filter.
  *   - 'none'    (server `hide=0`): show everything regardless of
- *     network or mux enabled state. Useful for debugging. */
+ *     network or mux enabled state. Useful for debugging.
+ *
+ * Classic labels the default "Inactive services" on both grids.
+ * Muxes are not services, so the default reads "Disabled
+ * networks" here, which is what it hides. The default already
+ * hides rows, so `inactiveValue` makes the Filters summary say so
+ * instead of "None". */
 const hideMode = ref<'default' | 'all' | 'none'>('default')
 
 const filters = computed<GlobalFilterSpec[]>(() => [
@@ -76,11 +82,12 @@ const filters = computed<GlobalFilterSpec[]>(() => [
     key: 'hidemode',
     label: t('Hide'),
     options: [
-      { value: 'default', label: t('Parent disabled') },
+      { value: 'default', label: t('Disabled networks') },
       { value: 'all', label: t('All') },
       { value: 'none', label: t('None') },
     ],
     current: hideMode.value,
+    inactiveValue: 'none',
   },
 ])
 

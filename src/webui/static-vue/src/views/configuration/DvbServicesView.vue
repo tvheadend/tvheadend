@@ -67,15 +67,19 @@ function openInfoDialog(row: BaseRow): void {
 
 /* "Hide" filter — three-option dropdown surfaced in the
  * GridSettingsMenu (above View level). Mirrors the legacy ExtJS
- * picklist (`idnode.js:1992-2020`) and feeds the server's
- * `hidemode` param (`api/api_mpegts.c:265-272`). For Services:
- *   - 'default' (server `hide=1`): hides unverified services +
- *     services on disabled networks. Sensible default — admins
- *     usually want only the validated, network-active rows.
+ * picklist (`idnode.js:1998-2026`), including its "Inactive
+ * services" label, and feeds the server's `hidemode` param
+ * (`api/api_mpegts.c:258-285`). For Services:
+ *   - 'default' (server `hide=1`): hides services on disabled
+ *     networks or disabled muxes, and unverified services.
+ *     Sensible default — admins usually want only the validated,
+ *     active rows.
  *   - 'all'     (server `hide=2`): also hides services that are
  *     themselves disabled. Strictest filter.
  *   - 'none'    (server `hide=0`): show everything. Useful when
- *     debugging discovery issues. */
+ *     debugging discovery issues.
+ * The default already hides rows, so `inactiveValue` makes the
+ * Filters summary say so instead of "None". */
 const hideMode = ref<'default' | 'all' | 'none'>('default')
 
 const filters = computed<GlobalFilterSpec[]>(() => [
@@ -84,11 +88,12 @@ const filters = computed<GlobalFilterSpec[]>(() => [
     key: 'hidemode',
     label: t('Hide'),
     options: [
-      { value: 'default', label: t('Parent disabled') },
+      { value: 'default', label: t('Inactive services') },
       { value: 'all', label: t('All') },
       { value: 'none', label: t('None') },
     ],
     current: hideMode.value,
+    inactiveValue: 'none',
   },
 ])
 

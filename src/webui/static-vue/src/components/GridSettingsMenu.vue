@@ -276,8 +276,9 @@ const hasGlobalFilters = computed(() => (props.filters?.length ?? 0) > 0)
  * EpgTableOptions's Filters CollapsibleSection. The accordion
  * accent chip lights up when EITHER any GLOBAL filter is off
  * its default OR any column funnel is active; the section
- * summary text combines a per-axis breadcrumb (non-default
- * globals) plus a count of column filters. */
+ * summary text combines a per-axis breadcrumb (globals that
+ * narrow the rows, see filterNarrows, which can be at their
+ * default) plus a count of column filters. */
 const allGlobalFiltersAtDefault = computed(() =>
   (props.filters ?? []).every(filterIsDefault),
 )
@@ -287,12 +288,12 @@ const filtersAggregateIsDefault = computed(
 const filtersAggregateSummary = computed(() => {
   const bits: string[] = []
   for (const f of props.filters ?? []) {
-    if (filterIsDefault(f)) continue
+    if (!filterNarrows(f)) continue
     bits.push(filterSummary(f))
   }
   const cols = props.perColumnFilters?.length ?? 0
   if (cols > 0) bits.push(t('{0} columns', cols))
-  /* All defaults / nothing active → render "None" rather than
+  /* Nothing narrowing → render "None" rather than
    * letting the chip disappear (`v-if="summary"` in
    * CollapsibleSection). Always-present chip + the muted colour
    * the default state already paints reads as "filters: nothing
@@ -404,9 +405,23 @@ function filterIsDefault(f: GlobalFilterSpec) {
   return true
 }
 
+/* Whether the filter narrows the rows right now, for the summary.
+ * A select with an `inactiveValue` narrows whenever another option
+ * is picked, even at its default (Muxes / Services hide rows by
+ * default). Without one, any non-default pick counts. */
+function filterNarrows(f: GlobalFilterSpec): boolean {
+  if (f.kind === 'select' && f.inactiveValue !== undefined) {
+    return f.current !== f.inactiveValue
+  }
+  return !filterIsDefault(f)
+}
+
+/* "Hide: All" rather than a bare "All", which does not say what
+ * the option applies to. */
 function filterSummary(f: GlobalFilterSpec): string {
   if (f.kind === 'select') {
-    return f.options.find((o) => o.value === f.current)?.label ?? ''
+    const option = f.options.find((o) => o.value === f.current)?.label ?? ''
+    return option ? `${f.label}: ${option}` : ''
   }
   return ''
 }

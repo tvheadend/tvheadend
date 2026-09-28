@@ -115,6 +115,10 @@ export interface GroupableFieldDef<Row = Record<string, unknown>> {
  *     is the "default" pick (the menu uses it to decide whether
  *     the Filters section's accent chip should show). Used today
  *     by DvbMuxes / DvbServices for the `hidemode` param.
+ *     `inactiveValue` names the option that hides nothing. When
+ *     set, the Filters summary lists the filter whenever another
+ *     option is picked, the default included, so a default that
+ *     hides rows does not read "None".
  */
 export type GlobalFilterSpec =
   | {
@@ -127,4 +131,7 @@ export type GlobalFilterSpec =
       options: Array<{ value: string; label: string }>
       /** Currently-picked value. */
       current: string
+      /** Option value that filters nothing (e.g. hidemode `'none'`).
+       *  Optional, see the kind-specific notes above. */
+      inactiveValue?: string
     }
