@@ -599,7 +599,7 @@ function pickGroup(field: string | null) {
           :class="{
             'settings-popover__option--active': sortField === col.field,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="sortField === col.field"
           @click="pickSort(col.field)"
         >
@@ -631,7 +631,7 @@ function pickGroup(field: string | null) {
           type="button"
           class="settings-popover__option"
           :class="{ 'settings-popover__option--active': !groupField }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="!groupField"
           @click="pickGroup(null)"
         >
@@ -646,7 +646,7 @@ function pickGroup(field: string | null) {
           type="button"
           class="settings-popover__option grid-settings__sort-row"
           :class="{ 'settings-popover__option--active': groupField === g.field }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="groupField === g.field"
           @click="pickGroup(g.field)"
         >
@@ -684,7 +684,7 @@ function pickGroup(field: string | null) {
             'settings-popover__option--disabled': locked,
           }"
           :disabled="locked"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="effectiveLevel === opt.value"
           @click="pickLevel(opt.value)"
         >

@@ -661,7 +661,7 @@ function resetToDefaults() {
           :class="{
             'settings-popover__option--active': sortField === s.field,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="sortField === s.field"
           @click="pickSort(s.field)"
         >
@@ -693,7 +693,7 @@ function resetToDefaults() {
           type="button"
           class="settings-popover__option"
           :class="{ 'settings-popover__option--active': !options.groupField }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="!options.groupField"
           @click="pickGroup(null)"
         >
@@ -710,7 +710,7 @@ function resetToDefaults() {
           :class="{
             'settings-popover__option--active': options.groupField === g.field,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="options.groupField === g.field"
           @click="pickGroup(g.field)"
         >
@@ -746,7 +746,7 @@ function resetToDefaults() {
           :class="{
             'settings-popover__option--active': options.progressDisplay === opt.value,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="options.progressDisplay === opt.value"
           @click="setProgressDisplay(opt.value)"
         >
