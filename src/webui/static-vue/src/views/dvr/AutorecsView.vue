@@ -170,7 +170,7 @@ const {
     :create-base="creatingBase"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Autorec') : t('Add Autorec')"
+    :title="creatingBase ? t('Add Autorec') : t('Edit Autorec')"
     :inline-enum-multi-fields="['weekdays']"
     :field-groups="AUTOREC_FIELD_GROUPS"
     @close="closeEditor"

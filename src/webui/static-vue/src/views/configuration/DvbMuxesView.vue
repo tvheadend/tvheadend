@@ -302,7 +302,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :parent-scoped="creatingParentScope"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Mux') : t('Add Mux')"
+    :title="creatingBase ? t('Add Mux') : t('Edit Mux')"
     @close="closeEditor"
     @created="flipToEdit"
   />

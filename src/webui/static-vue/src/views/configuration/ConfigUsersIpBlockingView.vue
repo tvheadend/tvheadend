@@ -142,7 +142,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :create-base="creatingBase"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit IP Blocking Entry') : t('Add IP Blocking Entry')"
+    :title="creatingBase ? t('Add IP Blocking Entry') : t('Edit IP Blocking Entry')"
     @close="closeEditor"
     @created="flipToEdit"
   />
