@@ -41,7 +41,7 @@ const fmtKbps = (v: unknown) =>
 const fmtPids = (v: unknown) => {
   if (!Array.isArray(v) || v.length === 0) return ''
   const sorted = [...(v as number[])].sort((a, b) => a - b)
-  if (sorted[sorted.length - 1] === 65535) return 'all'
+  if (sorted[sorted.length - 1] === 65535) return t('all')
   /* ", " (comma + space) so long lists have wrap points — see the
    * matching comment in StreamView.vue for why ExtJS's no-space form
    * doesn't translate cleanly to our DataTable. */
@@ -63,7 +63,7 @@ const fmtPids = (v: unknown) => {
  * desktop-only — diagnostics rather than headline information.
  */
 const cols: ColumnDef[] = [
-  { field: 'id', label: t('Id'), sortable: true, minVisible: 'desktop', format: fmtHexId },
+  { field: 'id', label: t('ID'), sortable: true, minVisible: 'desktop', format: fmtHexId },
   { field: 'hostname', label: t('Hostname'), sortable: true, minVisible: 'desktop' },
   { field: 'username', label: t('Username'), sortable: true, minVisible: 'desktop' },
   {

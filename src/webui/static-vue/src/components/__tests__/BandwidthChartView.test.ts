@@ -227,6 +227,20 @@ describe('BandwidthChartView — phone (Drawer) branch', () => {
     expect(w.text()).toContain('5 min')
   })
 
+  it('reuses the Classic "min" msgid in the window selector', () => {
+    ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { min: 'perc' }
+    try {
+      const rows = ref<Row[]>([{ uuid: 'a', input: 'A', bps: 1_000_000 }])
+      const visible = ref(true)
+      const labels = mountView(rows, visible)
+        .findAll('.bandwidth-chart__segment')
+        .map((b) => b.text())
+      expect(labels).toEqual(['30s', '1 perc', '5 perc'])
+    } finally {
+      delete (globalThis as { tvh_locale?: unknown }).tvh_locale
+    }
+  })
+
   it('legend lists every selected row with its colour dot', () => {
     const rows = ref<Row[]>([
       { uuid: 'a', input: 'A', bps: 1_000_000 },
