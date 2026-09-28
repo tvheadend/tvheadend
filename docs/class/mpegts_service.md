@@ -9,8 +9,6 @@ Services are automatically pulled from muxes and can be mapped to Channels.
 
 !['Services'](static/img/doc/dvbinputs/dvbinput_service.png)
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons
