@@ -254,11 +254,12 @@ const cols: ColumnDef[] = [
 const editList = ref('')
 /* Service Mapper modal state. Channels has no service uuids in
  * scope (channels are mapped TO, not FROM), so the dialog opens
- * with no preselect — the user picks services on the dialog's
- * services field. Mirrors Classic's `mapall` /
- * `mapsel: service_mapper_none` toolbar entries
- * (`chconf.js:163-165`) which both open the form fresh. */
+ * either with every service preselected (`mapperAll`, Classic's
+ * `mapall: service_mapper_all`) or with none, for the user to
+ * pick on the dialog's services field (Classic's
+ * `mapsel: service_mapper_none`, `chconf.js:163-165`). */
 const mapperOpen = ref(false)
+const mapperAll = ref(false)
 
 const {
   editingUuid,
@@ -361,13 +362,14 @@ async function onResetIcon(selection: BaseRow[], clearSelection: () => void) {
 
 /* Map services — opens the ServiceMapperDialog modal in-place.
  * Channels grid has no service-uuids in scope (channels are
- * mapped TO, not FROM), so the dialog opens with no preselect;
- * the user picks services from the dialog's services field.
- * Mirrors Classic's `chconf.js:163-165` where the Channels page
- * wires the same "Map all" / "Map selected" buttons against
- * `service_mapper_all` / `service_mapper_none` (both open the
- * form fresh — Channels selection isn't relevant). */
-function onMapServices() {
+ * mapped TO, not FROM), so the dialog opens with every service
+ * preselected (`all`) or with none. Mirrors Classic's
+ * `chconf.js:163-165` where the Channels page wires the same
+ * "Map all" / "Map selected" buttons against
+ * `service_mapper_all` / `service_mapper_none` (Channels
+ * selection isn't relevant). */
+function onMapServices(all: boolean) {
+  mapperAll.value = all
   mapperOpen.value = true
 }
 
@@ -403,9 +405,9 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     onClick: () => onResetIcon(selection, clearSelection),
   }
   /* Map services — parent submenu mirroring Classic's
-   * `chconf.js:133-168` shape (minus the "Map all services"
-   * variant which would need ServiceMapperDialog select-all-on-
-   * open support; deferred). Two children:
+   * `chconf.js:133-168` shape. Three children:
+   *   - Map all services : open the mapper dialog with every
+   *                        service preselected. Always enabled.
    *   - Map services… : open the mapper dialog and let the user
    *                     pick services to map. Always enabled.
    *   - Detach from bouquet : POST `api/bouquet/detach` with the
@@ -417,10 +419,16 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     tooltip: t('Service-mapping shortcuts'),
     children: [
       {
+        id: 'map-services-all',
+        label: t('Map all services'),
+        tooltip: t('Map all services to channels'),
+        onClick: () => onMapServices(true),
+      },
+      {
         id: 'map-services-open',
         label: t('Map services…'),
         tooltip: t('Open the Service Mapper to add channels from services'),
-        onClick: () => onMapServices(),
+        onClick: () => onMapServices(false),
       },
       {
         id: 'map-services-detach',
@@ -507,7 +515,7 @@ watch(
   () => route.query.openMapper,
   (mode) => {
     if (mode !== 'true') return
-    mapperOpen.value = true
+    onMapServices(false)
     const rest = { ...route.query }
     delete rest.openMapper
     router.replace({ query: rest }).catch(() => { /* nav cancellation is fine */ })
@@ -553,7 +561,11 @@ watch(
     @close="closeEditor"
     @created="flipToEdit"
   />
-  <ServiceMapperDialog v-model:visible="mapperOpen" @started="onMappingStarted" />
+  <ServiceMapperDialog
+    v-model:visible="mapperOpen"
+    :map-all="mapperAll"
+    @started="onMappingStarted"
+  />
 </template>
 
 <style scoped>

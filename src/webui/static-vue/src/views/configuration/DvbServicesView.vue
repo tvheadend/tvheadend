@@ -401,19 +401,21 @@ const toast = useToastNotify()
 
 /* Service Mapper modal state. Opened with selection-based
  * preselect when one or more services are highlighted in the
- * grid; opened with no preselect when nothing is selected (the
- * dialog's services field falls through to whatever the server
- * has saved, usually empty). Mirrors Classic's
+ * grid; opened with every service preselected when nothing is
+ * selected (the server never loads a saved pick back, so an
+ * empty preselect would leave nothing to map). Mirrors Classic's
  * `mpegts.js:295-297` `mapall: service_mapper_all,
  * mapsel: service_mapper_sel`. */
 const mapperOpen = ref(false)
 const mapperPreselect = ref<Record<string, unknown> | null>(null)
+const mapperAll = ref(false)
 
 function onMapServices(selection: BaseRow[]) {
   const uuids = selection
     .map((r) => r.uuid)
     .filter((u): u is string => typeof u === 'string' && !!u)
   mapperPreselect.value = uuids.length > 0 ? { services: uuids } : null
+  mapperAll.value = uuids.length === 0
   mapperOpen.value = true
 }
 
@@ -453,7 +455,7 @@ async function runRemoveUnseen(type: 'pat' | 'all'): Promise<void> {
 }
 
 function mapServicesLabel(n: number): string {
-  if (n === 0) return t('Map services')
+  if (n === 0) return t('Map all services')
   return n === 1 ? t('Map 1 service') : t('Map {0} services', n)
 }
 
@@ -498,7 +500,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
       tooltip:
         selection.length > 0
           ? t('Open the Service Mapper preselected with the chosen services')
-          : t('Open the Service Mapper to start a new mapping job'),
+          : t('Open the Service Mapper preselected with every service'),
       onClick: () => onMapServices(selection),
     },
     /* Maintenance — nested submenu mirroring Classic's
@@ -569,6 +571,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
   <ServiceMapperDialog
     v-model:visible="mapperOpen"
     :preselect="mapperPreselect"
+    :map-all="mapperAll"
     @started="onMappingStarted"
   />
   <ServiceStreamsDialog
