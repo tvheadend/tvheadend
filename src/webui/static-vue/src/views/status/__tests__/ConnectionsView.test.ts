@@ -81,6 +81,22 @@ describe('ConnectionsView — columns', () => {
     const ports = gridColumns().find((c) => c.field === 'peer_extra_ports')
     expect(ports?.format?.({ tcp: [5000], udp: [6000] }, {})).toBe('tcp-x: 5000; udp-x: 6000')
   })
+
+  it('offers the Classic Proxy Address column, hidden until enabled', () => {
+    ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { 'Proxy Address': 'proxy-x' }
+    const cols = gridColumns()
+    const proxy = cols.find((c) => c.field === 'proxy')
+    expect(proxy).toMatchObject({
+      label: 'proxy-x',
+      sortable: true,
+      minVisible: 'desktop',
+      hiddenByDefault: true,
+    })
+    /* Next to the server address, as in Classic. */
+    expect(cols.findIndex((c) => c.field === 'proxy')).toBe(
+      cols.findIndex((c) => c.field === 'server') + 1,
+    )
+  })
 })
 
 describe('ConnectionsView — Drop', () => {

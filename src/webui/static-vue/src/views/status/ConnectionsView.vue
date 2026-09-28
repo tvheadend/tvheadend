@@ -18,7 +18,7 @@
  * users. ExtJS itself uses "Drop all connections" for the bulk
  * variant, so the verb has translation precedent.
  *
- * Columns mirror status.js:681-738. Server addresses / ports are
+ * Columns mirror status.js:681-755. Server addresses / ports are
  * coalesced into one "Server" cell to save columns; same for client.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
@@ -118,6 +118,16 @@ const cols: ColumnDef[] = [
     phoneOrder: 4,
   },
   { field: 'server', label: t('Server'), sortable: true, minVisible: 'desktop', width: 200, format: fmtServer },
+  /* The reverse proxy's own address. The server sends it only when
+   * the proxy option is on and X-Forwarded-For replaced the peer
+   * with the real client (src/http.c), so it starts hidden. */
+  {
+    field: 'proxy',
+    label: t('Proxy Address'),
+    sortable: true,
+    minVisible: 'desktop',
+    hiddenByDefault: true,
+  },
 ]
 
 const dropping = ref(false)
