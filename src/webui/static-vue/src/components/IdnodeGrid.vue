@@ -45,6 +45,7 @@ import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import { createDebounce } from '@/utils/debounce'
 import { fmtDate } from '@/utils/formatTime'
+import { fmtPassword } from '@/utils/formatPassword'
 import { reorderRowsBySlot } from '@/utils/slotReorder'
 import GridSettingsMenu from './GridSettingsMenu.vue'
 import NumericFilterControls, {
@@ -1086,9 +1087,34 @@ const timeFields = computed<Set<string>>(() => {
 })
 
 /*
+ * Set of property ids flagged `password` (PO_PASSWORD). The grid
+ * endpoint still carries the stored value, so `decoratedColumns`
+ * masks these cells with `fmtPassword`. Only the drawer's
+ * IdnodeFieldString can reveal it, behind its show/hide toggle.
+ *
+ * Defense in depth: the set is empty until the class metadata
+ * arrives (and stays empty if the fetch fails), and rows are not
+ * held back for it. Until then only columns a view masks itself
+ * are masked, so a view that knows a column holds a password
+ * (Users -> Passwords) sets `format: fmtPassword` on it, and that
+ * column is masked from the first render.
+ */
+const passwordFields = computed<Set<string>>(() => {
+  const meta = idnodeClass.get(entityClass.value)
+  if (!meta) return new Set()
+  return new Set(meta.props.filter((p) => p.password).map((p) => p.id))
+})
+
+/*
  * Caller-supplied columns decorated with a generated `format`
- * function. Caller's own `format` always wins (e.g. `fmtSize` on
- * filesize, `fmtDuration` on a duration column). Otherwise:
+ * function. Password columns are masked first, overriding any
+ * caller `format` / `cellComponent` so a caller cannot unmask the
+ * stored value. They also drop `editable`: `isInlineEditable` only
+ * rejects flagged `str` props, and every PO_PASSWORD prop is a
+ * PT_STR today, so this guards a flagged prop of another type
+ * whose inline editor would show the value. Otherwise the caller's
+ * own `format` always wins (e.g. `fmtSize` on filesize,
+ * `fmtDuration` on a duration column), and:
  *   1. enum columns get a key→label mapper (server's localised
  *      label rather than the raw int).
  *   2. PT_TIME columns get `fmtDate` (epoch → locale string,
@@ -1103,6 +1129,9 @@ const decoratedColumns = computed<ColumnDef[]>(() =>
    * the user's persisted column-order rides through the format /
    * edit-gate decoration into the eventual DataGrid render. */
   orderedColumns.value.map((col) => {
+    if (passwordFields.value.has(col.field)) {
+      return { ...col, format: fmtPassword, cellComponent: undefined, editable: false }
+    }
     if (col.format || col.cellComponent) return col
     const labels = enumLabels.value[col.field]
     if (labels) {
@@ -1127,7 +1156,14 @@ onMounted(async () => {
     metadataReady.value = true
     return
   }
-  await idnodeClass.ensure(entityClass.value)
+  /* `ensure` resolves null on a failed fetch. Should it ever reject,
+   * treat it the same (no metadata, defaults apply) rather than
+   * leave the grid in its loading state for good. */
+  try {
+    await idnodeClass.ensure(entityClass.value)
+  } catch {
+    /* fall through */
+  }
   metadataReady.value = true
 })
 

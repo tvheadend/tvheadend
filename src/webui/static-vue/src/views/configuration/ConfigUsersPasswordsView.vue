@@ -29,6 +29,7 @@ import type { ActionDef } from '@/types/action'
 import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useI18n } from '@/composables/useI18n'
+import { fmtPassword } from '@/utils/formatPassword'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
 const { t } = useI18n()
@@ -61,9 +62,12 @@ const cols: ColumnDef[] = [
     phoneRole: 'primary',
     editable: true,
   },
-  /* password is server-side PT_STR + PO_PASSWORD; isInlineEditable
-   * skips password fields (drawer-only — needs the show/hide widget). */
-  { field: 'password', sortable: false, width: 250, editable: true },
+  /* password is server-side PT_STR + PO_PASSWORD and the grid
+   * endpoint returns the stored value. Masked here so the cell never
+   * shows it, even before or without the class metadata that lets
+   * IdnodeGrid mask it too. Not inline-editable: the drawer's
+   * show/hide widget is the only editor. */
+  { field: 'password', sortable: false, width: 250, format: fmtPassword },
   {
     field: 'auth',
     sortable: true,

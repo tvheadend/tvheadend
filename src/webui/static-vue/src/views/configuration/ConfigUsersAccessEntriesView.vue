@@ -46,6 +46,7 @@ import type { ActionDef } from '@/types/action'
 import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useI18n } from '@/composables/useI18n'
+import { fmtPassword } from '@/utils/formatPassword'
 import { useIdnodeMove } from '@/composables/useIdnodeMove'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
@@ -134,7 +135,11 @@ const cols: ColumnDef[] = [
     phoneRole: 'primary',
     editable: true,
   },
-  { field: 'password', sortable: false, width: 250, editable: true },
+  /* `access_entry_class` has no `password` prop (the grid response
+   * carries no such key), so this column is blank today. It keeps
+   * the ExtJS column set, masked like the Passwords grid in case
+   * the server ever returns a value here. */
+  { field: 'password', sortable: false, width: 250, format: fmtPassword },
   {
     field: 'prefix',
     sortable: true,
