@@ -9,16 +9,15 @@
  * in-header selection pill.
  *
  * Output shape (in priority order):
- *   - selected > 0, all visible selected   → `All N {label} selected`
+ *   - selected > 0, all visible selected   → `All selected: N`
  *   - selected > 0, partial                → `M of N selected`
- *   - selected = 0, total > entries (filt) → `M / N {label}`
- *   - selected = 0, no filter              → `N {label}`
+ *   - selected = 0, total > entries (filt) → `{Label}: M / N`
+ *   - selected = 0, no filter              → `{Label}: N`
  *
- * The selection-state messages intentionally drop the label —
- * "All 147 recordings selected" reads cleanly, but "1 of 147
- * recordings selected" gets verbose. Mirrors the pre-refactor
- * phone-list-summary shape verbatim so existing eyeballs see
- * the same words.
+ * Every form leaves the noun uninflected by the count. The label is
+ * a plural noun ("recordings"), so "N {label}" read "1 recordings"
+ * for a single row, and useI18n has no plural forms (Czech needs
+ * three). "Recordings: 1" is right for any count and any language.
  *
  * `total` is the server-side total when known (paginator-off
  * mode loads all rows, so `total === entries` in steady state;
@@ -35,20 +34,27 @@ export interface GridSummaryInput {
   selected: number
   /** True when every visible row is selected. */
   allVisibleSelected: boolean
-  /** Singular noun describing the row type. Default 'entries'. */
+  /** Plural noun describing the row type. Default 'entries'. */
   label?: string
 }
 
+/* Upper-case the first letter only, so "IP blocks" keeps its
+ * acronym and a translated label keeps the rest of its casing. */
+function capitalise(label: string): string {
+  return label.charAt(0).toLocaleUpperCase() + label.slice(1)
+}
+
 export function summaryText(input: GridSummaryInput): string {
-  const label = input.label ?? 'entries'
   if (input.selected > 0) {
     if (input.allVisibleSelected) {
-      return `All ${input.entries} ${label} selected`
+      return `All selected: ${input.entries}`
     }
     return `${input.selected} of ${input.entries} selected`
   }
-  if (input.total !== undefined && input.total > input.entries) {
-    return `${input.entries} / ${input.total} ${label}`
-  }
-  return `${input.entries} ${label}`
+  const count =
+    input.total !== undefined && input.total > input.entries
+      ? `${input.entries} / ${input.total}`
+      : `${input.entries}`
+  const label = input.label ?? 'entries'
+  return label ? `${capitalise(label)}: ${count}` : count
 }

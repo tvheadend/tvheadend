@@ -751,5 +751,17 @@ describe('DataGrid', () => {
       expect(frame.find('.my-empty').exists()).toBe(true)
       expect((frame.element as HTMLElement).style.width).toBe('640px')
     })
+
+    it('runs the default empty text through t(), as the phone path does', () => {
+      const g = globalThis as { tvh_locale?: Record<string, string> }
+      const saved = g.tvh_locale
+      g.tvh_locale = { 'No entries.': 'Žádné položky.' }
+      try {
+        const wrapper = mountGrid({ entries: [] })
+        expect(wrapper.find('.data-grid__empty-frame').text()).toBe('Žádné položky.')
+      } finally {
+        g.tvh_locale = saved
+      }
+    })
   })
 })
