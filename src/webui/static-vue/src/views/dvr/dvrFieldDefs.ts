@@ -35,6 +35,8 @@ import EnumNameCell from '@/components/EnumNameCell.vue'
 import { getResolvedDeferredEnum } from '@/components/idnode-fields/deferredEnum'
 import { fmtDate, fmtGroupDate } from '@/utils/formatTime'
 import { t } from '@/composables/useI18n'
+import { useAccessStore } from '@/stores/access'
+import { makeKodiPlainFmt } from '@/views/epg/kodiText'
 
 /* ---- Shared enum descriptors ----
  *
@@ -344,10 +346,21 @@ export const DVR_FIELDS = {
   },
 } satisfies Record<string, FieldDefault>
 
+/* Cluster-header formatter for the title group. Same gate as the
+ * title cells (`useDvrListView` / UpcomingView): Kodi label codes
+ * are stripped only when the access flag asks for it. The store is
+ * read at render time, so no component setup is needed here. */
+const titleGroupFmt = makeKodiPlainFmt(() => !!useAccessStore().data?.label_formatting)
+
 /* ---- Group-by options for the four dvr_entry list views ----
  *
  * Shared by Upcoming / Finished / Failed / Removed. Per design
  * spec:
+ *   - Title — series grouping, Classic's groupRenderer on
+ *     `disp_title` (dvr.js:606-609, 796-799, 916-919). Classic
+ *     groups on the title without the copyright year; the Vue
+ *     title cell never appends the year, so the raw title is
+ *     already that key.
  *   - Channel — most natural grouping ("recordings for a single channel")
  *   - Config — group by DVR profile (multi-config installs)
  *   - Start date — by the SCHEDULED start date (not actual);
@@ -365,6 +378,11 @@ export const DVR_FIELDS = {
  * rule editors, not row lists; grouping isn't useful there).
  */
 export const DVR_GROUPABLE_FIELDS: GroupableFieldDef[] = [
+  {
+    field: 'disp_title',
+    label: t('Title'),
+    headerLabel: (row) => titleGroupFmt((row as { disp_title?: unknown }).disp_title),
+  },
   {
     field: 'channel',
     label: t('Channel'),
