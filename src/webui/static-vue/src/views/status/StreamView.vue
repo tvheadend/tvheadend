@@ -46,7 +46,7 @@ const fmtKbps = (v: unknown) => (typeof v === 'number' ? Math.round(v / 1024).to
 const fmtPids = (v: unknown) => {
   if (!Array.isArray(v) || v.length === 0) return ''
   const sorted = [...(v as number[])].sort((a, b) => a - b)
-  if (sorted[sorted.length - 1] === 65535) return 'all'
+  if (sorted[sorted.length - 1] === 65535) return t('all')
   /*
    * Use ", " (comma + space) so long PID lists have wrap points;
    * ExtJS's formatter uses "," with no space and relies on its

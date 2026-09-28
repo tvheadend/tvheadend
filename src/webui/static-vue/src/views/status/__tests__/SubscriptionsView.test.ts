@@ -8,13 +8,14 @@
  * handed to the grid.
  *
  * Coverage:
+ *   - The ID header and the "all" PID list reuse Classic msgids.
  *   - The Start column delegates to the shared fmtDate (custom
  *     date mask + phone smart-relative form), matching
  *     ConnectionsView's Started column.
  *   - The Id column keeps the ExtJS zero-padded uppercase hex look.
  */
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SubscriptionsView from '../SubscriptionsView.vue'
 import StatusGrid from '@/components/StatusGrid.vue'
@@ -32,6 +33,19 @@ function gridColumns(): ColumnDef[] {
   })
   return wrapper.findComponent(StatusGrid).props('columns') as ColumnDef[]
 }
+
+describe('SubscriptionsView — translations', () => {
+  afterEach(() => {
+    delete (globalThis as { tvh_locale?: unknown }).tvh_locale
+  })
+
+  it('reuses the Classic msgids for the ID header and the "all" PID list', () => {
+    ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { ID: 'Ident', all: 'vše' }
+    const cols = gridColumns()
+    expect(cols.find((c) => c.field === 'id')?.label).toBe('Ident')
+    expect(cols.find((c) => c.field === 'pids')?.format?.([0, 65535], {})).toBe('vše')
+  })
+})
 
 describe('SubscriptionsView — column formatting', () => {
   it('formats the Start column with the shared fmtDate helper', () => {

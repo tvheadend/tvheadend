@@ -52,8 +52,8 @@ const fmtExtraPorts = (v: unknown) => {
   /* ", " between port numbers and "; " between protocol groups so
    * the cell has wrap points when the list gets long; same reason
    * as fmtPids in Stream/Subscriptions. */
-  if (obj.tcp) parts.push(`TCP: ${obj.tcp.join(', ')}`)
-  if (obj.udp) parts.push(`UDP: ${obj.udp.join(', ')}`)
+  if (obj.tcp) parts.push(`${t('TCP')}: ${obj.tcp.join(', ')}`)
+  if (obj.udp) parts.push(`${t('UDP')}: ${obj.udp.join(', ')}`)
   return parts.join('; ')
 }
 

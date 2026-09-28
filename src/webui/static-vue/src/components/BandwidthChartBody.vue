@@ -75,10 +75,12 @@ const modeButtons: Array<{ value: Mode; label: string }> = [
   { value: 'aggregate', label: t('Aggregate') },
 ]
 
+/* Classic builds durations as value + ' ' + _('min'), so reuse its
+ * msgid. There is no Classic msgid for seconds. */
 const windowButtons: Array<{ value: WindowSec; label: string }> = [
   { value: 30, label: '30s' },
-  { value: 60, label: '1 min' },
-  { value: 300, label: '5 min' },
+  { value: 60, label: `1 ${t('min')}` },
+  { value: 300, label: `5 ${t('min')}` },
 ]
 
 const LegendDot: FunctionalComponent<{ color: string }> = (p) =>
