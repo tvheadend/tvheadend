@@ -63,6 +63,10 @@ const selected = ref<string | null>(null)
  * scannability: enabled state first (instant overview), title
  * (the user's mental anchor), uuid hidden by default.
  *
+ * `title` is not a prop of the `epggrab_mod` class, so the grid
+ * finds no caption for it. The label is Classic's column title
+ * (`epggrab.js:90`).
+ *
  * The server's grid endpoint emits `status` as a strtab string
  * (`'epggrabmodEnabled'` / `'epggrabmodNone'`); the column
  * derives a real boolean via `computeValue` so BooleanCell +
@@ -86,6 +90,7 @@ const cols: ColumnDef[] = [
   },
   {
     field: 'title',
+    label: t('EPG Grabber Name'),
     sortable: true,
     filterType: 'string',
     width: 280,
