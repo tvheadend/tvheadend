@@ -13,6 +13,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import ServiceStreamsDialog from '../ServiceStreamsDialog.vue'
 import { DIALOG_PASSTHROUGH_STUB } from './__helpers__/idnodeEditorTestUtils'
 
@@ -39,6 +40,7 @@ function makeDataTableStub() {
             :data-type="row.type"
             :data-detail="row.detail"
             :data-used="row.used"
+            :data-order="row.order"
           >{{ row.type }}</div>
         </div>
       </div>
@@ -135,6 +137,58 @@ describe('ServiceStreamsDialog', () => {
     expect(rows[2].attributes('data-used')).toBe('true')
     expect(rows[3].attributes('data-type')).toBe('AC3')
     expect(rows[3].attributes('data-used')).toBe('true')
+  })
+
+  it('numbers the used streams in their filtered order', async () => {
+    /* An esfilter can reorder: here the audio stream comes first
+     * after filtering, and the second audio stream is dropped. */
+    apiMock.mockResolvedValueOnce({
+      name: 'X',
+      streams: [
+        { pid: 256, type: 'PCR' },
+        { index: 1, pid: 512, type: 'H264' },
+        { index: 2, pid: 513, type: 'AC3', language: 'eng' },
+        { index: 3, pid: 514, type: 'MPEG2AUDIO', language: 'ger' },
+      ],
+      fstreams: [
+        { index: 2, pid: 513, type: 'AC3', language: 'eng' },
+        { index: 1, pid: 512, type: 'H264' },
+      ],
+    })
+    const wrapper = mountDialog()
+    await flushPromises()
+    const rows = wrapper.findAll('.dt-stub__row')
+    expect(rows.map((r) => r.attributes('data-order'))).toEqual([undefined, '2', '1', undefined])
+    expect(rows.map((r) => r.attributes('data-used'))).toEqual(['false', 'true', 'true', 'false'])
+  })
+
+  it('appends the CAIDs in use when esfilters dropped some', async () => {
+    const all = [
+      { caid: 0x0d00, provider: 0 },
+      { caid: 0x1802, provider: 0 },
+    ]
+    apiMock.mockResolvedValueOnce({
+      name: 'X',
+      streams: [{ index: 4, pid: 1000, type: 'CA', caids: all }],
+      fstreams: [{ index: 4, pid: 1000, type: 'CA', caids: [all[1]] }],
+    })
+    const wrapper = mountDialog()
+    await flushPromises()
+    expect(wrapper.find('.dt-stub__row').attributes('data-detail')).toBe(
+      '0x0d00 / 0x0, 0x1802 / 0x0 · Used: 0x1802 / 0x0',
+    )
+  })
+
+  it('shows the CAIDs once when all of them are in use', async () => {
+    const all = [{ caid: 0x0d00, provider: 0 }]
+    apiMock.mockResolvedValueOnce({
+      name: 'X',
+      streams: [{ index: 4, pid: 1000, type: 'CA', caids: all }],
+      fstreams: [{ index: 4, pid: 1000, type: 'CA', caids: all }],
+    })
+    const wrapper = mountDialog()
+    await flushPromises()
+    expect(wrapper.find('.dt-stub__row').attributes('data-detail')).toBe('0x0d00 / 0x0')
   })
 
   it('synthesises video Details as WxH + aspect ratio', async () => {
@@ -252,5 +306,41 @@ describe('ServiceStreamsDialog', () => {
     await wrapper.setProps({ uuid: 'b' })
     await flushPromises()
     expect(apiMock).toHaveBeenCalledWith('service/streams', { uuid: 'b' })
+  })
+})
+
+/* The real PrimeVue DataTable, so the cell text is what the user
+ * sees. */
+describe('ServiceStreamsDialog rendered tables', () => {
+  function mountReal() {
+    return mount(ServiceStreamsDialog, {
+      props: { uuid: 'svc-abc', visible: true },
+      global: {
+        plugins: [[PrimeVue, {}]],
+        stubs: { Dialog: DIALOG_PASSTHROUGH_STUB },
+      },
+    })
+  }
+
+  it('shows the filtered position in the Order column', async () => {
+    apiMock.mockResolvedValueOnce({
+      name: 'X',
+      streams: [
+        { index: 1, pid: 512, type: 'H264' },
+        { index: 2, pid: 513, type: 'AC3' },
+      ],
+      fstreams: [{ index: 2, pid: 513, type: 'AC3' }, { index: 1, pid: 512, type: 'H264' }],
+    })
+    const wrapper = mountReal()
+    await flushPromises()
+    const headers = wrapper.findAll('.service-streams-dialog__table thead th').map((th) => th.text())
+    expect(headers[headers.length - 1]).toBe('Order')
+    const lastCells = wrapper
+      .findAll('.service-streams-dialog__table tbody tr')
+      .map((tr) => {
+        const tds = tr.findAll('td')
+        return tds[tds.length - 1]?.text()
+      })
+    expect(lastCells).toEqual(['2', '1'])
   })
 })
