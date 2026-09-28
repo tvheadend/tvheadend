@@ -41,6 +41,10 @@
   --tvh-text-muted: #64748b;
   --tvh-success: #16a34a;
   --tvh-warning: #d97706;
+  /* Warning as text. --tvh-warning suits icons and fills (3.2:1 on
+   * white) but not words, which need 4.5:1, also on the 15-25 %
+   * warning tint of an alert chip. The dark themes alias it. */
+  --tvh-warning-text: #92400e;
   --tvh-error: #dc2626;
 
   /* Per-theme interaction intensities */
@@ -151,6 +155,7 @@
   --tvh-text-muted: #98a3b3;
   --tvh-success: #4ade80;
   --tvh-warning: #fbbf24;
+  --tvh-warning-text: var(--tvh-warning);
   --tvh-error: #f87171;
 
   /*
@@ -208,6 +213,7 @@
   --tvh-text-muted: #d0d0d0;
   --tvh-success: #4ade80;
   --tvh-warning: #fbbf24;
+  --tvh-warning-text: var(--tvh-warning);
   --tvh-error: #f87171;
 
   --tvh-hover-strength: 30%;

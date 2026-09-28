@@ -2235,7 +2235,7 @@ onBeforeUnmount(() => {
 }
 
 .ifld-row__counter--warn {
-  color: var(--tvh-warning, var(--tvh-error));
+  color: var(--tvh-warning-text);
 }
 
 @media (max-width: 767px) {

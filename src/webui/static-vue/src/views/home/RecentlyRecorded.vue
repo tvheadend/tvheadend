@@ -304,7 +304,7 @@ function removeEntry(entry: FinishedEntry): void {
   background: color-mix(in srgb, var(--tvh-warning) 15%, transparent);
   border: 1px solid color-mix(in srgb, var(--tvh-warning) 40%, transparent);
   border-radius: var(--tvh-radius-md);
-  color: var(--tvh-warning);
+  color: var(--tvh-warning-text);
   font: inherit;
   font-size: var(--tvh-text-sm);
   font-weight: 500;
