@@ -82,3 +82,15 @@ describe('formatMuxFrequency', () => {
     expect(formatMuxFrequency(null, { uuid: 'b' } as BaseRow)).toBe('')
   })
 })
+
+describe('DvbMuxesView Hide filter', () => {
+  it('labels the default by what it hides and marks None as hiding nothing', () => {
+    mount(DvbMuxesView)
+    const hide = stubs.gridFilter('hidemode')
+    expect(hide?.kind).toBe('select')
+    if (hide?.kind !== 'select') return
+    expect(hide.current).toBe('default')
+    expect(hide.options[0]).toEqual({ value: 'default', label: 'Disabled networks' })
+    expect(hide.inactiveValue).toBe('none')
+  })
+})

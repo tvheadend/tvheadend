@@ -268,6 +268,41 @@ describe('GridSettingsMenu', () => {
       expect(wrapper.emitted('setFilter')![0]).toEqual(['hidemode', 'none'])
     })
 
+    function filtersChip(wrapper: VueWrapper): string {
+      const section = wrapper
+        .findAll('.collapsible-section')
+        .find((el) => el.find('.collapsible-section__title').text() === 'Filters')
+      return section?.find('.collapsible-section__chip').text() ?? ''
+    }
+
+    it('summarises a default that hides nothing as None', async () => {
+      const wrapper = mountMenu({ filters: [hidemodeFilter] })
+      await openAndExpand(wrapper)
+      expect(filtersChip(wrapper)).toBe('None')
+    })
+
+    it('summarises a default that hides rows when inactiveValue is set', async () => {
+      const wrapper = mountMenu({
+        filters: [{ ...hidemodeFilter, inactiveValue: 'none' }],
+      })
+      await openAndExpand(wrapper)
+      expect(filtersChip(wrapper)).toBe('Hide: Parent disabled')
+    })
+
+    it('summarises None when the inactive option is picked', async () => {
+      const wrapper = mountMenu({
+        filters: [{ ...hidemodeFilter, current: 'none', inactiveValue: 'none' }],
+      })
+      await openAndExpand(wrapper)
+      expect(filtersChip(wrapper)).toBe('None')
+    })
+
+    it('names the filter in the summary of a non-default pick', async () => {
+      const wrapper = mountMenu({ filters: [{ ...hidemodeFilter, current: 'all' }] })
+      await openAndExpand(wrapper)
+      expect(filtersChip(wrapper)).toBe('Hide: All')
+    })
+
     it('renders multiple filters in order', async () => {
       const wrapper = mountMenu({
         filters: [

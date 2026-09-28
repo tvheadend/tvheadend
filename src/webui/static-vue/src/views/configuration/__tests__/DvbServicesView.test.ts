@@ -67,3 +67,15 @@ describe('DvbServicesView Map services action', () => {
     expect(captured.mapper.preselect).toEqual({ services: ['s1', 's2'] })
   })
 })
+
+describe('DvbServicesView Hide filter', () => {
+  it("labels the default Classic's way and marks None as hiding nothing", () => {
+    mount(DvbServicesView)
+    const hide = stubs.gridFilter('hidemode')
+    expect(hide?.kind).toBe('select')
+    if (hide?.kind !== 'select') return
+    expect(hide.current).toBe('default')
+    expect(hide.options[0]).toEqual({ value: 'default', label: 'Inactive services' })
+    expect(hide.inactiveValue).toBe('none')
+  })
+})

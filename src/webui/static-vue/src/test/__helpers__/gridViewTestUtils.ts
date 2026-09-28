@@ -25,6 +25,7 @@ import { enableAutoUnmount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import type { ActionDef } from '@/types/action'
 import type { ColumnDef } from '@/types/column'
+import type { GlobalFilterSpec } from '@/types/grid'
 
 export const captured = {
   /* The props the view handed to IdnodeGrid. */
@@ -122,6 +123,12 @@ export function gridColumns(): ColumnDef[] {
 
 export function gridColumn(field: string): ColumnDef | undefined {
   return gridColumns().find((c) => c.field === field)
+}
+
+/* A global filter the view handed to IdnodeGrid. */
+export function gridFilter(key: string): GlobalFilterSpec | undefined {
+  const filters = captured.gridProps?.filters as GlobalFilterSpec[] | undefined
+  return filters?.find((f) => f.key === key)
 }
 
 /* A toolbar action the view handed to ActionMenu. */
