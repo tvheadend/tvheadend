@@ -14,12 +14,15 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { defineComponent, h, markRaw, ref } from 'vue'
 import PrimeVue from 'primevue/config'
 import IdnodeGrid from '../IdnodeGrid.vue'
+import DataGrid from '../DataGrid.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow } from '@/types/grid'
 import type { UiLevel } from '@/types/access'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
+import { fmtPassword } from '@/utils/formatPassword'
 
 /* Mock the shared phone-breakpoint singleton with a test-driven
  * ref — happy-dom's matchMedia wiring can't be flipped reliably
@@ -138,8 +141,9 @@ vi.mock('@/api/client', () => ({
 }))
 
 const idnodeClassStub = {
-  /* By default, no metadata loaded — equivalent to "all columns basic". */
-  meta: null as null | {
+  /* By default, no metadata loaded — equivalent to "all columns basic".
+   * `undefined` is the store's "fetch still pending". */
+  meta: null as undefined | null | {
     props: {
       id: string
       caption?: string
@@ -1468,6 +1472,300 @@ describe('IdnodeGrid', () => {
     const cardHtml = wrapper.find('.idnode-grid__card').html()
     /* No caption for `title` in metadata → falls back to col.label. */
     expect(cardHtml).toContain('Title')
+  })
+
+  /*
+   * PO_PASSWORD props (e.g. passwd_entry's `password`) arrive in
+   * the grid response with the stored value. Two layers keep it
+   * out of the DOM:
+   *   - a view that knows the column holds a password sets
+   *     `format: fmtPassword` itself (ConfigUsersPasswordsView),
+   *     so it is masked from the first render, and
+   *   - decoratedColumns masks every prop the class metadata flags
+   *     `password`, ahead of any caller `format` / `cellComponent`.
+   * Rows are never held back for the metadata.
+   */
+  describe('password masking', () => {
+    const pwRows = (): MockRow[] => [
+      { uuid: 'a', title: 'Alpha', size: 1, password: 'hunter2', secret: 's3cret' },
+      { uuid: 'b', title: 'Beta', size: 2, password: '', secret: 's3cret' },
+    ]
+    /* The Passwords view's shape: `password` masked statically. */
+    const staticCols = (extra: ColumnDef[] = []): ColumnDef[] => [
+      { field: 'title', label: 'Title', minVisible: 'phone' },
+      { field: 'password', label: 'Password', format: fmtPassword },
+      ...extra,
+    ]
+    /* Renders its raw value, so a leak through cellComponent shows.
+     * markRaw, as a column's cellComponent is never made reactive. */
+    const RawCell = markRaw(
+      defineComponent({
+        props: { value: { type: null, default: undefined } },
+        setup(props) {
+          return () => h('span', { class: 'raw-cell' }, `raw:${String(props.value)}`)
+        },
+      })
+    )
+    type Wrapper = ReturnType<typeof mountGrid>
+    const cells = (wrapper: Wrapper, field: string) =>
+      wrapper.findAll(`tbody tr td[data-field="${field}"]`).map((td) => td.text())
+    const expectNoLeak = (wrapper: Wrapper) => {
+      expect(wrapper.html()).not.toContain('hunter2')
+      expect(wrapper.html()).not.toContain('s3cret')
+    }
+    const flush = async (wrapper: Wrapper) => {
+      await new Promise((r) => setTimeout(r, 0))
+      await wrapper.vm.$nextTick()
+    }
+
+    /* Hand-driven class-metadata fetch: `get` reads a ref so the
+     * grid's computeds see the metadata land, like the real store's
+     * reactive cache, and `ensure` stays pending until the test
+     * settles it. The afterEach below restores the stub defaults. */
+    function pendingMetadata() {
+      const meta = ref<typeof idnodeClassStub.meta>(undefined)
+      const settle = {
+        resolve: (() => {}) as (m: typeof idnodeClassStub.meta) => void,
+        reject: (() => {}) as (e: unknown) => void,
+      }
+      idnodeClassStub.get.mockImplementation(() => meta.value)
+      idnodeClassStub.ensure.mockImplementationOnce(
+        () =>
+          new Promise((resolve, reject) => {
+            settle.resolve = resolve
+            settle.reject = reject
+          })
+      )
+      return { meta, settle }
+    }
+
+    afterEach(() => {
+      idnodeClassStub.get.mockReset()
+      idnodeClassStub.ensure.mockReset()
+    })
+
+    it('masks password props in grid cells, blank when unset', () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'password', type: 'str', password: true },
+          { id: 'secret', type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: [
+          { field: 'title', label: 'Title', minVisible: 'phone' },
+          { field: 'password', label: 'Password' },
+          /* A caller format must not unmask the value. */
+          { field: 'secret', label: 'Secret', format: (v) => String(v) },
+        ],
+      })
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expect(cells(wrapper, 'secret')).toEqual(['********', '********'])
+      expectNoLeak(wrapper)
+    })
+
+    it('masks password props on phone cards', () => {
+      setViewport(400)
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'password', type: 'str', password: true },
+          { id: 'secret', type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      mockStore = makeStore({ entries: pwRows().slice(0, 1), total: 1, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: [
+          { field: 'title', label: 'Title', minVisible: 'phone' },
+          { field: 'password', label: 'Password', minVisible: 'phone' },
+          { field: 'secret', label: 'Secret', minVisible: 'phone', cellComponent: RawCell },
+        ],
+      })
+      const cardHtml = wrapper.find('.idnode-grid__card').html()
+      expect(cardHtml).toContain('********')
+      expect(wrapper.find('.raw-cell').exists()).toBe(false)
+      expectNoLeak(wrapper)
+    })
+
+    it('shows rows while the metadata is pending, the static mask holds', async () => {
+      pendingMetadata()
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, { columns: staticCols() })
+      await flush(wrapper)
+      /* Entries and total reach DataGrid unchanged. `loading`
+       * still follows the pending fetch, as on upstream. */
+      const grid = wrapper.findComponent(DataGrid)
+      expect(grid.props('entries')).toHaveLength(2)
+      expect(grid.props('total')).toBe(2)
+      expect(grid.props('loading')).toBe(true)
+      expect(cells(wrapper, 'title')).toEqual(['Alpha', 'Beta'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expectNoLeak(wrapper)
+    })
+
+    it('masks a password flag that appears when the metadata lands', async () => {
+      const { meta, settle } = pendingMetadata()
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: staticCols([{ field: 'secret', label: 'Secret' }]),
+      })
+      await flush(wrapper)
+      /* No view has such a column today: one that is not masked
+       * statically shows its value until the metadata flags it. */
+      expect(cells(wrapper, 'secret')).toEqual(['s3cret', 's3cret'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+
+      meta.value = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'password', type: 'str', password: true },
+          { id: 'secret', type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      settle.resolve(meta.value)
+      await flush(wrapper)
+      expect(wrapper.findComponent(DataGrid).props('loading')).toBe(false)
+      expect(cells(wrapper, 'secret')).toEqual(['********', '********'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expectNoLeak(wrapper)
+
+      /* Flag gone again: the static mask does not depend on it. */
+      meta.value = { props: [{ id: 'title' }, { id: 'password' }] as unknown as MetaProp[] }
+      await flush(wrapper)
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expect(wrapper.html()).not.toContain('hunter2')
+    })
+
+    it('keeps rows and the static mask when the metadata fetch fails', async () => {
+      /* The store's contract: a failed fetch resolves (and caches)
+       * null, see stores/idnodeClass.ts. */
+      const { meta, settle } = pendingMetadata()
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, { columns: staticCols() })
+      meta.value = null
+      settle.resolve(null)
+      await flush(wrapper)
+      const grid = wrapper.findComponent(DataGrid)
+      expect(grid.props('entries')).toHaveLength(2)
+      expect(grid.props('total')).toBe(2)
+      expect(grid.props('loading')).toBe(false)
+      expect(cells(wrapper, 'title')).toEqual(['Alpha', 'Beta'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expectNoLeak(wrapper)
+    })
+
+    it('keeps rows and the static mask when the metadata fetch rejects', async () => {
+      const { settle } = pendingMetadata()
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, { columns: staticCols() })
+      settle.reject(new Error('idnode/class failed'))
+      await flush(wrapper)
+      const grid = wrapper.findComponent(DataGrid)
+      expect(grid.props('entries')).toHaveLength(2)
+      expect(grid.props('total')).toBe(2)
+      expect(grid.props('loading')).toBe(false)
+      expect(cells(wrapper, 'title')).toEqual(['Alpha', 'Beta'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expectNoLeak(wrapper)
+    })
+
+    it('masks despite missing or malformed password metadata', () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          /* Flag missing: only the view's static mask covers it. */
+          { id: 'password', type: 'str' },
+          /* Truthy but not a boolean still counts. */
+          { id: 'secret', type: 'str', password: 1 },
+          /* No id: does not break the grid. */
+          { type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: staticCols([{ field: 'secret', label: 'Secret' }]),
+      })
+      expect(cells(wrapper, 'title')).toEqual(['Alpha', 'Beta'])
+      expect(cells(wrapper, 'password')).toEqual(['********', ''])
+      expect(cells(wrapper, 'secret')).toEqual(['********', '********'])
+      expectNoLeak(wrapper)
+    })
+
+    /* isInlineEditable only rejects flagged `str` props. A flagged
+     * prop of another type must not get an inline editor, which
+     * would show the stored value in edit mode. */
+    it('keeps a flagged non-str password prop out of inline editing', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'code', type: 'int', password: true },
+        ] as unknown as MetaProp[],
+      }
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+          { field: 'code', label: 'Code', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, code: 4711 }],
+        storeKey: 'edit-cell-password-int',
+      })
+      const td = (field: string) => wrapper.find(`tbody tr td[data-field="${field}"]`)
+      expect(td('title').attributes('data-editable')).toBe('')
+      expect(td('code').attributes('data-editable')).toBeUndefined()
+      expect(td('code').text()).toBe('********')
+      await td('code').trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('td[data-field="code"] input').exists()).toBe(false)
+      expect(wrapper.html()).not.toContain('4711')
+    })
+
+    it('masks a password column that has a cellComponent', () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'secret', type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: [
+          /* Control: the same component renders on a plain column. */
+          { field: 'title', label: 'Title', minVisible: 'phone', cellComponent: RawCell },
+          { field: 'secret', label: 'Secret', cellComponent: RawCell },
+        ],
+      })
+      expect(cells(wrapper, 'title')).toEqual(['raw:Alpha', 'raw:Beta'])
+      expect(cells(wrapper, 'secret')).toEqual(['********', '********'])
+      expect(wrapper.findAll('td[data-field="secret"] .raw-cell')).toHaveLength(0)
+      expectNoLeak(wrapper)
+    })
+
+    it('masks a password column that has format and cellComponent', () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' },
+          { id: 'secret', type: 'str', password: true },
+        ] as unknown as MetaProp[],
+      }
+      mockStore = makeStore({ entries: pwRows(), total: 2, isEmpty: false })
+      const wrapper = mountGrid({}, {
+        columns: [
+          { field: 'title', label: 'Title', minVisible: 'phone' },
+          {
+            field: 'secret',
+            label: 'Secret',
+            format: (v) => `fmt:${String(v)}`,
+            cellComponent: RawCell,
+          },
+        ],
+      })
+      expect(cells(wrapper, 'secret')).toEqual(['********', '********'])
+      expect(wrapper.find('.raw-cell').exists()).toBe(false)
+      expect(wrapper.html()).not.toContain('fmt:')
+      expectNoLeak(wrapper)
+    })
   })
 
   /*
