@@ -444,7 +444,11 @@ export function decideFilterDispatch(input: {
 
 export interface AutoRecConfInput {
   title: string
-  channelName: string
+  /* Uuid of the one channel the rule is bound to, or null. Resolved
+   * via `resolveAutoRecChannel`: never the free-text funnel text,
+   * which the server would try as an exact name and otherwise drop
+   * (`dvr_autorec.c` channel setter). */
+  channelUuid: string | null
   mode: TitleSearchMode
   newOnly: boolean
   /* Genre filter as an array of major-group codes. The
@@ -494,7 +498,7 @@ export function buildAutoRecConf(input: AutoRecConfInput): Record<string, unknow
       : input.commentSuffix,
   }
   if (input.title) conf.title = input.title
-  if (input.channelName) conf.channel = input.channelName
+  if (input.channelUuid !== null) conf.channel = input.channelUuid
   if (input.title && input.mode === 'fulltext') conf.fulltext = 1
   if (input.title && input.mode === 'mergetext') conf.mergetext = 1
   if (input.newOnly) conf.btype = 3 // DVR_AUTOREC_BTYPE_NEW
@@ -531,7 +535,7 @@ export function buildAutoRecConf(input: AutoRecConfInput): Record<string, unknow
  */
 export function hasAnyAutoRecFilter(input: AutoRecConfInput): boolean {
   if (input.title.length > 0) return true
-  if (input.channelName.length > 0) return true
+  if (input.channelUuid !== null) return true
   if (input.newOnly) return true
   /* Only a single-genre selection counts — multi-genre can't
    * be translated into the server's scalar `content_type`
@@ -542,4 +546,70 @@ export function hasAnyAutoRecFilter(input: AutoRecConfInput): boolean {
   if (input.durationMaxMinutes !== null) return true
   if (input.tagUuid !== null) return true
   return false
+}
+
+export interface AutoRecChannel {
+  /* Channel the rule will carry, or null for "any channel". */
+  uuid: string | null
+  /* What the confirmation shows on the Channel line. */
+  label: string
+  /* True when a channel filter is active but cannot be saved
+   * because the funnel text is not exactly one channel name. */
+  unsaved: boolean
+}
+
+/*
+ * Decide which channel an AutoRec rule created from the Table gets.
+ *
+ *   - An exact pick (hand-off uuid) rides as that uuid.
+ *   - Free text in the Channel funnel is a caseless, unanchored
+ *     regex in the Table ("CT 1" lists CT 1 HD too), but the rule
+ *     field holds one channel. Only text that is exactly the name
+ *     of one channel is translated, to that channel's uuid.
+ *   - Any other text is reported as unsaved and adds no channel.
+ *     The server would otherwise try it as a name, fail, clear the
+ *     channel and record on every channel.
+ */
+export function resolveAutoRecChannel(
+  perColumn: Pick<PerColumnFiltersInput, 'channel' | 'channelName'>,
+  channels: readonly { uuid: string; name?: string }[],
+  exactLabel: string,
+): AutoRecChannel {
+  if (perColumn.channel) {
+    return { uuid: perColumn.channel, label: exactLabel, unsaved: false }
+  }
+  const text = perColumn.channelName ?? ''
+  if (!text) return { uuid: null, label: '', unsaved: false }
+  const uuid = uniqueChannelUuidByName(channels, text)
+  return { uuid, label: text, unsaved: uuid === null }
+}
+
+/*
+ * Params for a count-only `epg/events/grid` query that matches what
+ * `buildAutoRecConf(input)` will save: title (with its scope), the
+ * rule's channel, New only, a single genre, duration and tag. No
+ * time window, because the rule has none. The Table's own total
+ * reflects the displayed query instead, which can differ in channel
+ * (regex vs exact) and time window.
+ */
+export function autoRecMatchCountParams(input: AutoRecConfInput): Record<string, unknown> {
+  const base = serverParamsFromFilters({
+    perColumn: input.channelUuid === null ? {} : { channel: input.channelUuid },
+    timeWindow: 'all',
+    genre: input.genre.length === 1 ? input.genre : [],
+    newOnly: input.newOnly,
+    durationMinMinutes: input.durationMinMinutes,
+    durationMaxMinutes: input.durationMaxMinutes,
+    tagFilter: { tag: input.tagUuid },
+    now: 0,
+    endOfToday: 0,
+  })
+  const out: Record<string, unknown> = { ...base.params, start: 0, limit: 0 }
+  if (input.title) {
+    out.title = input.title
+    if (input.mode === 'fulltext') out.fulltext = 1
+    else if (input.mode === 'mergetext') out.mergetext = 1
+  }
+  if (base.filter.length) out.filter = JSON.stringify(base.filter)
+  return out
 }

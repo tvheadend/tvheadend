@@ -94,8 +94,10 @@ import { useEpgGenreOptions } from '@/composables/useEpgGenreOptions'
 import { useEpgViewState, type EpgRow } from '@/composables/useEpgViewState'
 import type { TitleSearchMode } from './epgViewOptions'
 import {
+  autoRecMatchCountParams,
   buildAutoRecConf,
   hasAnyAutoRecFilter,
+  resolveAutoRecChannel,
   type AutoRecConfInput,
   buildClusterFetchFilter,
   buildTitleSearchQueryParams,
@@ -2042,9 +2044,9 @@ function onHelpClick() {
  * Mirrors Classic's top-toolbar `Create AutoRec` button at
  * `static/app/epg.js:1317-1322` + `createAutoRec()` at
  * `:1493-1546`. Click opens a confirmation summarising the
- * active filter state plus the predicted match count (the
- * server's current totalCount for that filter), then POSTs to
- * `dvr/autorec/create` with the filter-derived conf.
+ * active filter state plus the predicted match count (a count
+ * query shaped like the rule, see `autoRecMatchCountParams`),
+ * then POSTs to `dvr/autorec/create` with the filter-derived conf.
  *
  * Vue Table's filter surface is narrower than Classic's
  * (channelName + title — no genre / duration / fulltext /
@@ -2062,6 +2064,14 @@ const createAutoRecInflight = ref(false)
 
 const canCreateAutoRec = computed(() => !!access.data?.dvr)
 
+/* Channel the rule gets: an exact pick, or funnel text that is
+ * exactly one channel's name. Other funnel text is a regex the rule
+ * cannot hold — reported in the confirmation, left out of the rule
+ * and of the enable gate. */
+const autoRecChannel = computed(() =>
+  resolveAutoRecChannel(filters.value.perColumn, state.channels.value, exactChannelLabel.value),
+)
+
 /*
  * Single source of truth for the AutoRec rule's input state.
  * Both the disabled-gate computed below AND the click handler
@@ -2076,10 +2086,7 @@ function currentAutoRecInput(): AutoRecConfInput {
   const vo = state.viewOptions.value
   return {
     title: effectiveTitle.value,
-    /* The rule's `channel` takes a uuid or an exact name
-     * (`dvr_autorec.c` channel setter), so an exact pick rides as
-     * its uuid. */
-    channelName: filters.value.perColumn.channel ?? filters.value.perColumn.channelName ?? '',
+    channelUuid: autoRecChannel.value.uuid,
     mode: titleSearchMode.value,
     newOnly: vo.newOnly,
     genre: vo.genre,
@@ -2146,6 +2153,9 @@ function describeDuration(
 interface AutoRecSummaryInput {
   title: string
   channelName: string
+  /* True when the Channel funnel holds text that is not exactly
+   * one channel's name — the rule can't carry it. */
+  channelUnsaved: boolean
   mode: TitleSearchMode
   newOnly: boolean
   genreLabel: string | null
@@ -2163,7 +2173,9 @@ interface AutoRecSummaryInput {
    * into the saved rule. Surface the same kind of note the
    * multi-tag path uses. */
   genreMultiActive: boolean
-  matchCount: number
+  /* Events the rule's own query matches now, or null when the
+   * count request failed (the sentence is left out). */
+  matchCount: number | null
 }
 
 /* Confirmation-dialog body. Mirrors Classic's verbose copy at
@@ -2195,22 +2207,42 @@ function buildAutoRecSummary(input: AutoRecSummaryInput): string {
   else if (input.genreMultiActive) {
     genreLine = t("Active filter can't be saved (multi-genre rules not supported by server)")
   }
+  const channelLine = input.channelUnsaved
+    ? t("Active filter can't be saved (not an exact channel name)")
+    : input.channelName || dontCare
+  const countLine =
+    input.matchCount === null
+      ? ''
+      : t('Currently this will match (and record) {0} events.', input.matchCount) + ' '
   return (
     t(
       'This will create an automatic rule that continuously scans the EPG for programs to record that match this query:',
     ) +
     '\n\n' +
     `${t('Title')}: ${input.title || dontCare}${modeLabel}\n` +
-    `${t('Channel')}: ${input.channelName || dontCare}\n` +
+    `${t('Channel')}: ${channelLine}\n` +
     `${t('Content type')}: ${genreLine}\n` +
     `${t('Duration')}: ${describeDuration(input.durationMinMinutes, input.durationMaxMinutes)}\n` +
     `${t('New only')}: ${input.newOnly ? t('Yes') : t('No')}\n` +
     `${t('Channel tag')}: ${tagLine}\n` +
     '\n' +
-    t('Currently this will match (and record) {0} events.', input.matchCount) +
-    ' ' +
+    countLine +
     t('Are you sure?')
   )
+}
+
+/* Count what the rule will match with the rule's own query (exact
+ * channel, no time window). null when the request fails. */
+async function countAutoRecMatches(input: AutoRecConfInput): Promise<number | null> {
+  try {
+    const resp = await apiCall<GridResponse<EpgRow>>(
+      'epg/events/grid',
+      autoRecMatchCountParams(input),
+    )
+    return resp.totalCount ?? resp.total ?? null
+  } catch {
+    return null
+  }
 }
 
 async function onCreateAutoRecClick() {
@@ -2227,10 +2259,9 @@ async function onCreateAutoRecClick() {
    * when these axes are multi. */
   if (autoRecMultiAxisBlocked.value) return
 
-  const title = effectiveTitle.value
-  const channelName = filters.value.perColumn.channel ?? filters.value.perColumn.channelName ?? ''
-  const channelLabel = filters.value.perColumn.channel ? exactChannelLabel.value : channelName
-  const mode = titleSearchMode.value
+  /* One input feeds the count, the summary and the saved rule. */
+  const input = currentAutoRecInput()
+  const channel = autoRecChannel.value
   const vo = state.viewOptions.value
   /* Single-genre case carries a resolved label into the rule;
    * multi-genre is surfaced via `genreMultiActive` so the
@@ -2243,23 +2274,32 @@ async function onCreateAutoRecClick() {
   /* Tag is single-positive after the channelTag migration — when
    * set, look up the display name; when null the rule simply omits
    * the tag axis. No "multi-tag can't translate" path remains. */
-  const tagUuid = vo.tagFilter.tag
+  const tagUuid = input.tagUuid
   const tagName = tagUuid === null
     ? null
     : (state.tags.value.find((tag) => tag.uuid === tagUuid)?.name ?? tagUuid)
 
+  createAutoRecInflight.value = true
+  let matchCount: number | null
+  try {
+    matchCount = await countAutoRecMatches(input)
+  } finally {
+    createAutoRecInflight.value = false
+  }
+
   const summary = buildAutoRecSummary({
-    title,
-    channelName: channelLabel,
-    mode,
-    newOnly: vo.newOnly,
+    title: input.title,
+    channelName: channel.label,
+    channelUnsaved: channel.unsaved,
+    mode: input.mode,
+    newOnly: input.newOnly,
     genreLabel,
-    durationMinMinutes: vo.durationMinMinutes,
-    durationMaxMinutes: vo.durationMaxMinutes,
+    durationMinMinutes: input.durationMinMinutes,
+    durationMaxMinutes: input.durationMaxMinutes,
     tagName,
     tagMultiActive: false,
-    genreMultiActive: vo.genre.length >= 2,
-    matchCount: grandTotal.value,
+    genreMultiActive: input.genre.length >= 2,
+    matchCount,
   })
 
   /* Non-destructive confirm — no severity flag (the composable
@@ -2273,17 +2313,7 @@ async function onCreateAutoRecClick() {
 
   createAutoRecInflight.value = true
   try {
-    const conf = buildAutoRecConf({
-      title,
-      channelName,
-      mode,
-      newOnly: vo.newOnly,
-      genre: vo.genre,
-      durationMinMinutes: vo.durationMinMinutes,
-      durationMaxMinutes: vo.durationMaxMinutes,
-      tagUuid: vo.tagFilter.tag,
-      commentSuffix: t('Created from EPG query'),
-    })
+    const conf = buildAutoRecConf(input)
     await apiCall('dvr/autorec/create', { conf: JSON.stringify(conf) })
     toast.success(t('AutoRec rule created'))
   } catch (e) {
@@ -2549,9 +2579,13 @@ async function onCreateAutoRecClick() {
                 ? t(
                     'Create an automatic recording rule to record all future programs that match the current query.',
                   )
-                : t(
-                    'Set at least one filter (title, channel, genre, duration, tag, or “New only”) to create an AutoRec rule.',
-                  )
+                : autoRecChannel.unsaved
+                  ? t(
+                      'The Channel filter is not an exact channel name, so it can’t be saved as a rule. Enter the full channel name or set another filter to create an AutoRec rule.',
+                    )
+                  : t(
+                      'Set at least one filter (title, channel, genre, duration, tag, or “New only”) to create an AutoRec rule.',
+                    )
           "
           type="button"
           class="epg-table-grid__autorec"

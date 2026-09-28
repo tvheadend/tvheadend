@@ -20,7 +20,7 @@
  * so the tests drive the same paths the real grid does.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, defineComponent, type DirectiveBinding, h, ref } from 'vue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import type { ChannelRow, EpgRow } from '@/composables/useEpgViewState'
@@ -121,6 +121,13 @@ function makeFakeState(opts: { viewOptions?: Partial<EpgViewOptions> } = {}) {
   }
 }
 
+/* v-tooltip stub that keeps the tooltip text in data-tooltip, so
+ * tests can read what a hover would show. */
+function keepTooltip(el: HTMLElement, binding: DirectiveBinding<string>): void {
+  el.dataset.tooltip = binding.value ?? ''
+}
+const tooltipStub = { mounted: keepTooltip, updated: keepTooltip }
+
 /* DataGrid stub — renders the toolbar-right slot and the empty
  * slot, and keeps the props for assertions. */
 const DataGridStub = defineComponent({
@@ -156,7 +163,7 @@ function mountTable(query: Record<string, string> = {}): VueWrapper {
         EpgEventDrawer: true,
         LiveTvButton: true,
       },
-      directives: { tooltip: {} },
+      directives: { tooltip: tooltipStub },
     },
   })
 }
@@ -314,5 +321,113 @@ describe('TableView — title hand-off (?title=<title>)', () => {
     await flushPromises()
     const args = lastLoadPage()
     expect(args.extraParams?.channel).toBe('u-ct1')
+  })
+})
+
+describe('TableView — Create AutoRec channel and count', () => {
+  function autorecCreateConf(): Record<string, unknown> | undefined {
+    const call = mocks.apiCall.mock.calls.find((c) => c[0] === 'dvr/autorec/create')
+    return call ? (JSON.parse((call[1] as { conf: string }).conf) as Record<string, unknown>) : undefined
+  }
+
+  function lastCountCall(): Record<string, unknown> | undefined {
+    const calls = epgGridCalls().filter((p) => p.limit === 0)
+    return calls[calls.length - 1]
+  }
+
+  async function applyChannelFunnel(wrapper: VueWrapper, text: string, title?: string) {
+    const filters: Record<string, { value: string }> = { channelName: { value: text } }
+    if (title) filters.title = { value: title }
+    wrapper.findComponent(DataGridStub).vm.$emit('filter', { filters })
+    await flushPromises()
+  }
+
+  it('an exact channel name in the funnel becomes the rule channel (uuid)', async () => {
+    fakeState = makeFakeState({ viewOptions: { timeWindow: 'today' } })
+    mocks.apiCall.mockImplementation((path: string, params?: Record<string, unknown>) =>
+      Promise.resolve(
+        path === 'epg/events/grid' && params?.limit === 0
+          ? { entries: [], totalCount: 222 }
+          : { entries: [], totalCount: 0 },
+      ),
+    )
+    mocks.confirmAsk.mockResolvedValue(true)
+    const wrapper = mountTable()
+    await flushPromises()
+    await applyChannelFunnel(wrapper, 'CT 1')
+    await wrapper.find('.epg-table-grid__autorec').trigger('click')
+    await flushPromises()
+
+    /* Count query = the rule's query: exact channel, no time window. */
+    const count = lastCountCall()
+    expect(count?.channel).toBe('u-ct1')
+    expect(count?.filter).toBeUndefined()
+    const summary = mocks.confirmAsk.mock.calls[0][0] as string
+    expect(summary).toContain('Channel: CT 1')
+    expect(summary).toContain('222')
+    expect(autorecCreateConf()?.channel).toBe('u-ct1')
+  })
+
+  it('funnel text that is not one channel name is not saved and does not enable the button', async () => {
+    const wrapper = mountTable()
+    await flushPromises()
+    await applyChannelFunnel(wrapper, 'CT')
+    const button = wrapper.find('.epg-table-grid__autorec')
+    expect(button.attributes('disabled')).toBeDefined()
+  })
+
+  it('the disabled button says why a partial channel alone is not enough', async () => {
+    const wrapper = mountTable()
+    await flushPromises()
+    const button = wrapper.find('.epg-table-grid__autorec')
+    expect(button.attributes('data-tooltip')).toContain('Set at least one filter')
+    await applyChannelFunnel(wrapper, 'CT')
+    expect(button.attributes('disabled')).toBeDefined()
+    expect(button.attributes('data-tooltip')).toContain('not an exact channel name')
+    expect(button.attributes('data-tooltip')).not.toContain('Set at least one filter')
+  })
+
+  it('with a title, a partial channel is reported as unsaved and left out of the rule', async () => {
+    mocks.confirmAsk.mockResolvedValue(true)
+    const wrapper = mountTable()
+    await flushPromises()
+    await applyChannelFunnel(wrapper, 'CT', 'News')
+    await wrapper.find('.epg-table-grid__autorec').trigger('click')
+    await flushPromises()
+    const summary = mocks.confirmAsk.mock.calls[0][0] as string
+    expect(summary).toContain("Active filter can't be saved (not an exact channel name)")
+    const conf = autorecCreateConf()
+    expect(conf?.title).toBe('News')
+    expect(conf?.channel).toBeUndefined()
+    const count = lastCountCall()
+    expect(count?.title).toBe('News')
+    expect(count?.channel).toBeUndefined()
+  })
+
+  it('an exact pick from a hand-off rides into the rule as its uuid', async () => {
+    mocks.confirmAsk.mockResolvedValue(true)
+    const wrapper = mountTable({ channel: 'u-ct1hd' })
+    await flushPromises()
+    await wrapper.find('.epg-table-grid__autorec').trigger('click')
+    await flushPromises()
+    const summary = mocks.confirmAsk.mock.calls[0][0] as string
+    expect(summary).toContain('Channel: CT 1 HD')
+    expect(autorecCreateConf()?.channel).toBe('u-ct1hd')
+  })
+
+  it('leaves the count sentence out when the count request fails', async () => {
+    mocks.apiCall.mockImplementation((path: string, params?: Record<string, unknown>) =>
+      path === 'epg/events/grid' && params?.limit === 0
+        ? Promise.reject(new Error('boom'))
+        : Promise.resolve({ entries: [], totalCount: 0 }),
+    )
+    const wrapper = mountTable()
+    await flushPromises()
+    await applyChannelFunnel(wrapper, 'CT 1')
+    await wrapper.find('.epg-table-grid__autorec').trigger('click')
+    await flushPromises()
+    const summary = mocks.confirmAsk.mock.calls[0][0] as string
+    expect(summary).not.toContain('Currently this will match')
+    expect(summary).toContain('Are you sure?')
   })
 })
