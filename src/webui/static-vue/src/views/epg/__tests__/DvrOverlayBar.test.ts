@@ -13,9 +13,12 @@
  * break the visual differentiation contract.
  */
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import DvrOverlayBar from '../DvrOverlayBar.vue'
+import { clearLocale, switchLocale } from '@/test/__helpers__/switchLocale'
+
+afterEach(clearLocale)
 
 interface OverlayEntry {
   uuid: string
@@ -79,6 +82,28 @@ describe('DvrOverlayBar render state', () => {
      * the dimmed render. */
     const w = mountBar(buildEntry())
     expect(w.get('.epg-overlay-bar').classes()).not.toContain('epg-overlay-bar--disabled')
+  })
+
+  it('names the state in the tooltip instead of the raw token', () => {
+    expect(mountBar(buildEntry()).get('.epg-overlay-bar').attributes('title')).toBe(
+      'Scheduled for recording',
+    )
+    expect(
+      mountBar(buildEntry({ sched_status: 'recordingError' }))
+        .get('.epg-overlay-bar')
+        .attributes('title'),
+    ).toBe('Recording (errors)')
+    /* An unknown token still says something. */
+    expect(
+      mountBar(buildEntry({ sched_status: 'unknown' })).get('.epg-overlay-bar').attributes('title'),
+    ).toBe('unknown')
+  })
+
+  it('renames the state in the tooltip after a runtime language change', async () => {
+    const w = mountBar(buildEntry({ sched_status: 'recording' }))
+    expect(w.get('.epg-overlay-bar').attributes('title')).toBe('Recording')
+    await switchLocale({ Recording: 'Nahrávání' })
+    expect(w.get('.epg-overlay-bar').attributes('title')).toBe('Nahrávání')
   })
 
   it('disabled + error compose (both classes)', () => {

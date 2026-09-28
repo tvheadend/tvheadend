@@ -20,12 +20,15 @@
  *   - skipped rows (duplicate > 0) classify as dimmed via the
  *     grid's rowClass hook; normal rows don't,
  *   - the status column formats skipped rows as "Will be skipped".
+ *
+ * Also pins the leading recording-state icon column.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import UpcomingView from '../UpcomingView.vue'
+import DvrStateCell from '@/components/DvrStateCell.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
@@ -150,11 +153,46 @@ describe('UpcomingView — dedup-skipped entries', () => {
   it('formats the status column as "Will be skipped" for skipped rows', () => {
     mount(UpcomingView)
     const cols = gridProps.current?.columns as ColumnDef[]
-    const status = cols.find((c) => c.field === 'sched_status')!
+    /* `status` carries the server's localized text; `sched_status`
+     * is a raw token ("scheduled"), not display text. */
+    const status = cols.find((c) => c.field === 'status')!
     expect(status.format?.('Scheduled for recording', SKIPPED_ROW)).toBe('Will be skipped')
     expect(status.format?.('Scheduled for recording', NORMAL_ROW)).toBe(
       'Scheduled for recording',
     )
+  })
+
+  it('names a skipped rerun on the state icon too', () => {
+    mount(UpcomingView)
+    const cols = gridProps.current?.columns as ColumnDef[]
+    const state = cols.find((c) => c.field === 'sched_status')!
+    expect(state.format?.('scheduled', SKIPPED_ROW)).toBe('Will be skipped')
+    /* Empty → the cell falls through to the row's status text. */
+    expect(state.format?.('scheduled', NORMAL_ROW)).toBe('')
+  })
+})
+
+describe('UpcomingView — recording state', () => {
+  it('leads with the state icon column, shown although the server hides the property', () => {
+    mount(UpcomingView)
+    const cols = gridProps.current?.columns as ColumnDef[]
+    expect(cols[0].field).toBe('sched_status')
+    expect(cols[0].cellComponent).toBe(DvrStateCell)
+    /* sched_status is PO_HIDDEN server-side; IdnodeGrid honours
+     * that unless the column says otherwise. */
+    expect(cols[0].hiddenByDefault).toBe(false)
+    /* Raw tokens: no text filter, no sort. */
+    expect(cols[0].filterType).toBeUndefined()
+    expect(cols[0].sortable).toBe(false)
+  })
+
+  it('shows the localized status text as its own column', () => {
+    mount(UpcomingView)
+    const cols = gridProps.current?.columns as ColumnDef[]
+    const status = cols.find((c) => c.field === 'status')
+    expect(status).toBeDefined()
+    expect(status?.hiddenByDefault).not.toBe(true)
+    expect(cols.filter((c) => c.field === 'sched_status')).toHaveLength(1)
   })
 })
 

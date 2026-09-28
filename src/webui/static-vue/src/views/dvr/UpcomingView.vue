@@ -24,7 +24,13 @@
  *                    padded `start_real` / `stop_real` pair is
  *                    hidden by default, one start/stop pair is
  *                    enough on a list of scheduled entries.
- *   - `sched_status` "scheduled" / "recording" / etc. Plain string.
+ *   - `sched_status` state token ("scheduled", "recording",
+ *                    "recordingError", …, `dvr_db.c:704-735`), not
+ *                    display text. Drawn as the leading state icon
+ *                    (DvrStateCell).
+ *   - `status`       the server's localized text for the entry
+ *                    ("Waiting for stream", no free adapter, …).
+ *                    Its own column, and the state icon's label.
  *
  * Dedup-skipped reruns: hidden by default (`duplicates=0`, mirroring
  * the ExtJS grid at `dvr.js:508` — the server includes them unless
@@ -144,6 +150,13 @@ function rowClassFor(row: BaseRow): string | undefined {
   return isSkipped(row) ? 'upcoming__row--skipped' : undefined
 }
 
+/* A skipped rerun's server status still says "Scheduled for
+ * recording" — name it honestly (classic msgid, translations ride
+ * along) when the toggle reveals such rows. Empty for other rows. */
+function skippedLabel(row: BaseRow): string {
+  return isSkipped(row) ? t('Will be skipped') : ''
+}
+
 /*
  * Column set roughly matches the ExtJS Upcoming view's `list` (see
  * `src/webui/static/app/dvr.js` `tvheadend.dvr_upcoming`). Server
@@ -164,6 +177,10 @@ function rowClassFor(row: BaseRow): string | undefined {
  * pairs side by side. The column picker brings them back.
  */
 const cols: ColumnDef[] = [
+  /* Leading recording-state icon (see DVR_FIELDS.sched_status).
+   * `format` names a skipped rerun; other rows fall through to
+   * their `status` text as the icon's label. */
+  { field: 'sched_status', ...DVR_FIELDS.sched_status, format: (_v, row) => skippedLabel(row) },
   /* Basic */
   { field: 'enabled', ...DVR_FIELDS.enabled, editable: true },
   { field: 'disp_title', ...DVR_FIELDS.disp_title, format: kodiFmt, editable: true },
@@ -183,18 +200,13 @@ const cols: ColumnDef[] = [
   { field: 'start', ...DVR_FIELDS.start, phoneFullWidth: true },
   { field: 'stop', ...DVR_FIELDS.stop },
   { field: 'duration', ...DVR_FIELDS.duration },
-  /* `sched_status` stays desktop-only — it's server-flagged
-   * advanced and phone-mode pins the level to basic, so a
-   * phone-promotion would silently drop via the level filter
-   * anyway. Phone cards intentionally surface basic-level
-   * fields only. */
+  /* Localized status text. Says why an entry is not recording
+   * yet (waiting for stream, no free adapter, no access), which
+   * Classic's Upcoming grid leaves to the icon's details dialog. */
   {
-    field: 'sched_status',
-    ...DVR_FIELDS.sched_status,
-    /* A skipped rerun's server status still says "Scheduled for
-     * recording" — override with the honest label (classic msgid,
-     * translations ride along) when the toggle reveals such rows. */
-    format: (v, row) => (isSkipped(row) ? t('Will be skipped') : String(v ?? '')),
+    field: 'status',
+    ...DVR_FIELDS.status,
+    format: (v, row) => skippedLabel(row) || String(v ?? ''),
   },
   { field: 'comment', ...DVR_FIELDS.comment, editable: true },
 
