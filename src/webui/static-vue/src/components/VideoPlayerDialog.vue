@@ -17,6 +17,11 @@
  * store); if the chosen one cannot be decoded the element fires a
  * media error and the overlay below surfaces it.
  *
+ * An error before the first `progress` event means the stream never
+ * got going, and the player cannot tell whether the server did not
+ * start it or the browser cannot play it (see `sawProgress`). The
+ * overlay then names both and does not flag the profile.
+ *
  * Teardown: on close (and implicitly on every profile switch via
  * load()) the <video> is paused, its src cleared and load() called.
  * A live stream holds a server-side subscription open for as long as
@@ -30,6 +35,7 @@ import { TriangleAlert } from 'lucide-vue-next'
 import { useI18n } from '@/composables/useI18n'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
+import { useAccessStore } from '@/stores/access'
 import { channelStreamUrl } from '@/utils/playUrl'
 import { apiCall } from '@/api/client'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
@@ -38,6 +44,7 @@ import type { GridResponse, FilterDef } from '@/types/grid'
 const { t } = useI18n()
 const player = useVideoPlayer()
 const streamProfiles = useStreamProfilesStore()
+const access = useAccessStore()
 
 /* localStorage key for the last in-browser profile the user chose. */
 const LAST_PROFILE_KEY = 'tvh:browser-play-profile'
@@ -109,6 +116,36 @@ const playbackErrorDetail = ref('')
  * initial load uses the <video> element's own loading UI. */
 const switching = ref(false)
 const hasPlayed = ref(false)
+/* True when the error came before the first `progress` event. */
+const notStarted = ref(false)
+/* Whether the current load fired `progress`, reset on every load.
+ * The HTML spec fires it while media data is being fetched. An error
+ * before it means the stream never got going, for one of two reasons
+ * the player cannot tell apart:
+ *   - The server did not start the stream. tvheadend sends the status
+ *     line and headers only once the stream starts (SMT_START in
+ *     http_stream_run, src/webui/webui.c), and a subscription gets
+ *     SMT_START only once packets arrive (TSS_PACKETS in
+ *     src/subscriptions.c). When it cannot start one (no free tuner,
+ *     no access to an encrypted channel, no signal) it closes the
+ *     connection with zero bytes, or answers 503 when it could not
+ *     even subscribe. Chrome 154 and WebKit (a macOS WKWebView) both
+ *     fire no `progress` then and report code 4.
+ *   - The browser cannot play the stream with this profile. WebKit
+ *     rejects such a stream before any `progress` too (measured with
+ *     H.264 in Matroska and with raw MPEG-TS: code 4, empty message),
+ *     so in WebKit (Safari's engine) an unplayable profile lands here
+ *     and is not flagged.
+ * Chrome fires `progress` as soon as a 200 response arrives, even an
+ * empty one. A 200 from tvheadend means packets arrived, so a stream
+ * Chrome cannot decode fails after `progress` and the profile is
+ * flagged as before. Firefox was not measured. */
+let sawProgress = false
+
+/* Status → Log (an admin-only route, see router/index.ts) shows
+ * whether the server logged why it did not start the stream.
+ * Non-admin users get no link to a page they could not open. */
+const canOpenLog = computed(() => access.has('admin'))
 
 /* MediaError codes (HTMLMediaElement spec) → short phrases. */
 const MEDIA_ERROR_LABELS: Record<number, string> = {
@@ -141,6 +178,15 @@ const failedHere = computed(() =>
 )
 /* i18n: new string */
 const failedProfileText = computed(() => t('Failed to play this channel earlier this session'))
+/* i18n: new string */
+const notStartedText = computed(() =>
+  t(
+    'The stream did not start. Either the server could not start it (for example no free tuner, no access to an encrypted channel or no signal), or this browser cannot play it with profile "{0}".',
+    selectedProfile.value,
+  ),
+)
+/* i18n: new string */
+const logLinkText = computed(() => t('Open Status → Log to see whether the server logged a reason.'))
 
 function profileLabel(name: string): string {
   return profiles.value.find((p) => p.name === name)?.label ?? name
@@ -196,6 +242,8 @@ watch(
     if (open) {
       playbackError.value = false
       playbackErrorDetail.value = ''
+      notStarted.value = false
+      sawProgress = false
       switching.value = false
       hasPlayed.value = false
       void pickInitialProfile()
@@ -218,6 +266,8 @@ watch(
     if (!el || !player.isOpen.value || !videoSrc.value) return
     playbackError.value = false
     playbackErrorDetail.value = ''
+    notStarted.value = false
+    sawProgress = false
     /* Show the "switching" hint only for a genuine switch, not the
      * first load (the <video> shows its own loading UI). */
     switching.value = hasPlayed.value
@@ -231,6 +281,11 @@ watch(
 function onError(): void {
   switching.value = false
   playbackError.value = true
+  /* The stream never got going, see `sawProgress`. */
+  if (!sawProgress) {
+    notStarted.value = true
+    return
+  }
   const err = videoEl.value?.error
   if (err) {
     const label = MEDIA_ERROR_LABELS[err.code] ?? `error ${err.code}`
@@ -247,6 +302,12 @@ function onError(): void {
       )
     }
   }
+}
+
+/* Media data is arriving, so a later error is about the stream
+ * itself. */
+function onProgress(): void {
+  sawProgress = true
 }
 
 /* Stream is up — clear the transient "switching" hint, and drop any
@@ -353,10 +414,29 @@ function onPlaying(): void {
         autoplay
         playsinline
         @error="onError"
+        @progress="onProgress"
         @playing="onPlaying"
       />
       <div v-if="!hasChannel" class="video-player-dialog__overlay">
         <p>{{ t('Select a channel to watch.') }}</p>
+      </div>
+      <div v-else-if="notStarted" class="video-player-dialog__overlay">
+        <!-- No MediaError detail here: before the first progress
+             event it was code 4 ("format not supported") in every
+             measured case, in Chrome and WebKit alike, so it cannot
+             say which cause applies and would point at the profile.
+             Following the link navigates away, so it closes the
+             player too. -->
+        <p>{{ notStartedText }}</p>
+        <p v-if="canOpenLog">
+          <router-link
+            :to="{ name: 'status-log' }"
+            class="video-player-dialog__log-link"
+            @click="player.close()"
+          >
+            {{ logLinkText }}
+          </router-link>
+        </p>
       </div>
       <div v-else-if="playbackError" class="video-player-dialog__overlay">
         <p>
@@ -466,5 +546,12 @@ function onPlaying(): void {
 .video-player-dialog__error-detail {
   font-size: var(--tvh-text-sm);
   opacity: 0.75;
+}
+
+/* Link to Status → Log. The overlay is always dark, so it keeps the
+ * overlay's white text and marks itself with the underline. */
+.video-player-dialog__log-link {
+  color: inherit;
+  text-decoration: underline;
 }
 </style>
