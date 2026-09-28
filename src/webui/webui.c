@@ -286,10 +286,13 @@ page_static_file_maxage(http_connection_t *hc, const char *_remain,
       content = "text/html; charset=UTF-8";
     else if(!strcmp(postfix, "css"))
       content = "text/css; charset=UTF-8";
-    else if(!strcmp(postfix, "git"))
+    else if(!strcmp(postfix, "gif"))
       nogzip = 1;
-    else if(!strcmp(postfix, "jpg") || !strcmp(postfix, "png")) {
+    else if(!strcmp(postfix, "jpg") || !strcmp(postfix, "png") ||
+            !strcmp(postfix, "webp")) {
       nogzip = 1;
+      if(!strcmp(postfix, "webp"))
+        content = "image/webp";
       /* Increase amount of time in seconds that a client can cache
        * images since they rarely change. This avoids clients
        * requesting category icons frequently.
