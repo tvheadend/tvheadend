@@ -10,10 +10,10 @@
  * The three views differ only in which optional columns they
  * include:
  *
- *   Finished  → filesize, playcount, filename
- *   Failed    → filesize, playcount, filename, status
- *   Removed   → status   (no filesize / playcount / filename
- *                         because the file is gone)
+ *   Finished  → play, filesize, playcount, filename
+ *   Failed    → play, filesize, playcount, filename, status
+ *   Removed   → status   (no play / filesize / playcount /
+ *                         filename because the file is gone)
  *
  * The Basic / Advanced / Expert grouping (controlled server-side
  * via PO_ADVANCED / PO_EXPERT) and the per-field config
@@ -21,9 +21,14 @@
  * from the shared DVR_FIELDS map.
  */
 import type { ColumnDef } from '@/types/column'
+import PlayCell from '@/components/PlayCell.vue'
+import { t } from '@/composables/useI18n'
 import { DVR_FIELDS } from './dvrFieldDefs'
 
 export interface DvrEntryColumnsOpts {
+  /** Leading per-row Play icon (Classic's Play column on Finished
+   *  and Failed, `dvr.js:812-823, 932-944`). */
+  play?: boolean
   status?: boolean
   filesize?: boolean
   playcount?: boolean
@@ -39,6 +44,30 @@ export interface DvrEntryColumnsOpts {
   phoneFields?: string[]
 }
 
+/* Per-row Play icon. Synthetic column — matches Classic's
+ * leftmost Play column on DVR Finished and Failed. Disabled for
+ * rows with no on-disk file (rerecord / cleanup case, or a
+ * failed recording that never wrote anything). `hideHeaderLabel`
+ * keeps the header icon-only while the column picker / screen
+ * reader / hover tooltip see "Play". */
+export function dvrPlayColumn(): ColumnDef {
+  return {
+    field: '_play',
+    label: t('Play'),
+    hideHeaderLabel: true,
+    width: 40,
+    sortable: false,
+    cellComponent: PlayCell,
+    playPath: 'dvrfile',
+    playTitle: (r) => {
+      const title = String(r.disp_title ?? '')
+      const ep = String(r.episode_disp ?? '')
+      return ep ? `${title} / ${ep}` : title
+    },
+    playEnabled: (r) => typeof r.filesize === 'number' && r.filesize > 0,
+  }
+}
+
 export function dvrEntryColumns(
   kodiFmt: (v: unknown) => string,
   opts: DvrEntryColumnsOpts = {},
@@ -47,6 +76,7 @@ export function dvrEntryColumns(
    * when their flag is off. Keeps the array build linear so the
    * Basic / Advanced / Expert grouping reads top-to-bottom. */
   const cols: ColumnDef[] = [
+    ...(opts.play ? [dvrPlayColumn()] : []),
     /* Basic */
     { field: 'disp_title', ...DVR_FIELDS.disp_title, format: kodiFmt },
     { field: 'disp_extratext', ...DVR_FIELDS.disp_extratext, format: kodiFmt },

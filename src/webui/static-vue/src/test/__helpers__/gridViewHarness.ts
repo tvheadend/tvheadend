@@ -10,8 +10,8 @@
  * toolbar actions and opens IdnodeEditor from them, tested without
  * the real grid and drawer.
  *
- *   - The IdnodeGrid stub renders the toolbar slot with
- *     `harness.selection`.
+ *   - The IdnodeGrid stub records the props the view hands it and
+ *     renders the toolbar slot with `harness.selection`.
  *   - The ActionMenu stub records the actions built for it.
  *   - The IdnodeEditor stub records the rows it was opened for.
  *   - `apiMock` answers the API calls, `{}` unless a test says
@@ -34,6 +34,7 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import type { ActionDef } from '@/types/action'
 
 export const harness = {
+  gridProps: null as Record<string, unknown> | null,
   selection: [] as Array<Record<string, unknown>>,
   actions: [] as ActionDef[],
   editor: { uuid: null as unknown, uuids: null as unknown },
@@ -48,7 +49,8 @@ export const stubs = {
     default: defineComponent({
       name: 'IdnodeGrid',
       inheritAttrs: false,
-      setup(_, { slots }) {
+      setup(_, { attrs, slots }) {
+        harness.gridProps = attrs
         return () =>
           h(
             'div',
@@ -95,6 +97,7 @@ export function setupGridViewHarness(): void {
   enableAutoUnmount(afterEach)
   beforeEach(() => {
     setActivePinia(createPinia())
+    harness.gridProps = null
     harness.selection = []
     harness.actions = []
     harness.editor = { uuid: null, uuids: null }
