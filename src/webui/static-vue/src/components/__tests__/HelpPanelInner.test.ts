@@ -9,7 +9,9 @@
  *   - body content render (markdown / loading / error states)
  *   - close button, back button, breadcrumb links
  *   - in-panel link click interception (relative paths) + scheme
- *     passthrough (external + in-doc anchors + root-absolute)
+ *     passthrough (external + root-absolute)
+ *   - in-doc anchors (#section) scroll inside the body instead of
+ *     navigating against the <base> href
  *
  * Surface chrome (dock vs dialog) lives in the respective wrapper
  * (WizardHelpDock / HelpDialog) and is tested separately.
@@ -243,7 +245,7 @@ describe('HelpPanelInner — body click interception', () => {
     expect(navigateToMock).not.toHaveBeenCalled()
   })
 
-  it('does NOT intercept in-doc anchors (#section)', async () => {
+  it('does NOT route in-doc anchors (#section) as help pages', async () => {
     const wrapper = mountWithBody(
       '<p><a href="#section">Jump</a></p><h2 id="section">x</h2>',
     )
@@ -279,6 +281,79 @@ describe('HelpPanelInner — body click interception', () => {
     const strong = wrapper.find('.help-panel__markdown strong')
     await strong.trigger('click')
     expect(navigateToMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('HelpPanelInner — in-doc anchors', () => {
+  /* index.html carries <base href="/gui/static/">, so a native
+   * `#section` navigation would leave the app. The body handler
+   * must cancel it and scroll to the target element itself. */
+  let scrolled: Element[] = []
+
+  beforeEach(() => {
+    scrolled = []
+    vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      scrolled.push(this)
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  /* A real cancelable event, so the test can read defaultPrevented. */
+  function clickAnchor(el: Element): MouseEvent {
+    const ev = new MouseEvent('click', { bubbles: true, cancelable: true })
+    el.dispatchEvent(ev)
+    return ev
+  }
+
+  it('scrolls to the element with the matching id and cancels the navigation', async () => {
+    const wrapper = mountWithBody(
+      '<p><a href="#items">Items</a></p>' +
+        '<h2 id="overview">Overview</h2><h3 id="items">Items</h3>',
+    )
+    await nextTick()
+    const ev = clickAnchor(wrapper.find('.help-panel__markdown a').element)
+    expect(ev.defaultPrevented).toBe(true)
+    expect(scrolled).toEqual([wrapper.find('#items').element])
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('cancels the navigation when no element matches the anchor', async () => {
+    const wrapper = mountWithBody(
+      '<p><a href="#missing">Gone</a></p><h2 id="items">Items</h2>',
+    )
+    await nextTick()
+    const ev = clickAnchor(wrapper.find('.help-panel__markdown a').element)
+    expect(ev.defaultPrevented).toBe(true)
+    expect(scrolled).toEqual([])
+    expect(navigateToMock).not.toHaveBeenCalled()
+  })
+
+  it('looks the id up inside the body, not in the whole document', async () => {
+    const outside = document.createElement('div')
+    outside.id = 'overview'
+    document.body.prepend(outside)
+    try {
+      const wrapper = mountWithBody(
+        '<p><a href="#overview">Overview</a></p><h2 id="overview">Overview</h2>',
+      )
+      await nextTick()
+      clickAnchor(wrapper.find('.help-panel__markdown a').element)
+      expect(scrolled).toEqual([wrapper.find('.help-panel__markdown h2').element])
+    } finally {
+      outside.remove()
+    }
+  })
+
+  it('leaves relative page links to in-panel navigation', async () => {
+    const wrapper = mountWithBody('<p><a href="class/passwd">Passwords</a></p>')
+    await nextTick()
+    const ev = clickAnchor(wrapper.find('.help-panel__markdown a').element)
+    expect(ev.defaultPrevented).toBe(true)
+    expect(scrolled).toEqual([])
+    expect(navigateToMock).toHaveBeenCalledWith('class/passwd', 'Passwords')
   })
 })
 
