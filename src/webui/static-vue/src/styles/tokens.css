@@ -51,6 +51,11 @@
   --tvh-topbar-height: 48px;
   --tvh-rail-width: 272px;
   --tvh-nav-item-height: 36px;
+  /* Grid body row height (DataGrid). Keep it equal to the
+   * `itemSize` every grid passes to its virtual scroller. The
+   * Access theme keeps its taller 45 px rows, which its virtual
+   * scrollers still count as 36, as before this token. */
+  --tvh-row-height: 36px;
 
   /* Radii */
   --tvh-radius-sm: 4px;
@@ -198,6 +203,9 @@
   /* Scales text 1.5× on desktop (see phone override at the bottom
    * of this file). One knob covers every text token. */
   --tvh-text-scale: 1.5;
+  /* The 1.5× text line needs a taller row, as it had before the
+   * token: 28 px of text plus the usual 8 px above and below. */
+  --tvh-row-height: 45px;
 
   --tvh-primary: #4d9aff;
   --tvh-bg-page: #000000;

@@ -1179,6 +1179,15 @@ function labelFor(col: ColumnDef): string {
   return col.label ?? col.field
 }
 
+/* The visible header title. Titles may wrap onto a second line
+ * (`.p-datatable-column-title` in primevue.css), and a lone "#" on
+ * the first line of "# Services" says nothing, so a leading
+ * one-character word is tied to the next word with a no-break
+ * space. The tooltip and the column menus keep the plain label. */
+function headerTitleFor(col: ColumnDef): string {
+  return labelFor(col).replace(/^(\S) (?=\S)/, '$1 ')
+}
+
 /* Resolves the column-header hover tooltip text. Prefers the
  * caller-supplied `resolveDescription` result (which IdnodeGrid
  * wires to the idnode-class metadata's `prop.description`),
@@ -1186,10 +1195,14 @@ function labelFor(col: ColumnDef): string {
  * available — the `<th>` always gets a `title=` so it stays
  * accessible to screen readers and remains useful when the
  * label is truncated by the `.p-datatable-column-title` shrink
- * rule. */
+ * rule. With a description the label leads ("Enabled: Enable/
+ * Disable service."), because a clipped header is exactly when
+ * the user needs the full name as well as the explanation. */
 function tooltipFor(col: ColumnDef): string {
-  const desc = props.resolveDescription?.(col)
-  return desc && desc.length > 0 ? desc : labelFor(col)
+  const label = labelFor(col)
+  const desc = props.resolveDescription?.(col)?.trim()
+  if (!desc || desc === label) return label
+  return label ? `${label}: ${desc}` : desc
 }
 
 /* Per-column sort state read from the controlled props. The
@@ -2178,7 +2191,7 @@ defineExpose({
           v-for="col in visibleColumns"
           :key="col.field"
           :field="col.field"
-          :header="col.hideHeaderLabel ? '' : labelFor(col)"
+          :header="col.hideHeaderLabel ? '' : headerTitleFor(col)"
           :sortable="(col.sortable ?? false) && !(sortLockedByGroup && groupField)"
           :filter="!!col.filterType"
           :show-filter-match-modes="false"
@@ -2331,6 +2344,18 @@ defineExpose({
 
 .data-grid__table :deep(.p-datatable-tbody td) {
   text-overflow: ellipsis;
+}
+
+/* One row rhythm for every grid. The padding used to set the row
+ * height, so a cell with a 28 px Play or Info button made a 45 px
+ * row next to 36 px text rows, and those grids no longer matched
+ * the `itemSize: 36` their virtual scroller assumes. The cell now
+ * takes its height from the token and centres its content (table
+ * cells default to `vertical-align: middle`). Anything taller than
+ * the token still grows the row. */
+.data-grid__table :deep(.p-datatable-tbody > tr > td) {
+  height: var(--tvh-row-height);
+  padding-block: 0;
 }
 
 /* Reset the move-cursor PrimeVue paints on every column header
