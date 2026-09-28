@@ -5,13 +5,16 @@
  * WizardStepChannels component test. Pins:
  *   - One-shot apiCall to wizard/channels/load on mount; icon
  *     + description extracted + rendered.
- *   - Finish click POSTs channels/save (triggers C-side
- *     channels_changed → default-admin-entry removal at
- *     src/wizard.c:1157-1174) THEN wizard/cancel, then routes
- *     to /gui/ (epg).
- *   - Save and Cancel POSTs run sequentially, in that order.
+ *   - Finish click calls wizard/cancel THEN POSTs channels/save
+ *     (triggers C-side channels_changed → default-admin-entry
+ *     removal, src/wizard.c), then routes to /gui/ (epg). Classic
+ *     sends the cancel first too (static/app/wizard.js presave).
+ *   - Cancel and Save POSTs run sequentially, in that order, and
+ *     the save still runs when the cancel fails.
  *   - Finish navigates even when one of the POSTs throws (user
- *     explicitly chose to finish — we don't trap them).
+ *     explicitly chose to finish — we don't trap them). A save
+ *     that fails after a successful cancel starts the wizard
+ *     again, and only a successful save flags the greeting.
  *   - Footer shape: isFinal=true → Save button labelled
  *     "Finish"; previous goes to mapping; no Skip.
  *   - Saving state passed to the footer while the finish flow
@@ -39,9 +42,11 @@ vi.mock('@/utils/markdown', () => ({
 }))
 
 const cancelMock = vi.fn().mockResolvedValue(undefined)
+const startMock = vi.fn().mockResolvedValue(undefined)
 vi.mock('@/stores/wizard', () => ({
   useWizardStore: () => ({
     cancel: cancelMock,
+    start: startMock,
   }),
 }))
 
@@ -127,6 +132,8 @@ beforeEach(() => {
   })
   cancelMock.mockClear()
   cancelMock.mockResolvedValue(undefined)
+  startMock.mockClear()
+  startMock.mockResolvedValue(undefined)
   markSetupCompleteMock.mockClear()
   assignSpy = vi.spyOn(globalThis.location, 'assign').mockImplementation(() => {})
 })
@@ -184,7 +191,7 @@ describe('WizardStepChannels — footer shape', () => {
 })
 
 describe('WizardStepChannels — Finish flow', () => {
-  it('POSTs channels/save then calls wizard.cancel(), then reloads at /gui/', async () => {
+  it('calls wizard.cancel(), then POSTs channels/save, then reloads at /gui/', async () => {
     /* Reset apiCallMock with a fresh sequential pattern: first
      * call is the on-mount load, then we expect save next. */
     const wrapper = mountChannels()
@@ -218,7 +225,10 @@ describe('WizardStepChannels — Finish flow', () => {
     expect(assignSpy).toHaveBeenCalledWith('/gui/')
   })
 
-  it('runs save before cancel (sequential, not parallel)', async () => {
+  it('runs cancel before save (sequential, not parallel)', async () => {
+    /* The save removes the default wide-open access entry once a
+     * wizard admin exists, and wizard/cancel needs admin rights,
+     * so a cancel sent after the save could be refused. */
     const wrapper = mountChannels()
     await flushPromises()
     apiCallMock.mockClear()
@@ -237,8 +247,8 @@ describe('WizardStepChannels — Finish flow', () => {
     await wrapper.find('.wf-save').trigger('click')
     await flushPromises()
 
-    expect(saveOrder).toBe(1)
-    expect(cancelOrder).toBe(2)
+    expect(cancelOrder).toBe(1)
+    expect(saveOrder).toBe(2)
   })
 
   it('reloads even when save throws', async () => {
@@ -257,7 +267,44 @@ describe('WizardStepChannels — Finish flow', () => {
     warnSpy.mockRestore()
   })
 
-  it('reloads even when cancel throws', async () => {
+  it('starts the wizard again when the save fails after the cancel', async () => {
+    /* Without the save the wide-open default entry stays, so the
+     * wizard must not stay off. */
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountChannels()
+    await flushPromises()
+    apiCallMock.mockClear()
+    apiCallMock.mockRejectedValue(new Error('save failed'))
+
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+
+    expect(cancelMock).toHaveBeenCalledTimes(1)
+    expect(startMock).toHaveBeenCalledTimes(1)
+    expect(markSetupCompleteMock).not.toHaveBeenCalled()
+    expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    warnSpy.mockRestore()
+  })
+
+  it('does not start the wizard when the cancel failed too', async () => {
+    /* A failed cancel leaves the wizard active on the server. */
+    cancelMock.mockRejectedValueOnce(new Error('cancel failed'))
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountChannels()
+    await flushPromises()
+    apiCallMock.mockClear()
+    apiCallMock.mockRejectedValue(new Error('save failed'))
+
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+
+    expect(startMock).not.toHaveBeenCalled()
+    expect(markSetupCompleteMock).not.toHaveBeenCalled()
+    expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    warnSpy.mockRestore()
+  })
+
+  it('still saves and reloads when cancel throws', async () => {
     cancelMock.mockRejectedValueOnce(new Error('cancel failed'))
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const wrapper = mountChannels()
@@ -267,6 +314,9 @@ describe('WizardStepChannels — Finish flow', () => {
     await wrapper.find('.wf-save').trigger('click')
     await flushPromises()
 
+    /* The save is what removes the wide-open default entry, so a
+     * failed cancel must not skip it. */
+    expect(apiCallMock).toHaveBeenCalledWith('wizard/channels/save', { node: '{}' })
     expect(assignSpy).toHaveBeenCalledWith('/gui/')
     warnSpy.mockRestore()
   })
