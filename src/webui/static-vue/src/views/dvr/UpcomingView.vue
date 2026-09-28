@@ -16,10 +16,14 @@
  *                    `title` field carries).
  *   - `channelname`  flat string. `channel` is a UUID reference.
  *   - `start`/`stop` Unix epoch seconds — formatted client-side.
- *                    (ExtJS sorts on `start_real`, which differs from
- *                    `start` by `start_extra` padding; the plain
+ *                    The grid sorts on `start`. (ExtJS shows and
+ *                    sorts on `start_real`, which differs from
+ *                    `start` by the `start_extra` padding; the plain
  *                    start time is close enough for sorting purposes
- *                    and is what the grid endpoint returns directly.)
+ *                    and it is the column the user can see.) The
+ *                    padded `start_real` / `stop_real` pair is
+ *                    hidden by default, one start/stop pair is
+ *                    enough on a list of scheduled entries.
  *   - `sched_status` "scheduled" / "recording" / etc. Plain string.
  *
  * Dedup-skipped reruns: hidden by default (`duplicates=0`, mirroring
@@ -153,7 +157,10 @@ function rowClassFor(row: BaseRow): string | undefined {
  * `minVisible: 'desktop'` default here — these fields are
  * diagnostic-only on Upcoming since the recording hasn't
  * happened yet. They're more meaningful on Finished, where
- * they reflect the actual recording extents.
+ * they reflect the actual recording extents. start_real and
+ * stop_real are also hidden by default (the server does not
+ * flag them hidden), so the grid does not show two start/stop
+ * pairs side by side. The column picker brings them back.
  */
 const cols: ColumnDef[] = [
   /* Basic */
@@ -192,8 +199,8 @@ const cols: ColumnDef[] = [
 
   /* Advanced — server's PO_ADVANCED flag will gate visibility on basic users */
   { field: 'pri', ...DVR_FIELDS.pri, editable: true },
-  { field: 'start_real', ...DVR_FIELDS.start_real, minVisible: 'desktop' },
-  { field: 'stop_real', ...DVR_FIELDS.stop_real, minVisible: 'desktop' },
+  { field: 'start_real', ...DVR_FIELDS.start_real, minVisible: 'desktop', hiddenByDefault: true },
+  { field: 'stop_real', ...DVR_FIELDS.stop_real, minVisible: 'desktop', hiddenByDefault: true },
   { field: 'filesize', ...DVR_FIELDS.filesize, minVisible: 'desktop' },
   /* `config_name` (DVR Profile) is server-side writable for
    * editable entries (`dvr_entry_class_config_name_opts` —
@@ -529,7 +536,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     store-key="dvr-upcoming"
     :filters="gridFilters"
     :row-class="rowClassFor"
-    :default-sort="{ key: 'start_real', dir: 'ASC' }"
+    :default-sort="{ key: 'start', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
     count-label="recordings"
     :groupable-fields="DVR_GROUPABLE_FIELDS"
