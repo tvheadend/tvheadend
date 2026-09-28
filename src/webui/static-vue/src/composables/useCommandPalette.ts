@@ -18,7 +18,7 @@
  * palette.
  */
 import { ref } from 'vue'
-import { readStoredJson, writeStoredJson } from '@/utils/storage'
+import { readStoredJson, removeStoredKey, writeStoredJson } from '@/utils/storage'
 
 const MRU_STORAGE_KEY = 'tvh:command-palette:mru'
 const MRU_LIMIT = 20
@@ -73,8 +73,10 @@ function open(): void {
 function markPaletteSeen(): void {
   if (seenPalette.value) return
   seenPalette.value = true
-  if (globalThis.localStorage === undefined) return
+  /* The undefined check sits inside the try: a browser that blocks
+   * site data throws from the localStorage getter itself. */
   try {
+    if (globalThis.localStorage === undefined) return
     globalThis.localStorage.setItem(SEEN_STORAGE_KEY, '1')
   } catch {
     /* Silent — same rationale as saveMru above. */
@@ -82,8 +84,8 @@ function markPaletteSeen(): void {
 }
 
 function loadSeenPalette(): boolean {
-  if (globalThis.localStorage === undefined) return false
   try {
+    if (globalThis.localStorage === undefined) return false
     return globalThis.localStorage.getItem(SEEN_STORAGE_KEY) === '1'
   } catch {
     return false
@@ -134,10 +136,8 @@ export function __resetCommandPaletteForTests(): void {
   query.value = ''
   mru.value = []
   seenPalette.value = false
-  if (globalThis.localStorage !== undefined) {
-    globalThis.localStorage.removeItem(MRU_STORAGE_KEY)
-    globalThis.localStorage.removeItem(SEEN_STORAGE_KEY)
-  }
+  removeStoredKey(MRU_STORAGE_KEY)
+  removeStoredKey(SEEN_STORAGE_KEY)
 }
 
 export function useCommandPalette() {

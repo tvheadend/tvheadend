@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Tvheadend contributors
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   __resetCommandPaletteForTests,
   useCommandPalette,
@@ -168,6 +168,43 @@ describe('useCommandPalette', () => {
       expect(seenPalette.value).toBe(true)
       open()
       expect(seenPalette.value).toBe(true)
+    })
+  })
+
+  describe('blocked browser storage', () => {
+    /* A browser that blocks site data for the server throws a
+     * SecurityError from the localStorage getter itself, so even a
+     * `=== undefined` check has to sit inside a try. This module
+     * reads storage at load time, during the app bootstrap, and a
+     * throw there left the whole UI blank. */
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
+
+    beforeEach(() => {
+      Object.defineProperty(globalThis, 'localStorage', {
+        configurable: true,
+        get() {
+          throw new DOMException('The operation is insecure.', 'SecurityError')
+        },
+      })
+      vi.resetModules()
+    })
+
+    afterEach(() => {
+      if (original) Object.defineProperty(globalThis, 'localStorage', original)
+      vi.resetModules()
+    })
+
+    it('loads, opens and records commands without throwing', async () => {
+      const mod = await import('../useCommandPalette')
+      const palette = mod.useCommandPalette()
+      expect(palette.seenPalette.value).toBe(false)
+      expect(palette.mru.value).toEqual([])
+      palette.open()
+      expect(palette.isOpen.value).toBe(true)
+      expect(palette.seenPalette.value).toBe(true)
+      palette.recordExecution('nav-epg')
+      expect(palette.mruRank('nav-epg')).toBe(0)
+      expect(() => mod.__resetCommandPaletteForTests()).not.toThrow()
     })
   })
 })
