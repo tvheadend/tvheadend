@@ -8,7 +8,8 @@
  *
  * Adds the Status-specific seams that DataGrid stays agnostic of:
  *   - useStatusStore wiring (single fetch on mount + Comet-driven
- *     re-fetch via `notificationClass`); no pagination. The data
+ *     re-fetch via `notificationClass`, listened to only while the
+ *     grid is mounted); no pagination. The data
  *     is fully client-held, so the table runs non-lazy
  *     (`:lazy="false"`) and PrimeVue sorts rows client-side on
  *     column-header clicks (the store does no sorting).
@@ -23,7 +24,7 @@
  *     dropdowns are NOT surfaced (Status rows have no PO_*
  *     metadata and no filters in scope).
  */
-import { computed, onMounted, ref, useSlots } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, useSlots } from 'vue'
 import { HelpCircle } from 'lucide-vue-next'
 import DataGrid from './DataGrid.vue'
 import GridSettingsMenu from './GridSettingsMenu.vue'
@@ -152,8 +153,17 @@ function toggleSelect(row: Row) {
 /* Phone-mode flag for the desktop-only selection-strip — shared
  * singleton, same breakpoint as DataGrid. */
 const isPhone = useIsPhone()
+/* Hold the store's Comet listener only while mounted. The store
+ * is shared and outlives the view, so without the release every
+ * notification kept refetching from any page. */
+let releaseStore: (() => void) | undefined
 onMounted(() => {
+  releaseStore = store.retain()
   store.fetch()
+})
+onBeforeUnmount(() => {
+  releaseStore?.()
+  releaseStore = undefined
 })
 
 /* GridSettingsMenu inputs. Status has no view-levels and no

@@ -30,10 +30,13 @@ vi.mock('@/stores/access', () => ({
 /* Controllable status/inputs entries — one row per tuner input;
  * `subs` is its subscription count (0 = an idle placeholder row). */
 const statusEntries: Array<{ uuid: string; subs: number }> = []
+const releaseInputs = vi.fn()
+const retainInputs = vi.fn(() => releaseInputs)
 vi.mock('@/stores/status', () => ({
   useStatusStore: () => ({
     entries: statusEntries,
     fetch: vi.fn(() => Promise.resolve()),
+    retain: retainInputs,
   }),
 }))
 
@@ -45,6 +48,8 @@ beforeEach(() => {
   accessData.totaldiskspace = undefined
   statusEntries.length = 0
   mockIsAdmin = false
+  retainInputs.mockClear()
+  releaseInputs.mockClear()
 })
 
 /* Stub vue-router so <router-link> mounts without a real
@@ -115,6 +120,18 @@ describe('HealthLine', () => {
     statusEntries.push({ uuid: 'tuner-a', subs: 1 })
     const w = mount(HealthLine, globalMountOpts)
     expect(w.find('.health-line__streams').text()).toBe('1 active subscription')
+  })
+
+  it('listens to input_status only while mounted, and only for admins', () => {
+    mockIsAdmin = true
+    const w = mount(HealthLine, globalMountOpts)
+    expect(retainInputs).toHaveBeenCalledTimes(1)
+    w.unmount()
+    expect(releaseInputs).toHaveBeenCalledTimes(1)
+
+    mockIsAdmin = false
+    mount(HealthLine, globalMountOpts).unmount()
+    expect(retainInputs).toHaveBeenCalledTimes(1)
   })
 
   it('reads "Idle" when only idle tuners are present', () => {

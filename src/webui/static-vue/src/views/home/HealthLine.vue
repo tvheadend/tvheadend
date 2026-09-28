@@ -16,7 +16,7 @@
  * kept live via input_status — so this ticks without a manual
  * refresh.
  */
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { CircleCheck, RadioTower, TriangleAlert } from 'lucide-vue-next'
 import { useI18n } from '@/composables/useI18n'
 import { useAccessStore } from '@/stores/access'
@@ -28,6 +28,9 @@ const access = useAccessStore()
 
 /* Tuner inputs from status/inputs. */
 const inputs = useStatusStore('status/inputs', 'input_status', 'uuid')
+/* Listen to input_status only while Home is shown. The store is
+ * shared with Status > Stream and outlives both views. */
+let releaseInputs: (() => void) | undefined
 onMounted(() => {
   /* `status/inputs` is registered with ACCESS_ADMIN
    * (`src/api/api_status.c:250`); firing it as anonymous returns
@@ -38,7 +41,12 @@ onMounted(() => {
    * the explicit skip here so the call is suppressed regardless
    * of mount-order timing. */
   if (!access.has('admin')) return
+  releaseInputs = inputs.retain()
   inputs.fetch().catch(() => { /* fetch errors surface via inputs.error */ })
+})
+onBeforeUnmount(() => {
+  releaseInputs?.()
+  releaseInputs = undefined
 })
 
 /* Active subscriptions = total subscriptions across all tuner
