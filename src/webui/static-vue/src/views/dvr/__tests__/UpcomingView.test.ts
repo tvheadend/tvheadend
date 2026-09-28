@@ -28,6 +28,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import UpcomingView from '../UpcomingView.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
+import type { ActionDef } from '@/types/action'
+import type { IdnodeClassMeta } from '@/types/idnode'
+import { useIdnodeClassStore } from '@/stores/idnodeClass'
 
 /* Capture the props UpcomingView hands to the grid; the grid itself
  * (store wiring, fetching, virtual scroller, the filters→params
@@ -37,9 +40,28 @@ vi.mock('@/components/IdnodeGrid.vue', () => ({
   default: defineComponent({
     name: 'IdnodeGrid',
     inheritAttrs: false,
-    setup(_, { attrs }) {
+    setup(_, { attrs, slots }) {
       gridProps.current = attrs as Record<string, unknown>
-      return () => h('div', { class: 'idnode-grid-stub' })
+      /* Render the toolbar slot with an empty selection so the
+       * view's action list reaches the ActionMenu stub below. */
+      return () =>
+        h('div', { class: 'idnode-grid-stub' }, [
+          slots.toolbarActions?.({ selection: [], clearSelection: () => {} }),
+        ])
+    },
+  }),
+}))
+/* Capture the toolbar actions the view builds. */
+const menuActions = vi.hoisted(() => ({ current: [] as ActionDef[] }))
+vi.mock('@/components/ActionMenu.vue', () => ({
+  default: defineComponent({
+    name: 'ActionMenu',
+    props: { actions: { type: Array, required: true } },
+    setup(props) {
+      return () => {
+        menuActions.current = props.actions as ActionDef[]
+        return null
+      }
     },
   }),
 }))
@@ -150,5 +172,38 @@ describe('UpcomingView — start-time columns', () => {
     expect(byField('stop').hiddenByDefault).not.toBe(true)
     expect(byField('start_real').hiddenByDefault).toBe(true)
     expect(byField('stop_real').hiddenByDefault).toBe(true)
+  })
+})
+
+describe('UpcomingView — translations from existing catalogs', () => {
+  const g = globalThis as { tvh_locale?: Record<string, string> }
+  afterEach(() => {
+    delete g.tvh_locale
+  })
+
+  it('uses the server-localized Priority options once the class metadata is in', async () => {
+    const csPri = [
+      { key: 6, val: 'Výchozí' },
+      { key: 2, val: 'Normální' },
+    ]
+    mount(UpcomingView)
+    const before = (gridProps.current?.columns as ColumnDef[]).find((c) => c.field === 'pri')
+    expect(before?.enumSource).toContainEqual({ key: 6, val: 'Default' })
+
+    useIdnodeClassStore().cache.set('dvrentry', {
+      props: [{ id: 'pri', type: 'int', enum: csPri }],
+    } as unknown as IdnodeClassMeta)
+    await nextTick()
+    const after = (gridProps.current?.columns as ColumnDef[]).find((c) => c.field === 'pri')
+    expect(after?.enumSource).toEqual(csPri)
+  })
+
+  it('uses the Classic msgid for the Previously recorded tooltip', () => {
+    g.tvh_locale = {
+      'Toggle the previously recorded state.': 'Przełącz stan wcześniej nagranych.',
+    }
+    mount(UpcomingView)
+    const prevrec = menuActions.current.find((a) => a.id === 'prevrec')
+    expect(prevrec?.tooltip).toBe('Przełącz stan wcześniej nagranych.')
   })
 })
