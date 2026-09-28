@@ -29,6 +29,7 @@
  */
 import type { ColumnDef } from '@/types/column'
 import type { GroupableFieldDef } from '@/types/grid'
+import type { IdnodeClassMeta } from '@/types/idnode'
 import BooleanCell from '@/components/BooleanCell.vue'
 import DrillDownCell from '@/components/DrillDownCell.vue'
 import EnumNameCell from '@/components/EnumNameCell.vue'
@@ -100,13 +101,18 @@ const CONTENT_TYPE_ENUM = {
 
 /* Inline option list for the DVR Priority enum (`pri` field).
  * Mirrors the server's `dvr_entry_class_pri_list` callback at
- * `src/dvr/dvr_db.c:3733-3742` — same order, same key→label
+ * `src/dvr/dvr_db.c:3768-3779` — same order, same key→label
  * pairing. Inline (not deferred) because the set is small,
  * bounded, and stable across the session.
  *
+ * These labels have no msgid in the web UI catalog, so they stay
+ * English. They are only the fallback until the class metadata
+ * arrives — see `withServerPriEnum` below, which swaps in the
+ * server's localized list.
+ *
  * `5 = DVR_PRIO_NOTSET` is intentionally absent: the server's
  * list callback hides it and any value of 5 is coerced to 6
- * (Default) on set (`dvr_db.c:3727-3728`). */
+ * (Default) on set (`dvr_db.c:3762-3763`). */
 const DVR_PRI_ENUM = [
   { key: 6, val: t('Default') },
   { key: 0, val: t('Important') },
@@ -115,6 +121,24 @@ const DVR_PRI_ENUM = [
   { key: 3, val: t('Low') },
   { key: 4, val: t('Unimportant') },
 ]
+
+/* Swap the inline priority options of a `pri` column for the
+ * class metadata's `pri` enum once that has loaded. The server
+ * localizes those labels (`dvr_entry_class_pri_list` builds them
+ * with `strtab2htsmsg(tab, 1, lang)`), which is what the cells
+ * already show through IdnodeGrid's metadata enum lookup. The
+ * header filter, its tooltip and the active-filter chip read
+ * `enumSource`, so without the swap they stayed English.
+ * dvrentry, dvrautorec and dvrtimerec all use the same list
+ * callback. Returns `cols` unchanged while metadata is missing. */
+export function withServerPriEnum(
+  cols: ColumnDef[],
+  meta: IdnodeClassMeta | null | undefined,
+): ColumnDef[] {
+  const serverEnum = meta?.props.find((p) => p.id === 'pri')?.enum
+  if (!Array.isArray(serverEnum) || serverEnum.length === 0) return cols
+  return cols.map((c) => (c.field === 'pri' ? { ...c, enumSource: serverEnum } : c))
+}
 
 /* ---- Formatters ---- */
 

@@ -27,12 +27,14 @@
  *
  * Default sort: name ASC (dvr.js:1177-1179).
  */
+import { computed } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
+import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import type { ColumnDef } from '@/types/column'
 import { useDvrRulesView } from '@/composables/useDvrRulesView'
-import { TIMEREC_FIELDS } from './dvrFieldDefs'
+import { TIMEREC_FIELDS, withServerPriEnum } from './dvrFieldDefs'
 import { adminAwareEditList } from './dvrToolbarHelpers'
 import { useI18n } from '@/composables/useI18n'
 
@@ -67,6 +69,11 @@ const cols: ColumnDef[] = [
   { field: 'creator', ...TIMEREC_FIELDS.creator, editable: true },
   { field: 'comment', ...TIMEREC_FIELDS.comment, editable: true },
 ]
+
+/* Priority filter options from the class metadata, which the server
+ * localizes. See withServerPriEnum in dvrFieldDefs.ts. */
+const idnodeClass = useIdnodeClassStore()
+const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrtimerec')))
 
 /* Edit-list segments — match dvr.js:1131-1135 verbatim. */
 const EDITOR_LIST_BASE = 'name,title,channel,start,stop,weekdays,directory,config_name,comment'
@@ -107,7 +114,7 @@ const {
     ref="gridRef"
     endpoint="dvr/timerec/grid"
     help-page="class/dvrtimerec"
-    :columns="cols"
+    :columns="gridCols"
     store-key="dvr-timerec"
     :default-sort="{ key: 'name', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"

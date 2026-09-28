@@ -24,13 +24,15 @@
  *
  * Default sort: name ASC (dvr.js:1117-1118).
  */
+import { computed } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
+import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import StartWindowRangePicker from '@/components/idnode-fields/StartWindowRangePicker.vue'
 import type { ColumnDef } from '@/types/column'
 import { useDvrRulesView } from '@/composables/useDvrRulesView'
-import { AUTOREC_FIELDS } from './dvrFieldDefs'
+import { AUTOREC_FIELDS, withServerPriEnum } from './dvrFieldDefs'
 import { adminAwareEditList } from './dvrToolbarHelpers'
 import { useI18n } from '@/composables/useI18n'
 
@@ -98,6 +100,11 @@ const cols: ColumnDef[] = [
   { field: 'serieslink', ...AUTOREC_FIELDS.serieslink, editable: true },
 ]
 
+/* Priority filter options from the class metadata, which the server
+ * localizes. See withServerPriEnum in dvrFieldDefs.ts. */
+const idnodeClass = useIdnodeClassStore()
+const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrautorec')))
+
 /* Edit-list segments — match dvr.js:1048-1050 (admin: enabled +
  * extras + <base> + admin extras + retention/removal/maxcount/
  * maxsched; non-admin: same minus the admin extras). `pri` appears
@@ -146,7 +153,7 @@ const {
     ref="gridRef"
     endpoint="dvr/autorec/grid"
     help-page="class/dvrautorec"
-    :columns="cols"
+    :columns="gridCols"
     store-key="dvr-autorec"
     :default-sort="{ key: 'name', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"

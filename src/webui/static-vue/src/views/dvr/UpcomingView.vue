@@ -57,6 +57,7 @@
  */
 import { computed, ref, watch } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
+import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import ActionMenu from '@/components/ActionMenu.vue'
 import IdnodeEditor from '@/components/IdnodeEditor.vue'
 import EpgRelatedDialog from '@/components/EpgRelatedDialog.vue'
@@ -67,7 +68,7 @@ import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useEditorMode } from '@/composables/useEditorMode'
-import { DVR_FIELDS, DVR_GROUPABLE_FIELDS } from './dvrFieldDefs'
+import { DVR_FIELDS, DVR_GROUPABLE_FIELDS, withServerPriEnum } from './dvrFieldDefs'
 import { adminAwareEditList, buildAddEditDeleteActions } from './dvrToolbarHelpers'
 import { useI18n } from '@/composables/useI18n'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
@@ -227,6 +228,11 @@ const cols: ColumnDef[] = [
   { field: 'data_errors', ...DVR_FIELDS.data_errors },
   { field: 'copyright_year', ...DVR_FIELDS.copyright_year },
 ]
+
+/* Priority filter options from the class metadata, which the server
+ * localizes. See withServerPriEnum in dvrFieldDefs.ts. */
+const idnodeClass = useIdnodeClassStore()
+const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrentry')))
 
 /*
  * Each toolbar verb gets its own `useBulkAction` handle (one per
@@ -505,7 +511,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     {
       id: 'prevrec',
       label: prevrec.inflight.value ? t('Toggling…') : t('Previously recorded'),
-      tooltip: t('Toggle the previously recorded state'),
+      tooltip: t('Toggle the previously recorded state.'),
       disabled: selection.length === 0 || prevrec.inflight.value || hasRecording(selection),
       onClick: () => prevrec.run(selection, clearSelection),
     },
@@ -532,7 +538,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     ref="gridRef"
     endpoint="dvr/entry/grid_upcoming"
     help-page="class/dvrentry"
-    :columns="cols"
+    :columns="gridCols"
     store-key="dvr-upcoming"
     :filters="gridFilters"
     :row-class="rowClassFor"
