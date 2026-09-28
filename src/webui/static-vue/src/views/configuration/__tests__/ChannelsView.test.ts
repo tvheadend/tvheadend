@@ -54,3 +54,22 @@ describe('ChannelsView Map services menu', () => {
     expect(captured.mapper.mapAll).toBe(false)
   })
 }, 30_000)
+
+describe('ChannelsView ?openMapper from the command palette', () => {
+  it('opens Map all services for openMapper=all and clears the param', async () => {
+    captured.query = { openMapper: 'all', other: 'x' }
+    mount(ChannelsView)
+    await nextTick()
+    expect(captured.mapper.visible).toBe(true)
+    expect(captured.mapper.mapAll).toBe(true)
+    expect(stubs.router.replace).toHaveBeenCalledWith({ query: { other: 'x' } })
+  })
+
+  it('opens the empty picker for openMapper=true', async () => {
+    captured.query = { openMapper: 'true' }
+    mount(ChannelsView)
+    await nextTick()
+    expect(captured.mapper.visible).toBe(true)
+    expect(captured.mapper.mapAll).toBe(false)
+  })
+}, 30_000)

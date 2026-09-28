@@ -506,7 +506,8 @@ watch(
 )
 
 /* Auto-open the Service Mapper modal when Cmd-K pushes us here
- * with `?openMapper=true`. Same read+clear pattern as the manage
+ * with `?openMapper=true` (empty picker) or `?openMapper=all` (Map
+ * all services). Same read+clear pattern as the manage
  * drawer above — the user typed "map services" in the palette,
  * hit Enter, and expects to land directly in the mapper dialog
  * rather than on the Channels grid + having to click another
@@ -514,8 +515,8 @@ watch(
 watch(
   () => route.query.openMapper,
   (mode) => {
-    if (mode !== 'true') return
-    onMapServices(false)
+    if (mode !== 'true' && mode !== 'all') return
+    onMapServices(mode === 'all')
     const rest = { ...route.query }
     delete rest.openMapper
     router.replace({ query: rest }).catch(() => { /* nav cancellation is fine */ })
