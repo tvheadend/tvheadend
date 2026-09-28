@@ -587,7 +587,7 @@ describe('CommandPalette', () => {
       expect(labels).not.toContain('ITV1')
     })
 
-    it('Enter on a channel row opens EPG with the channel-name URL filter (primary)', async () => {
+    it('Enter on a channel row opens EPG with the channel uuid URL filter (primary)', async () => {
       const { wrapper, router } = await mountPalette()
       useCommandPalette().open()
       await flushPromises()
@@ -597,7 +597,7 @@ describe('CommandPalette', () => {
       await input.trigger('keydown', { key: 'Enter' })
       await flushPromises()
       expect(router.currentRoute.value.name).toBe('epg-table')
-      expect(router.currentRoute.value.query.channelName).toBe('BBC One')
+      expect(router.currentRoute.value.query.channel).toBe('ch-bbc1')
       /* Editor drawer must NOT have opened — that's the secondary. */
       expect(entityEditorOpenMock).not.toHaveBeenCalled()
     })

@@ -9,11 +9,9 @@
  * with three tiered actions:
  *
  *   primary   ↵     — Open in EPG (navigates to
- *                     `/epg/table?channelName=<name>`, which
- *                     TableView consumes via its existing channel-
- *                     name column filter — same UI affordance the
- *                     user gets from typing in the column funnel
- *                     manually)
+ *                     `/epg/table?channel=<uuid>`, which TableView
+ *                     consumes as an exact channel pick shown in
+ *                     its Channel column filter)
  *   secondary ⌘↵    — Watch in external player. Opens
  *                     `/play/ticket/stream/channel/<uuid>` in a
  *                     new tab; tvheadend returns an .m3u playlist
@@ -131,15 +129,16 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
     keywords: ['channel'],
     actionLabel: 'Open in EPG',
     action: () => {
-      /* Pass the channel NAME (not uuid) so TableView can drop it
-       * straight into its existing channel-name column filter. The
-       * column filter is a substring match — using the name keeps
-       * the URL human-readable and reuses the same Table chrome
-       * the user already knows. Swallow NavigationFailure (e.g.
+      /* Pass the channel UUID, not the name. The server matches a
+       * channel-name filter as a caseless, unanchored regex, so
+       * "CT 1" would also list "CT 1 HD" and every other channel
+       * whose name contains it. TableView sends the uuid as the
+       * server's exact `channel` param and shows the name in its
+       * Channel column filter. Swallow NavigationFailure (e.g.
        * router-guard redirect) so an aborted navigation doesn't
        * surface as an unhandled rejection. */
       deps.router
-        .push({ name: 'epg-table', query: { channelName: name } })
+        .push({ name: 'epg-table', query: { channel: uuid } })
         .catch(() => undefined)
     },
   }
