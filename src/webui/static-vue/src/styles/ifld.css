@@ -24,6 +24,10 @@
  *   - Phone-mode collapse — at < 768 px every field stacks
  *     label-over-control, matching the rest of the app's mobile
  *     pattern.
+ *   - Narrow-form collapse — the same stack when the form itself
+ *     is under 400 px wide on a desktop screen (the detail pane
+ *     of a master-detail config page). Below that the 180 px
+ *     label column leaves the input too narrow to read.
  *
  * **Specificity bump via self-chained class.** Field renderers
  * (IdnodeFieldString / Bool / Number / Time / Enum / EnumMulti /
@@ -39,6 +43,13 @@
  * to the field component's own scoped styles — they don't carry
  * the `.ifld-form` ancestor.
  */
+
+/* Size container for the narrow-form rule at the end of this
+ * file. Inline size only, so the height still follows the
+ * content. */
+.ifld-form {
+  container-type: inline-size;
+}
 
 .ifld-form .ifld.ifld {
   display: grid;
@@ -125,6 +136,20 @@
 }
 
 @media (max-width: 767px) {
+  .ifld-form .ifld.ifld {
+    grid-template-columns: 1fr;
+  }
+  .ifld-form .ifld__row {
+    grid-column: auto;
+  }
+}
+
+/* The same stack for a form that is narrow on a wide screen. The
+ * master-detail config pages (DVR Profiles, Stream Profiles, EPG
+ * Grabber Modules, Codec Profiles, CAs) give the detail pane about
+ * a third of the width, which left the inputs a few pixels wide.
+ * The drawer editor's form is about 460 px and keeps two columns. */
+@container (max-width: 399px) {
   .ifld-form .ifld.ifld {
     grid-template-columns: 1fr;
   }

@@ -2245,6 +2245,14 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Same once the rows stack in a narrow form (ifld.css). */
+@container (max-width: 399px) {
+  .ifld-row__error,
+  .ifld-row__counter {
+    margin-left: 0;
+  }
+}
+
 /*
  * Read-only group: visually muted to signal "informational, not
  * editable". The fields inside are already rendered disabled by their

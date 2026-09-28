@@ -1240,6 +1240,13 @@ onBeforeUnmount(() => {
   color: var(--tvh-error);
 }
 
+/* Flush left once the rows stack (narrow-form rule in ifld.css). */
+@container (max-width: 399px) {
+  .ifld-row__error {
+    margin-left: 0;
+  }
+}
+
 /* Help button — same 32px icon-button shape IdnodeGrid uses
  * so the trailing-edge affordance reads consistently across
  * grid and form surfaces. aria-pressed lights the button with
