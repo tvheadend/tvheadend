@@ -14,6 +14,8 @@
  *     `harness.selection`.
  *   - The ActionMenu stub records the actions built for it.
  *   - The IdnodeEditor stub records the rows it was opened for.
+ *   - `apiMock` answers the API calls, `{}` unless a test says
+ *     otherwise.
  *
  * `vi.mock` stays in the test file. Its factories take the stubs
  * from this module, loaded through `vi.hoisted` so it is the same
@@ -22,9 +24,9 @@
  *   const h = await vi.hoisted(() => import('@/test/__helpers__/gridViewHarness'))
  *   vi.mock('@/components/IdnodeGrid.vue', () => h.stubs.grid)
  */
-import { afterEach, beforeEach, expect, it } from 'vitest'
+import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, type Component } from 'vue'
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import ConfirmationService from 'primevue/confirmationservice'
 import ToastService from 'primevue/toastservice'
@@ -36,6 +38,9 @@ export const harness = {
   actions: [] as ActionDef[],
   editor: { uuid: null as unknown, uuids: null as unknown },
 }
+
+export const toast = { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() }
+export const apiMock = vi.fn()
 
 /* Stand-ins for the mocked modules, in the shape `vi.mock` takes. */
 export const stubs = {
@@ -79,10 +84,13 @@ export const stubs = {
   },
   /* A component the test does not look at. */
   blank: (name: string) => ({ default: defineComponent({ name, render: () => null }) }),
+  toast: { useToastNotify: () => toast },
+  api: { apiCall: (...args: unknown[]) => apiMock(...args) },
 }
 
-/* Per test: a fresh Pinia, an empty harness, and the mounted view
- * unmounted afterwards. Call once at the top level. */
+/* Per test: a fresh Pinia, an empty harness, cleared toasts and API
+ * calls, and the mounted view unmounted afterwards. Call once at the
+ * top level. */
 export function setupGridViewHarness(): void {
   enableAutoUnmount(afterEach)
   beforeEach(() => {
@@ -90,6 +98,9 @@ export function setupGridViewHarness(): void {
     harness.selection = []
     harness.actions = []
     harness.editor = { uuid: null, uuids: null }
+    for (const fn of Object.values(toast)) fn.mockReset()
+    apiMock.mockReset()
+    apiMock.mockResolvedValue({})
   })
 }
 
@@ -137,5 +148,57 @@ export function runEditActionTests(view: Component, tooltips: [string, string]):
     await edit.onClick?.()
     await nextTick()
     expect(harness.editor.uuid).toBe('r1')
+  })
+}
+
+interface ForceScanCase {
+  view: Component
+  /* The toolbar action and the endpoint it posts to. */
+  actionId: string
+  endpoint: string
+  /* Success toasts for one and for two rows. */
+  toasts: [string, string]
+  /* Error toast text before the server's message. */
+  failPrefix: string
+}
+
+/* Force Scan posts the selected rows, confirms the started scan in a
+ * toast, reports a failure in an error toast and keeps its label
+ * while the request is in flight. */
+export function runForceScanTests(c: ForceScanCase): void {
+  async function scan(uuids: string[]) {
+    mountSelected(c.view, uuids)
+    await action(c.actionId).onClick?.()
+    await flushPromises()
+  }
+
+  it('confirms the started scan with a toast', async () => {
+    await scan(['r1', 'r2'])
+    expect(apiMock).toHaveBeenCalledWith(c.endpoint, { uuid: JSON.stringify(['r1', 'r2']) })
+    expect(toast.success).toHaveBeenCalledWith(c.toasts[1])
+  })
+
+  it('uses the singular text for one row', async () => {
+    await scan(['r1'])
+    expect(toast.success).toHaveBeenCalledWith(c.toasts[0])
+  })
+
+  it('reports a failed request in an error toast', async () => {
+    apiMock.mockRejectedValue(new Error('boom'))
+    await scan(['r1'])
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(`${c.failPrefix}: boom`)
+  })
+
+  it('keeps the Force Scan label while the request is in flight', async () => {
+    let resolve: (v: unknown) => void = () => {}
+    apiMock.mockImplementation(() => new Promise((r) => (resolve = r)))
+    mountSelected(c.view, ['r1'])
+    const pending = action(c.actionId).onClick?.()
+    await flushPromises()
+    expect(action(c.actionId).label).toBe('Force Scan')
+    expect(action(c.actionId).disabled).toBe(true)
+    resolve({})
+    await pending
   })
 }

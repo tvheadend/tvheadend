@@ -58,6 +58,14 @@ export interface BulkActionConfig {
    * translations apply once vue-i18n lands.
    */
   failPrefix: string
+  /**
+   * Optional success toast. Called with the number of rows the
+   * request was sent for; the returned text is shown once the
+   * request succeeds. Omit for actions whose effect is visible in
+   * the grid itself (delete, cancel); set it for actions that only
+   * start something on the server (Force Scan).
+   */
+  successText?: (count: number) => string
 }
 
 export interface BulkActionHandle {
@@ -104,6 +112,7 @@ export function useBulkAction(config: BulkActionConfig): BulkActionHandle {
     try {
       await apiCall(config.endpoint, { uuid: JSON.stringify(uuids) })
       clear()
+      if (config.successText) toast.success(config.successText(uuids.length))
     } catch (err) {
       toast.error(`${config.failPrefix}: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
