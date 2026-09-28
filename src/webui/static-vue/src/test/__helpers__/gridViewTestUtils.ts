@@ -17,11 +17,12 @@
  *   stubs.resetEachTest()
  *
  * Each stub is a module: `default` for a component, the hooks for
- * vue-router and the composables. What they see goes to `captured`.
+ * vue-router and the composables, `apiCall` for the API client. What
+ * they see goes to `captured`, the toasts and API calls to spies.
  */
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, type Component } from 'vue'
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import type { ActionDef } from '@/types/action'
 import type { ColumnDef } from '@/types/column'
@@ -42,6 +43,9 @@ export const captured = {
   query: {} as Record<string, string>,
 }
 
+/* The clearSelection the toolbar slot gets, to see the view call it. */
+export const clearSelection = vi.fn()
+
 function gridStub(withToolbar: boolean) {
   return {
     default: defineComponent({
@@ -50,7 +54,7 @@ function gridStub(withToolbar: boolean) {
       setup(_, { attrs, slots }) {
         captured.gridProps = attrs as Record<string, unknown>
         const toolbar = () =>
-          slots.toolbarActions?.({ selection: captured.selection, clearSelection: () => undefined })
+          slots.toolbarActions?.({ selection: captured.selection, clearSelection })
         return () => h('div', { class: 'idnode-grid-stub' }, withToolbar ? toolbar() : undefined)
       },
     }),
@@ -128,8 +132,19 @@ export const confirmDialog = {
   useConfirmDialog: () => ({ ask: vi.fn(() => Promise.resolve(true)) }),
 }
 
+/* The toasts the view shows. */
+export const toast = { success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() }
+
 export const toastNotify = {
-  useToastNotify: () => ({ success: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() }),
+  useToastNotify: () => toast,
+}
+
+/* The API calls the view makes, answered with `{}` unless a test
+ * says otherwise. */
+export const apiMock = vi.fn()
+
+export const apiClient = {
+  apiCall: (...args: unknown[]) => apiMock(...args),
 }
 
 /* The columns the view handed to IdnodeGrid. */
@@ -154,8 +169,9 @@ export function toolbarAction(id: string): ActionDef {
   return found
 }
 
-/* Unmount after each test and start the next one with a fresh Pinia
- * and nothing captured. Call it once at the top of the test file. */
+/* Unmount after each test and start the next one with a fresh Pinia,
+ * nothing captured, no toasts and no API calls. Call it once at the
+ * top of the test file. */
 export function resetEachTest(): void {
   enableAutoUnmount(afterEach)
   beforeEach(() => {
@@ -168,6 +184,10 @@ export function resetEachTest(): void {
     captured.query = {}
     router.push.mockClear()
     router.replace.mockClear()
+    clearSelection.mockClear()
+    for (const fn of Object.values(toast)) fn.mockReset()
+    apiMock.mockReset()
+    apiMock.mockResolvedValue({})
   })
 }
 
@@ -204,5 +224,60 @@ export function runEditActionTests(view: Component, tooltips: [string, string]):
     await edit.onClick?.()
     await nextTick()
     expect(captured.editor.uuid).toBe('r1')
+  })
+}
+
+interface ForceScanCase {
+  view: Component
+  /* The toolbar action and the endpoint it posts to. */
+  actionId: string
+  endpoint: string
+  /* Success toasts for one and for two rows. */
+  toasts: [string, string]
+  /* Error toast text before the server's message. */
+  failPrefix: string
+}
+
+/* Force Scan posts the selected rows, confirms the started scan in a
+ * toast and clears the selection, reports a failure in an error toast
+ * and keeps its label while the request is in flight. The test file
+ * mocks IdnodeGrid with the toolbar, ActionMenu, useToastNotify and
+ * the API client with these stubs. */
+export function runForceScanTests(c: ForceScanCase): void {
+  async function scan(uuids: string[]) {
+    mountSelected(c.view, uuids)
+    await toolbarAction(c.actionId).onClick?.()
+    await flushPromises()
+  }
+
+  it('confirms the started scan with a toast and clears the selection', async () => {
+    await scan(['r1', 'r2'])
+    expect(apiMock).toHaveBeenCalledWith(c.endpoint, { uuid: JSON.stringify(['r1', 'r2']) })
+    expect(toast.success).toHaveBeenCalledWith(c.toasts[1])
+    expect(clearSelection).toHaveBeenCalledOnce()
+  })
+
+  it('uses the singular text for one row', async () => {
+    await scan(['r1'])
+    expect(toast.success).toHaveBeenCalledWith(c.toasts[0])
+  })
+
+  it('reports a failed request in an error toast', async () => {
+    apiMock.mockRejectedValue(new Error('boom'))
+    await scan(['r1'])
+    expect(toast.success).not.toHaveBeenCalled()
+    expect(toast.error).toHaveBeenCalledWith(`${c.failPrefix}: boom`)
+  })
+
+  it('keeps the Force Scan label while the request is in flight', async () => {
+    let resolve: (v: unknown) => void = () => {}
+    apiMock.mockImplementation(() => new Promise((r) => (resolve = r)))
+    mountSelected(c.view, ['r1'])
+    const pending = toolbarAction(c.actionId).onClick?.()
+    await flushPromises()
+    expect(toolbarAction(c.actionId).label).toBe('Force Scan')
+    expect(toolbarAction(c.actionId).disabled).toBe(true)
+    resolve({})
+    await pending
   })
 }
