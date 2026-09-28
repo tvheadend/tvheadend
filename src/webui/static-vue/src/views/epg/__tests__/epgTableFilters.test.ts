@@ -22,6 +22,7 @@ process.env.TZ = 'Europe/Berlin'
 
 import { describe, expect, it } from 'vitest'
 import {
+  autoRecMatchCountParams,
   buildAutoRecConf,
   buildClusterFetchFilter,
   buildClusterFilterByChannel,
@@ -31,6 +32,7 @@ import {
   decideFilterDispatch,
   hasAnyAutoRecFilter,
   isTagFilterActive,
+  resolveAutoRecChannel,
   serverParamsFromFilters,
   timeWindowFilters,
   uniqueChannelUuidByName,
@@ -69,7 +71,7 @@ function inputDefaults(): BuildFiltersInput {
 function autoRecConfInputDefaults() {
   return {
     title: '',
-    channelName: '',
+    channelUuid: null as string | null,
     mode: 'title' as const,
     newOnly: false,
     genre: [] as number[],
@@ -696,9 +698,14 @@ describe('buildAutoRecConf', () => {
     expect(conf.comment).toBe('News - Created from EPG query')
   })
 
-  it('channelName present → channel field', () => {
-    const conf = buildAutoRecConf({ ...confInputDefaults(), channelName: 'BBC One' })
-    expect(conf.channel).toBe('BBC One')
+  it('channelUuid present → channel field', () => {
+    const conf = buildAutoRecConf({ ...confInputDefaults(), channelUuid: 'u-bbc1' })
+    expect(conf.channel).toBe('u-bbc1')
+  })
+
+  it('channelUuid null → no channel field', () => {
+    const conf = buildAutoRecConf({ ...confInputDefaults(), channelUuid: null })
+    expect(conf.channel).toBeUndefined()
   })
 
   it('fulltext mode WITH title → fulltext flag set', () => {
@@ -785,7 +792,7 @@ describe('buildAutoRecConf', () => {
   it('every axis populated → comprehensive conf', () => {
     const conf = buildAutoRecConf({
       title: 'News',
-      channelName: 'BBC One',
+      channelUuid: 'u-bbc1',
       mode: 'mergetext',
       newOnly: true,
       genre: [12],
@@ -798,7 +805,7 @@ describe('buildAutoRecConf', () => {
       enabled: 1,
       comment: 'News - Created from EPG query',
       title: 'News',
-      channel: 'BBC One',
+      channel: 'u-bbc1',
       mergetext: 1,
       btype: 3,
       content_type: 12,
@@ -1051,8 +1058,8 @@ describe('hasAnyAutoRecFilter', () => {
     expect(hasAnyAutoRecFilter({ ...defaults(), title: 'News' })).toBe(true)
   })
 
-  it('returns true when channelName alone is set', () => {
-    expect(hasAnyAutoRecFilter({ ...defaults(), channelName: 'BBC One' })).toBe(true)
+  it('returns true when channelUuid alone is set', () => {
+    expect(hasAnyAutoRecFilter({ ...defaults(), channelUuid: 'u-bbc1' })).toBe(true)
   })
 
   it('returns true when newOnly alone is set', () => {
@@ -1115,7 +1122,7 @@ describe('hasAnyAutoRecFilter', () => {
     const cases = [
       { ...defaults() },
       { ...defaults(), title: 'News' },
-      { ...defaults(), channelName: 'BBC One' },
+      { ...defaults(), channelUuid: 'u-bbc1' },
       { ...defaults(), newOnly: true },
       { ...defaults(), genre: [0x10] },
       { ...defaults(), genre: [0x10, 0x40] },
@@ -1285,5 +1292,102 @@ describe('buildClusterFetchFilter', () => {
      * bounds. */
     const out = buildClusterFetchFilter('start', '2026-XX-15', [])
     expect(out.ok).toBe(false)
+  })
+})
+
+describe('resolveAutoRecChannel', () => {
+  const channels = [
+    { uuid: 'u-ct1', name: 'CT 1' },
+    { uuid: 'u-ct1hd', name: 'CT 1 HD' },
+  ]
+
+  it('no channel filter → any channel, nothing unsaved', () => {
+    expect(resolveAutoRecChannel({}, channels, '')).toEqual({
+      uuid: null,
+      label: '',
+      unsaved: false,
+    })
+  })
+
+  it('exact pick → its uuid, labelled by name', () => {
+    expect(resolveAutoRecChannel({ channel: 'u-ct1' }, channels, 'CT 1')).toEqual({
+      uuid: 'u-ct1',
+      label: 'CT 1',
+      unsaved: false,
+    })
+  })
+
+  it('funnel text that is exactly one channel name → that uuid', () => {
+    expect(resolveAutoRecChannel({ channelName: 'CT 1' }, channels, '')).toEqual({
+      uuid: 'u-ct1',
+      label: 'CT 1',
+      unsaved: false,
+    })
+  })
+
+  it('funnel text that is a partial name or regex → unsaved, no channel', () => {
+    /* The Table lists every channel matching "CT" but the rule can
+     * hold only one. The server would try the text as a name, fail,
+     * clear the channel and record on every channel. */
+    for (const text of ['CT', 'ct 1', 'CT 1.*']) {
+      const out = resolveAutoRecChannel({ channelName: text }, channels, '')
+      expect(out).toEqual({ uuid: null, label: text, unsaved: true })
+      expect(
+        hasAnyAutoRecFilter({ ...autoRecConfInputDefaults(), channelUuid: out.uuid }),
+      ).toBe(false)
+    }
+  })
+})
+
+describe('autoRecMatchCountParams', () => {
+  it('counts with the rule channel and no time window', () => {
+    const out = autoRecMatchCountParams({
+      ...autoRecConfInputDefaults(),
+      title: String.raw`News \(Late\)`,
+      channelUuid: 'u-ct1',
+    })
+    expect(out).toEqual({
+      start: 0,
+      limit: 0,
+      channel: 'u-ct1',
+      title: String.raw`News \(Late\)`,
+    })
+  })
+
+  it('carries every rule axis the server can count', () => {
+    const out = autoRecMatchCountParams({
+      ...autoRecConfInputDefaults(),
+      title: 'News',
+      mode: 'fulltext',
+      newOnly: true,
+      genre: [0x10],
+      durationMinMinutes: 30,
+      durationMaxMinutes: 120,
+      tagUuid: 'tag-1',
+    })
+    expect(out).toMatchObject({
+      start: 0,
+      limit: 0,
+      title: 'News',
+      fulltext: 1,
+      new: 1,
+      channelTag: 'tag-1',
+    })
+    expect(out.channel).toBeUndefined()
+    expect(JSON.parse(out.filter as string)).toEqual([
+      { field: 'duration', type: 'numeric', value: '1800', comparison: 'gt' },
+      { field: 'duration', type: 'numeric', value: '7200', comparison: 'lt' },
+      { field: 'genre', type: 'numeric', value: '16', comparison: 'eq' },
+    ])
+  })
+
+  it('leaves out a multi-genre selection the rule cannot hold', () => {
+    const out = autoRecMatchCountParams({ ...autoRecConfInputDefaults(), genre: [0x10, 0x20] })
+    expect(out.filter).toBeUndefined()
+  })
+
+  it('scope flags only ride with a title', () => {
+    const out = autoRecMatchCountParams({ ...autoRecConfInputDefaults(), mode: 'mergetext' })
+    expect(out).toEqual({ start: 0, limit: 0 })
   })
 })
