@@ -295,12 +295,15 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
       }
     }
 
-    /* Check size */
-    if (!timeshift_conf.unlimited_size &&
-        atomic_pre_add_u64(&timeshift_conf.total_size, 0) >= timeshift_conf.max_size) {
+    /* Check size (RAM only buffers are limited by the RAM checks below) */
+    while (!ts->full && !timeshift_conf.ram_only &&
+           !timeshift_conf.unlimited_size &&
+           atomic_pre_add_u64(&timeshift_total_size, 0) >= timeshift_conf.max_size) {
 
-      /* Remove the last file (if we can) */
-      if (tsf_hd && !tsf_hd->refcount) {
+      /* Remove the oldest file (if we can), but never the current one,
+         its start message is copied to the new file below */
+      tsf_hd = TAILQ_FIRST(&ts->files);
+      if (tsf_hd && tsf_hd != tsf_tl && !tsf_hd->refcount) {
         timeshift_filemgr_remove(ts, tsf_hd, 0);
 
       /* Full */
@@ -336,8 +339,8 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
           break;
         } else {
           tsf_hd = TAILQ_FIRST(&ts->files);
-          if (timeshift_conf.ram_fit && tsf_hd && !tsf_hd->refcount &&
-              tsf_hd->ram && ts->file_segments == 0) {
+          if (timeshift_conf.ram_fit && tsf_hd && tsf_hd != tsf_tl &&
+              !tsf_hd->refcount && tsf_hd->ram && ts->file_segments == 0) {
             tvhtrace(LS_TIMESHIFT, "ts %d remove RAM segment %"PRId64" (fit)", ts->id, tsf_hd->time);
             timeshift_filemgr_remove(ts, tsf_hd, 0);
           } else {
