@@ -192,24 +192,25 @@ export const useLogStore = defineStore('log', () => {
 
   let nextId = 0
 
-  function pushLine(payload: LogPayload): void {
-    const raw = payload.logtxt ?? ''
-    if (!raw) return
-    const parsed = parseLine(raw)
-    const severity = parseSeverityFromBody(parsed.body)
-    const line: LogLine = {
-      id: nextId++,
-      ts: parsed.ts,
-      subsys: parsed.subsys,
-      body: parsed.body,
-      severity,
-      raw,
-    }
-    lines.value.push(line)
+  function appendLine(line: Omit<LogLine, 'id'>): void {
+    lines.value.push({ id: nextId++, ...line })
     if (lines.value.length > LOG_BUFFER_MAX) {
       lines.value.splice(0, lines.value.length - LOG_BUFFER_MAX)
       bufferFull.value = true
     }
+  }
+
+  function pushLine(payload: LogPayload): void {
+    const raw = payload.logtxt ?? ''
+    if (!raw) return
+    const parsed = parseLine(raw)
+    appendLine({
+      ts: parsed.ts,
+      subsys: parsed.subsys,
+      body: parsed.body,
+      severity: parseSeverityFromBody(parsed.body),
+      raw,
+    })
   }
 
   /* No matching unsubscribe — the store lives for the SPA's
@@ -255,11 +256,24 @@ export const useLogStore = defineStore('log', () => {
     }
   }
 
+  /* A line from the UI itself, for what the server cannot log: the
+   * Comet connection dropping and coming back. Classic writes the
+   * same messages to its log panel (static/app/comet.js). No
+   * subsystem, so it never passes for a server line. */
+  function pushLocal(body: string, severity: Severity): void {
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    const ts = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+    appendLine({ ts, subsys: '', body, severity, raw: `${date} ${ts} ${body}` })
+  }
+
   return {
     lines,
     bufferFull,
     debugEnabled,
     clear,
     toggleDebug,
+    pushLocal,
   }
 })

@@ -141,7 +141,11 @@ class CometClient {
       try {
         const body = new URLSearchParams()
         if (this.boxid) body.append('boxid', this.boxid)
-        body.append('immediate', '0')
+        /* After a failed poll ask for an immediate answer, as Classic
+         * does (static/app/comet.js). Otherwise a mailbox that survived
+         * the outage holds the first poll for up to 10 s, and the UI
+         * learns that the server is back only then. */
+        body.append('immediate', this.reconnectAttempt > 0 ? '1' : '0')
 
         const res = await fetch(serverUrl('comet/poll'), {
           method: 'POST',
