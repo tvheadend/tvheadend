@@ -1202,6 +1202,11 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     }
   }
 
+  /* Shared DVR-entries store. Declared ahead of the immediate
+   * watcher below, which reads it during setup when DVR access is
+   * already known (e.g. navigating to the EPG from another view). */
+  const dvrEntriesStore = useDvrEntriesStore()
+
   /* Prime the DVR-entries cache as soon as DVR access is known.
    * Gated on DVR access — `dvr/entry/grid_upcoming` requires
    * ACCESS_RECORDER and would pop a Digest dialog on anonymous
@@ -1343,7 +1348,6 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
    * stop_real ticks past now). Reads the reactive `nowEpoch`
    * so the filter re-evaluates each minute and entries that
    * finish drop out of the overlay set without a manual refresh. */
-  const dvrEntriesStore = useDvrEntriesStore()
   const dvrEntries = computed<DvrEntry[]>(() => {
     const visibleUuids = new Set(filteredChannels.value.map((c) => c.uuid))
     const lowerBound = nowEpoch.value - 60

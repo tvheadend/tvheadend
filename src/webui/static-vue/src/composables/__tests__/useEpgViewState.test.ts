@@ -50,16 +50,19 @@ vi.mock('@/api/comet', () => ({
   },
 }))
 
+/* DVR access is off unless a test turns it on. */
+let hasDvrAccess = false
 vi.mock('@/stores/access', () => ({
   useAccessStore: () => ({
-    has: () => false,
+    has: (key: string) => key === 'dvr' && hasDvrAccess,
     quicktips: true,
     chnameNum: false,
   }),
 }))
 
+const dvrEnsure = vi.fn()
 vi.mock('@/stores/dvrEntries', () => ({
-  useDvrEntriesStore: () => ({ entries: [], ensure: vi.fn() }),
+  useDvrEntriesStore: () => ({ entries: [], ensure: dvrEnsure }),
 }))
 
 vi.mock('../useIsPhone', async () => {
@@ -129,6 +132,8 @@ let wrappers: VueWrapper[] = []
 beforeEach(() => {
   cometHandlers = new Map()
   cometStateListener = null
+  hasDvrAccess = false
+  dvrEnsure.mockReset()
   apiMock.mockReset()
   answerWith(() => ({ entries: [], total: 0, totalCount: 0 }))
 })
@@ -145,6 +150,18 @@ function setTag(state: UseEpgViewState, tag: string | null): void {
     tagFilter: { tag },
   })
 }
+
+describe('useEpgViewState — DVR entries priming', () => {
+  it('primes the DVR store during setup when DVR access is already known', async () => {
+    /* Navigating to the EPG from another view: access has landed, so
+     * the immediate access watcher fires inside setup. */
+    hasDvrAccess = true
+    const { wrapper } = mountState()
+    wrappers.push(wrapper)
+    await flushPromises()
+    expect(dvrEnsure).toHaveBeenCalled()
+  })
+})
 
 describe('useEpgViewState — channel-tag change (per-day mode)', () => {
   it('discards a stale in-flight day fetch resolved after the tag change', async () => {
