@@ -167,33 +167,16 @@ const tvdbLogo = computed(() => serverUrl(`static/img/tvdb${logoSuffix.value}.pn
         <a href="https://lucide.dev" target="_blank" rel="noopener noreferrer">Lucide</a>
         {{ t('icons.') }}
       </p>
-      <!-- Classic UI stack — still in use during the dual-UI
-           coexistence period; some pages (About on the C
-           server, status views, etc.) still render via this
-           stack until the new UI fully replaces it. "Classic"
-           is the standing project term for the legacy ExtJS
-           interface. -->
+      <!-- The help pages embed FamFamFam Silk icons (static/icons
+           links into vendor/famfamsilk). The classic UI credits its
+           own stack on its about.html page. -->
       <p>
-        {{ t('Classic UI built with') }}
-        <a href="https://www.extjs.com/" target="_blank" rel="noopener noreferrer">ExtJS</a>.
-        {{ t('Icons from') }}
+        {{ t('Help page icons from') }}
         <a
           href="https://www.famfamfam.com/lab/icons/silk/"
           target="_blank"
           rel="noopener noreferrer"
-          >FamFamFam</a
-        >,
-        <a
-          href="https://www.google.com/get/noto/help/emoji/"
-          target="_blank"
-          rel="noopener noreferrer"
-          >Google Noto Color Emoji </a
-        >
-        <a
-          href="https://raw.githubusercontent.com/googlei18n/noto-emoji/master/LICENSE"
-          target="_blank"
-          rel="noopener noreferrer"
-          >{{ t('(Apache Licence v2.0)') }}</a
+          >FamFamFam Silk</a
         >.
       </p>
       <p>
