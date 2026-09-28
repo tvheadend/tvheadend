@@ -33,6 +33,7 @@
 import { computed } from 'vue'
 import { Clock, HardDrive, UserCircle2 } from 'lucide-vue-next'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 import { useNowCursor } from '@/composables/useNowCursor'
 import { formatBytes } from '@/utils/formatBytes'
 
@@ -45,6 +46,7 @@ withDefaults(
 )
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 /* ---- info_area ordering ---- */
 const KNOWN_INFO_ITEMS = new Set(['login', 'storage', 'time'])
@@ -137,6 +139,12 @@ const storageTooltip = computed(() => {
   return `Storage — Free: ${free} · Used: ${used} · Total: ${total}`
 })
 
+/* The compact chip (collapsed rail, phone top bar) says "96% free".
+ * A bare "96%" reads like a fill level. */
+const freeChip = computed<string>(() =>
+  freePct.value === '—' ? freePct.value : t('{0} free', freePct.value),
+)
+
 /* ---- Time ----
  * Reuses `useNowCursor` (already aligned to wall-clock :00 / :30
  * ticks). HH:MM display only visibly changes at :00 of each
@@ -193,7 +201,7 @@ const dayTimeWide = computed(() => {
       </div>
       <div v-else class="info-stack" :title="storageTooltip">
         <HardDrive :size="16" :stroke-width="2" />
-        <span class="info-stack__value">{{ freePct }}</span>
+        <span class="info-stack__value">{{ freeChip }}</span>
       </div>
     </template>
 
