@@ -44,7 +44,7 @@ import type {
   TagFilter,
   TimeWindow,
 } from './epgViewOptions'
-import { isTagFilterActive } from './epgTableFilters'
+import { countActiveGlobalFilters } from './epgTableFilters'
 import type { ColumnDef } from '@/types/column'
 
 const { t } = useI18n()
@@ -227,9 +227,6 @@ function onTagSelect(value: string | null) {
   setTagFilter({ tag: value })
 }
 
-/* Tag axis is "active" whenever a positive tag is selected. */
-const tagFilterIsActive = computed(() => isTagFilterActive(props.options.tagFilter))
-
 /* Phone path doesn't render the Progress column at all
  * (`progress` is `minVisible: 'desktop'`) so its display
  * settings are dead UI on small screens. Hide the section
@@ -398,20 +395,10 @@ const hasActivePerColumn = computed(() => activePerColumnFilters.value.length > 
 /* Count of GLOBAL axes that are non-default (i.e. actively
  * narrowing the grid). Time window is always set so it counts
  * only when not at its default; the rest count when not null /
- * not false. Tag filter counts whenever any tag is excluded or
- * untagged channels hidden. */
-const activeGlobalCount = computed(() => {
-  const o = props.options
-  const d = props.defaults
-  let n = 0
-  if (o.timeWindow !== d.timeWindow) n++
-  if (o.genre.length > 0) n++
-  if (o.newOnly) n++
-  if (o.durationMinMinutes !== null) n++
-  if (o.durationMaxMinutes !== null) n++
-  if (tagFilterIsActive.value) n++
-  return n
-})
+ * not false. Shared with the Table's empty state. */
+const activeGlobalCount = computed(() =>
+  countActiveGlobalFilters(props.options, props.defaults),
+)
 
 const filtersIsDefault = computed(
   () => activeGlobalCount.value === 0 && !hasActivePerColumn.value,

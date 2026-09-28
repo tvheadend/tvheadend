@@ -21,7 +21,7 @@
  */
 
 import type { FilterDef } from '@/types/grid'
-import type { TagFilter, TimeWindow, TitleSearchMode } from './epgViewOptions'
+import type { EpgViewOptions, TagFilter, TimeWindow, TitleSearchMode } from './epgViewOptions'
 import { fmtGroupDate } from '@/utils/formatTime'
 import { addLocalDaysEpoch } from '@/utils/localDay'
 import { regexEscape } from '@/utils/regexEscape'
@@ -386,6 +386,57 @@ export function buildClusterFetchFilter(
  */
 export function isTagFilterActive(tagFilter: TagFilter): boolean {
   return tagFilter.tag !== null
+}
+
+/* The view-option axes that narrow the Table's query (the
+ * popover's Filters → GLOBAL block). They are persisted per
+ * browser (`useEpgViewState`), so a filter set days ago still
+ * narrows the Table today. */
+export type GlobalFilterAxes = Pick<
+  EpgViewOptions,
+  'timeWindow' | 'genre' | 'newOnly' | 'durationMinMinutes' | 'durationMaxMinutes' | 'tagFilter'
+>
+
+/*
+ * Number of GLOBAL filter axes that are narrowing the Table. The
+ * time window counts only when it is off its default, the other
+ * axes whenever they are set. Shared by the popover's Filters
+ * summary and the Table's empty state, so both agree on what
+ * "a filter is active" means.
+ */
+export function countActiveGlobalFilters(
+  options: GlobalFilterAxes,
+  defaults: Pick<EpgViewOptions, 'timeWindow'>,
+): number {
+  let n = 0
+  if (options.timeWindow !== defaults.timeWindow) n++
+  if (options.genre.length > 0) n++
+  if (options.newOnly) n++
+  if (options.durationMinMinutes !== null) n++
+  if (options.durationMaxMinutes !== null) n++
+  if (isTagFilterActive(options.tagFilter)) n++
+  return n
+}
+
+/*
+ * `options` with every GLOBAL filter axis back at its default and
+ * everything else (columns, grouping, display) kept. Used by the
+ * empty Table's "Clear filters", which, like Classic's "Reset All"
+ * (`static/app/epg.js` `epgQueryClear`), only drops filters.
+ */
+export function withGlobalFiltersCleared<T extends GlobalFilterAxes>(
+  options: T,
+  defaults: GlobalFilterAxes,
+): T {
+  return {
+    ...options,
+    timeWindow: defaults.timeWindow,
+    genre: [...defaults.genre],
+    newOnly: defaults.newOnly,
+    durationMinMinutes: defaults.durationMinMinutes,
+    durationMaxMinutes: defaults.durationMaxMinutes,
+    tagFilter: { ...defaults.tagFilter },
+  }
 }
 
 /*

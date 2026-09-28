@@ -431,3 +431,93 @@ describe('TableView — Create AutoRec channel and count', () => {
     expect(summary).toContain('Are you sure?')
   })
 })
+
+describe('TableView — empty state', () => {
+  const GRABBERS = "Make sure your network's EPG grabbers are configured"
+
+  function emptyText(wrapper: VueWrapper): string {
+    return wrapper.find('.empty').text()
+  }
+
+  it('blames the EPG grabbers only when no filter is set', async () => {
+    const wrapper = mountTable()
+    await flushPromises()
+    expect(emptyText(wrapper)).toContain(GRABBERS)
+    expect(wrapper.find('.epg-table-grid__clear-filters').exists()).toBe(false)
+  })
+
+  it('a persisted global filter (New only) gets the no-match text and Clear filters', async () => {
+    fakeState = makeFakeState({ viewOptions: { newOnly: true } })
+    const wrapper = mountTable()
+    await flushPromises()
+    expect(emptyText(wrapper)).toContain('No events match the current filter.')
+    expect(emptyText(wrapper)).not.toContain(GRABBERS)
+    expect(wrapper.find('.epg-table-grid__clear-filters').exists()).toBe(true)
+  })
+
+  it('counts the tag, genre, duration and time window as filters too', async () => {
+    const cases: Partial<EpgViewOptions>[] = [
+      { tagFilter: { tag: 'tag-1' } },
+      { genre: [0x10] },
+      { durationMinMinutes: 30 },
+      { durationMaxMinutes: 60 },
+      { timeWindow: 'now' },
+    ]
+    for (const viewOptions of cases) {
+      fakeState = makeFakeState({ viewOptions })
+      const wrapper = mountTable()
+      await flushPromises()
+      expect(emptyText(wrapper)).toContain('No events match the current filter.')
+      wrapper.unmount()
+    }
+  })
+
+  it('Clear filters drops global and column filters but keeps display options', async () => {
+    fakeState = makeFakeState({
+      viewOptions: {
+        newOnly: true,
+        tagFilter: { tag: 'tag-1' },
+        genre: [0x10],
+        durationMinMinutes: 30,
+        timeWindow: 'today',
+        columnVisibility: { summary: false },
+        progressDisplay: 'pie',
+      },
+    })
+    const wrapper = mountTable({ title: 'News (Late)' })
+    await flushPromises()
+    await wrapper.find('.epg-table-grid__clear-filters').trigger('click')
+    await flushPromises()
+    const vo = fakeState.viewOptions.value
+    expect(vo).toMatchObject({
+      newOnly: false,
+      tagFilter: { tag: null },
+      genre: [],
+      durationMinMinutes: null,
+      durationMaxMinutes: null,
+      timeWindow: 'all',
+      columnVisibility: { summary: false },
+      progressDisplay: 'pie',
+    })
+    expect(wrapper.findComponent({ name: 'SearchInput' }).props('modelValue')).toBe('')
+    expect(emptyText(wrapper)).toContain(GRABBERS)
+  })
+
+  it('shows Loading while a filtered load is still running', async () => {
+    fakeState = makeFakeState({ viewOptions: { newOnly: true } })
+    fakeState.loading = computed(() => true)
+    const wrapper = mountTable()
+    await flushPromises()
+    expect(emptyText(wrapper)).toContain('Loading events…')
+    expect(wrapper.find('.epg-table-grid__clear-filters').exists()).toBe(false)
+  })
+
+  it('shows Loading, not the no-match text, while a column-filtered load is running', async () => {
+    fakeState.loading = computed(() => true)
+    const wrapper = mountTable({ channel: 'u-ct1' })
+    await flushPromises()
+    expect(emptyText(wrapper)).toContain('Loading events…')
+    expect(emptyText(wrapper)).not.toContain('No events match the current filter.')
+    expect(wrapper.find('.epg-table-grid__clear-filters').exists()).toBe(false)
+  })
+})
