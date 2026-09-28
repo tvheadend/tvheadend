@@ -7,7 +7,8 @@
  * dropdown (fetched from channel/grid on open; the sole way to pick
  * what to watch — issue #2183), the on-close teardown (pause + load)
  * that releases the server-side streaming subscription, the error
- * overlay and the per-channel failed-profile flag.
+ * overlay (including the neutral one for an error before any
+ * `progress` event) and the per-channel failed-profile flag.
  *
  * jsdom doesn't implement HTMLMediaElement play/pause/load, so we
  * stub those on the prototype.
@@ -19,6 +20,8 @@ import { setActivePinia, createPinia } from 'pinia'
 import VideoPlayerDialog from '../VideoPlayerDialog.vue'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
+import { useAccessStore } from '@/stores/access'
+import type { Access } from '@/types/access'
 import { DIALOG_PASSTHROUGH_STUB } from './__helpers__/idnodeEditorTestUtils'
 
 const apiMock = vi.fn()
@@ -114,6 +117,14 @@ const tooltipStub = {
   },
 }
 
+/* Stub vue-router so <router-link> mounts without a router. The
+ * target lands on `data-to` so tests can check the destination. */
+const routerLinkStub = {
+  name: 'RouterLink',
+  props: ['to'],
+  template: '<a :data-to="JSON.stringify(to)"><slot /></a>',
+}
+
 beforeEach(() => {
   setActivePinia(createPinia())
   apiMock.mockReset()
@@ -136,6 +147,7 @@ function mountDialog() {
       stubs: {
         Dialog: DIALOG_PASSTHROUGH_STUB,
         Select: SelectStub,
+        'router-link': routerLinkStub,
       },
       directives: { tooltip: tooltipStub },
     },
@@ -146,14 +158,21 @@ const TARGET = { channelUuid: 'ch-abc', title: 'News at Ten' }
 
 /* happy-dom leaves <video>.error null; plant a MediaError, then fire
  * the error event. */
-async function failWith(wrapper: ReturnType<typeof mountDialog>, code: number) {
+async function failWith(
+  wrapper: ReturnType<typeof mountDialog>,
+  code: number,
+  message = '',
+) {
   const video = wrapper.find('video')
   Object.defineProperty(video.element, 'error', {
     configurable: true,
-    value: { code, message: '' },
+    value: { code, message },
   })
   await video.trigger('error')
 }
+
+/* The neutral message for an error before any `progress` event. */
+const NOT_STARTED = /The stream did not start/
 
 /* Unmount each mounted dialog after its test — VideoPlayerDialog
  * subscribes to the `useVideoPlayer` module singleton, so a
@@ -241,6 +260,7 @@ describe('VideoPlayerDialog', () => {
     const wrapper = mountDialog()
     await flushPromises()
 
+    await wrapper.find('video').trigger('progress')
     await wrapper.find('video').trigger('error')
     /* The <video> stays mounted across errors; the failure renders
      * as an overlay so teardown / reload keep a stable element. */
@@ -255,6 +275,8 @@ describe('VideoPlayerDialog', () => {
     await flushPromises()
 
     const video = wrapper.find('video')
+    /* Media data arrived, so the error is about the stream itself. */
+    await video.trigger('progress')
     /* jsdom leaves <video>.error null; plant a decode MediaError. */
     Object.defineProperty(video.element, 'error', {
       configurable: true,
@@ -272,6 +294,7 @@ describe('VideoPlayerDialog', () => {
     await flushPromises()
 
     const video = wrapper.find('video')
+    await video.trigger('progress')
     Object.defineProperty(video.element, 'error', {
       configurable: true,
       value: { code: 2 },
@@ -302,6 +325,7 @@ describe('VideoPlayerDialog', () => {
     await flushPromises()
     expect(wrapper.find('.video-player-dialog__profile-warn').exists()).toBe(false)
 
+    await wrapper.find('video').trigger('progress')
     await failWith(wrapper, 4)
 
     const text = 'Failed to play this channel earlier this session'
@@ -327,6 +351,7 @@ describe('VideoPlayerDialog', () => {
     await flushPromises()
 
     /* matroska fails on an MPEG-2 channel and plays an H.264 one. */
+    await wrapper.find('video').trigger('progress')
     await failWith(wrapper, 3)
     expect(wrapper.find('.video-player-dialog__profile-warn').exists()).toBe(true)
 
@@ -351,5 +376,148 @@ describe('VideoPlayerDialog', () => {
     await wrapper.find('video').trigger('playing')
     expect(store.failedProfiles.get('ch-abc')?.has('pass')).toBe(false)
     expect(store.failedProfiles.get('ch-def')?.has('pass')).toBe(true)
+  })
+
+  it('names both causes and flags nothing on an error before any progress', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    /* A zero-byte close or a 503 (Chrome and WebKit), or a stream
+     * WebKit cannot play: code 4 and no progress event. */
+    await failWith(wrapper, 4)
+
+    expect(wrapper.find('video').exists()).toBe(true)
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+    expect(wrapper.text()).toMatch(/no free tuner/)
+    expect(wrapper.text()).toMatch(/cannot play it with profile "webtv"/)
+    expect(wrapper.text()).not.toMatch(/Playback failed/)
+    /* Code 4 would point at the profile, so the detail is left out. */
+    expect(wrapper.text()).not.toMatch(/format not supported/)
+    expect(useStreamProfilesStore().failedProfiles.get('ch-abc')?.has('webtv')).toBeFalsy()
+  })
+
+  it('does not read the error message', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    /* Only the progress event decides. The message is engine-specific
+     * text and gets no say. */
+    await failWith(wrapper, 4, 'any engine-specific text')
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+  })
+
+  it('blames and flags the profile on an error after progress', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    /* Chrome with a stream it cannot decode: progress, then code 4. */
+    await wrapper.find('video').trigger('progress')
+    await failWith(wrapper, 4)
+
+    expect(wrapper.text()).toMatch(/Playback failed/)
+    expect(wrapper.text()).toMatch(/format not supported/)
+    expect(wrapper.text()).not.toMatch(NOT_STARTED)
+    expect(useStreamProfilesStore().failedProfiles.get('ch-abc')?.has('webtv')).toBe(true)
+  })
+
+  it('links an admin to Status → Log and closes the player on click', async () => {
+    mockApi()
+    useAccessStore().data = { admin: true, dvr: true } as Access
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await failWith(wrapper, 4)
+
+    const link = wrapper.find('a[data-to]')
+    expect(link.exists()).toBe(true)
+    expect(JSON.parse(link.attributes('data-to')!)).toEqual({ name: 'status-log' })
+    await link.trigger('click')
+    expect(useVideoPlayer().isOpen.value).toBe(false)
+  })
+
+  it('offers no Log link to a non-admin user', async () => {
+    mockApi()
+    useAccessStore().data = { admin: false, dvr: true } as Access
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await failWith(wrapper, 4)
+
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+    expect(wrapper.find('a[data-to]').exists()).toBe(false)
+  })
+
+  it('offers no Log link on an error after progress', async () => {
+    mockApi()
+    useAccessStore().data = { admin: true, dvr: true } as Access
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await wrapper.find('video').trigger('progress')
+    await failWith(wrapper, 4)
+
+    expect(wrapper.find('a[data-to]').exists()).toBe(false)
+  })
+
+  it('clears the not-started message on a channel switch', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    await failWith(wrapper, 4)
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+
+    await wrapper.find('.video-player-dialog__channel-select').setValue('ch-def')
+    await flushPromises()
+    expect(wrapper.text()).not.toMatch(NOT_STARTED)
+  })
+
+  it("forgets the previous load's progress on a profile switch", async () => {
+    mockApi(['matroska', 'pass'])
+    useVideoPlayer().open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+
+    /* The first profile's stream got going… */
+    await wrapper.find('video').trigger('progress')
+
+    /* …the next one never does. Its error must not count the earlier
+     * progress, or the new profile would be flagged. */
+    await wrapper.find('.video-player-dialog__profile-select').setValue('pass')
+    await flushPromises()
+    await failWith(wrapper, 4)
+
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+    expect(useStreamProfilesStore().failedProfiles.get('ch-abc')?.has('pass')).toBeFalsy()
+  })
+
+  it('forgets the progress when reopened', async () => {
+    mockApi()
+    const player = useVideoPlayer()
+    player.open(TARGET)
+    const wrapper = mountDialog()
+    await flushPromises()
+    await wrapper.find('video').trigger('progress')
+
+    /* Reopening starts a new load, so the earlier progress must not
+     * count for it. */
+    player.close()
+    await flushPromises()
+    player.open(TARGET)
+    await flushPromises()
+    await failWith(wrapper, 4)
+
+    expect(wrapper.text()).toMatch(NOT_STARTED)
+    expect(useStreamProfilesStore().failedProfiles.get('ch-abc')?.has('webtv')).toBeFalsy()
   })
 })
