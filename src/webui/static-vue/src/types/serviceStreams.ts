@@ -20,7 +20,7 @@
  * each entry has the same shape as a `streams` entry. The dialog
  * merges them client-side and renders one row per `streams` entry
  * with a Used flag indicating whether the same (index, pid) appears
- * in `fstreams`.
+ * in `fstreams`, and its position there (esfilters can reorder).
  */
 
 /* Per-stream type-specific extras emitted by
