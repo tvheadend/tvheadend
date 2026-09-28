@@ -12,7 +12,7 @@
  *     for each form-driven step.
  *   - The status step starts polling on mount + auto-advances
  *     to mapping when the scan progress completes.
- *   - The channels step's Finish flow POSTs save then cancel
+ *   - The channels step's Finish flow POSTs cancel then save
  *     then navigates to /gui/ (epg).
  *   - The wizard guard pulls users back into the wizard when
  *     they navigate to a non-wizard route while wizard is

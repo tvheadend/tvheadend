@@ -11,14 +11,15 @@
  * choosing between `channels` and `channels2` doc variants).
  *
  * Finish flow:
- *   1. POST wizard/channels/save — triggers the C-side
+ *   1. POST wizard/cancel — clears `config.wizard` so the
+ *      wizard auto-trigger doesn't re-fire on next session.
+ *   2. POST wizard/channels/save — triggers the C-side
  *      `channels_changed` callback (src/wizard.c:1157) which
  *      removes the wide-open default access entry when a
- *      wizard-created admin exists.
- *   2. POST wizard/cancel — clears `config.wizard` so the
- *      wizard auto-trigger doesn't re-fire on next session.
+ *      wizard-created admin exists. If it fails after a
+ *      successful cancel, POST wizard/start puts the wizard back.
  *   3. Navigate to `/gui/` (the EPG route) — the user is dropped
- *      into the regular UI.
+ *      into the regular UI, or into the wizard again after 2.
  *
  * No IdnodeConfigForm — the channels step has no form fields
  * (just icon + description + PREV / LAST markers). Mirroring
@@ -74,15 +75,33 @@ function normalizeStaticUrl(u: string): string {
 async function handleFinish(): Promise<void> {
   if (finishing.value) return
   finishing.value = true
+  let saved = false
   try {
-    /* Sequence per ADR 0015 §10. The server-side
-     * channels_changed callback fires on the save POST and
-     * removes the default wide-open access entry; the cancel
-     * POST then clears config.wizard. Doing this in two
-     * sequential requests (not parallel) so the access-entry
-     * removal completes before cancel teardown. */
-    await apiCall('wizard/channels/save', { node: JSON.stringify({}) })
-    await wizard.cancel()
+    /* Cancel first, then save, the order Classic uses (the cancel
+     * in presave, static/app/wizard.js). The save's
+     * channels_changed callback removes the default wide-open
+     * access entry once a wizard admin exists (src/wizard.c), and
+     * wizard/cancel needs admin rights. Sent after the save, the
+     * cancel could hit a credentials prompt and leave the wizard
+     * active. The save still runs when the cancel fails, because
+     * it is what removes the wide-open entry. */
+    let cancelled = false
+    try {
+      await wizard.cancel()
+      cancelled = true
+    } catch (e) {
+      console.warn('[wizard] cancel failed:', e)
+    }
+    try {
+      await apiCall('wizard/channels/save', { node: JSON.stringify({}) })
+      saved = true
+    } catch (e) {
+      /* Without the save the wide-open entry stays. After a
+       * successful cancel, start the wizard again so the reload
+       * below lands in it and the setup can still be finished. */
+      if (cancelled) await wizard.start()
+      throw e
+    }
   } catch (e) {
     console.warn('[wizard] finish flow failed:', e)
   } finally {
@@ -107,8 +126,9 @@ async function handleFinish(): Promise<void> {
    * (recoverable from the Configuration UI). */
   /* Flag the Home dashboard's "Setup complete" greeting for after
    * the reload — sessionStorage survives the full reload, in-memory
-   * state does not. The Home reads + clears it once. */
-  markSetupComplete()
+   * state does not. The Home reads + clears it once. Only after a
+   * successful save, since the setup is not complete otherwise. */
+  if (saved) markSetupComplete()
   globalThis.location.assign(appBase)
 }
 
