@@ -7,8 +7,8 @@
  *
  * Pins the leading recording-state icon on all three (Classic
  * dvrRowActions, dvr.js:352-373) and the per-row Play icon right
- * after it on Finished (dvr.js:812-823), while Removed has none
- * (the file is gone).
+ * after it on Finished and Failed (Classic dvr.js:812-823, 932-944),
+ * gated on an on-disk file, while Removed has none (the file is gone).
  */
 import { describe, expect, it, vi } from 'vitest'
 import type { Component } from 'vue'
@@ -18,7 +18,9 @@ import FailedView from '../FailedView.vue'
 import RemovedView from '../RemovedView.vue'
 import PlayCell from '@/components/PlayCell.vue'
 import DvrStateCell from '@/components/DvrStateCell.vue'
+import { dvrEntryColumns } from '../dvrEntryColumns'
 import type { ColumnDef } from '@/types/column'
+import type { BaseRow } from '@/types/grid'
 
 /* The grid itself is out of scope. Its stub records the props each
  * view hands to it. */
@@ -36,9 +38,53 @@ function columnsOf(view: Component): ColumnDef[] {
   return stubs.gridColumns()
 }
 
+const plain = (v: unknown) => String(v ?? '')
+
+function playOf(cols: ColumnDef[]): ColumnDef {
+  const play = cols.find((c) => c.field === '_play')
+  if (!play) throw new Error('no Play column')
+  return play
+}
+
+describe('dvrEntryColumns — play option', () => {
+  it('puts the Play column right after the state icon when asked', () => {
+    const cols = dvrEntryColumns(plain, { play: true })
+    expect(cols[0].field).toBe('sched_status')
+    expect(cols[1].field).toBe('_play')
+    expect(cols[1].cellComponent).toBe(PlayCell)
+    expect(cols[1].playPath).toBe('dvrfile')
+    expect(cols[1].sortable).toBe(false)
+  })
+
+  it('has no Play column by default', () => {
+    expect(dvrEntryColumns(plain).some((c) => c.field === '_play')).toBe(false)
+  })
+
+  it('enables Play only for rows with a file on disk', () => {
+    const play = playOf(dvrEntryColumns(plain, { play: true }))
+    expect(play.playEnabled?.({ uuid: 'a', filesize: 1024 } as BaseRow)).toBe(true)
+    expect(play.playEnabled?.({ uuid: 'a', filesize: 0 } as BaseRow)).toBe(false)
+    expect(play.playEnabled?.({ uuid: 'a' } as BaseRow)).toBe(false)
+  })
+
+  it('titles the stream with the episode when there is one', () => {
+    const play = playOf(dvrEntryColumns(plain, { play: true }))
+    expect(play.playTitle?.({ disp_title: 'News', episode_disp: 'S01E02' } as BaseRow)).toBe(
+      'News / S01E02',
+    )
+    expect(play.playTitle?.({ disp_title: 'News' } as BaseRow)).toBe('News')
+  })
+})
+
 describe('DVR entry views — Play column', () => {
   it('Finished has the Play column after the state icon', () => {
     const cols = columnsOf(FinishedView)
+    expect(cols[1].field).toBe('_play')
+    expect(cols[1].cellComponent).toBe(PlayCell)
+  })
+
+  it('Failed has the Play column after the state icon', () => {
+    const cols = columnsOf(FailedView)
     expect(cols[1].field).toBe('_play')
     expect(cols[1].cellComponent).toBe(PlayCell)
   })
