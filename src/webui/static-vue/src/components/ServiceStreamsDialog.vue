@@ -178,23 +178,45 @@ function fmtCaid(c: ServiceCaid): string {
 
 /* ---- HbbTV section ---- */
 
+/* One row per section, application and title (language), like
+ * Classic (`mpegts.js:226-250`). Applications without a title are
+ * skipped there too. */
 interface HbbTvRow {
+  key: string
   section: string
-  language?: string
-  appName?: string
-  url?: string
+  language: string
+  name: string
+  url: string
 }
 
 const hbbtvRows = computed<HbbTvRow[]>(() => {
   const hb = data.value?.hbbtv
-  if (!hb) return []
-  return Object.entries(hb).map(([section, payload]) => ({
-    section,
-    language: typeof payload?.language === 'string' ? payload.language : undefined,
-    appName: typeof payload?.appName === 'string' ? payload.appName : undefined,
-    url: typeof payload?.url === 'string' ? payload.url : undefined,
-  }))
+  if (!hb || typeof hb !== 'object') return []
+  const out: HbbTvRow[] = []
+  for (const [section, apps] of Object.entries(hb)) {
+    if (!Array.isArray(apps)) continue
+    apps.forEach((app, appIdx) => {
+      if (!Array.isArray(app?.title)) return
+      const url = typeof app.url === 'string' ? app.url : ''
+      app.title.forEach((title, titleIdx) => {
+        out.push({
+          key: `${section}:${appIdx}:${titleIdx}`,
+          section,
+          language: typeof title?.lang === 'string' ? title.lang : '',
+          name: typeof title?.name === 'string' ? title.name : '',
+          url,
+        })
+      })
+    })
+  }
+  return out
 })
+
+/* The URL comes from the broadcast, so only http(s) URLs become
+ * links. Anything else (e.g. a `javascript:` URL) stays text. */
+function isWebUrl(url: string): boolean {
+  return /^https?:\/\//i.test(url)
+}
 </script>
 
 <template>
@@ -251,15 +273,26 @@ const hbbtvRows = computed<HbbTvRow[]>(() => {
       <summary>{{ t('HbbTV') }}</summary>
       <DataTable
         :value="hbbtvRows"
-        data-key="section"
+        data-key="key"
         striped-rows
         size="small"
         class="service-streams-dialog__hbbtv-table"
       >
         <Column field="section" :header="t('Section')" style="width: 100px" />
         <Column field="language" :header="t('Language')" style="width: 80px" />
-        <Column field="appName" :header="t('App name')" style="width: 220px" />
-        <Column field="url" :header="t('URL')" />
+        <Column field="name" :header="t('Name')" style="width: 200px" />
+        <Column :header="t('Link')">
+          <template #body="{ data: row }">
+            <a
+              v-if="isWebUrl((row as HbbTvRow).url)"
+              :href="(row as HbbTvRow).url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="service-streams-dialog__hbbtv-link"
+            >{{ (row as HbbTvRow).url }}</a>
+            <span v-else>{{ (row as HbbTvRow).url }}</span>
+          </template>
+        </Column>
       </DataTable>
     </details>
   </Dialog>
@@ -300,5 +333,9 @@ const hbbtvRows = computed<HbbTvRow[]>(() => {
 .service-streams-dialog__hbbtv-table {
   width: 100%;
   margin-top: var(--tvh-space-2);
+}
+
+.service-streams-dialog__hbbtv-link {
+  overflow-wrap: anywhere;
 }
 </style>

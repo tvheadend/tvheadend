@@ -13,6 +13,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
+import PrimeVue from 'primevue/config'
 import ServiceStreamsDialog from '../ServiceStreamsDialog.vue'
 import { DIALOG_PASSTHROUGH_STUB } from './__helpers__/idnodeEditorTestUtils'
 
@@ -45,6 +46,29 @@ function makeDataTableStub() {
     `,
     props: ['value', 'loading', 'dataKey', 'scrollable', 'scrollHeight', 'stripedRows', 'size'],
   }
+}
+
+/* `api/service/streams` HbbTV payload as `dvb_psi_hbbtv_cb`
+ * builds it (`src/input/mpegts/dvb_psi_hbbtv.c`): section number
+ * -> applications -> titles per language. */
+const HBBTV_FIXTURE = {
+  '0': [
+    {
+      title: [
+        { name: 'CT HbbTV', lang: 'ces' },
+        { name: 'CT HbbTV EN', lang: 'eng' },
+      ],
+      url: 'https://hbbtv.example.cz/index.html',
+      visibility: 'all',
+    },
+  ],
+  '1': [
+    {
+      title: [{ name: 'Teletext', lang: 'ces' }],
+      url: 'javascript:alert(1)',
+      visibility: 'all',
+    },
+  ],
 }
 
 beforeEach(() => {
@@ -228,9 +252,7 @@ describe('ServiceStreamsDialog', () => {
       name: 'X',
       streams: [],
       fstreams: [],
-      hbbtv: {
-        s1: { language: 'eng', appName: 'BBC iPlayer', url: 'https://example.com/app' },
-      },
+      hbbtv: HBBTV_FIXTURE,
     })
     const wrapper = mountDialog()
     await flushPromises()
@@ -252,5 +274,62 @@ describe('ServiceStreamsDialog', () => {
     await wrapper.setProps({ uuid: 'b' })
     await flushPromises()
     expect(apiMock).toHaveBeenCalledWith('service/streams', { uuid: 'b' })
+  })
+})
+
+/* HbbTV table with the real PrimeVue DataTable, so the cell text
+ * and the link markup are what the user sees. */
+describe('ServiceStreamsDialog HbbTV table', () => {
+  function mountReal() {
+    return mount(ServiceStreamsDialog, {
+      props: { uuid: 'svc-abc', visible: true },
+      global: {
+        plugins: [[PrimeVue, {}]],
+        stubs: { Dialog: DIALOG_PASSTHROUGH_STUB },
+      },
+    })
+  }
+
+  function hbbtvCells(wrapper: ReturnType<typeof mountReal>): string[][] {
+    return wrapper
+      .findAll('.service-streams-dialog__hbbtv-table tbody tr')
+      .map((tr) => tr.findAll('td').map((td) => td.text()))
+  }
+
+  it('lists one row per section, application and title', async () => {
+    apiMock.mockResolvedValueOnce({ name: 'X', streams: [], fstreams: [], hbbtv: HBBTV_FIXTURE })
+    const wrapper = mountReal()
+    await flushPromises()
+    expect(hbbtvCells(wrapper)).toEqual([
+      ['0', 'ces', 'CT HbbTV', 'https://hbbtv.example.cz/index.html'],
+      ['0', 'eng', 'CT HbbTV EN', 'https://hbbtv.example.cz/index.html'],
+      ['1', 'ces', 'Teletext', 'javascript:alert(1)'],
+    ])
+  })
+
+  it('links http(s) URLs in a new tab and leaves other schemes as text', async () => {
+    apiMock.mockResolvedValueOnce({ name: 'X', streams: [], fstreams: [], hbbtv: HBBTV_FIXTURE })
+    const wrapper = mountReal()
+    await flushPromises()
+    const links = wrapper.findAll('.service-streams-dialog__hbbtv-table a')
+    expect(links).toHaveLength(2)
+    for (const a of links) {
+      expect(a.attributes('href')).toBe('https://hbbtv.example.cz/index.html')
+      expect(a.attributes('target')).toBe('_blank')
+      expect(a.attributes('rel')).toBe('noopener noreferrer')
+    }
+    expect(wrapper.find('a[href^="javascript"]').exists()).toBe(false)
+  })
+
+  it('skips applications without titles', async () => {
+    apiMock.mockResolvedValueOnce({
+      name: 'X',
+      streams: [],
+      fstreams: [],
+      hbbtv: { '0': [{ url: 'https://a.example/' }] },
+    })
+    const wrapper = mountReal()
+    await flushPromises()
+    expect(wrapper.find('.service-streams-dialog__hbbtv').exists()).toBe(false)
   })
 })
