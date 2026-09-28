@@ -29,10 +29,15 @@
  *   - TimelineView's <EpgTimeline>: opens on event-block click.
  *   - TableView: opens on row click.
  *
- * Action surface: Record / Stop recording / Delete recording (via
- * `<ActionMenu>`, top of body). Buttons swap based on the event's
- * `dvrState`, mirroring the legacy ExtJS dialog at
- * `static/app/epg.js:327-435`.
+ * Action surface (`<ActionMenu>`, top of body), in this order: Play,
+ * the DVR state action (Record / Stop recording / Delete recording,
+ * swapped on the event's `dvrState`), Autorec or Record series, View
+ * DVR entry, then Other showings. Order matters because ActionMenu
+ * overflows from the end of the array, so the first entries are the
+ * ones that stay visible in a narrow drawer. It follows the legacy
+ * ExtJS dialog at `static/app/epg.js:362-447` and DVR Upcoming's
+ * toolbar at `UpcomingView.vue:505-518`, both of which put the
+ * related / alternative showings after the recording actions.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDvrEditor } from '@/composables/useDvrEditor'
@@ -588,15 +593,12 @@ function buildPlayAction(ev: EpgEventDetail): ActionDef | null {
   return null
 }
 
-const actions = computed<ActionDef[]>(() => {
-  const ev = props.event
-  if (!ev) return []
-  const out: ActionDef[] = []
-  const play = buildPlayAction(ev)
-  if (play) out.push(play)
-  /* Related / alternative showings — browse-only (anonymous-access
-   * endpoints), so offered to every user regardless of DVR access. */
-  out.push({
+/* Other showings — related broadcasts and alternative showings,
+ * browse-only (anonymous-access endpoints), so offered to every user
+ * regardless of DVR access. It trails the DVR actions on purpose, so
+ * a browse-only dropdown never pushes Record into the `…` overflow. */
+function buildShowingsAction(): ActionDef {
+  return {
     id: 'showings',
     label: t('Other showings'),
     tooltip: t('Find related broadcasts and alternative showings of this programme'),
@@ -614,23 +616,17 @@ const actions = computed<ActionDef[]>(() => {
         onClick: () => openRelated('alternative'),
       },
     ],
-  })
-  /* DVR-specific actions need recorder access. */
-  if (!access.data?.dvr) return out
+  }
+}
+
+/* DVR actions (recorder access only), in overflow-priority order:
+ * the state action (Stop / Delete / Record), Autorec or Record
+ * series, then View DVR entry. Extracted from the actions computed
+ * for the same cognitive-complexity reason as buildPlayAction. */
+function buildDvrActions(ev: EpgEventDetail): ActionDef[] {
+  const out: ActionDef[] = []
   const recording = ev.dvrState?.startsWith('recording') ?? false
   const scheduled = ev.dvrState?.startsWith('scheduled') ?? false
-  /* "View DVR entry" — non-destructive, leads the DVR group.
-   * Whenever the event has an associated DVR entry, offer a path
-   * to inspect/edit it without manually navigating to DVR
-   * Upcoming/Finished/Failed. */
-  if (ev.dvrUuid) {
-    out.push({
-      id: 'view',
-      label: t('View DVR entry'),
-      tooltip: t("Open this event's DVR entry"),
-      onClick: viewDvrEntry,
-    })
-  }
   if (recording) {
     out.push({
       id: 'stop',
@@ -654,8 +650,9 @@ const actions = computed<ActionDef[]>(() => {
      * The picker rides on the action itself so ActionMenu's
      * width-aware overflow keeps the picker glued to the button:
      * if Record overflows into the `…` menu, the picker goes with
-     * it. Picker is skipped on dvrUuid-bearing events (View / Stop
-     * / Delete branches above) where it would have no effect. */
+     * it. Picker is skipped on the Stop / Delete branches above
+     * (recording or scheduled entries), where it would have no
+     * effect. */
     const profileOptions = dvrConfig.entries.map((cfg) => ({
       value: String(cfg.key),
       label: cfg.val,
@@ -697,6 +694,30 @@ const actions = computed<ActionDef[]>(() => {
     disabled: inflight.value,
     onClick: recordSeries,
   })
+  /* "View DVR entry" — non-destructive. Follows the state action
+   * and Autorec so that on a phone its long label never pushes
+   * Stop or Delete into the `…` overflow. Whenever the event has
+   * an associated DVR entry, offer a path to inspect/edit it
+   * without manually navigating to DVR Upcoming/Finished/Failed. */
+  if (ev.dvrUuid) {
+    out.push({
+      id: 'view',
+      label: t('View DVR entry'),
+      tooltip: t("Open this event's DVR entry"),
+      onClick: viewDvrEntry,
+    })
+  }
+  return out
+}
+
+const actions = computed<ActionDef[]>(() => {
+  const ev = props.event
+  if (!ev) return []
+  const out: ActionDef[] = []
+  const play = buildPlayAction(ev)
+  if (play) out.push(play)
+  if (access.data?.dvr) out.push(...buildDvrActions(ev))
+  out.push(buildShowingsAction())
   return out
 })
 
@@ -877,20 +898,12 @@ const flags = computed(() => {
     </template>
     <div v-if="event" class="epg-event-drawer__body">
       <!--
-        Action row — Record / Stop / Delete, depending on the event's
-        dvrState. Hidden when the user lacks recorder access OR when
-        no actionable button applies (rare; would need ev.dvrState to
-        be in a 'completed*' state where neither record nor cancel
-        applies). `<ActionMenu>` is the same component DVR/Status
-        toolbars use, so the look matches the rest of the app.
-      -->
-      <!--
-        Single ActionMenu hosts every drawer action. The Record
-        action carries the DVR-profile picker as a `leadingControl`
-        so the picker + Record button render as one inline pair
-        — and if the toolbar narrows enough to push Record into the
-        `…` overflow, the picker travels with it (the pair is
-        measured as one logical entry).
+        Single ActionMenu hosts every drawer action — the same
+        component DVR/Status toolbars use. The order of `actions` is
+        the overflow priority: the first entries stay inline, the
+        rest go into `…`. The Record action carries the DVR-profile
+        picker as a `leadingControl`, so the picker + Record pair is
+        measured as one logical entry and overflows as one unit.
       -->
       <ActionMenu
         v-if="actions.length > 0"
