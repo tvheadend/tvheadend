@@ -155,14 +155,16 @@ function buildEventCommand(entry: EpgEventEntry, deps: EpgEventSourceDeps): Comm
     keywords: ['show', 'epg', 'program'],
     actionLabel: 'Open in EPG',
     action: () => {
-      /* Navigate with `?title=<title>` so TableView's existing
-       * URL-→-perColumn watcher applies the title column filter.
-       * Same pattern as channelSource using `?channelName=`. The
-       * user lands on a filtered Table view; clicking the row
+      /* Navigate with `?title=<title>` so TableView's URL watcher
+       * applies the title filter. TableView treats the value as
+       * the literal title and regex-escapes it for the server, so
+       * a title with parentheses still matches itself. An untitled
+       * event has nothing to search for and just opens the Table.
+       * The user lands on a filtered Table view; clicking the row
        * opens the event drawer via the normal Table flow. .catch
        * swallows NavigationFailure (router-guard redirect etc.). */
       deps.router
-        .push({ name: 'epg-table', query: { title } })
+        .push({ name: 'epg-table', query: entry.title ? { title: entry.title } : {} })
         .catch(() => undefined)
     },
   }

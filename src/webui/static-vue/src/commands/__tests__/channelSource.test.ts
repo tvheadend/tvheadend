@@ -95,7 +95,7 @@ describe('channelSource', () => {
     expect(cmd.tertiaryAction?.label).toBe('Edit channel')
   })
 
-  it('primary action routes to /epg/table with the channel NAME in the query', async () => {
+  it('primary action routes to /epg/table with the channel uuid in the query', async () => {
     apiMock.mockResolvedValueOnce({
       entries: [{ key: 'ch-a', val: 'Alpha' }],
     })
@@ -104,7 +104,7 @@ describe('channelSource', () => {
     cmd.action()
     expect(fakeRouter.push).toHaveBeenCalledWith({
       name: 'epg-table',
-      query: { channelName: 'Alpha' },
+      query: { channel: 'ch-a' },
     })
   })
 
@@ -182,7 +182,7 @@ describe('channelSource', () => {
     cmd.action()
     expect(fakeRouter.push).toHaveBeenCalledWith({
       name: 'epg-table',
-      query: { channelName: 'Alpha' },
+      query: { channel: 'ch-a' },
     })
   })
 
@@ -252,27 +252,23 @@ describe('channelSource', () => {
     expect(getChannelCommands().value).toEqual([])
   })
 
-  it('preserves channel names with spaces verbatim in the route query', async () => {
+  it('opens the EPG Table with the channel uuid, not the name', async () => {
     apiMock.mockResolvedValueOnce({
-      entries: [{ key: 'ch-1', val: 'BBC One HD' }],
+      entries: [{ key: 'ch-1', val: 'BBC One' }],
     })
     await ensureChannelsLoaded(deps)
     const cmd = getChannelCommands().value[0]
     cmd.action()
-    /* vue-router stringifies + URL-encodes the query value at navigate
-     * time. We just pass the raw name through — encoding is the
-     * router's job and TableView reads via route.query.channelName
-     * (already decoded). */
+    /* The server matches a channel NAME filter as a caseless,
+     * unanchored regex, so the name would also list "BBC One HD".
+     * TableView sends the uuid as the exact `channel` param. */
     expect(fakeRouter.push).toHaveBeenCalledWith({
       name: 'epg-table',
-      query: { channelName: 'BBC One HD' },
+      query: { channel: 'ch-1' },
     })
   })
 
-  it('keeps channel names with regex metacharacters intact (no escaping at source)', async () => {
-    /* The column filter does substring (matchMode: contains) match,
-     * not regex, so special chars pass through as literal text and
-     * still match the column value verbatim. */
+  it('hands off the uuid for names with regex metacharacters too', async () => {
     apiMock.mockResolvedValueOnce({
       entries: [{ key: 'ch-special', val: 'A+B (Live) | News' }],
     })
@@ -281,7 +277,7 @@ describe('channelSource', () => {
     cmd.action()
     expect(fakeRouter.push).toHaveBeenCalledWith({
       name: 'epg-table',
-      query: { channelName: 'A+B (Live) | News' },
+      query: { channel: 'ch-special' },
     })
   })
 

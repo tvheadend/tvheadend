@@ -192,6 +192,29 @@ describe('epgEventSource', () => {
       })
     })
 
+    it('hands off the raw title (TableView escapes it for the server)', async () => {
+      apiMock.mockResolvedValue({
+        entries: [{ eventId: 1, title: 'Afrika z výšky (S1, E3)', start: 1700000000 }],
+      })
+      updateEpgQuery('afrika', deps)
+      await vi.advanceTimersByTimeAsync(400)
+      await getEpgEventCommands().value[0].action()
+      expect(fakeRouter.push).toHaveBeenCalledWith({
+        name: 'epg-table',
+        query: { title: 'Afrika z výšky (S1, E3)' },
+      })
+    })
+
+    it('an untitled event opens the Table without a title filter', async () => {
+      apiMock.mockResolvedValue({
+        entries: [{ eventId: 1, start: 1700000000 }],
+      })
+      updateEpgQuery('xxx', deps)
+      await vi.advanceTimersByTimeAsync(400)
+      await getEpgEventCommands().value[0].action()
+      expect(fakeRouter.push).toHaveBeenCalledWith({ name: 'epg-table', query: {} })
+    })
+
     it('tolerates empty entries (no commands, no throw)', async () => {
       apiMock.mockResolvedValue({ entries: [] })
       updateEpgQuery('zzznoresults', deps)

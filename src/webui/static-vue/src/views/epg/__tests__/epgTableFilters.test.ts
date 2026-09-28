@@ -33,6 +33,7 @@ import {
   isTagFilterActive,
   serverParamsFromFilters,
   timeWindowFilters,
+  uniqueChannelUuidByName,
   type BuildFiltersInput,
 } from '../epgTableFilters'
 import type { FilterDef } from '@/types/grid'
@@ -169,6 +170,28 @@ describe('serverParamsFromFilters — empty / single-axis', () => {
       { field: 'channelName', type: 'string', value: 'bbc' },
     ])
     expect(out.params).toEqual({})
+  })
+
+  it('exact channel pick → exact `channel` param, no channelName regex', () => {
+    /* A channelName filter is a caseless, unanchored regex on the
+     * server: "CT 1" would also match "CT 1 HD". The exact pick
+     * must go out as the uuid, and wins over leftover funnel text. */
+    const out = serverParamsFromFilters({
+      ...inputDefaults(),
+      perColumn: { channel: 'uuid-ct1', channelName: 'CT 1' },
+    })
+    expect(out.filter).toEqual([])
+    expect(out.params).toEqual({ channel: 'uuid-ct1' })
+  })
+
+  it('exact channel pick composes with a tag and other axes', () => {
+    const out = serverParamsFromFilters({
+      ...inputDefaults(),
+      perColumn: { channel: 'uuid-ct1' },
+      newOnly: true,
+      tagFilter: { tag: 'tag-1' },
+    })
+    expect(out.params).toEqual({ channel: 'uuid-ct1', new: 1, channelTag: 'tag-1' })
   })
 
   it('per-column title is NOT included (routes through query mode)', () => {
@@ -374,13 +397,54 @@ describe('serverParamsFromFilters — combined axes', () => {
   })
 })
 
-describe('buildClusterFilterByChannel', () => {
-  it('appends cluster channelName to an empty global filter', () => {
-    const out = buildClusterFilterByChannel([], 'BBC One')
-    expect(out).toEqual([{ field: 'channelName', type: 'string', value: 'BBC One' }])
+describe('uniqueChannelUuidByName', () => {
+  const channels = [
+    { uuid: 'u-ct1', name: 'CT 1' },
+    { uuid: 'u-ct1hd', name: 'CT 1 HD' },
+    { uuid: 'u-dup-a', name: 'Dup' },
+    { uuid: 'u-dup-b', name: 'Dup' },
+    { uuid: 'u-noname' },
+  ]
+
+  it('returns the uuid of the one channel with exactly that name', () => {
+    expect(uniqueChannelUuidByName(channels, 'CT 1')).toBe('u-ct1')
   })
 
-  it('strips per-column channelName from global filter, appends cluster name', () => {
+  it('does not match on a substring or a different case', () => {
+    expect(uniqueChannelUuidByName(channels, 'CT')).toBeNull()
+    expect(uniqueChannelUuidByName(channels, 'ct 1')).toBeNull()
+  })
+
+  it('returns null when several channels share the name', () => {
+    expect(uniqueChannelUuidByName(channels, 'Dup')).toBeNull()
+  })
+
+  it('returns null for an unknown name or an empty list', () => {
+    expect(uniqueChannelUuidByName(channels, 'Nope')).toBeNull()
+    expect(uniqueChannelUuidByName([], 'CT 1')).toBeNull()
+  })
+})
+
+describe('buildClusterFilterByChannel', () => {
+  it('with a uuid: exact `channel` param, no channelName entry', () => {
+    const out = buildClusterFilterByChannel([], 'CT 1', 'u-ct1')
+    expect(out).toEqual({ filter: [], params: { channel: 'u-ct1' } })
+  })
+
+  it('without a uuid: the name escaped and anchored, never the raw regex', () => {
+    /* Raw "CT 1" would also match "CT 1 HD" on the server, and the
+     * cluster chip would show that inflated total. */
+    const out = buildClusterFilterByChannel([], 'A+B (Live)')
+    expect(out).toEqual({
+      filter: [{ field: 'channelName', type: 'string', value: String.raw`^A\+B \(Live\)$` }],
+      params: {},
+    })
+    const re = new RegExp(out.filter[0].value as string, 'i')
+    expect(re.test('A+B (Live)')).toBe(true)
+    expect(re.test('A+B (Live) HD')).toBe(false)
+  })
+
+  it('strips per-column channelName from global filter (cluster bound wins)', () => {
     /* Cluster bound wins over the per-column regex — the user
      * clicked a specific channel-cluster header, that channel
      * is the authoritative scope. */
@@ -388,11 +452,11 @@ describe('buildClusterFilterByChannel', () => {
       { field: 'channelName', type: 'string' as const, value: 'bbc' },
       { field: 'start', type: 'numeric' as const, value: String(NOW), comparison: 'lt' as const },
     ]
-    const out = buildClusterFilterByChannel(global, 'BBC One')
-    expect(out).toEqual([
+    const out = buildClusterFilterByChannel(global, 'BBC One', 'u-bbc1')
+    expect(out.filter).toEqual([
       { field: 'start', type: 'numeric', value: String(NOW), comparison: 'lt' },
-      { field: 'channelName', type: 'string', value: 'BBC One' },
     ])
+    expect(out.params).toEqual({ channel: 'u-bbc1' })
   })
 
   it('preserves time-window entries (start / stop) in the cluster filter', () => {
@@ -403,11 +467,10 @@ describe('buildClusterFilterByChannel', () => {
       { field: 'start', type: 'numeric' as const, value: String(NOW), comparison: 'lt' as const },
       { field: 'stop', type: 'numeric' as const, value: String(NOW), comparison: 'gt' as const },
     ]
-    const out = buildClusterFilterByChannel(global, 'BBC One')
-    expect(out).toEqual([
+    const out = buildClusterFilterByChannel(global, 'BBC One', 'u-bbc1')
+    expect(out.filter).toEqual([
       { field: 'start', type: 'numeric', value: String(NOW), comparison: 'lt' },
       { field: 'stop', type: 'numeric', value: String(NOW), comparison: 'gt' },
-      { field: 'channelName', type: 'string', value: 'BBC One' },
     ])
   })
 
@@ -416,9 +479,9 @@ describe('buildClusterFilterByChannel', () => {
       { field: 'duration', type: 'numeric' as const, value: '1800', comparison: 'gt' as const },
     ]
     const out = buildClusterFilterByChannel(global, 'BBC One')
-    expect(out).toEqual([
+    expect(out.filter).toEqual([
       { field: 'duration', type: 'numeric', value: '1800', comparison: 'gt' },
-      { field: 'channelName', type: 'string', value: 'BBC One' },
+      { field: 'channelName', type: 'string', value: '^BBC One$' },
     ])
   })
 
@@ -1137,16 +1200,24 @@ describe('buildClusterFetchFilter', () => {
       { field: 'channelName', type: 'string', value: 'old-regex' }, /* stripped */
       { field: 'genre', type: 'numeric', value: '5', comparison: 'eq' }, /* kept */
     ]
-    const out = buildClusterFetchFilter('channelName', 'BBC One', global)
+    const out = buildClusterFetchFilter('channelName', 'BBC One', global, 'u-bbc1')
     expect(out.ok).toBe(true)
     if (!out.ok) return
     /* Same shape as buildClusterFilterByChannel — pre-existing
-     * channelName stripped, cluster's bound appended, other
-     * fields preserved. */
+     * channelName stripped, cluster bound by the exact `channel`
+     * param, other fields preserved. */
     expect(out.filter).toEqual([
       { field: 'genre', type: 'numeric', value: '5', comparison: 'eq' },
-      { field: 'channelName', type: 'string', value: 'BBC One' },
     ])
+    expect(out.params).toEqual({ channel: 'u-bbc1' })
+  })
+
+  it('channelName mode without a uuid: anchored, escaped name', () => {
+    const out = buildClusterFetchFilter('channelName', 'CT 1', [])
+    expect(out.ok).toBe(true)
+    if (!out.ok) return
+    expect(out.filter).toEqual([{ field: 'channelName', type: 'string', value: '^CT 1$' }])
+    expect(out.params).toEqual({})
   })
 
   it('start mode: parses YYYY-MM-DD into day-bound numeric filters', () => {
@@ -1161,6 +1232,7 @@ describe('buildClusterFetchFilter', () => {
       { field: 'start', type: 'numeric', value: String(dayStart), comparison: 'gt' },
       { field: 'start', type: 'numeric', value: String(dayEnd), comparison: 'lt' },
     ])
+    expect(out.params).toEqual({})
   })
 
   it('start mode: preserves non-time global entries', () => {

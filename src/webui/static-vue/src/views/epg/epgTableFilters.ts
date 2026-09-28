@@ -24,6 +24,7 @@ import type { FilterDef } from '@/types/grid'
 import type { TagFilter, TimeWindow, TitleSearchMode } from './epgViewOptions'
 import { fmtGroupDate } from '@/utils/formatTime'
 import { addLocalDaysEpoch } from '@/utils/localDay'
+import { regexEscape } from '@/utils/regexEscape'
 
 /*
  * Group-field union the EPG Table currently supports. Adding a
@@ -61,6 +62,11 @@ export function clusterKeyOf(
 }
 
 export interface PerColumnFiltersInput {
+  /* Exact channel pick (uuid) from a hand-off such as the command
+   * palette's "Open in EPG". Sent as the server's exact `channel`
+   * param (`api_epg.c` → `epg_query`), never as a regex. Takes
+   * precedence over the free-text `channelName` funnel. */
+  channel?: string
   channelName?: string
   title?: string
   episodeOnscreen?: string
@@ -174,8 +180,13 @@ export function serverParamsFromFilters(
 ): BuildFiltersOutput {
   const filter: FilterDef[] = []
 
+  /* An exact channel pick rides the `channel` param below. The
+   * free-text Channel funnel is the only path that sends a
+   * channelName regex (caseless, unanchored on the server). */
+  const exactChannel = input.perColumn.channel
+  const hasExactChannel = typeof exactChannel === 'string' && exactChannel.length > 0
   const cn = input.perColumn.channelName
-  if (typeof cn === 'string' && cn.length > 0) {
+  if (!hasExactChannel && typeof cn === 'string' && cn.length > 0) {
     filter.push({ field: 'channelName', type: 'string', value: cn })
   }
   filter.push(...timeWindowFilters(input.timeWindow, input.now, input.endOfToday))
@@ -218,6 +229,7 @@ export function serverParamsFromFilters(
   }
 
   const params: Record<string, unknown> = {}
+  if (hasExactChannel) params.channel = exactChannel
   if (input.newOnly) params.new = 1
   /* Single-tag narrowing rides the server's `channelTag` scalar
    * (top-level param, not a filter-array entry) — resolved server-
@@ -231,21 +243,50 @@ export function serverParamsFromFilters(
 }
 
 /*
- * Compose a channel-cluster fetch's filter array. Cluster's
- * channelName is the authoritative bound for the cluster — any
- * per-column channelName entry in the global filter is stripped
- * (would otherwise produce two entries on the same field; the
- * server's single-value semantic for string fields means the
- * second overwrites the first, which is conceptually muddled).
- * Other global entries (time-window, duration) pass through.
+ * Pick the uuid of the one channel called exactly `name`, or null
+ * when no channel or more than one channel has that name. Used to
+ * turn a channel-cluster key (the channel name) into the server's
+ * exact `channel` param.
+ */
+export function uniqueChannelUuidByName(
+  channels: readonly { uuid: string; name?: string }[],
+  name: string,
+): string | null {
+  let found: string | null = null
+  for (const ch of channels) {
+    if (ch.name !== name) continue
+    if (found !== null) return null
+    found = ch.uuid
+  }
+  return found
+}
+
+/*
+ * Compose a channel-cluster fetch. The cluster's channel is the
+ * authoritative bound: any per-column channelName entry in the
+ * global filter is stripped, and the cluster is fetched by the
+ * channel's uuid through the server's exact `channel` param, which
+ * overrides an exact pick in the global params. A channelName
+ * string filter would be a caseless, unanchored regex on the
+ * server, so the "CT 1" cluster would also count and list "CT 1 HD"
+ * and every other name containing it.
+ *
+ * Without a uuid (no loaded channel, or several channels sharing
+ * the name) the name is sent escaped and anchored, which the
+ * server matches against that exact name only. Other global
+ * entries (time window, duration) pass through.
  */
 export function buildClusterFilterByChannel(
   globalFilter: readonly FilterDef[],
   channelName: string,
-): FilterDef[] {
-  const out: FilterDef[] = globalFilter.filter((f) => f.field !== 'channelName')
-  out.push({ field: 'channelName', type: 'string', value: channelName })
-  return out
+  channelUuid: string | null = null,
+): { filter: FilterDef[]; params: Record<string, unknown> } {
+  const filter: FilterDef[] = globalFilter.filter((f) => f.field !== 'channelName')
+  if (channelUuid !== null) {
+    return { filter, params: { channel: channelUuid } }
+  }
+  filter.push({ field: 'channelName', type: 'string', value: `^${regexEscape(channelName)}$` })
+  return { filter, params: {} }
 }
 
 /*
@@ -318,9 +359,12 @@ export function buildClusterFetchFilter(
   groupField: EpgGroupField,
   key: string,
   globalFilter: readonly FilterDef[],
-): { ok: true; filter: FilterDef[] } | { ok: false; error: string } {
+  channelUuid: string | null = null,
+):
+  | { ok: true; filter: FilterDef[]; params: Record<string, unknown> }
+  | { ok: false; error: string } {
   if (groupField === 'channelName') {
-    return { ok: true, filter: buildClusterFilterByChannel(globalFilter, key) }
+    return { ok: true, ...buildClusterFilterByChannel(globalFilter, key, channelUuid) }
   }
   const parts = key.split('-').map(Number)
   if (parts.length !== 3 || parts.some((n) => !Number.isFinite(n))) {
@@ -329,7 +373,7 @@ export function buildClusterFetchFilter(
   const [y, m, d] = parts
   const dayStart = Math.floor(new Date(y, m - 1, d).getTime() / 1000)
   const dayEnd = dayStart + 86400
-  return { ok: true, filter: buildClusterFilterByDate(globalFilter, dayStart, dayEnd) }
+  return { ok: true, filter: buildClusterFilterByDate(globalFilter, dayStart, dayEnd), params: {} }
 }
 
 /*
