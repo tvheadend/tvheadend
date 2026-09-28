@@ -4,54 +4,66 @@
 -->
 <script setup lang="ts">
 /*
- * DvrStateCell — per-row recording-status icon for the EPG Table view.
+ * DvrStateCell — per-row recording-status icon.
  *
- * The `epg/events/grid` row carries a `dvrState` column joined from
- * the matching DVR entry (`api_epg.c`, `dvr_entry_schedstatus` at
- * `dvr_db.c:704`). Timeline / Magazine surface that state via the DVR
- * overlay bars; this cell is the Table view's equivalent — an at-a-
- * glance marker (with a tooltip naming the state) instead of having
- * to open each event's drawer. Mirrors the classic UI's per-row
- * `dvrState` icon.
+ * Two consumers:
+ *   - EPG Table: the `epg/events/grid` row carries a `dvrState`
+ *     column joined from the matching DVR entry (`api_epg.c`).
+ *     Timeline / Magazine surface the same state via the DVR
+ *     overlay bars; this cell is the Table view's equivalent.
+ *   - DVR grids (Upcoming / Finished / Failed / Removed): the
+ *     leading `sched_status` column. Classic puts the same icon
+ *     first on every DVR entry grid (`dvr.js` dvrRowActions,
+ *     `iconIndex: 'sched_status'`).
  *
- * Only in-progress / upcoming states render; completed states and
- * events with no DVR entry show nothing — same scope as the
- * Timeline / Magazine overlay, which draws upcoming windows only.
+ * Both fields carry the `dvr_entry_schedstatus` token (see
+ * `utils/dvrState.ts`). Every token Classic draws an icon for
+ * renders here too, including the completed ones; unknown values
+ * and events with no DVR entry show nothing.
+ *
+ * Label (tooltip and aria-label), first match wins:
+ *   1. the column's `format(value, row)`, for a view that knows
+ *      better than the server (Upcoming names skipped reruns),
+ *   2. the row's `status`, the server's localized text for a DVR
+ *      entry ("Waiting for stream", "Time missed", …), because it
+ *      says why. A re-record entry gets the state name appended,
+ *      since its status can read "Completed OK" (`dvr_db.c`
+ *      dvr_entry_status vs dvr_entry_schedstatus),
+ *   3. the generic state name (EPG rows have no `status`).
  */
 import { computed } from 'vue'
-import { Circle, Clock, TriangleAlert } from 'lucide-vue-next'
+import { CircleCheck, CircleX, Circle, Clock, RotateCcw, TriangleAlert } from 'lucide-vue-next'
+import type { BaseRow } from '@/types/grid'
+import type { ColumnDef } from '@/types/column'
 import { useI18n } from '@/composables/useI18n'
+import { dvrStateKind, dvrStateLabel } from '@/utils/dvrState'
 
 const props = defineProps<{
-  /* The row's `dvrState` (cell value) — absent when no DVR entry. */
+  /* The row's `dvrState` / `sched_status` (cell value) — absent
+   * when no DVR entry. */
   value?: unknown
+  /* Forwarded by DataGrid with every cell component. */
+  row?: BaseRow
+  col?: ColumnDef
 }>()
 
 const { t } = useI18n()
 
-type Kind = 'recording' | 'recordingError' | 'scheduled'
-
-/* State taxonomy in `dvr_db.c:704-737`. Exact-match the error state
- * first — it shares the 'recording' prefix. */
-const kind = computed<Kind | null>(() => {
-  const s = typeof props.value === 'string' ? props.value : ''
-  if (s === 'recordingError') return 'recordingError'
-  if (s.startsWith('recording')) return 'recording'
-  if (s.startsWith('scheduled')) return 'scheduled'
-  return null
-})
+const kind = computed(() => dvrStateKind(props.value))
 
 const label = computed<string>(() => {
-  switch (kind.value) {
-    case 'recording':
-      return t('Recording')
-    case 'recordingError':
-      return t('Recording (errors)')
-    case 'scheduled':
-      return t('Scheduled for recording')
-    default:
-      return ''
+  if (!kind.value) return ''
+  const row = props.row ?? ({} as BaseRow)
+  const custom = props.col?.format?.(props.value, row)
+  if (custom) return custom
+  const status = row.status
+  const name = dvrStateLabel(kind.value, t)
+  if (typeof status === 'string' && status.trim()) {
+    /* Parenthesised existing msgid, so no new string and no word
+     * order for translators to fight. */
+    return kind.value === 'completedRerecord' ? `${status} (${name})` : status
   }
+  return name
 })
 </script>
 
@@ -65,18 +77,38 @@ const label = computed<string>(() => {
       aria-hidden="true"
     />
     <TriangleAlert
-      v-else-if="kind === 'recordingError'"
+      v-else-if="kind === 'recordingError' || kind === 'completedWarning'"
       :size="14"
       class="dvr-state-cell__error"
       aria-hidden="true"
     />
-    <Clock v-else :size="14" class="dvr-state-cell__scheduled" aria-hidden="true" />
+    <Clock
+      v-else-if="kind === 'scheduled'"
+      :size="14"
+      class="dvr-state-cell__scheduled"
+      aria-hidden="true"
+    />
+    <CircleCheck
+      v-else-if="kind === 'completed'"
+      :size="14"
+      class="dvr-state-cell__completed"
+      aria-hidden="true"
+    />
+    <RotateCcw
+      v-else-if="kind === 'completedRerecord'"
+      :size="14"
+      class="dvr-state-cell__rerecord"
+      aria-hidden="true"
+    />
+    <CircleX v-else :size="14" class="dvr-state-cell__failed" aria-hidden="true" />
   </span>
 </template>
 
 <style scoped>
+/* A block-level flex box: an inline one sits on the text baseline,
+ * and an icon has none, so it rode about 3 px above the row centre. */
 .dvr-state-cell {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
@@ -88,7 +120,8 @@ const label = computed<string>(() => {
   color: var(--tvh-error);
 }
 
-/* In-progress recording that has hit stream errors. */
+/* In-progress recording that has hit stream errors, or a missed
+ * recording the server rates as a warning (service not enabled). */
 .dvr-state-cell__error {
   color: var(--tvh-warning);
 }
@@ -97,5 +130,18 @@ const label = computed<string>(() => {
  * events doesn't shout. */
 .dvr-state-cell__scheduled {
   color: var(--tvh-text-muted);
+}
+
+.dvr-state-cell__completed {
+  color: var(--tvh-success);
+}
+
+/* Completed with enough errors that the server records it again. */
+.dvr-state-cell__rerecord {
+  color: var(--tvh-warning);
+}
+
+.dvr-state-cell__failed {
+  color: var(--tvh-error);
 }
 </style>

@@ -23,10 +23,8 @@
  * "filesize > 0" gating mirrors dvr.js:761 — checks the FIRST row
  * only, not all rows. See predicates.ts and finishedActions.ts.
  *
- * Grouping toggle and the per-row Play icon (lcol in the legacy UI)
- * are part of broader grid-feature work and not mounted here yet —
- * users select a row and click Download on the toolbar for the
- * same effect.
+ * The per-row Play icon (lcol in the legacy UI) follows the leading
+ * state icon from `dvrEntryColumns`.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -65,8 +63,18 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
   urlSync: true,
 })
 
+/* dvrEntryColumns leads with the recording state icon. Play goes
+ * right after it, Classic's lcol order. */
+const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
+  filesize: true,
+  playcount: true,
+  filename: true,
+  phoneFields: ['filesize', 'duration'],
+})
+
 /* Column set from dvr.js:792-794 — the entry-list baseline plus
- * filesize / playcount / filename. No `status` column on Finished
+ * the per-row state and Play icons and filesize / playcount /
+ * filename. No `status` column on Finished
  * (a successfully finished recording has no failure-reason text).
  *
  * `phoneFields` upgrades `filesize` and `duration` to phone-card
@@ -76,8 +84,9 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
  * place them on the second secondary row beside title, channel,
  * recorded-on. */
 const cols: ColumnDef[] = [
+  stateCol,
   /* Per-row Play icon. Synthetic column — matches Classic's
-   * leftmost Play column on DVR Finished (`dvr.js`). Disabled
+   * Play column on DVR Finished (`dvr.js`). Disabled
    * for rows with no on-disk file (rerecord / cleanup case),
    * mirroring the toolbar Play's prior filesize gate.
    * `hideHeaderLabel` keeps the header icon-only while the
@@ -97,12 +106,7 @@ const cols: ColumnDef[] = [
     },
     playEnabled: (r) => typeof r.filesize === 'number' && r.filesize > 0,
   },
-  ...dvrEntryColumns(kodiFmt, {
-    filesize: true,
-    playcount: true,
-    filename: true,
-    phoneFields: ['filesize', 'duration'],
-  }),
+  ...entryCols,
 ]
 
 /* Bulk-action handles — see useBulkAction.ts for the shared

@@ -33,6 +33,7 @@
 
 import { computed } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import { dvrStateKind, dvrStateLabel } from '@/utils/dvrState'
 
 const { t } = useI18n()
 
@@ -99,6 +100,12 @@ const postTail = computed(() =>
 const isError = computed(() => props.entry.sched_status === 'recordingError')
 const isDisabled = computed(() => props.entry.enabled === false)
 
+/* Tooltip: the state by name (shared with DvrStateCell), not the
+ * raw `sched_status` token. An unknown token falls back to itself. */
+const stateLabel = computed(
+  () => dvrStateLabel(dvrStateKind(props.entry.sched_status), t) || props.entry.sched_status,
+)
+
 function styleFor(seg: Segment): Record<string, string> {
   if (props.orientation === 'horizontal') {
     return { left: `${seg.offset}px`, width: `${seg.length}px` }
@@ -120,7 +127,7 @@ function onClick() {
       'epg-overlay-bar--disabled': isDisabled,
     }"
     :data-orientation="orientation"
-    :title="t('Recording: {0}', entry.sched_status)"
+    :title="stateLabel"
     @click="onClick"
   >
     <span

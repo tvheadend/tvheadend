@@ -15,6 +15,9 @@
  *   Removed   → status   (no filesize / playcount / filename
  *                         because the file is gone)
  *
+ * All three lead with the recording state icon (`sched_status`,
+ * DvrStateCell), as Classic's dvrRowActions column does.
+ *
  * The Basic / Advanced / Expert grouping (controlled server-side
  * via PO_ADVANCED / PO_EXPERT) and the per-field config
  * (sortable / filterType / width / minVisible / format) come
@@ -47,6 +50,8 @@ export function dvrEntryColumns(
    * when their flag is off. Keeps the array build linear so the
    * Basic / Advanced / Expert grouping reads top-to-bottom. */
   const cols: ColumnDef[] = [
+    /* Leading state icon — Classic's dvrRowActions column. */
+    { field: 'sched_status', ...DVR_FIELDS.sched_status },
     /* Basic */
     { field: 'disp_title', ...DVR_FIELDS.disp_title, format: kodiFmt },
     { field: 'disp_extratext', ...DVR_FIELDS.disp_extratext, format: kodiFmt },
@@ -62,7 +67,6 @@ export function dvrEntryColumns(
     { field: 'duration', ...DVR_FIELDS.duration },
     ...(opts.filesize ? [{ field: 'filesize', ...DVR_FIELDS.filesize }] : []),
     ...(opts.status ? [{ field: 'status', ...DVR_FIELDS.status }] : []),
-    { field: 'sched_status', ...DVR_FIELDS.sched_status },
     { field: 'comment', ...DVR_FIELDS.comment },
 
     /* Advanced — server-gated by PO_ADVANCED on basic users */
