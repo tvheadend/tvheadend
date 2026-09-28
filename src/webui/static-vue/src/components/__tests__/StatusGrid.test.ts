@@ -50,7 +50,10 @@ interface MockStore {
   error: Error | null
   isEmpty: boolean
   fetch: ReturnType<typeof vi.fn>
+  retain: ReturnType<typeof vi.fn>
 }
+
+const releaseSpy = vi.fn()
 
 let mockStore: MockStore
 
@@ -71,6 +74,7 @@ function makeStore(overrides: Partial<MockStore> = {}): MockStore {
     error: null,
     isEmpty: true,
     fetch: vi.fn(),
+    retain: vi.fn(() => releaseSpy),
     ...overrides,
   }
 }
@@ -123,6 +127,14 @@ describe('StatusGrid', () => {
   it('calls store.fetch on mount', () => {
     mountGrid()
     expect(mockStore.fetch).toHaveBeenCalledOnce()
+  })
+
+  it('holds the store Comet listener only while mounted', () => {
+    const wrapper = mountGrid()
+    expect(mockStore.retain).toHaveBeenCalledTimes(1)
+    expect(releaseSpy).not.toHaveBeenCalled()
+    wrapper.unmount()
+    expect(releaseSpy).toHaveBeenCalledTimes(1)
   })
 
   it('renders the error banner when the store has an error', () => {
