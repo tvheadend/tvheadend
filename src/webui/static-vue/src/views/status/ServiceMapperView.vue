@@ -23,7 +23,7 @@
  * from action (the dialog) keeps the Status section's role
  * pure read-only monitoring.
  */
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { HelpCircle } from 'lucide-vue-next'
 import { useServiceMapperStore } from '@/stores/serviceMapper'
 import { useI18n } from '@/composables/useI18n'
@@ -39,6 +39,22 @@ const HELP_PAGE = 'status_service_mapper'
 function onHelpClick(): void {
   help.toggle(HELP_PAGE).catch(() => {})
 }
+
+/* Last-run summary as one whole sentence per case, so translators
+ * get full sentences and the template cannot drop or add spaces
+ * between fragments. */
+const idleSummary = computed(() => {
+  const { ok, total, fail, ignore } = store.status
+  if (total <= 0) {
+    return t('Open Configuration → Channel/EPG → Channels or Configuration → DVB Inputs → Services to start mapping.')
+  }
+  if (fail > 0 && ignore > 0) {
+    return t('Last run mapped {0} of {1} services, {2} failed, {3} ignored.', ok, total, fail, ignore)
+  }
+  if (fail > 0) return t('Last run mapped {0} of {1} services, {2} failed.', ok, total, fail)
+  if (ignore > 0) return t('Last run mapped {0} of {1} services, {2} ignored.', ok, total, ignore)
+  return t('Last run mapped {0} of {1} services.', ok, total)
+})
 
 onMounted(() => {
   /* Initial snapshot. Comet will take over once the first push
@@ -82,19 +98,7 @@ onMounted(() => {
       </header>
       <div class="service-mapper__status-body">
         <p v-if="!store.isActive" class="service-mapper__idle">
-          <strong>{{ t('Idle.') }}</strong>
-          <template v-if="store.status.total > 0">
-            {{ t('Last run mapped {0} of {1} services', store.status.ok, store.status.total) }}
-            <template v-if="store.status.fail > 0">{{
-              t(', {0} failed', store.status.fail)
-            }}</template>
-            <template v-if="store.status.ignore > 0">{{
-              t(', {0} ignored', store.status.ignore)
-            }}</template>.
-          </template>
-          <template v-else>
-            {{ t('Open Configuration → Channel/EPG → Channels or Configuration → DVB Inputs → Services to start mapping.') }}
-          </template>
+          <strong>{{ t('Idle.') }}</strong> {{ idleSummary }}
         </p>
         <template v-else>
           <p class="service-mapper__active">
