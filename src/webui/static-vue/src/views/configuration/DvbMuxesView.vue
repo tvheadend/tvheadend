@@ -46,6 +46,7 @@ import { useBulkAction } from '@/composables/useBulkAction'
 import { useI18n } from '@/composables/useI18n'
 import PlayCell from '@/components/PlayCell.vue'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
+import { formatMuxFrequency } from './muxFrequency'
 
 const { t } = useI18n()
 
@@ -102,9 +103,16 @@ function onFilterChange(key: string, value: string) {
  * `mpegts_mux_class`'s prop table. Server's `network` field
  * already resolves to the network NAME (the parent's
  * `network_name` getter); the raw UUID is on `network_uuid` for
- * any future cross-reference. Per-subclass fields like
- * polarisation only render meaningfully on the relevant mux
- * subclass; rows from other subclasses leave the cell empty. */
+ * any future cross-reference.
+ *
+ * The tuning columns (frequency, symbolrate, constellation,
+ * modulation, polarisation) exist only on the mux subclasses
+ * (`src/input/mpegts/mpegts_mux_dvb.c`), so the `mpegts_mux`
+ * metadata has no caption for them and the view labels them.
+ * Each is empty on rows of a subclass without the field:
+ * cable and terrestrial muxes carry constellation, DVB-S and
+ * ATSC-T muxes carry modulation, only DVB-S carries
+ * polarisation, and IPTV muxes carry none of them. */
 /* Polymorphic class — `mpegts_mux` is abstract; subclasses
  * (DVB-T/C/S/ATSC/IPTV mux classes) carry the
  * subclass-specific fields like satellite parameters or IPTV
@@ -119,8 +127,9 @@ function onFilterChange(key: string, value: string) {
 /* Phone-card: mux name as bold headline; enabled + network as
  * the 2-up identifier; scan_state as full-width trailer (the
  * "is this mux being scanned right now" cue). Tuning specifics
- * (frequency / modulation / polarisation) + svc/chn counts stay
- * desktop-only — diagnostic detail behind a tap. */
+ * (frequency / symbol rate / modulation / polarisation) +
+ * svc/chn counts stay desktop-only — diagnostic detail behind
+ * a tap. */
 const cols: ColumnDef[] = [
   /* Per-row Play icon. Synthetic column — matches Classic's
    * leftmost Play column on Muxes (`mpegts.js:118-131`).
@@ -181,9 +190,48 @@ const cols: ColumnDef[] = [
     phoneRole: 'primary',
     editable: true,
   },
-  { field: 'frequency', sortable: true, filterType: 'numeric', width: 130, editable: true },
-  { field: 'modulation', sortable: true, filterType: 'string', width: 120, editable: true },
-  { field: 'polarisation', sortable: true, filterType: 'string', width: 110, editable: true },
+  /* Hz or kHz depending on the subclass, see muxFrequency.ts. */
+  {
+    field: 'frequency',
+    label: t('Frequency'),
+    sortable: true,
+    filterType: 'numeric',
+    width: 150,
+    format: formatMuxFrequency,
+    editable: true,
+  },
+  {
+    field: 'symbolrate',
+    label: t('Symbol rate (Sym/s)'),
+    sortable: true,
+    filterType: 'numeric',
+    width: 180,
+    editable: true,
+  },
+  {
+    field: 'constellation',
+    label: t('Constellation'),
+    sortable: true,
+    filterType: 'string',
+    width: 150,
+    editable: true,
+  },
+  {
+    field: 'modulation',
+    label: t('Modulation'),
+    sortable: true,
+    filterType: 'string',
+    width: 120,
+    editable: true,
+  },
+  {
+    field: 'polarisation',
+    label: t('Polarization'),
+    sortable: true,
+    filterType: 'string',
+    width: 130,
+    editable: true,
+  },
   {
     field: 'scan_state',
     sortable: true,
