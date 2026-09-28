@@ -29,9 +29,13 @@ import type { StatusEntry } from '@/stores/status'
 import { apiCall } from '@/api/client'
 import { fmtDate } from '@/utils/formatTime'
 import { ref } from 'vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useToastNotify } from '@/composables/useToastNotify'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
+const confirmDialog = useConfirmDialog()
+const toast = useToastNotify()
 
 const fmtClient = (_v: unknown, row: StatusEntry) => {
   const peer = row.peer ?? ''
@@ -123,7 +127,11 @@ async function dropSelection(selected: StatusEntry[], clear: () => void) {
     .map((r) => r.id)
     .filter((i): i is number => typeof i === 'number')
   if (ids.length === 0) return
-  if (!globalThis.confirm(t('Drop the selected connection(s)?'))) return
+  const ok = await confirmDialog.ask(t('Drop the selected connection(s)?'), {
+    header: t('Drop Connections'),
+    severity: 'danger',
+  })
+  if (!ok) return
   dropping.value = true
   try {
     /* api/connections/cancel takes either a single id, the literal
@@ -132,7 +140,7 @@ async function dropSelection(selected: StatusEntry[], clear: () => void) {
     await apiCall('connections/cancel', { id: JSON.stringify(ids) })
     clear()
   } catch (err) {
-    globalThis.alert(
+    toast.error(
       t('Failed to drop connection(s): {0}', err instanceof Error ? err.message : String(err)),
     )
   } finally {
