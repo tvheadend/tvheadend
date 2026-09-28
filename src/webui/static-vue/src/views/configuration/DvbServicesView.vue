@@ -15,7 +15,7 @@
  * Services are auto-discovered by the SI/SDT scanner — there is no
  * Add path. The editor handles edit (a small set of editable fields:
  * `enabled`, `auto`, channel mapping, `priority`, plus expert
- * overrides like `dvb_ignore_eit`, `charset`, `prefcapid_lock`,
+ * overrides like `dvb_eit_processing`, `charset`, `prefcapid_lock`,
  * etc.) and Delete is bulk-style.
  *
  * Toolbar actions: Edit, Map services (mode-by-selection label),
@@ -108,6 +108,7 @@ function onFilterChange(key: string, value: string) {
  *   - `service_class_auto_list`           (`service.c:131-140`)
  *   - `service_type_auto_list`            (`service.c:142-156`)
  *   - `mpegts_service_subtitle_procesing` (`mpegts_service.c:85-95`)
+ *   - `mpegts_service_eit_processing_list` (`mpegts_service.c:97-109`)
  *   - `mpegts_service_pref_capid_lock_list` (`mpegts_service.c:74-83`)
  */
 const AUTO_OPTIONS = [
@@ -129,6 +130,14 @@ const SUBTITLE_PROCESSING_OPTIONS = [
   { key: 1, val: t('Save in Description') },
   { key: 2, val: t('Append to Description') },
   { key: 3, val: t('Prepend to Description') },
+]
+const EIT_PROCESSING_OPTIONS = [
+  { key: 0, val: t('Default (use global setting)') },
+  { key: 1, val: t('None') },
+  { key: 2, val: t('Actual transport stream only') },
+  { key: 3, val: t('Other transport stream only') },
+  { key: 4, val: t('Either') },
+  { key: 5, val: t('Adaptive') },
 ]
 const PREFCAPID_LOCK_OPTIONS = [
   { key: 0, val: t('Off') },
@@ -316,11 +325,12 @@ const cols: ColumnDef[] = [
   { field: 'cridauth', sortable: true, filterType: 'string', width: 180, editable: true },
   { field: 'dvb_servicetype', sortable: true, filterType: 'numeric', width: 110, editable: true },
   {
-    field: 'dvb_ignore_eit',
+    field: 'dvb_eit_processing',
     sortable: true,
-    filterType: 'boolean',
-    width: 130,
-    cellComponent: BooleanCell,
+    filterType: 'enum',
+    width: 200,
+    cellComponent: EnumNameCell,
+    enumSource: EIT_PROCESSING_OPTIONS,
     editable: true,
   },
   {
