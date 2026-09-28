@@ -38,6 +38,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiCall } from '@/api/client'
+import { apiErrorMessage } from '@/utils/apiErrorMessage'
 import { useAccessStore } from '@/stores/access'
 import { levelMatches, propLevel, type IdnodeProp, type PropertyGroup } from '@/types/idnode'
 import type { UiLevel } from '@/types/access'
@@ -310,7 +311,13 @@ const currentValues = ref<Record<string, unknown>>({})
 
 const loading = ref(true)
 const saving = ref(false)
+/* Load failure: replaces the form (there is nothing to show) and
+ * offers Retry. */
 const error = ref<string | null>(null)
+/* Save failure: shown above the form, which stays mounted with the
+ * user's edits so they can fix a value and save again. Cleared by
+ * the next save, Undo or load. */
+const saveError = ref<string | null>(null)
 
 /* Class id of the loaded entry — keyed lookup into `CLASS_RULES`
  * for required / cross-field / minLength rules. Server emits it on
@@ -341,6 +348,7 @@ async function load() {
   }
   loading.value = true
   error.value = null
+  saveError.value = null
   try {
     /* uuid mode: idnode/load with uuid + meta. Server returns the
      * same `{ entries: [{ params, meta: { groups } }] }` shape as
@@ -701,7 +709,7 @@ async function save() {
   submitAttempted.value = true
   if (hasErrors.value) return
   saving.value = true
-  error.value = null
+  saveError.value = null
   try {
     /* Snapshot the reload / access-refetch decisions against the
      * PRE-save baseline before the api call mutates anything we're
@@ -728,7 +736,7 @@ async function save() {
           { node: JSON.stringify(currentValues.value) },
         ]
     if (!endpoint) {
-      error.value = t('Configuration form misconfigured (no save endpoint)')
+      saveError.value = t('Configuration form misconfigured (no save endpoint)')
       return
     }
 
@@ -761,7 +769,7 @@ async function save() {
      * sent). */
     await load()
   } catch (e) {
-    error.value = e instanceof Error ? e.message : t('Save failed: {0}', String(e))
+    saveError.value = t('Save failed: {0}', apiErrorMessage(e))
   } finally {
     saving.value = false
   }
@@ -769,6 +777,7 @@ async function save() {
 
 function undo() {
   if (!isDirty.value) return
+  saveError.value = null
   /* Spread the baseline so currentValues becomes a fresh object
    * — triggers reactive updates on every field input. */
   currentValues.value = { ...baseline.value }
@@ -974,9 +983,15 @@ onBeforeUnmount(() => {
       v-else-if="error"
       class="idnode-config-form__status idnode-config-form__status--error"
     >
-      {{ error }}
+      <p class="idnode-config-form__status-text">{{ error }}</p>
+      <button type="button" class="idnode-config-form__btn idnode-config-form__retry" @click="load">
+        {{ t('Retry') }}
+      </button>
     </div>
-    <form v-else class="idnode-config-form__form" @submit.prevent="save">
+    <p v-if="saveError && !loading && !error" class="idnode-config-form__save-error" role="alert">
+      {{ saveError }}
+    </p>
+    <form v-if="!loading && !error" class="idnode-config-form__form" @submit.prevent="save">
       <!-- Optional caller-supplied content rendered above the
            auto-rendered groups but INSIDE the scroll area. Used by
            views that supplement the standard form with custom
@@ -1140,6 +1155,22 @@ onBeforeUnmount(() => {
 .idnode-config-form__status--error {
   color: var(--tvh-text);
   border-color: color-mix(in srgb, var(--tvh-primary) 40%, var(--tvh-border));
+}
+
+.idnode-config-form__status-text {
+  margin: 0 0 var(--tvh-space-3);
+}
+
+/* Save failure above the still-mounted form. */
+.idnode-config-form__save-error {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--tvh-space-2) var(--tvh-space-3);
+  background: color-mix(in srgb, var(--tvh-error) 8%, var(--tvh-bg-surface));
+  border: 1px solid var(--tvh-error);
+  border-radius: var(--tvh-radius-sm);
+  color: var(--tvh-text);
+  font-size: var(--tvh-text-md);
 }
 
 .idnode-config-form__form {
