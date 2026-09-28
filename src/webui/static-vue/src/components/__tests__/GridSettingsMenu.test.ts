@@ -115,7 +115,7 @@ describe('GridSettingsMenu', () => {
   it('renders all three level options and one checkbox per column', async () => {
     const wrapper = mountMenu()
     await openAndExpand(wrapper)
-    const radios = wrapper.findAll('[role="menuitemradio"]')
+    const radios = wrapper.findAll('[role="radio"]')
     expect(radios).toHaveLength(3)
     const checks = wrapper.findAll('input[type="checkbox"]')
     expect(checks).toHaveLength(cols.length)
@@ -124,7 +124,7 @@ describe('GridSettingsMenu', () => {
   it('marks the active level option', async () => {
     const wrapper = mountMenu({ effectiveLevel: 'advanced' })
     await openAndExpand(wrapper)
-    const radios = wrapper.findAll<HTMLButtonElement>('[role="menuitemradio"]')
+    const radios = wrapper.findAll<HTMLButtonElement>('[role="radio"]')
     const active = radios.find((r) => r.attributes('aria-checked') === 'true')
     expect(active?.text()).toContain('Advanced')
   })
@@ -133,7 +133,7 @@ describe('GridSettingsMenu', () => {
     const wrapper = mountMenu({ effectiveLevel: 'basic' })
     await openAndExpand(wrapper)
     const expertRadio = wrapper
-      .findAll<HTMLButtonElement>('[role="menuitemradio"]')
+      .findAll<HTMLButtonElement>('[role="radio"]')
       .find((r) => r.text().includes('Expert'))
     await expertRadio!.trigger('click')
     expect(wrapper.emitted('setLevel')).toBeTruthy()
@@ -143,7 +143,7 @@ describe('GridSettingsMenu', () => {
   it('disables level radios and shows locked note when locked', async () => {
     const wrapper = mountMenu({ locked: true })
     await openAndExpand(wrapper)
-    const radios = wrapper.findAll<HTMLButtonElement>('[role="menuitemradio"]')
+    const radios = wrapper.findAll<HTMLButtonElement>('[role="radio"]')
     expect(radios.every((r) => r.element.disabled)).toBe(true)
     expect(wrapper.find('.grid-settings__locked-note').exists()).toBe(true)
   })
@@ -154,7 +154,7 @@ describe('GridSettingsMenu', () => {
     /* The radio button is disabled, so clicks don't fire @click. Verify
      * by trying anyway and confirming nothing emitted. */
     const expertRadio = wrapper
-      .findAll<HTMLButtonElement>('[role="menuitemradio"]')
+      .findAll<HTMLButtonElement>('[role="radio"]')
       .find((r) => r.text().includes('Expert'))
     await expertRadio!.trigger('click')
     expect(wrapper.emitted('setLevel')).toBeFalsy()
@@ -196,7 +196,7 @@ describe('GridSettingsMenu', () => {
     /* No level radios. (SettingsPopover renders its own divider above
      * Reset; counting class instances is not a reliable assertion here,
      * so the missing radios + present checkboxes are the evidence.) */
-    expect(wrapper.findAll('[role="menuitemradio"]')).toHaveLength(0)
+    expect(wrapper.findAll('[role="radio"]')).toHaveLength(0)
     /* Columns section still rendered. */
     expect(wrapper.findAll<HTMLInputElement>('input[type="checkbox"]')).toHaveLength(cols.length)
     /* Reset still available. */
@@ -206,7 +206,7 @@ describe('GridSettingsMenu', () => {
   it('renders the level section by default (hideLevelSection unset)', async () => {
     const wrapper = mountMenu()
     await openAndExpand(wrapper)
-    expect(wrapper.findAll('[role="menuitemradio"]')).toHaveLength(3)
+    expect(wrapper.findAll('[role="radio"]')).toHaveLength(3)
   })
 
   it('emits reset and closes the popover when "Reset to defaults" is clicked', async () => {

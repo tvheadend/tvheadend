@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Tvheadend contributors
 
+/* eslint-disable vue/one-component-per-file -- two throwaway host
+ * components for the popover, not real components. */
+
 /*
  * SettingsPopover + CollapsibleSection unit tests.
  *
@@ -17,8 +20,10 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
+import PrimeVue from 'primevue/config'
+import Select from 'primevue/select'
 import SettingsPopover from '../SettingsPopover.vue'
 import CollapsibleSection from '../CollapsibleSection.vue'
 
@@ -83,6 +88,102 @@ describe('SettingsPopover — basic open/close', () => {
     await wrapper.find('.settings-popover__btn').trigger('click')
     await wrapper.find('.settings-popover__btn').trigger('click')
     expect(wrapper.find('.settings-popover__panel').exists()).toBe(false)
+  })
+
+  it('is announced as a dialog, not a menu', async () => {
+    /* The panel holds checkboxes, radio rows and selects, which a
+     * menu may not contain. */
+    const wrapper = mountHost()
+    const btn = wrapper.find('.settings-popover__btn')
+    expect(btn.attributes('aria-haspopup')).toBe('dialog')
+    await openPopover(wrapper)
+    const panel = wrapper.find('.settings-popover__panel')
+    expect(panel.attributes('role')).toBe('dialog')
+    expect(panel.attributes('aria-label')).toBe('View options')
+  })
+})
+
+describe('SettingsPopover — Escape', () => {
+  it('closes on Escape inside the popover and refocuses the trigger', async () => {
+    const wrapper = mount(Host, {
+      attachTo: document.body,
+      global: { directives: { tooltip: tooltipDirectiveStub } },
+    })
+    await openPopover(wrapper)
+    const header = wrapper.find('[aria-controls="collapsible-a"]')
+    ;(header.element as HTMLElement).focus()
+    /* A listener further up, such as the Drawer the popover sits
+     * in, must not see the Escape that closed the popover. */
+    let outerSaw = false
+    const outer = () => {
+      outerSaw = true
+    }
+    document.addEventListener('keydown', outer)
+    await header.trigger('keydown', { key: 'Escape' })
+    document.removeEventListener('keydown', outer)
+    expect(wrapper.find('.settings-popover__panel').exists()).toBe(false)
+    expect(document.activeElement).toBe(wrapper.find('.settings-popover__btn').element)
+    expect(outerSaw).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('closes on Escape while focus is outside the popover', async () => {
+    const wrapper = mountHost()
+    await openPopover(wrapper)
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await flushPromises()
+    expect(wrapper.find('.settings-popover__panel').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
+  /* A real PrimeVue Select: it stops every Escape it gets, also
+   * with its list closed. */
+  const SelectHost = defineComponent({
+    components: { SettingsPopover, PSelect: Select },
+    setup() {
+      return { picked: ref('a'), options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] }
+    },
+    template: `
+      <SettingsPopover>
+        <PSelect v-model="picked" :options="options" option-value="value" option-label="label" />
+      </SettingsPopover>
+    `,
+  })
+
+  async function focusedSelect() {
+    const wrapper = mount(SelectHost, {
+      attachTo: document.body,
+      global: { plugins: [[PrimeVue, {}]], directives: { tooltip: tooltipDirectiveStub } },
+    })
+    await openPopover(wrapper)
+    const combo = wrapper.find('[role="combobox"]')
+    ;(combo.element as HTMLElement).focus()
+    return { wrapper, combo }
+  }
+
+  it('closes on Escape from a closed select and refocuses the trigger', async () => {
+    const { wrapper, combo } = await focusedSelect()
+    expect(combo.attributes('aria-expanded')).toBe('false')
+    await combo.trigger('keydown', { key: 'Escape', code: 'Escape' })
+    expect(wrapper.find('.settings-popover__panel').exists()).toBe(false)
+    expect(document.activeElement).toBe(wrapper.find('.settings-popover__btn').element)
+    wrapper.unmount()
+  })
+
+  it('lets an open select list take Escape before the popover', async () => {
+    const { wrapper, combo } = await focusedSelect()
+    await combo.trigger('keydown', { key: 'ArrowDown', code: 'ArrowDown' })
+    await flushPromises()
+    expect(combo.attributes('aria-expanded')).toBe('true')
+    await combo.trigger('keydown', { key: 'Escape', code: 'Escape' })
+    /* Select hides its list in a timeout. */
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await flushPromises()
+    expect(combo.attributes('aria-expanded')).toBe('false')
+    expect(wrapper.find('.settings-popover__panel').exists()).toBe(true)
+    await combo.trigger('keydown', { key: 'Escape', code: 'Escape' })
+    expect(wrapper.find('.settings-popover__panel').exists()).toBe(false)
+    wrapper.unmount()
   })
 })
 

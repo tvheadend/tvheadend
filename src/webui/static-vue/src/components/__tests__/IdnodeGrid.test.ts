@@ -1406,7 +1406,7 @@ describe('IdnodeGrid', () => {
     /* Open the GridSettingsMenu popover. */
     await wrapper.find('.settings-popover__btn').trigger('click')
     /* No level radios when locked; columns checkboxes still rendered. */
-    expect(wrapper.findAll('[role="menuitemradio"]')).toHaveLength(0)
+    expect(wrapper.findAll('[role="radio"]')).toHaveLength(0)
     expect(
       wrapper.findAll<HTMLInputElement>('input[type="checkbox"]').length
     ).toBeGreaterThan(0)

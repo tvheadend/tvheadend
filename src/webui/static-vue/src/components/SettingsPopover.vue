@@ -9,7 +9,7 @@
  *
  * Provides:
  *   - The trigger button (sliders icon + tooltip + aria wiring).
- *   - Open / close state with click-outside dismissal.
+ *   - Open / close state with click-outside and Escape dismissal.
  *   - The popover panel itself, anchored below the trigger.
  *   - A "Reset to defaults" footer button (gated on the consumer's
  *     `defaultsActive` prop — disabled when current state already
@@ -80,6 +80,7 @@ const emit = defineEmits<{
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
+const trigger = ref<HTMLButtonElement | null>(null)
 
 /* True when the consumer passes default-slot content. Drives the
  * footer divider — single-action consumers (drawer "View options"
@@ -210,8 +211,38 @@ function onDocClick(ev: MouseEvent) {
   open.value = false
 }
 
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+/* Escape closes the panel and returns focus to the trigger, the
+ * same contract as ColumnHeaderMenu. Handled on the root in the
+ * capture phase, before the focused control: a PrimeVue Select
+ * stops every Escape and a MultiSelect cancels it, even with their
+ * list closed. An open list inside the panel keeps the key, so
+ * Escape closes the list first and the panel next. Stopping it
+ * here also keeps a Drawer around the popover (ChannelManageDrawer)
+ * from closing with it. */
+function onRootKeydown(ev: KeyboardEvent) {
+  if (ev.key !== 'Escape' || !open.value) return
+  if (root.value?.querySelector('[role="combobox"][aria-expanded="true"]')) return
+  ev.stopPropagation()
+  open.value = false
+  trigger.value?.focus()
+}
+
+/* Fallback for Escape while focus sits outside the popover, for
+ * example on the page body after a click on the panel background. */
+function onDocKeydown(ev: KeyboardEvent) {
+  if (ev.key !== 'Escape' || !open.value || ev.defaultPrevented) return
+  if (root.value && ev.composedPath().includes(root.value)) return
+  open.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  document.addEventListener('keydown', onDocKeydown)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  document.removeEventListener('keydown', onDocKeydown)
+})
 
 /* Exposed for tests + consumers that want to programmatically close
  * the popover (e.g. after committing a value). */
@@ -223,19 +254,27 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="root" class="settings-popover">
+  <!-- A non-modal dialog, not a menu: the panel holds checkboxes,
+       radio rows, selects and collapsible groups. -->
+  <div ref="root" class="settings-popover" @keydown.capture="onRootKeydown">
     <button
+      ref="trigger"
       v-tooltip.bottom="tooltipText"
       type="button"
       class="settings-popover__btn"
       :aria-label="ariaLabel"
-      aria-haspopup="menu"
+      aria-haspopup="dialog"
       :aria-expanded="open"
       @click="toggle"
     >
       <SlidersHorizontal :size="16" :stroke-width="2" />
     </button>
-    <div v-if="open" class="settings-popover__panel" role="menu">
+    <div
+      v-if="open"
+      class="settings-popover__panel"
+      role="dialog"
+      :aria-label="ariaLabel"
+    >
       <slot />
       <hr v-if="hasDefaultSlot" class="settings-popover__divider" />
       <button

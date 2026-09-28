@@ -426,7 +426,7 @@ function resetToDefaults() {
           :class="{
             'settings-popover__option--active': options.tooltipMode === opt.value,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="options.tooltipMode === opt.value"
           @click="setTooltipMode(opt.value)"
         >
@@ -451,7 +451,7 @@ function resetToDefaults() {
             'settings-popover__option--active':
               options.density[currentView] === opt.value,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="options.density[currentView] === opt.value"
           @click="setDensity(opt.value)"
         >
@@ -475,7 +475,7 @@ function resetToDefaults() {
           :class="{
             'settings-popover__option--active': options.dvrOverlay === opt.value,
           }"
-          role="menuitemradio"
+          role="radio"
           :aria-checked="options.dvrOverlay === opt.value"
           @click="setDvrOverlay(opt.value)"
         >
