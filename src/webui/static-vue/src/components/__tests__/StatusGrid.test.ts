@@ -331,4 +331,21 @@ describe('StatusGrid', () => {
     exposed.toggleSelect(a)
     expect(exposed.selection.map((r) => r.uuid)).not.toContain('a')
   })
+
+  it('says the kept rows are from the last update when a refresh fails', () => {
+    mockStore = makeStore({
+      entries: [{ uuid: 'a', input: 'IPTV #1', bps: 1 }],
+      isEmpty: false,
+      error: new Error('API 500 Internal Server Error'),
+    })
+    const banner = mountGrid().find('.data-grid__error')
+    expect(banner.text()).toContain('Refresh failed: API 500 Internal Server Error.')
+    expect(banner.text()).toContain('The rows below are from the last successful update.')
+  })
+
+  it('keeps the plain load failure when there are no rows', () => {
+    mockStore = makeStore({ error: new Error('API 500 Internal Server Error') })
+    const banner = mountGrid().find('.data-grid__error')
+    expect(banner.text()).toBe('Failed to load: API 500 Internal Server Error')
+  })
 })

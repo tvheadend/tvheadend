@@ -18,6 +18,9 @@
  *      refresh is what keeps Comet-driven updates from flashing.
  *   4. The Comet listener is ref-counted by retain() / release, so
  *      a store left behind by an unmounted view stops refetching.
+ *   5. A failed silent refetch keeps the rows (and so the grid
+ *      selection and chart history). Only a non-silent fetch
+ *      clears them.
  *
  * Each test uses a unique endpoint string so the module-level
  * storeFactoryCache doesn't leak state between cases.
@@ -231,5 +234,48 @@ describe('useStatusStore', () => {
     fireComet('cls-9', { reload: 1 })
     await vi.advanceTimersByTimeAsync(200)
     expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the rows when a silent refetch fails, and clears the error on the next success', async () => {
+    apiMock.mockResolvedValueOnce({
+      entries: [
+        { uuid: 'a', name: 'Alpha' },
+        { uuid: 'b', name: 'Beta' },
+      ],
+    })
+    const store = useStatusStore<Row>('status/test-10', 'cls', 'uuid')
+    await store.fetch()
+    const originalA = store.entries[0]
+
+    apiMock.mockRejectedValueOnce(new Error('API 502'))
+    await store.fetch({ silent: true })
+    expect(store.entries).toHaveLength(2)
+    expect(store.entries[0]).toBe(originalA)
+    expect(store.error?.message).toBe('API 502')
+
+    /* The error stays up while the next silent refetch is in flight,
+     * so a sustained outage does not blink the banner. */
+    let resolveFn: (v: unknown) => void = () => {}
+    apiMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFn = resolve
+      })
+    )
+    const inflight = store.fetch({ silent: true })
+    expect(store.error?.message).toBe('API 502')
+    resolveFn({ entries: [{ uuid: 'a', name: 'Alpha' }] })
+    await inflight
+    expect(store.error).toBeNull()
+    expect(store.entries).toHaveLength(1)
+  })
+
+  it('clears the rows when a non-silent fetch fails', async () => {
+    apiMock.mockResolvedValueOnce({ entries: [{ uuid: 'a', name: 'Alpha' }] })
+    const store = useStatusStore<Row>('status/test-11', 'cls', 'uuid')
+    await store.fetch()
+    apiMock.mockRejectedValueOnce(new Error('API 403'))
+    await store.fetch()
+    expect(store.entries).toHaveLength(0)
+    expect(store.error?.message).toBe('API 403')
   })
 })

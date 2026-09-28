@@ -338,6 +338,13 @@ defineExpose({ selection, clearSelection, toggleSelect })
           <HelpCircle :size="16" :stroke-width="2" />
         </button>
       </template>
+      <!-- A failed background refresh keeps the rows it had (see
+           useStatusStore's fetch), so the banner says how old they
+           are. A failed first load has none and keeps the default. -->
+      <template v-if="store.entries.length > 0" #error="{ error }">
+        <strong>{{ t('Refresh failed') }}:</strong> {{ error.message }}.
+        {{ t('The rows below are from the last successful update.') }}
+      </template>
     </DataGrid>
   </div>
 </template>
