@@ -222,6 +222,19 @@ const dvrEditor = useDvrEditor()
  * ExtJS popup, which builds a fresh combo per dialog). */
 const selectedConfigUuid = ref<string>('')
 
+/* Keep the selection on a listed profile: the first entry (the
+ * auto-created default config, title "(Default profile)", sorts first
+ * via the leading paren) unless the user picked another that is still
+ * listed. With no entries (fetch failed or returned nothing) it stays
+ * '', which the server still resolves to its default. Runs when the
+ * list arrives and whenever it changes, so a picker hidden with one
+ * profile never keeps a profile that is gone. */
+function syncSelectedConfig(): void {
+  const keys = dvrConfig.entries.map((cfg) => cfg.key)
+  if (!keys.includes(selectedConfigUuid.value)) selectedConfigUuid.value = keys[0] ?? ''
+}
+watch(() => dvrConfig.entries, syncSelectedConfig, { deep: true })
+
 /* Related / alternative showings dialog state. Opens the same
  * EpgRelatedDialog browser DVR Upcoming uses, scoped to this event.
  * `relatedMode` retains the last-picked mode so the dialog always
@@ -270,13 +283,7 @@ watch(
     if (ev.dvrUuid && ev.dvrState?.startsWith('scheduled')) {
       void loadDuplicateOf(ev.dvrUuid)
     }
-    dvrConfig.ensure().then(() => {
-      /* Land on the first entry — the auto-created default config
-       * (title "(Default profile)" sorts first via the leading paren).
-       * If the fetch failed or returned nothing, keep '' — the server
-       * still resolves an empty config_uuid to its default. */
-      selectedConfigUuid.value = dvrConfig.entries[0]?.key ?? ''
-    })
+    dvrConfig.ensure().then(syncSelectedConfig)
   },
   { immediate: true }
 )
@@ -340,9 +347,9 @@ const playProfileChannel = ref<string | null>(null)
  * subscribes to that class and refetches events, so the underlying
  * grid reflects the new state on the next render.
  *
- * The Record call passes `config_uuid: ''` so the server uses the
- * default DVR profile. Users can switch to a non-default config by
- * editing the row from DVR Upcoming after creation.
+ * The Record and Autorec calls pass `config_uuid: selectedConfigUuid`,
+ * the first DVR profile (the default) unless the user picks another
+ * in the picker next to Record, shown with two or more profiles.
  */
 const inflight = ref(false)
 const confirmDialog = useConfirmDialog()
@@ -663,8 +670,11 @@ function buildDvrActions(ev: EpgEventDetail): ActionDef[] {
       tooltip: t('Record this program now'),
       disabled: inflight.value,
       onClick: recordEvent,
+      /* Only offer the picker when there is a choice: with a single
+       * profile it would take action-row width for nothing. The
+       * request still carries that profile (`selectedConfigUuid`). */
       leadingControl:
-        profileOptions.length > 0
+        profileOptions.length > 1
           ? {
               type: 'select',
               value: selectedConfigUuid.value,
