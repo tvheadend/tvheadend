@@ -2,16 +2,19 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * ConnectionsView — the Drop action. StatusGrid is stubbed: the
- * tests render its toolbarActions slot with a fixed selection and
- * read the actions handed to the stubbed ActionMenu.
+ * ConnectionsView — column wiring and the Drop action. StatusGrid is
+ * stubbed: the column tests read the `columns` prop handed to it,
+ * and the Drop tests render its toolbarActions slot with a fixed
+ * selection and read the actions handed to the stubbed ActionMenu.
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import ConnectionsView from '../ConnectionsView.vue'
+import StatusGrid from '@/components/StatusGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
+import type { ColumnDef } from '@/types/column'
 import type { ActionDef } from '@/types/action'
 
 const askMock = vi.fn()
@@ -28,6 +31,13 @@ const apiMock = vi.fn()
 vi.mock('@/api/client', () => ({
   apiCall: (...args: unknown[]) => apiMock(...args),
 }))
+
+function gridColumns(): ColumnDef[] {
+  const wrapper = mount(ConnectionsView, {
+    global: { stubs: { StatusGrid: true } },
+  })
+  return wrapper.findComponent(StatusGrid).props('columns') as ColumnDef[]
+}
 
 const clearSelection = vi.fn()
 const StatusGridStub = defineComponent({
@@ -53,8 +63,27 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  delete (globalThis as { tvh_locale?: unknown }).tvh_locale
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+})
+
+describe('ConnectionsView — columns', () => {
+  it('offers the Classic Proxy Address column, hidden until enabled', () => {
+    ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { 'Proxy Address': 'proxy-x' }
+    const cols = gridColumns()
+    const proxy = cols.find((c) => c.field === 'proxy')
+    expect(proxy).toMatchObject({
+      label: 'proxy-x',
+      sortable: true,
+      minVisible: 'desktop',
+      hiddenByDefault: true,
+    })
+    /* Next to the server address, as in Classic. */
+    expect(cols.findIndex((c) => c.field === 'proxy')).toBe(
+      cols.findIndex((c) => c.field === 'server') + 1,
+    )
+  })
 })
 
 describe('ConnectionsView — Drop', () => {
