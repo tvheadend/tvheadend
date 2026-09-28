@@ -361,6 +361,18 @@ mpegts_mux_class_get_num_chn ( void *ptr )
   return &n;
 }
 
+#if ENABLE_T2MI
+static const void *
+mpegts_mux_class_get_num_t2mi ( void *ptr )
+{
+  static int n;
+  mpegts_mux_t *mm = ptr;
+
+  n = mm ? t2mi_mux_count_carriers(mm) : 0;
+  return &n;
+}
+#endif
+
 static const void *
 mpegts_mux_class_get_network ( void *ptr )
 {
@@ -669,6 +681,18 @@ const idclass_t mpegts_mux_class =
       .opts     = PO_RDONLY | PO_NOSAVE,
       .get      = mpegts_mux_class_get_num_chn,
     },
+#if ENABLE_T2MI
+    {
+      .type     = PT_INT,
+      .id       = "carrier_count",
+      .name     = N_("Carriers"),
+      .desc     = N_("The number of encapsulated multiplexes (T2-MI, "
+                     "TS piping, ...) currently carried by services on "
+                     "this mux."),
+      .opts     = PO_RDONLY | PO_NOSAVE,
+      .get      = mpegts_mux_class_get_num_t2mi,
+    },
+#endif
     {
        .type     = PT_BOOL,
        .id       = "tsid_zero",
@@ -703,6 +727,35 @@ const idclass_t mpegts_mux_class =
       .off      = offsetof(mpegts_mux_t, mm_sid_filter),
       .opts     = PO_HIDDEN | PO_EXPERT
     },
+#if ENABLE_T2MI
+    {
+      /* internal marker: this mux is used as a T2-MI carrier source.
+       * Set automatically when the mux is selected as a source of a
+       * T2-MI network; controls whether its private streams are examined
+       * as carriers (together with 't2mi_ignore_private' below). */
+      .type     = PT_BOOL,
+      .id       = "t2mi_carriers",
+      .name     = N_("T2-MI carrier source"),
+      .desc     = N_("Set automatically when this mux is used as a source "
+                     "for a T2-MI network."),
+      .off      = offsetof(mpegts_mux_t, mm_t2mi_carriers),
+      .opts     = PO_HIDDEN | PO_EXPERT | PO_RDONLY
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "t2mi_ignore_private",
+      .name     = N_("Ignore private streams as carriers"),
+      .desc     = N_("By default the private data streams of a T2-MI "
+                     "source mux without recognized signalling are also "
+                     "examined as T2-MI / TS piping carriers, which is "
+                     "needed for feeds like Abertis/Cellnex. Enable this "
+                     "to consider only streams with a proper T2MI "
+                     "descriptor. Normally set from the T2-MI network's "
+                     "'Ignore private-stream carriers' option."),
+      .off      = offsetof(mpegts_mux_t, mm_t2mi_ignore_private),
+      .opts     = PO_ADVANCED
+    },
+#endif
     {
       .type     = PT_TIME,
       .id       = "created",
@@ -788,6 +841,11 @@ mpegts_mux_delete ( mpegts_mux_t *mm, int delconf )
 
   /* Stop */
   mm->mm_stop(mm, 1, SM_CODE_ABORTED);
+
+#if ENABLE_T2MI
+  /* Unlink from T2-MI automatic networks selecting this mux as a source */
+  t2mi_source_mux_deleting(mm, delconf);
+#endif
 
   /* Remove from network */
   LIST_REMOVE(mm, mm_network_link);
