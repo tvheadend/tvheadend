@@ -13,6 +13,7 @@
  *   - dirty detection (shallow primitive comparison vs `baseline`)
  *   - save (`apiCall(saveEndpoint, { node: JSON.stringify(currentValues) })`)
  *   - undo (reset currentValues to baseline)
+ *   - live refresh when Comet reports a change made elsewhere
  *   - error / loading state
  *   - per-page UI-level override via `<LevelMenu>` (defaults to
  *     `access.uilevel`, honours `access.locked` cap; pages can
@@ -39,6 +40,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiCall } from '@/api/client'
 import { apiErrorMessage } from '@/utils/apiErrorMessage'
+import { cometClient } from '@/api/comet'
+import type { IdnodeNotification } from '@/types/comet'
 import { useAccessStore } from '@/stores/access'
 import { levelMatches, propLevel, type IdnodeProp, type PropertyGroup } from '@/types/idnode'
 import type { UiLevel } from '@/types/access'
@@ -306,6 +309,9 @@ interface LoadResponse {
   entries?: Array<{
     uuid?: string
     class?: string
+    /* Comet notification class for this entry (`ic_event`, see
+     * IdnodeEditor's LoadEntry). Drives the live refresh below. */
+    event?: string
     params?: IdnodeProp[]
     meta?: { groups?: PropertyGroup[]; props?: IdnodeProp[] }
   }>
@@ -325,6 +331,12 @@ const error = ref<string | null>(null)
  * user's edits so they can fix a value and save again. Cleared by
  * the next save, Undo or load. */
 const saveError = ref<string | null>(null)
+/* Edited fields that another session changed meanwhile (see the
+ * Comet refresh below). */
+const changedElsewhere = ref<string[]>([])
+/* Bumped by every load(), so a quiet Comet refresh that raced a
+ * load drops its stale response. */
+let loadSeq = 0
 
 /* Class id of the loaded entry — keyed lookup into `CLASS_RULES`
  * for required / cross-field / minLength rules. Server emits it on
@@ -332,6 +344,7 @@ const saveError = ref<string | null>(null)
  * (e.g. `config/load`). Falls back to null when absent — `applyClassRules`
  * treats null as "no class-level rules", same default as IdnodeEditor. */
 const currentClass = ref<string | null>(null)
+const currentEvent = ref<string | null>(null)
 
 /* Touched fields — error messages stay hidden on untouched fields so
  * opening a fresh form with empty required fields doesn't immediately
@@ -354,8 +367,10 @@ async function load() {
     return
   }
   loading.value = true
+  loadSeq++
   error.value = null
   saveError.value = null
+  changedElsewhere.value = []
   try {
     /* uuid mode: idnode/load with uuid + meta. Server returns the
      * same `{ entries: [{ params, meta: { groups } }] }` shape as
@@ -378,6 +393,7 @@ async function load() {
     fieldProps.value = entry.params ?? []
     groups.value = entry.meta?.groups ?? []
     currentClass.value = entry.class ?? null
+    currentEvent.value = entry.event ?? null
     /* Fresh load resets the touch tracking so previously-touched
      * fields don't carry their visible-error state across a reload
      * of the same form (e.g. after Save). */
@@ -785,10 +801,109 @@ async function save() {
 function undo() {
   if (!isDirty.value) return
   saveError.value = null
+  changedElsewhere.value = []
   /* Spread the baseline so currentValues becomes a fresh object
    * — triggers reactive updates on every field input. */
   currentValues.value = { ...baseline.value }
 }
+
+/* ---- Live refresh from Comet ----
+ *
+ * The server notifies a change under the entry's `event`: a
+ * singleton config (Base, Image Cache, SAT>IP Server, Debugging,
+ * …) as `{ reload: 1 }` (notify_reload), a multi-instance entry as
+ * `{ change: [uuid, …] }`. Classic reloads its forms on these
+ * (idnode.js:3017-3020). Without it a form left open while another
+ * session saved kept the old values, and the next Save, which
+ * posts every field, wrote them back.
+ *
+ * The refresh is quiet: no loading state, so the form and its
+ * scroll position stay. Untouched fields take the server value.
+ * Edited fields keep the user's value, but their baseline moves to
+ * the server value too, so Undo returns to what is saved now. An
+ * edited field the server also changed is named above the form. */
+const COMET_REFRESH_DEBOUNCE_MS = 250
+let cometRefreshTimer: ReturnType<typeof setTimeout> | null = null
+let cometUnsub: (() => void) | null = null
+let isUnmounted = false
+
+function mergeFromServer(serverParams: IdnodeProp[]): void {
+  const dirty = dirtyIds.value
+  const nextBaseline = { ...baseline.value }
+  const nextCurrent = { ...currentValues.value }
+  const conflicts = new Set(changedElsewhere.value)
+  for (const p of serverParams) {
+    if (!(p.id in nextBaseline)) continue
+    const value = p.value ?? null
+    if (!dirty.has(p.id)) {
+      nextCurrent[p.id] = value
+    } else if (JSON.stringify(value) !== JSON.stringify(baseline.value[p.id])) {
+      conflicts.add(p.id)
+    }
+    nextBaseline[p.id] = value
+  }
+  baseline.value = nextBaseline
+  currentValues.value = nextCurrent
+  changedElsewhere.value = [...conflicts]
+}
+
+async function refreshFromServer(): Promise<void> {
+  /* A load in flight ends with fresh values. A Save can fail and
+   * keep the form, so try again after it. */
+  if (loading.value) return
+  if (saving.value) {
+    scheduleRefresh()
+    return
+  }
+  const seq = loadSeq
+  const [endpoint, params] = props.uuid
+    ? ['idnode/load', { uuid: props.uuid }]
+    : [props.loadEndpoint, {}]
+  if (!endpoint) return
+  try {
+    const res = await apiCall<LoadResponse>(endpoint, params)
+    if (seq !== loadSeq || loading.value) return
+    if (saving.value) {
+      scheduleRefresh()
+      return
+    }
+    const entry = res.entries?.[0]
+    if (entry?.params) mergeFromServer(entry.params)
+  } catch {
+    /* Quiet: the next notification tries again. */
+  }
+}
+
+/* Debounced, so a burst of notifications costs one fetch. A quiet
+ * fetch that returns after unmount does not arm it again. */
+function scheduleRefresh(): void {
+  if (isUnmounted) return
+  if (cometRefreshTimer !== null) clearTimeout(cometRefreshTimer)
+  cometRefreshTimer = setTimeout(() => {
+    cometRefreshTimer = null
+    void refreshFromServer()
+  }, COMET_REFRESH_DEBOUNCE_MS)
+}
+
+function onCometNotification(msg: unknown): void {
+  const note = msg as IdnodeNotification
+  const relevant = props.uuid ? !!note.change?.includes(props.uuid) : !!note.reload
+  if (relevant) scheduleRefresh()
+}
+
+watch(currentEvent, (event) => {
+  cometUnsub?.()
+  cometUnsub = event ? cometClient.on(event, onCometNotification) : null
+})
+
+/* A field the user has since set back to the saved value is no
+ * longer in conflict. */
+const changedElsewhereCaptions = computed(() =>
+  changedElsewhere.value
+    .filter((id) => dirtyIds.value.has(id))
+    .map((id) => fieldProps.value.find((p) => p.id === id)?.caption ?? id)
+    .join(', '),
+)
 
 /* Expose imperative handles for wrappers that render their own
  * action chrome (setup wizard's WizardFooter is the canonical
@@ -920,6 +1035,10 @@ watch(
 
 onBeforeUnmount(() => {
   if (targetedTimer !== null) clearTimeout(targetedTimer)
+  isUnmounted = true
+  if (cometRefreshTimer !== null) clearTimeout(cometRefreshTimer)
+  cometUnsub?.()
+  cometUnsub = null
 })
 </script>
 
@@ -998,6 +1117,18 @@ onBeforeUnmount(() => {
     </div>
     <p v-if="saveError && !loading && !error" class="idnode-config-form__save-error" role="alert">
       {{ saveError }}
+    </p>
+    <p
+      v-if="changedElsewhereCaptions && !loading && !error"
+      class="idnode-config-form__changed-elsewhere"
+      role="status"
+    >
+      {{
+        t(
+          'Changed elsewhere while you were editing: {0}. Save keeps your values, Undo shows the new ones.',
+          changedElsewhereCaptions,
+        )
+      }}
     </p>
     <form v-if="!loading && !error" class="idnode-config-form__form" @submit.prevent="save">
       <!-- Optional caller-supplied content rendered above the
@@ -1176,6 +1307,19 @@ onBeforeUnmount(() => {
   padding: var(--tvh-space-2) var(--tvh-space-3);
   background: color-mix(in srgb, var(--tvh-error) 8%, var(--tvh-bg-surface));
   border: 1px solid var(--tvh-error);
+  border-radius: var(--tvh-radius-sm);
+  color: var(--tvh-text);
+  font-size: var(--tvh-text-md);
+}
+
+/* A notice above the still-mounted form, not an error: the edit
+ * is kept. */
+.idnode-config-form__changed-elsewhere {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--tvh-space-2) var(--tvh-space-3);
+  background: color-mix(in srgb, var(--tvh-warning) 10%, var(--tvh-bg-surface));
+  border: 1px solid var(--tvh-warning);
   border-radius: var(--tvh-radius-sm);
   color: var(--tvh-text);
   font-size: var(--tvh-text-md);

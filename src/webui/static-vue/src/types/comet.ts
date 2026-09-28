@@ -39,9 +39,12 @@ export interface CometEnvelope {
  * Idnode-class notifications (e.g. dvrentry) carry these arrays. The
  * action key emitted by the server is `change` (idnode_notify_changed
  * → notify_delayed → notify_by_msg keyed on the literal "change").
+ * A singleton class (config, imagecache, …) notifies `{ reload: 1 }`
+ * instead (idnode_notify → notify_reload, src/idnode.c).
  */
 export interface IdnodeNotification extends NotificationMessage {
   create?: string[]
   change?: string[]
   delete?: string[]
+  reload?: number
 }
