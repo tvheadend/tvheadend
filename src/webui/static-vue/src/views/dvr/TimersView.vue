@@ -131,7 +131,7 @@ const {
     :create-base="creatingBase"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Timer') : t('Add Timer')"
+    :title="creatingBase ? t('Add Timer') : t('Edit Timer')"
     :inline-enum-multi-fields="['weekdays']"
     @close="closeEditor"
     @created="flipToEdit"

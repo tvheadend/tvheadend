@@ -549,7 +549,7 @@ watch(
     :subclass="creatingSubclass"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Channel') : t('Add Channel')"
+    :title="creatingBase ? t('Add Channel') : t('Edit Channel')"
     @close="closeEditor"
     @created="flipToEdit"
   />

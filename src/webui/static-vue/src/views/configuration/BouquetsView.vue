@@ -233,7 +233,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :subclass="creatingSubclass"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Bouquet') : t('Add Bouquet')"
+    :title="creatingBase ? t('Add Bouquet') : t('Edit Bouquet')"
     @close="closeEditor"
     @created="flipToEdit"
   />

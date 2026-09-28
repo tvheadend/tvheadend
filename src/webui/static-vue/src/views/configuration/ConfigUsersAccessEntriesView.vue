@@ -378,7 +378,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :create-base="creatingBase"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Access Entry') : t('Add Access Entry')"
+    :title="creatingBase ? t('Add Access Entry') : t('Edit Access Entry')"
     @close="closeEditor"
     @created="flipToEdit"
   />

@@ -164,7 +164,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :subclass="creatingSubclass"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Rating Label') : t('Add Rating Label')"
+    :title="creatingBase ? t('Add Rating Label') : t('Edit Rating Label')"
     @close="closeEditor"
     @created="flipToEdit"
   />

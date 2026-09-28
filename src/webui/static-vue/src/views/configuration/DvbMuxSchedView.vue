@@ -206,7 +206,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :subclass="creatingSubclass"
     :level="editorLevel"
     :list="editorList"
-    :title="editingUuid ? t('Edit Mux Scheduler') : t('Add Mux Scheduler')"
+    :title="creatingBase ? t('Add Mux Scheduler') : t('Edit Mux Scheduler')"
     @close="closeEditor"
     @created="flipToEdit"
   />
