@@ -101,10 +101,12 @@ import {
   type AutoRecConfInput,
   buildClusterFetchFilter,
   buildTitleSearchQueryParams,
+  countActiveGlobalFilters,
   decideFilterDispatch,
   type EpgGroupField,
   serverParamsFromFilters as serverParamsFromFiltersPure,
   uniqueChannelUuidByName,
+  withGlobalFiltersCleared,
 } from './epgTableFilters'
 import { regexEscape } from '@/utils/regexEscape'
 import { applyInMemorySort } from './epgTableSort'
@@ -1938,7 +1940,27 @@ function onDrawerClose() {
   state.closeDrawer()
 }
 
-const hasActiveColumnFilter = computed(() => Object.keys(filters.value.perColumn).length > 0)
+/* Any filter narrowing the Table: a column funnel or Search Title,
+ * or a GLOBAL axis from the view options (time window, tag, genre,
+ * New only, duration). The GLOBAL axes persist per browser, so an
+ * empty Table must not blame the EPG grabbers while one is set. */
+const hasActiveFilter = computed(
+  () =>
+    Object.keys(filters.value.perColumn).length > 0 ||
+    countActiveGlobalFilters(state.viewOptions.value, state.currentDefaults.value) > 0,
+)
+
+/* Empty state's "Clear filters": drop the column funnels, Search
+ * Title and the GLOBAL axes, keep columns, grouping and display
+ * options (Classic's "Reset All" also clears filters only). */
+function onClearAllFilters(): void {
+  filters.value = { ...filters.value, perColumn: {}, literalTitle: null }
+  const vo = state.viewOptions.value
+  const defaults = state.currentDefaults.value
+  if (countActiveGlobalFilters(vo, defaults) > 0) {
+    state.setViewOptions(withGlobalFiltersCleared(vo, defaults))
+  }
+}
 
 /* Combined loading/error so DataGrid's loading + error UI flips
  * for query-mode fetches too. In browse mode these reduce to the
@@ -2440,11 +2462,18 @@ async function onCreateAutoRecClick() {
           <template v-if="queryLoading">
             Searching the EPG…
           </template>
-          <template v-else-if="hasActiveColumnFilter">
-            No events match the current filter.
-          </template>
           <template v-else-if="state.loading.value">
             Loading events…
+          </template>
+          <template v-else-if="hasActiveFilter">
+            No events match the current filter.
+            <button
+              type="button"
+              class="epg-table-grid__clear-filters"
+              @click="onClearAllFilters"
+            >
+              {{ t('Clear filters') }}
+            </button>
           </template>
           <template v-else>
             No EPG events available. Make sure your network's EPG grabbers are configured and have
@@ -2706,6 +2735,26 @@ async function onCreateAutoRecClick() {
   color: var(--tvh-text-muted);
   text-align: center;
   padding: var(--tvh-space-6);
+}
+
+/* Empty state's "Clear filters", on its own line under the
+ * message. Same look as the Log's Clear filters button. */
+.epg-table-grid__clear-filters {
+  display: block;
+  margin: var(--tvh-space-3) auto 0;
+  padding: 2px var(--tvh-space-2);
+  font-size: var(--tvh-text-sm);
+  background: none;
+  border: 1px solid var(--tvh-border-strong);
+  border-radius: var(--tvh-radius-sm);
+  color: var(--tvh-text-muted);
+  cursor: pointer;
+  transition: background var(--tvh-transition);
+}
+
+.epg-table-grid__clear-filters:hover {
+  background: color-mix(in srgb, var(--tvh-primary) var(--tvh-hover-strength), transparent);
+  color: var(--tvh-text);
 }
 
 /* Per-column funnel-popover input. */

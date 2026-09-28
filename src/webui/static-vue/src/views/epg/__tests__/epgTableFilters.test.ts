@@ -29,6 +29,7 @@ import {
   buildClusterFilterByDate,
   buildTitleSearchQueryParams,
   clusterKeyOf,
+  countActiveGlobalFilters,
   decideFilterDispatch,
   hasAnyAutoRecFilter,
   isTagFilterActive,
@@ -36,9 +37,11 @@ import {
   serverParamsFromFilters,
   timeWindowFilters,
   uniqueChannelUuidByName,
+  withGlobalFiltersCleared,
   type BuildFiltersInput,
 } from '../epgTableFilters'
 import type { FilterDef } from '@/types/grid'
+import { buildDefaults } from '../epgViewOptions'
 
 /* Fixed reference times for deterministic tests.
  *   NOW = 2026-05-17 12:00:00 UTC = 1779364800
@@ -1389,5 +1392,67 @@ describe('autoRecMatchCountParams', () => {
   it('scope flags only ride with a title', () => {
     const out = autoRecMatchCountParams({ ...autoRecConfInputDefaults(), mode: 'mergetext' })
     expect(out).toEqual({ start: 0, limit: 0 })
+  })
+})
+
+describe('countActiveGlobalFilters', () => {
+  const defaults = buildDefaults(false, false)
+
+  it('is 0 at the defaults', () => {
+    expect(countActiveGlobalFilters(defaults, defaults)).toBe(0)
+  })
+
+  it('counts each narrowing axis once', () => {
+    const cases: Partial<typeof defaults>[] = [
+      { timeWindow: 'today' },
+      { genre: [0x10, 0x20] },
+      { newOnly: true },
+      { durationMinMinutes: 30 },
+      { durationMaxMinutes: 90 },
+      { tagFilter: { tag: 'tag-1' } },
+    ]
+    for (const c of cases) {
+      expect(countActiveGlobalFilters({ ...defaults, ...c }, defaults)).toBe(1)
+    }
+    expect(
+      countActiveGlobalFilters(Object.assign({}, defaults, ...cases), defaults),
+    ).toBe(cases.length)
+  })
+
+  it('ignores display options and grouping', () => {
+    const options = {
+      ...defaults,
+      groupField: 'channelName' as const,
+      progressDisplay: 'off' as const,
+      titleSearchMode: 'fulltext' as const,
+    }
+    expect(countActiveGlobalFilters(options, defaults)).toBe(0)
+  })
+})
+
+describe('withGlobalFiltersCleared', () => {
+  const defaults = buildDefaults(false, false)
+
+  it('resets every filter axis and keeps the rest', () => {
+    const options = {
+      ...defaults,
+      timeWindow: 'now' as const,
+      genre: [0x10],
+      newOnly: true,
+      durationMinMinutes: 30,
+      durationMaxMinutes: 90,
+      tagFilter: { tag: 'tag-1' },
+      groupField: 'start' as const,
+      columnVisibility: { summary: false },
+      titleSearchMode: 'mergetext' as const,
+    }
+    const out = withGlobalFiltersCleared(options, defaults)
+    expect(countActiveGlobalFilters(out, defaults)).toBe(0)
+    expect(out.groupField).toBe('start')
+    expect(out.columnVisibility).toEqual({ summary: false })
+    expect(out.titleSearchMode).toBe('mergetext')
+    /* No shared references with the defaults object. */
+    expect(out.genre).not.toBe(defaults.genre)
+    expect(out.tagFilter).not.toBe(defaults.tagFilter)
   })
 })
