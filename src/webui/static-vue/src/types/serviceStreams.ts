@@ -77,21 +77,28 @@ export interface ServiceStream {
   caids?: ServiceCaid[]
 }
 
-/* HbbTV section. Server copies a pre-built map straight from
- * `s->s_hbbtv` (`api_service.c:158-159`) — the exact shape
- * varies by service, so we model it loosely as a record-of-
- * records and let the dialog walk it defensively. The Classic
- * UI does the same at `mpegts.js:226-250`. */
-export type HbbTvData = Record<string, HbbTvSection>
-
-export interface HbbTvSection {
-  language?: string
-  appName?: string
-  url?: string
-  /* Other fields the server may emit. Stays open-typed because
-   * we don't author the C-side structure. */
-  [k: string]: unknown
+/* HbbTV applications. Server copies `s->s_hbbtv` verbatim
+ * (`api_service.c:158-165`). It is built by `dvb_psi_hbbtv_cb`
+ * (`src/input/mpegts/dvb_psi_hbbtv.c`): a map from the AIT
+ * section number to the list of applications found in it. Each
+ * application carries its names per language, the URL (HTTP
+ * transport base plus simple location) and its visibility. The
+ * Classic UI walks section, then application, then title
+ * (`mpegts.js:226-250`). */
+export interface HbbTvTitle {
+  name?: string
+  /* 3-letter ISO 639-2 language code. */
+  lang?: string
 }
+
+export interface HbbTvApp {
+  title?: HbbTvTitle[]
+  url?: string
+  /* `visibility_table` entry, e.g. 'all'. */
+  visibility?: string
+}
+
+export type HbbTvData = Record<string, HbbTvApp[]>
 
 export interface ServiceStreamsResponse {
   name: string
