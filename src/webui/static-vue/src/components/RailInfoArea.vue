@@ -31,7 +31,7 @@
  * in a `flex-direction: row` strip.
  */
 import { computed } from 'vue'
-import { Clock, HardDrive, UserCircle2 } from 'lucide-vue-next'
+import { Clock, HardDrive, ShieldOff, UserCircle2 } from 'lucide-vue-next'
 import { useAccessStore } from '@/stores/access'
 import { useI18n } from '@/composables/useI18n'
 import { useNowCursor } from '@/composables/useNowCursor'
@@ -77,19 +77,20 @@ const infoItems = computed<string[]>(() => {
  * fired but the rail hasn't caught up yet". `loginLabel` /
  * `loginTooltip` here pick a state-appropriate label; the compact
  * one-letter `usernameInitial` falls through to `·` for any state
- * that doesn't have a name to show. */
+ * that doesn't have a name to show, except --noacl, which gets its
+ * own icon in the template. */
 const username = computed(() => access.data?.username ?? '')
 const usernameInitial = computed(() => (username.value[0] ?? '·').toUpperCase())
 const loginLabel = computed<string>(() => {
   switch (access.authMode) {
     case 'pre-auth':
-      return 'Connecting…'
+      return t('Connecting…')
     case 'noacl':
-      return 'Authentication disabled'
+      return t('Authentication disabled')
     case 'anonymous-admin':
-      return 'Anonymous (admin)'
+      return t('Anonymous (admin)')
     case 'anonymous':
-      return 'Not logged in'
+      return t('Not logged in')
     case 'authenticated':
       return username.value
   }
@@ -98,52 +99,59 @@ const loginLabel = computed<string>(() => {
 const loginTooltip = computed<string>(() => {
   switch (access.authMode) {
     case 'authenticated':
-      return `Logged in as ${username.value}`
+      return `${t('Logged in as')} ${username.value}`
     case 'noacl':
-      return 'Server started with --noacl — all access-control checks are bypassed and every request is treated as admin'
+      return t(
+        'Server started with --noacl — all access-control checks are bypassed and every request is treated as admin',
+      )
     case 'anonymous-admin':
-      return 'No credentials presented — anonymous wildcard grants admin'
+      return t('No credentials presented — anonymous wildcard grants admin')
     default:
       return loginLabel.value
   }
 })
 
-/* ---- Storage ---- */
+/* ---- Storage ----
+ * The server's "used" figure is only the size of tvheadend's own
+ * recordings (`dvr_bused = dvfs->used_size`, src/dvr/dvr_vfsmgr.c),
+ * so free + used does not add up to the total. The row shows free
+ * of total in the Home health line's wording and units. The
+ * tooltip carries all three with Classic's labels, "Used by
+ * tvheadend" included (static/app/tvheadend.js setDiskSpace). */
 
-/* Compact-mode footer abbreviation — single-letter suffix, no
- * decimal except for TiB where the digit matters (the difference
- * between 1.2T and 1.8T is 600 GiB). */
-function formatBytesAbbr(b: number): string {
-  if (b >= 1024 ** 4) return `${(b / 1024 ** 4).toFixed(1)}T`
-  if (b >= 1024 ** 3) return `${Math.round(b / 1024 ** 3)}G`
-  if (b >= 1024 ** 2) return `${Math.round(b / 1024 ** 2)}M`
-  if (b >= 1024) return `${Math.round(b / 1024)}K`
-  return `${b}B`
+function fmtMaybe(v: number | undefined): string {
+  return typeof v === 'number' && v >= 0 ? formatBytes(v) : '—'
 }
 
-function fmtMaybe(v: number | undefined, fmt: (b: number) => string): string {
-  return typeof v === 'number' && v >= 0 ? fmt(v) : '—'
-}
-
-const storageWide = computed(() => ({
-  free: fmtMaybe(access.data?.freediskspace, formatBytesAbbr),
-  used: fmtMaybe(access.data?.useddiskspace, formatBytesAbbr),
-  total: fmtMaybe(access.data?.totaldiskspace, formatBytesAbbr),
-}))
+/* The sentence is translated as a whole and split at its
+ * placeholders, so the figures stay bold like the other rows
+ * whatever word order a translation uses. */
+const storageWide = computed<Array<{ text: string; value: boolean }>>(() => {
+  const values = [fmtMaybe(access.data?.freediskspace), fmtMaybe(access.data?.totaldiskspace)]
+  return t('{0} free of {1}')
+    .split(/(\{\d\})/)
+    .filter((part) => part !== '')
+    .map((part) => {
+      const m = /^\{(\d)\}$/.exec(part)
+      const value = m ? values[Number(m[1])] : undefined
+      return value === undefined ? { text: part, value: false } : { text: value, value: true }
+    })
+})
 
 const freePct = computed<string>(() => {
-  const f = access.data?.freediskspace
-  const t = access.data?.totaldiskspace
-  if (typeof f !== 'number' || typeof t !== 'number' || t <= 0) return '—'
-  return `${Math.round((f / t) * 100)}%`
+  const free = access.data?.freediskspace
+  const total = access.data?.totaldiskspace
+  if (typeof free !== 'number' || typeof total !== 'number' || total <= 0) return '—'
+  return `${Math.round((free / total) * 100)}%`
 })
 
-const storageTooltip = computed(() => {
-  const free = fmtMaybe(access.data?.freediskspace, formatBytes)
-  const used = fmtMaybe(access.data?.useddiskspace, formatBytes)
-  const total = fmtMaybe(access.data?.totaldiskspace, formatBytes)
-  return `Storage — Free: ${free} · Used: ${used} · Total: ${total}`
-})
+const storageTooltip = computed(() =>
+  [
+    `${t('Free')}: ${fmtMaybe(access.data?.freediskspace)}`,
+    `${t('Used by tvheadend')}: ${fmtMaybe(access.data?.useddiskspace)}`,
+    `${t('Total')}: ${fmtMaybe(access.data?.totaldiskspace)}`,
+  ].join(' · '),
+)
 
 /* The compact chip (collapsed rail, phone top bar) says "96% free".
  * A bare "96%" reads like a fill level. */
@@ -183,7 +191,7 @@ const dayTimeWide = computed(() => {
         <span v-else class="info-glyph">{{ access.userGlyph }}</span>
         <span class="info-row__text">
           <template v-if="access.authMode === 'authenticated'">
-            Logged in as <strong>{{ loginLabel }}</strong>
+            {{ t('Logged in as') }} <strong>{{ loginLabel }}</strong>
           </template>
           <span v-else class="info-row__text--muted">{{ loginLabel }}</span>
         </span>
@@ -191,7 +199,14 @@ const dayTimeWide = computed(() => {
       <div v-else class="info-stack" :title="loginTooltip">
         <UserCircle2 v-if="!access.userGlyph" :size="16" :stroke-width="2" />
         <span v-else class="info-glyph info-glyph--lg">{{ access.userGlyph }}</span>
-        <span class="info-stack__value">{{ usernameInitial }}</span>
+        <ShieldOff
+          v-if="access.authMode === 'noacl'"
+          class="info-stack__value"
+          :size="12"
+          :stroke-width="2"
+          aria-hidden="true"
+        />
+        <span v-else class="info-stack__value">{{ usernameInitial }}</span>
       </div>
     </template>
 
@@ -200,9 +215,10 @@ const dayTimeWide = computed(() => {
       <div v-if="!compact" class="info-row" :title="storageTooltip">
         <HardDrive :size="14" :stroke-width="2" />
         <span class="info-row__text">
-          Free <strong>{{ storageWide.free }}</strong> Used
-          <strong>{{ storageWide.used }}</strong> Total
-          <strong>{{ storageWide.total }}</strong>
+          <template v-for="(part, i) in storageWide" :key="i">
+            <strong v-if="part.value">{{ part.text }}</strong>
+            <template v-else>{{ part.text }}</template>
+          </template>
         </span>
       </div>
       <div v-else class="info-stack" :title="storageTooltip">
