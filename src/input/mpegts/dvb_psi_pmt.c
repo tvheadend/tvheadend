@@ -24,6 +24,7 @@
 #include "descrambler/dvbcam.h"
 #include "dvb_psi_pmt.h"
 #include "dvb_psi_hbbtv.h"
+#include "tsdemux.h"
 
 /*
  * PMT processing
@@ -664,6 +665,9 @@ dvb_pmt_callback
   tvhdebug(mt->mt_subsys, "%s: sid %04X (%d)", mt->mt_name, sid, sid);
   update = 0;
   tvh_mutex_lock(&s->s_stream_mutex);
+  /* Keep buffered TS packets ahead of any stream reconfiguration. */
+  if (s->s_status == SERVICE_RUNNING)
+    ts_remux_flush(s);
   update = dvb_psi_parse_pmt(mt, service_nicename((service_t *)s),
                              &s->s_components, ptr, len);
   if (update) {
