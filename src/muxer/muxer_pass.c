@@ -172,6 +172,10 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     len -= 5 + l;
   }
 
+  /* The PMT and streaming start may arrive in either order on a PID change. */
+  if (ol == 12)
+    return;
+
   /* update section length */
   out[1] = (out[1] & 0xf0) | ((ol + 4 - 3) >> 8);
   out[2] = (ol + 4 - 3) & 0xff;
@@ -475,9 +479,9 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
       streaming_start_unref(pm->pm_ss);
     pm->pm_ss = streaming_start_copy(ss);
 
-    dvb_table_parse_done(&pm->pm_pmt);
-    dvb_table_parse_init(&pm->pm_pmt, "pass-pmt", LS_TBL_PASS, pm->pm_pmt_pid,
-                         DVB_PMT_BASE, DVB_PMT_MASK, pm);
+    /* Reset input assembly, but keep the output continuity counter. */
+    dvb_table_parse_reinit_input(&pm->pm_pmt);
+    pm->pm_pmt.mt_pid = pm->pm_pmt_pid;
   }
 
   return 0;
