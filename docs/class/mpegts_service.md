@@ -9,8 +9,6 @@ Services are automatically pulled from muxes and can be mapped to Channels.
 
 !['Services'](static/img/doc/dvbinputs/dvbinput_service.png)
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons
@@ -21,7 +19,7 @@ Services are automatically pulled from muxes and can be mapped to Channels.
 
 ## Service Information
 
-Clicking the !['Information Icon'](static/img/doc/icons/information.png) 
+Clicking the !['Information Icon'](static/icons/information.png) 
 information icon will display service details.
 
 !['Service Information'](static/img/doc/dvbinputs/dvbinput_service_info.png)

@@ -7,8 +7,6 @@
 This panel lists all the available satellite (DVB-S/ISDB-S) configuration 
 parameters.
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons

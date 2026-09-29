@@ -91,10 +91,10 @@ The main grid items have the following functions:
 
 Icon                                                                  | Description
 ----------------------------------------------------------------------|-------------
-![Clock icon](static/img/doc/icons/scheduled.png)                     | the program is scheduled for recording
-![Recording icon](static/img/doc/icons/rec.png)                       | the program is currently recording
-![Broadcast details icon](static/img/doc/icons/broadcast_details.png) | click to call up more detailed information about an event
-![Exclamation icon](static/img/doc/icons/exclamation.png)             | the program failed to record
+![Clock icon](static/icons/scheduled.png)                             | the program is scheduled for recording
+![Recording icon](static/icons/rec.png)                               | the program is currently recording
+![Broadcast details icon](static/icons/broadcast_details.png)         | click to call up more detailed information about an event
+![Exclamation icon](static/icons/exclamation.png)                     | the program failed to record
 
 **Progress**
 : A bar graph display of how far through a program we currently are.
@@ -155,12 +155,12 @@ for recording, find alternative events and more.
 Toolbar item                                                                          | Description
 --------------------------------------------------------------------------------------|------------
 Find info from ... drop-down                                                          | Query an online service for more information on an event. Opens in new window.
-![Play](static/img/doc/icons/control_play.png) *[Play]*                               | Download a playlist file (XSPF or M3U depending on your startup options); if your system is configured for it, this will automatically launch an appropriate player, otherwise you will need to manually open the playlist to start watching (normally a double-click on the downloaded file).
+![Play](static/icons/control_play.png) *[Play]*                                       | Download a playlist file (XSPF or M3U depending on your startup options); if your system is configured for it, this will automatically launch an appropriate player, otherwise you will need to manually open the playlist to start watching (normally a double-click on the downloaded file).
 (default DVR Profile) drop-down                                                       | Choose a specific DVR profile that will apply to the recording or autorec rule. You can define different profiles in the **Configuration -\> Recording -\> [Digital Video Recorder Profiles](class/dvrconfig)** tab. This allows you to set, for example, more post-broadcast padding for a channel that always runs late, or perhaps define a different post-processing command to strip adverts out on a commercial channel.
-![Record](static/img/doc/icons/rec.png) *[Record]*                                    | Record the displayed event.
-![Record Series](static/img/doc/icons/auto_rec.png) *[Record Series]* / *[Autorec]*   | **Record Series:** Series link, Record all EPG-defined episodes in the series/season. **Autorec:** Create a pseudo-series link using the autorec feature.
-![Alternative showings](static/img/doc/icons/control_repeat_blue.png)                 | List/Find alternative showings (exact matches) of this event.
-![Related events](static/img/doc/icons/clock.png)                                     | List/Find related EPG events. 
+![Record](static/icons/rec.png) *[Record]*                                            | Record the displayed event.
+![Record Series](static/icons/auto_rec.png) *[Record Series]* / *[Autorec]*           | **Record Series:** Series link, Record all EPG-defined episodes in the series/season. **Autorec:** Create a pseudo-series link using the autorec feature.
+![Alternative showings](static/icons/control_repeat_blue.png)                         | List/Find alternative showings (exact matches) of this event.
+![Related events](static/icons/clock.png)                                             | List/Find related EPG events. 
 
 To close the popup, just click on the [X] window button. The popup isn’t
 modal, so you don’t have to close it before doing something else, and
@@ -193,19 +193,19 @@ support certain formats and codecs.
 
 Browser | MPEG-TS | MPEG-PS | Matroska | WebM
 ------- | :-----: | :-----: | :------: | :--:
-Google Chrome | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
-Mozilla Firefox | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
+Google Chrome | ![no](static/icons/exclamation.png) | ![no](static/icons/exclamation.png) | ![yes](static/icons/accept.png) | ![yes](static/icons/accept.png)
+Mozilla Firefox | ![no](static/icons/exclamation.png) | ![no](static/icons/exclamation.png) |  | ![yes](static/icons/accept.png)
 
 ### Supported video codecs
 
 Browser | MPEG2 Video | H.264 | VP8
 ------- | :---------: | :---: | :-:
-Google Chrome | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
-Mozilla Firefox | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
+Google Chrome | ![no](static/icons/exclamation.png) | ![yes](static/icons/accept.png) | ![yes](static/icons/accept.png)
+Mozilla Firefox | ![no](static/icons/exclamation.png) |  | ![yes](static/icons/accept.png)
 
 ### Supported audio codecs
 
 Browser | MPEG2 Audio | Dolby Digital (AC3) | AAC | Vorbis
 ------- | :---------: | :-----------------: | :-: | :----:
-Google Chrome | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) | ![yes](icons/accept.png) | ![yes](icons/accept.png)
-Mozilla Firefox | ![no](icons/exclamation.png) | ![no](icons/exclamation.png) |  | ![yes](icons/accept.png)
+Google Chrome | ![no](static/icons/exclamation.png) | ![no](static/icons/exclamation.png) | ![yes](static/icons/accept.png) | ![yes](static/icons/accept.png)
+Mozilla Firefox | ![no](static/icons/exclamation.png) | ![no](static/icons/exclamation.png) |  | ![yes](static/icons/accept.png)
