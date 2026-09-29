@@ -448,7 +448,8 @@ tcp_socket_dead(int fd)
   if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) < 0)
     return -errno;
 #else
-  if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) == 0)
+  char c;
+  if (recv(fd, &c, 1, MSG_PEEK | MSG_DONTWAIT) == 0)
     return -EIO;
 #endif
   return 0;
