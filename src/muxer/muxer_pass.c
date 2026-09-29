@@ -172,6 +172,10 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
     len -= 5 + l;
   }
 
+  /* The PMT and streaming start may arrive in either order on a PID change. */
+  if (ol == 12)
+    return;
+
   /* update section length */
   out[1] = (out[1] & 0xf0) | ((ol + 4 - 3) >> 8);
   out[2] = (ol + 4 - 3) & 0xff;
