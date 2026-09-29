@@ -16,6 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define _GNU_SOURCE
 #include <fcntl.h>
 #include <poll.h>
 #include <signal.h>
@@ -448,7 +449,8 @@ tcp_socket_dead(int fd)
   if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) < 0)
     return -errno;
 #else
-  if (recv(fd, NULL, 0, MSG_PEEK | MSG_DONTWAIT) == 0)
+  struct pollfd pfd = { .fd = fd, .events = POLLRDHUP };
+  if (poll(&pfd, 1, 0) > 0 && (pfd.revents & (POLLRDHUP | POLLHUP | POLLERR)))
     return -EIO;
 #endif
   return 0;
