@@ -313,6 +313,18 @@ ts_flush(mpegts_service_t *t, sbuf_t *sb)
 }
 
 /**
+ * Deliver buffered transport packets before changing the stream components.
+ * The caller must hold s_stream_mutex.
+ */
+void
+ts_remux_flush(mpegts_service_t *t)
+{
+  lock_assert(&t->s_stream_mutex);
+  if (t->s_tsbuf.sb_ptr || t->s_tsbuf.sb_err)
+    ts_flush(t, &t->s_tsbuf);
+}
+
+/**
  *
  */
 static void

@@ -21,6 +21,8 @@
 
 int ts_resync ( const uint8_t *tsb, int *len, int *idx );
 
+void ts_remux_flush(struct mpegts_service *t);
+
 void ts_recv_packet0
   (struct mpegts_service *t, elementary_stream_t *st, const uint8_t *tsb, int len);
 
