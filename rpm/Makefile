@@ -24,7 +24,7 @@ SPEC     ?= tvheadend.spec.in
 
 COMMIT   ?= $(shell git rev-parse HEAD)
 COMMIT1   = $(shell git rev-parse $(COMMIT))
-FVERSION  = $(shell cd .. && git describe --match "v*" $(COMMIT1) | sed "s/^v//")
+FVERSION  = $(shell cd .. && git describe --tags --match "v*" $(COMMIT1) | sed "s/^v//")
 VERSION   = $(shell echo "$(FVERSION)" | cut -d '-' -f 1)
 RELEASE   = $(shell echo "$(FVERSION)" | cut -d '-' -f 2-10 | sed "s/-/~/g")
 VERSION  ?= "0.0.0"

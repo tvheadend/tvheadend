@@ -35,7 +35,7 @@ concurrency:
 jobs:
   build-vue:
     name: Build + cache Vue UI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       source_hash:   ${{ steps.hash.outputs.hash }}
       artifact_name: webui-vue-${{ steps.hash.outputs.hash }}
