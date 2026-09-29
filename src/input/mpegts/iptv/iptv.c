@@ -489,7 +489,7 @@ iptv_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
   snprintf(buf, len, "IPTV #%d", iptv_input_thread_number((iptv_input_t *)mi));
 }
 
-static inline int
+int
 iptv_input_pause_check ( iptv_mux_t *im )
 {
   int64_t old, s64, limit;
