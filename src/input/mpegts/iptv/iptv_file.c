@@ -61,6 +61,7 @@ iptv_file_thread ( void *aux )
         if (e == ETIMEDOUT)
           break;
       } while (ERRNO_AGAIN(e));
+      pause = iptv_input_pause_check(im);
     }
     if (fp->shutdown)
       break;
