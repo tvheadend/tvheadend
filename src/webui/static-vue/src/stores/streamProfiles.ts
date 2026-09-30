@@ -91,20 +91,28 @@ export const useStreamProfilesStore = defineStore('streamProfiles', () => {
   const canPlayInBrowser = computed(() => profileNames.value.length > 0)
 
   /* Profiles that failed to play in the in-browser player this
-   * session. In-memory only and never persisted: decodability is
-   * browser- and OS-specific, so a reload — or a different browser —
-   * re-tests from scratch. The player's profile dropdown reads this
-   * to flag a profile the user already tried unsuccessfully. */
-  const failedProfiles = ref<Set<string>>(new Set())
+   * session, keyed by channel UUID. In-memory only and never
+   * persisted: decodability is browser- and OS-specific, so a
+   * reload — or a different browser — re-tests from scratch. It also
+   * depends on the channel's codecs (matroska plays an H.264 channel
+   * in Chrome but not an MPEG-2 one), so a failure only counts for
+   * the channel it happened on. The player's profile dropdown reads
+   * this to flag a profile the user already tried unsuccessfully. */
+  const failedProfiles = ref<Map<string, Set<string>>>(new Map())
 
-  /* Flag a profile as failed for the rest of this session. */
-  function markProfileFailed(name: string): void {
-    if (name) failedProfiles.value.add(name)
+  /* Flag a profile as failed on a channel for the rest of this
+   * session. */
+  function markProfileFailed(name: string, channelUuid: string): void {
+    if (!name || !channelUuid) return
+    const failed = failedProfiles.value.get(channelUuid)
+    if (failed) failed.add(name)
+    else failedProfiles.value.set(channelUuid, new Set([name]))
   }
 
-  /* Clear a profile's failed flag — a later attempt played fine. */
-  function clearProfileFailed(name: string): void {
-    failedProfiles.value.delete(name)
+  /* Clear a profile's failed flag on a channel — a later attempt
+   * played fine. */
+  function clearProfileFailed(name: string, channelUuid: string): void {
+    failedProfiles.value.get(channelUuid)?.delete(name)
   }
 
   async function fetchOnce(): Promise<void> {

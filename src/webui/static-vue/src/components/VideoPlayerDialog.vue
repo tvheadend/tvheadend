@@ -22,15 +22,23 @@
  * A live stream holds a server-side subscription open for as long as
  * the HTTP connection lasts; dropping the connection deterministically
  * releases the subscription without waiting for element GC.
+ *
+ * A "No sound" notice below the video says when the browser plays
+ * the picture but none of the stream's audio. It is best effort and
+ * Chromium-only: it reads Chromium's non-standard decoded-byte
+ * counters (see utils/audioPresence.ts) and does nothing in other
+ * browsers. It cannot name the codecs, because the channel's stream
+ * list is admin-only, and it does not flag the profile.
  */
 import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
-import { TriangleAlert } from 'lucide-vue-next'
+import { TriangleAlert, VolumeX } from 'lucide-vue-next'
 import { useI18n } from '@/composables/useI18n'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { channelStreamUrl } from '@/utils/playUrl'
+import { audioPresence } from '@/utils/audioPresence'
 import { apiCall } from '@/api/client'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import type { GridResponse, FilterDef } from '@/types/grid'
@@ -118,6 +126,27 @@ const MEDIA_ERROR_LABELS: Record<number, string> = {
   4: 'format not supported',
 }
 
+/* True when the audio check found the browser decoding the picture
+ * but no audio (see onTimeUpdate). */
+const noAudio = ref(false)
+/* currentTime when the check was armed, null while not armed. */
+let audioCheckFrom: number | null = null
+/* The check runs once per load. Chrome re-fires `playing` after
+ * every stall, so this stops it re-arming. */
+let audioChecked = false
+/* Seconds of media time played before the check reads the counters. */
+const AUDIO_CHECK_AFTER_S = 3
+
+/* The "No sound" notice gives way to the error and switching
+ * overlays. */
+const showNoAudio = computed(() => noAudio.value && !playbackError.value && !switching.value)
+/* i18n: new string */
+const noAudioText = computed(() =>
+  t(
+    "No sound: this browser is not playing any of this stream's audio. Use the external player, or ask the administrator for a stream profile that converts the audio.",
+  ),
+)
+
 /* Two-way bind PrimeVue's `visible` to the composable's `isOpen`. */
 const visibleProxy = computed({
   get: () => player.isOpen.value,
@@ -132,6 +161,19 @@ const headerTitle = computed(() => player.current.value?.title ?? t('Live TV'))
  * composable so the <select> and the <video> src agree). */
 const profiles = computed(() => streamProfiles.playableProfiles)
 const selectedProfile = player.profile
+
+/* Profiles that failed on the current channel earlier this session.
+ * The same profile may play another channel fine, so the flag is per
+ * channel (see the streamProfiles store). */
+const failedHere = computed(() =>
+  streamProfiles.failedProfiles.get(player.current.value?.channelUuid ?? ''),
+)
+/* i18n: new string */
+const failedProfileText = computed(() => t('Failed to play this channel earlier this session'))
+
+function profileLabel(name: string): string {
+  return profiles.value.find((p) => p.name === name)?.label ?? name
+}
 
 const videoSrc = computed(() => {
   const target = player.current.value
@@ -185,6 +227,7 @@ watch(
       playbackErrorDetail.value = ''
       switching.value = false
       hasPlayed.value = false
+      resetAudioCheck()
       void pickInitialProfile()
       void loadChannels()
       return
@@ -208,6 +251,7 @@ watch(
     /* Show the "switching" hint only for a genuine switch, not the
      * first load (the <video> shows its own loading UI). */
     switching.value = hasPlayed.value
+    resetAudioCheck()
     writeLastProfile(player.profile.value)
     el.load()
   },
@@ -223,21 +267,49 @@ function onError(): void {
     const label = MEDIA_ERROR_LABELS[err.code] ?? `error ${err.code}`
     playbackErrorDetail.value = err.message ? `${label} — ${err.message}` : label
     /* A decode (3) or unsupported-format (4) error is the profile's
-     * own codecs failing — flag it for the session so the dropdown
-     * warns. Aborted (1) and network (2) errors are transient and
-     * not the profile's fault, so they are not flagged. */
+     * codecs failing on this channel — flag it for the session so
+     * the dropdown warns. Aborted (1) and network (2) errors are
+     * transient and not the profile's fault, so they are not
+     * flagged. */
     if (err.code === 3 || err.code === 4) {
-      streamProfiles.markProfileFailed(player.profile.value)
+      streamProfiles.markProfileFailed(
+        player.profile.value,
+        player.current.value?.channelUuid ?? '',
+      )
     }
   }
 }
 
 /* Stream is up — clear the transient "switching" hint, and drop any
- * earlier-this-session failure flag on this profile: it just played. */
+ * earlier-this-session failure flag on this profile and channel: it
+ * just played. */
 function onPlaying(): void {
   switching.value = false
   hasPlayed.value = true
-  streamProfiles.clearProfileFailed(player.profile.value)
+  streamProfiles.clearProfileFailed(player.profile.value, player.current.value?.channelUuid ?? '')
+  /* Arm the audio check from the current media time. */
+  if (!audioChecked && audioCheckFrom === null) audioCheckFrom = videoEl.value?.currentTime ?? 0
+}
+
+/* Forget the audio check of the previous load. */
+function resetAudioCheck(): void {
+  noAudio.value = false
+  audioCheckFrom = null
+  audioChecked = false
+}
+
+/* A few seconds of media time after `playing`, check once whether
+ * the browser decodes any audio. Gated on media time, not wall-clock
+ * time, so a stall never triggers it. No muted gate: Chrome counts
+ * decoded audio while muted too. The profile did play, so it is not
+ * flagged. Outside Chromium audioPresence() reads 'unknown' and the
+ * notice stays hidden. */
+function onTimeUpdate(): void {
+  const el = videoEl.value
+  if (!el || audioChecked || audioCheckFrom === null) return
+  if (el.currentTime - audioCheckFrom < AUDIO_CHECK_AFTER_S) return
+  audioChecked = true
+  noAudio.value = audioPresence(el) === 'none'
 }
 </script>
 
@@ -255,7 +327,10 @@ function onPlaying(): void {
     <!-- Channel + profile switchers. The Channel dropdown is how you
          pick what to watch (and switch live); the profile switcher
          appears only when there is more than one profile. A profile
-         that failed to play earlier this session is flagged. -->
+         that failed to play this channel earlier this session is
+         flagged, in the list and on the selected value. The icon's
+         wrapper carries the tooltip: PrimeVue measures the target's
+         size only for an HTMLElement, not an <svg>. -->
     <div class="video-player-dialog__toolbar">
       <label class="video-player-dialog__field-label" for="video-player-channel">
         {{ t('Channel') }}
@@ -285,15 +360,31 @@ function onPlaying(): void {
           option-value="name"
           class="video-player-dialog__profile-select"
         >
+          <template #value="{ value }">
+            <span class="video-player-dialog__profile-option">
+              <span
+                v-if="failedHere?.has(value)"
+                v-tooltip.top="failedProfileText"
+                class="video-player-dialog__profile-warn"
+                role="img"
+                :aria-label="failedProfileText"
+              >
+                <TriangleAlert :size="14" :stroke-width="2" aria-hidden="true" />
+              </span>
+              <span>{{ profileLabel(value) }}</span>
+            </span>
+          </template>
           <template #option="{ option }">
             <span class="video-player-dialog__profile-option">
-              <TriangleAlert
-                v-if="streamProfiles.failedProfiles.has(option.name)"
-                :size="14"
-                :stroke-width="2"
+              <span
+                v-if="failedHere?.has(option.name)"
+                v-tooltip.top="failedProfileText"
                 class="video-player-dialog__profile-warn"
-                :aria-label="t('Failed to play earlier this session')"
-              />
+                role="img"
+                :aria-label="failedProfileText"
+              >
+                <TriangleAlert :size="14" :stroke-width="2" aria-hidden="true" />
+              </span>
               <span>{{ option.label }}</span>
             </span>
           </template>
@@ -303,16 +394,21 @@ function onPlaying(): void {
     <div class="video-player-dialog__body">
       <!-- The <video> stays mounted across errors and switches so
            teardown / reload always target a stable element; the
-           error and switching states render as overlays. -->
+           error and switching states render as overlays.
+           controlslist hides Chrome's Download and Playback speed
+           items. A download of a live stream never ends, and a
+           speed makes no sense for live TV. -->
       <video
         ref="videoEl"
         class="video-player-dialog__video"
         :src="videoSrc"
         controls
+        controlslist="nodownload noplaybackrate"
         autoplay
         playsinline
         @error="onError"
         @playing="onPlaying"
+        @timeupdate="onTimeUpdate"
       />
       <div v-if="!hasChannel" class="video-player-dialog__overlay">
         <p>{{ t('Select a channel to watch.') }}</p>
@@ -328,6 +424,20 @@ function onPlaying(): void {
       <div v-else-if="switching" class="video-player-dialog__overlay">
         <p>{{ t('Switching…') }}</p>
       </div>
+    </div>
+    <!-- Below the 16:9 frame, so it never covers the native controls.
+         The live region stays mounted so screen readers announce the
+         notice when it appears. -->
+    <div class="video-player-dialog__notice-region" aria-live="polite">
+      <p v-if="showNoAudio" class="video-player-dialog__notice">
+        <VolumeX
+          :size="14"
+          :stroke-width="2"
+          aria-hidden="true"
+          class="video-player-dialog__notice-icon"
+        />
+        <span>{{ noAudioText }}</span>
+      </p>
     </div>
   </Dialog>
 </template>
@@ -359,15 +469,18 @@ function onPlaying(): void {
   min-width: 200px;
 }
 
-/* A profile option in the dropdown: optional warning icon + label. */
+/* A profile in the dropdown or the selected value: optional warning
+ * icon + label. */
 .video-player-dialog__profile-option {
   display: flex;
   align-items: center;
   gap: var(--tvh-space-2);
 }
 
-/* Marks a profile that failed to play earlier this session. */
+/* Marks a profile that failed to play this channel earlier this
+ * session. */
 .video-player-dialog__profile-warn {
+  display: inline-flex;
   flex: none;
   color: var(--tvh-warning);
 }
@@ -408,6 +521,23 @@ function onPlaying(): void {
 
 .video-player-dialog__overlay p {
   margin: 0;
+}
+
+/* "No sound" notice under the video. The live region around it has
+ * no styles, so it takes no space while empty. */
+.video-player-dialog__notice {
+  display: flex;
+  align-items: center;
+  gap: var(--tvh-space-2);
+  margin: 0;
+  padding-top: var(--tvh-space-2);
+  font-size: var(--tvh-text-sm);
+  color: var(--tvh-text-muted);
+}
+
+.video-player-dialog__notice-icon {
+  flex: none;
+  color: var(--tvh-warning);
 }
 
 /* The MediaError code/message — smaller, dimmer. */
