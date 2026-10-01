@@ -3364,6 +3364,30 @@ htsp_server_status ( void *opaque, htsmsg_t *m )
 }
 
 /**
+ * Does the method start streaming? A subscription does, and so does
+ * opening a recording (fileOpen of "dvr/" or "dvrfile/"), which HTTP counts
+ * as a stream as well. Opening an image from the image cache does not.
+ */
+static int
+htsp_method_streams(const char *method, htsmsg_t *in)
+{
+  const char *file;
+
+  if (!strcmp(method, "subscribe"))
+    return 1;
+  if (strcmp(method, "fileOpen"))
+    return 0;
+  file = htsmsg_get_str(in, "file");
+  if (file == NULL)
+    return 0;
+  if (*file == '/')
+    file++;
+  if (tvh_strbegins(file, "dvr/"))
+    return 1;
+  return tvh_strbegins(file, "dvrfile/") != NULL;
+}
+
+/**
  *
  */
 static int
@@ -3441,7 +3465,7 @@ readmsg:
             goto readmsg;
 
           } else {
-            if (!strcmp(method, "subscribe") && !streaming) {
+            if (!streaming && htsp_method_streams(method, m)) {
               tcp_connection_land(tcp_id);
               tcp_id = tcp_connection_launch(htsp->htsp_fd, 1, htsp_server_status,
                                              htsp->htsp_granted_access);
