@@ -417,10 +417,12 @@ opentv_do_event
     lang_str_destroy(ls);
   }
   if (ev->cat) {
-    epg_genre_list_t *egl = calloc(1, sizeof(epg_genre_list_t));
-    epg_genre_list_add_by_eit(egl, ev->cat);
-    save |= epg_broadcast_set_genre(ebc, egl, changes);
-    epg_genre_list_destroy(egl);
+    epg_genre_list_t *egl = NULL;
+    epg_genre_list_add_by_eit(&egl, ev->cat);
+    if (egl) {
+      save |= epg_broadcast_set_genre(ebc, egl, changes);
+      epg_genre_list_destroy(egl);
+    }
   }
   if (ev->summary) {
     epg_episode_num_t en;

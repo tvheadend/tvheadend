@@ -327,12 +327,13 @@ static int _eit_desc_ext_event
 static int _eit_desc_component
   ( epggrab_module_t *mod, const uint8_t *ptr, int len, eit_event_t *ev )
 {
-  uint8_t c, t;
+  uint8_t c, ce, t;
 
   if (len < 6) return -1;
 
   /* Stream Content and Type */
   c = *ptr & 0x0f;
+  ce = (*ptr & 0xf0) >> 4;
   t = ptr[1];
 
   /* MPEG2 (video) */
@@ -350,37 +351,63 @@ static int _eit_desc_component
   } else if (c == 0x2) {
 
     /* Described */
-    if (t == 0x40 || t == 0x41)
+    if (t == 0x40 || t == 0x47 || t == 0x48)
       ev->ad = 1;
 
   /* Misc */
   } else if (c == 0x3) {
-    if (t == 0x1 || (t >= 0x10 && t <= 0x14) || (t >= 0x20 && t <= 0x24))
+    if (t == 0x1 || (t >= 0x10 && t <= 0x16) || (t >= 0x20 && t <= 0x26))
       ev->st = 1;
     else if (t == 0x30 || t == 0x31)
       ev->ds = 1;
 
+  /* AC-3 */
+  } else if (c == 0x4) {
+    if ((t & 0b00111000) == 0b00010000) // D.4 b4 Visually Impaired (VI)
+      ev->ad = 1;
+
   /* H264 */
   } else if (c == 0x5) {
-    if (t == 0x0b || t == 0x0c || t == 0x10)
+    if (t == 0x0b || t == 0x0c || t == 0x0f || t == 0x10)
       ev->hd = ev->ws = 1;
     else if (t == 0x03 || t == 0x04 || t == 0x07 || t == 0x08)
       ev->ws = 1;
+    else if (t >= 0x80 && t <= 0x83)
+      ev->hd = ev->ws = 1;
 
   /* AAC */
   } else if ( c == 0x6 ) {
 
     /* Described */
-    if (t == 0x40 || t == 0x44)
+    if (t == 0x40 || t == 0x44 || (t >= 0x47 && t <= 0x4a))
       ev->ad = 1;
 
-  /* HEVC */
+  /* DTS */
+  } else if (c == 0x7) {
+    if (t >= 0x00 && t <= 0x7F && (t & 0b00111000) == 0b00010000) // G.13 b4 Visually Impaired (VI)
+      ev->ad = 1;
+
+  /* HEVC / VVC / AVS3 */
   } else if ( c == 0x9 ) {
+    if ( ce == 0x0 ) {
+      if (t >= 0x00 && t <= 0x03) /* HD */
+        ev->hd = 1;
+      else if ((t >= 0x04 && t <= 0x08) || (t >= 0x10 && t <= 0x13) || (t >= 0x20 && t <= 0x23)) /* Ultra HD and above */
+        ev->hd = 2;
+    } else if (ce == 0x1) {
+      if ((t >= 0x06 && t <= 0x0d) || (t >= 0x16 && t <= 0x1d)) /* audio description */
+        ev->ad = 1;
+    } else if (ce == 0x2)
+      ev->st = 1; /* TTML subtitles */
 
-    ev->ws = 1;
-    if (t > 3)
-      ev->hd = 2;
-
+  } else if ( c == 0xb ) {
+    if ( ce == 0xe ) {
+      if ((t & 0b00000100) != 0) /* audio description */
+        ev->ad = 1;
+    } else if ( ce == 0xf ) {
+      if ( t == 0x01 || t == 0x02 ) /* 16:9 or more */
+        ev->ws = 1;
+    }
   }
 
   return 0;
@@ -409,10 +436,8 @@ static int _eit_desc_content
 
     if (tempPtr == 0xb1)  //0xB1 is the genre code for 'Black and White'
       ev->bw = 1;
-    else if (tempPtr < 0xb0) {  //0xB0 is the start of the 'Special Characteristics' block.
-      if (!ev->genre) ev->genre = calloc(1, sizeof(epg_genre_list_t));
-      epg_genre_list_add_by_eit(ev->genre, (const uint8_t)tempPtr);  //Cast as a 'const'
-    }
+    else
+      epg_genre_list_add_by_eit(&ev->genre, tempPtr);
     len -= 2;
     ptr += 2;
   }
@@ -624,20 +649,22 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
   lang_str_ele_t *se;
   char buffer[2048];
 
-  if (!ev->summary)
-    return;
-
   /* UK Freeview/Freesat have a subtitle as part of the summary in the format
    * "subtitle: desc". They may also have the title continue into the
    * summary. So if configured, run scrapers for the title, the subtitle
    * and the summary (the latter to tidy up).
    */
   if (ev->title && eit_mod->scrape_title) {
+    lang_str_t *summary = ev->summary;
+    if (!ev->summary)
+      summary = lang_str_create();
     char title_summary[2048];
     lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->title, link) {
-      snprintf(title_summary, sizeof(title_summary), "%s %% %s",
-               se->str, lang_str_get(ev->summary, se->lang));
+      char const * sumstr = lang_str_get(summary, se->lang);
+      if (sumstr == NULL)
+        sumstr = "";
+      snprintf(title_summary, sizeof(title_summary), "%s %% %s", se->str, sumstr);
       if (eit_pattern_apply_list(buffer, sizeof(buffer), title_summary, se->lang, &eit_mod->p_scrape_title)) {
         tvhtrace(LS_TBL_EIT, "  scrape title '%s' from '%s' using %s",
                  buffer, title_summary, eit_mod->id);
@@ -646,16 +673,24 @@ _eit_scrape_text(eit_module_t *eit_mod, eit_event_t *ev)
     }
     lang_str_set_multi(&ev->title, ls);
     lang_str_destroy(ls);
+    if (!ev->summary)
+      lang_str_destroy(summary);
   }
 
+  if (!ev->summary)
+    return;
+
   if (eit_mod->scrape_subtitle) {
+    lang_str_t *ls = lang_str_create();
     RB_FOREACH(se, ev->summary, link) {
       if (eit_pattern_apply_list(buffer, sizeof(buffer), se->str, se->lang, &eit_mod->p_scrape_subtitle)) {
         tvhtrace(LS_TBL_EIT, "  scrape subtitle '%s' from '%s' using %s",
                  buffer, se->str, eit_mod->id);
-        lang_str_set(&ev->subtitle, buffer, se->lang);
+        lang_str_set(&ls, buffer, se->lang);
       }
     }
+    lang_str_set_multi(&ev->subtitle, ls);
+    lang_str_destroy(ls);
   }
 
   if (eit_mod->scrape_summary) {
