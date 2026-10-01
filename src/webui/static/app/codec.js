@@ -239,6 +239,55 @@ function updateFilters(form) {
     }
 }
 
+function update_rc_settings_nvenc(form, bit_rate_value, max_bit_rate_value, cq_value, bit_rate_scale_factor_value, qp_value) {
+    if (form.findField('bit_rate') && form.findField('max_bit_rate') && form.findField('cq') && 
+        form.findField('bit_rate_scale_factor') && form.findField('qp')) {
+        form.findField('bit_rate').setDisabled(bit_rate_value);
+        form.findField('max_bit_rate').setDisabled(max_bit_rate_value);
+        form.findField('cq').setDisabled(cq_value);
+        form.findField('bit_rate_scale_factor').setDisabled(bit_rate_scale_factor_value);
+        form.findField('qp').setDisabled(qp_value);
+    }
+}
+
+function filter_based_on_rc_nvenc(form) {
+    if (form.findField('rc_mode')) {
+        switch (form.findField('rc_mode').getValue()) {
+            case 0:
+                // for auto --> let the driver decide as requested by documentation
+                update_rc_settings_nvenc(form, false, false, false, false, false);
+                break;
+            case 1:
+                // for constant quality: CQP we use qp
+                update_rc_settings_nvenc(form, true, true, true, true, false);
+                break;
+            case 2:
+            case 4:
+            case 32:
+                // for variable bitrate: VBR we use bitrate
+                update_rc_settings_nvenc(form, false, false, false, false, true);
+                break;
+            case 3:
+            case 8:
+            case 16:
+                // for constant bitrate: CBR we use bitrate
+                update_rc_settings_nvenc(form, false, true, true, false, true);
+                break;
+        }
+    }
+}
+
+function update_nvenc_ui(form) {
+    // first time we have to call this manually
+    filter_based_on_rc_nvenc(form);
+
+    // on rc_mode change
+    if (form.findField('rc_mode'))
+        form.findField('rc_mode').on('select', function(combo, record, index) {
+            // filter based in rc_mode
+            filter_based_on_rc_nvenc(form);
+        });
+}
 
 function update_vaapi_ui(form) {
     // first time we have to call this manually
@@ -539,10 +588,12 @@ var codec_profile_forms = {
 
     'codec_profile_nvenc_h264': function(form) { 
         enable_hwaccels_details(form);
+        update_nvenc_ui(form);
     },
 
     'codec_profile_nvenc_hevc': function(form) { 
         enable_hwaccels_details(form);
+        update_nvenc_ui(form);
     }
 };
 
