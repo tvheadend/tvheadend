@@ -144,6 +144,10 @@ deliver:
   if (SCT_ISVIDEO(pkt->pkt_type)) {
     pkt->v.pkt_aspect_num = st->es_aspect_num;
     pkt->v.pkt_aspect_den = st->es_aspect_den;
+#if ENABLE_LIBAV
+    pkt->v.pkt_sample_aspect_ratio.num = st->es_sample_aspect_ratio.num;
+    pkt->v.pkt_sample_aspect_ratio.den = st->es_sample_aspect_ratio.den;
+#endif
   }
 
   /* Forward packet */
@@ -1100,12 +1104,11 @@ parse_mpeg2video_pic_start(parser_t *t, parser_es_t *st, int *frametype,
  *
  */
 void
-parser_set_stream_vparam(parser_es_t *st, int width, int height,
-                         int duration)
+parser_set_stream_vparam(parser_es_t *st, int width, int height, int64_t duration)
 {
   int need_save = 0;
 
-  tvhtrace(LS_PARSER, "vparam %02d: w=%d h=%d d=%d (old w=%d h=%d d=%d meta=%d)",
+  tvhtrace(LS_PARSER, "vparam %02d: w=%d h=%d d=%"PRId64" (old w=%d h=%d d=%"PRId64" meta=%d)",
            st->es_index, width, height, duration, st->es_width, st->es_height,
            st->es_frame_duration, st->es_meta_change);
   if(st->es_width == 0 && st->es_height == 0 && st->es_frame_duration < 2) {
@@ -1131,13 +1134,35 @@ parser_set_stream_vparam(parser_es_t *st, int width, int height,
   }
 }
 
+static void
+parser_combine_stream_vparam(parser_es_t *st, int64_t duration) {
 
+  int width  = (st->es_width_2b  << 12) | (st->es_width_12b  & 0xFFFu);
+  int height = (st->es_height_2b << 12) | (st->es_height_12b & 0xFFFu);
+#if ENABLE_LIBAV
+  /* CALCULATE SAR 
+     Now that we have the intended display area, we can refine the SAR 
+     calculation if we already have the DAR from the 0xB3 header. */
+  if (st->es_aspect_num && st->es_aspect_den && width > 0 && height > 0) {
+    // SAR = (DAR_num * display_height) / (DAR_den * display_width)
+    uint32_t sample_aspect_ratio_num = st->es_aspect_num * height;
+    uint32_t sample_aspect_ratio_den = st->es_aspect_den * width;
+    // Note: You should simplify this fraction via GCD.
+    uint32_t v = gcdU32(sample_aspect_ratio_num, sample_aspect_ratio_den);
+    st->es_sample_aspect_ratio.num = sample_aspect_ratio_num / v;
+    st->es_sample_aspect_ratio.den = sample_aspect_ratio_den / v;
+  }
+#endif
+  parser_set_stream_vparam(st, width, height, duration);
+}
+
+/* Standard MPEG-2 DAR table: {numerator, denominator} */
 static const uint8_t mpeg2_aspect[16][2]={
-    {0,1},
-    {1,1},
-    {4,3},
-    {16,9},
-    {221,100},
+    {0,1},      /* Reserved */
+    {1,1},      /* Square Pixels (SAR is 1:1, DAR depends on W/H) */
+    {4,3},      /* 4:3 DAR */
+    {16,9},     /* 16:9 DAR */
+    {221,100},  /* 2.21:1 DAR */
     {0,1},
     {0,1},
     {0,1},
@@ -1153,35 +1178,200 @@ static const uint8_t mpeg2_aspect[16][2]={
 
 
 /**
- * Parse mpeg2video sequence start
+ * @brief Parses the MPEG-2 Video Sequence Header to extract stream metadata.
+ *
+ * This function reads the mandatory fixed-length fields of an MPEG-2 sequence 
+ * start code. It populates the elementary stream (ES) structure with 
+ * resolution, aspect ratio, and frame timing data.
+ *
+ * @param t   Pointer to the global parser state.
+ * @param st  Pointer to the stream-specific context where results are stored.
+ * @param bs  Pointer to the bitstream buffer currently being read.
+ * * @return int PARSER_APPEND on success, or PARSER_RESET if there is insufficient data.
  */
 static int
 parse_mpeg2video_seq_start(parser_t *t, parser_es_t *st,
                            bitstream_t *bs)
 {
-  int width, height, aspect, duration;
-
+  int aspect, duration;
+  /* 1. Check for minimum required bits. 
+     The Sequence Header core (up to VBV size) is 61 bits long.
+     If we have less, we return RESET to wait for more data. */
   if(bs->len < 61)
     return PARSER_RESET;
-  
-  width = read_bits(bs, 12);
-  height = read_bits(bs, 12);
+  /* 2. Read Resolution: 
+     Horizontal and Vertical sizes are 12 bits each in the MPEG-2 spec. */
+  st->es_width_12b = read_bits(bs, 12);
+  st->es_height_12b = read_bits(bs, 12);
+  /* 3. Read Aspect Ratio:
+     A 4-bit index used to determine the Sample or Display aspect ratio. */
   aspect = read_bits(bs, 4);
-
+  /* Look up the actual numerator/denominator from a predefined MPEG-2 table. */
   st->es_aspect_num = mpeg2_aspect[aspect][0];
   st->es_aspect_den = mpeg2_aspect[aspect][1];
-
+  /* 4. Read Frame Rate:
+     A 4-bit 'frame_rate_code'. This is mapped to a duration (likely in 90kHz ticks)
+     using the mpeg2video_framedurations lookup table. */
   duration = mpeg2video_framedurations[read_bits(bs, 4)];
-
+  /* 5. Skip Bit Rate and Marker:
+     - 18 bits for the bit_rate_value.
+     - 1 bit for the marker_bit (always '1' to prevent start-code emulation). */
   skip_bits(bs, 18);
   skip_bits(bs, 1);
   
 #if 0
+  /* Optional: Read VBV Buffer Size (10 bits).
+     VBV (Video Buffering Verifier) ensures the stream doesn't overflow the decoder buffer. */
   int v = read_bits(bs, 10) * 16 * 1024 / 8;
   st->es_vbv_size = v;
 #endif
+  /* 6. Commit Parameters:
+     Update the stream context with the newly parsed width, height, and duration. */
+  parser_combine_stream_vparam(st, duration);
+  /* Return APPEND to signal that parsing of this header is complete. */
+  return PARSER_APPEND;
+}
 
-  parser_set_stream_vparam(st, width, height, duration);
+
+/*
+ * parse_mpeg2video_seq_ext - Parse MPEG-2 sequence_extension (ISO/IEC 13818-2).
+ *
+ * extension_start_code_identifier: 0001 (0x1). Fixed-length syntax: 48 bits
+ * starting at the first bit of that 4-bit identifier (not counting the prior
+ * extension_start_code 0x000001B5 if the caller already consumed it).
+ *
+ * Bitstream layout (MSB-first, order must match the standard):
+ *   - extension_start_code_identifier (4)  -- consumed here via skip_bits(4)
+ *   - profile_and_level_indication (8)
+ *   - progressive_sequence (1)
+ *   - chroma_format (2)  -- value 00 is forbidden in conforming streams
+ *   - horizontal_size_extension (2)
+ *   - vertical_size_extension (2)
+ *   - bit_rate_extension (12)
+ *   - marker_bit (1)  -- shall be 1
+ *   - vbv_buffer_size_extension (8)
+ *   - low_delay (1)
+ *   - frame_rate_extension_n (2)
+ *   - frame_rate_extension_d (5)
+ *
+ * Preconditions:
+ *   - `bs` is positioned at the first bit of extension_start_code_identifier.
+ *   - At least 48 bits are available (returns PARSER_DROP if not).
+ *
+ * Coded picture size:
+ *   Combine with 12-bit horizontal_size_value / vertical_size_value from
+ *   sequence_header (0xB3): full width/height = (ext << 12) | value.
+ *   Extensions may be zero; the formula still applies.
+ *
+ * This implementation only refreshes width/height when either extension
+ * nibble is non-zero and is always applying the OR to achieve a one code
+ * path for all streams.
+ *
+ * Returns PARSER_APPEND on success, PARSER_DROP if the fixed extension
+ * cannot be read in full.
+ */
+static int
+parse_mpeg2video_seq_ext(parser_t *t, parser_es_t *st, bitstream_t *bs)
+{
+  /* 1. Check for minimum required bits. 
+     The Sequence Extension (0x1) is 48 bits long.
+     If we have less, we return PARSER_DROP to wait for more data. */
+  if(bs->len < 48)
+    return PARSER_DROP;
+  /* Skip the 4-bit ID we already read (0x1) */
+  skip_bits(bs, 4); 
+
+  skip_bits(bs, 8); // skip profile_and_level_indication
+  skip_bits(bs, 1); // skip progressive_sequence
+  skip_bits(bs, 2); // skip chroma_format
+  
+  /* Horizontal/Vertical size extensions (2 bits each) 
+     These would be appended to the 12-bit values from 0xB3 */
+  st->es_width_2b  = read_bits(bs, 2);
+  st->es_height_2b = read_bits(bs, 2);
+  skip_bits(bs, 12); // skip bit_rate_extension
+  // marker always 1
+  skip_bits(bs, 1); // skip marker_bit; TODO: maybe we sould check if is '1'
+
+  skip_bits(bs, 8); // skip vbv_buffer_size_extension
+  skip_bits(bs, 1); // skip low_delay
+  skip_bits(bs, 2); // skip frame_rate_extension_n
+  skip_bits(bs, 5); // skip frame_rate_extension_d
+
+  // Update st-> values
+  if (st->es_width_2b || st->es_height_2b) {
+    /* Commit Parameters:
+      Update the stream context with the newly parsed width, height, and duration. */
+    parser_combine_stream_vparam(st, st->es_frame_duration);
+  }
+  
+  /* Return APPEND to signal that parsing of this header is complete. */
+  return PARSER_APPEND; 
+}
+
+
+/*
+ * Parse MPEG-2 sequence_display_extension (ISO/IEC 13818-2, sequence_display_extension).
+ *
+ * Preconditions:
+ *   - bs is positioned at the first bit of extension_start_code_identifier.
+ *   - That identifier is 0x2 (binary 0010) for sequence_display_extension; the caller
+ *     should verify extension_start_code (0x000001B5) and optionally the ID before calling.
+ *
+ * Syntax (fixed part only; no frame_center offsets — those are in picture_display_extension):
+ *   - video_format (3), colour_description (1)
+ *   - if colour_description: colour_primaries (8), transfer_characteristics (8),
+ *     matrix_coefficients (8)
+ *   - display_horizontal_size (14), marker_bit (1), display_vertical_size (14)
+ *
+ * Length: 37 bits without optional colour fields, 61 bits with them (not counting the
+ * 32-bit extension_start_code, which is outside this routine if already consumed).
+ *
+ * Returns PARSER_APPEND on success, PARSER_DROP if insufficient bits remain.
+ */
+static int
+parse_mpeg2video_display_ext(parser_t *t, parser_es_t *st, bitstream_t *bs)
+{
+  /* 1. Check for minimum required bits. 
+     The Display Extension (0x2) is between 37 bits and 61 bits long.
+     If we have less, we return RESET to wait for more data. */
+  if(bs->len < 37)
+    return PARSER_DROP;
+  /* Skip the 4-bit ID (0x2) */
+  skip_bits(bs, 4);
+
+  skip_bits(bs, 3); // skip video_format
+  int colour_description = read_bits(bs, 1);
+
+  if (colour_description) {
+    if (bs->len < 61)
+      return PARSER_DROP;
+    skip_bits(bs, 8); // skip primaries
+    skip_bits(bs, 8); // skip transfer
+    skip_bits(bs, 8); // skip matrix
+  } else {
+    if (bs->len < 37)
+      return PARSER_DROP;
+  }
+
+  /* Extract Display Sizes - 14 bits each */
+  int display_width  = read_bits(bs, 14);
+  skip_bits(bs, 1); // Marker bit; TODO: maybe we sould check if is '1'
+  int display_height = read_bits(bs, 14);
+
+  if (display_width > 0 && display_height > 0) {
+    // update raw fields of es_width and st->es_height
+    st->es_width_12b  = display_width  & 0xFFFu;
+    st->es_height_12b = display_height & 0xFFFu;
+    st->es_width_2b   = (display_width  & 0x3000u) >> 12;
+    st->es_height_2b  = (display_height & 0x3000u) >> 12;
+
+    /* 6. Commit Parameters:
+    Update the stream context with the newly parsed width, height, and duration. */
+    parser_combine_stream_vparam(st, st->es_frame_duration);
+  }
+
+  /* Return APPEND to signal that parsing of this header is complete. */
   return PARSER_APPEND;
 }
 
@@ -1229,6 +1419,21 @@ parser_global_data_move(parser_es_t *st, const uint8_t *data, size_t len, int re
  * 'steal' the st->es_buffer and use it as 'pkt' buffer
  *
  */
+/**
+ * @brief Main reassembly and parsing logic for MPEG-2 Video elementary streams.
+ *
+ * This function processes MPEG-2 start codes to reconstruct frames from slices.
+ * It handles metadata extraction (Sequence, GOP, Extensions) and manages the
+ * lifecycle of media packets (th_pkt_t), including timestamp extrapolation
+ * and payload "stealing" for efficiency.
+ *
+ * @param t               Pointer to the global parser state.
+ * @param st              Pointer to the stream-specific context.
+ * @param len             Length of the current start code's data.
+ * @param next_startcode  The lookahead start code (used to detect frame boundaries).
+ * @param sc_offset       Offset in the stream buffer where the current code starts.
+ * @return int            Parser directive (APPEND, DROP, HEADER, or RESET).
+ */
 static int
 parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
                  uint32_t next_startcode, int sc_offset)
@@ -1237,15 +1442,16 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
   bitstream_t bs;
   int frametype;
   th_pkt_t *pkt;
-
+  /* 0x1E0 is the PES start code for Video. If found, signal it's a header. */
   if(next_startcode == 0x1e0)
     return PARSER_HEADER;
-
+  /* Initialize bitstream reader, skipping the 4-byte start code prefix (00 00 01 XX) */
   init_rbits(&bs, buf + 4, (len - 4) * 8);
-
+  /* Switch on the last byte of the start code */
   switch(st->es_startcode & 0xff) {
   case 0xe0 ... 0xef:
-    /* System start codes for video */
+    /* 1. PES/System Start Codes:
+       If we find a PES header, parse it to extract PTS/DTS and reset. */
     if(len < 9)
       return PARSER_RESET;
 
@@ -1253,16 +1459,17 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
     return PARSER_RESET;
 
   case 0x00:
-    /* Picture start code */
+    /* 2. Picture Start Code:
+       Start of a new frame. We need a valid duration before we can proceed. */
     if(st->es_frame_duration == 0)
       return PARSER_RESET;
-
+    /* Extract frame type (I, P, or B) from the picture header. */
     if(parse_mpeg2video_pic_start(t, st, &frametype, &bs) != PARSER_APPEND)
       return PARSER_RESET;
-
+    /* If there was a previous unfinished packet, release it. */
     if(st->es_curpkt != NULL)
       pkt_ref_dec(st->es_curpkt);
-
+    /* Allocate a new packet and populate it with current timing/metadata. */
     pkt = pkt_alloc(st->es_type, NULL, 0, st->es_curpts, st->es_curdts, t->prs_current_pcr);
     pkt->v.pkt_frametype = frametype;
     pkt->pkt_duration = st->es_frame_duration;
@@ -1274,13 +1481,15 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
     if(st->es_curdts != PTS_UNSET)
       st->es_curdts += st->es_frame_duration;
 
-    /* PTS cannot be extrapolated (it's not linear) */
+    /* PTS is non-linear in MPEG-2 (due to B-frame reordering), so we can't extrapolate it. */
     st->es_curpts = PTS_UNSET; 
 
     break;
 
   case 0xb3:
-    /* Sequence start code */
+    /* 3. Sequence Header:
+       Contains critical stream info (Resolution, Aspect Ratio).
+       'parser_global_data_move' saves this as extradata/global header. */
     if(!st->es_buf.sb_err) {
       if(parse_mpeg2video_seq_start(t, st, &bs) != PARSER_APPEND)
         return PARSER_RESET;
@@ -1291,45 +1500,102 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
     return PARSER_DROP;
 
   case 0xb5:
+    /* 4. Extension Header:
+       Check if it's a Sequence Extension (0x1) or Display Extension (0x2). */
     if(len < 5)
       return PARSER_RESET;
     switch(buf[4] >> 4) {
     case 0x1:
       // Sequence Extension
-      if(!st->es_buf.sb_err)
+      /* Fixed (~48 bits from first bit of ID, including marker_bit)*/
+      if(!st->es_buf.sb_err) {
+        if(parse_mpeg2video_seq_ext(t, st, &bs) != PARSER_APPEND)
+          return PARSER_RESET;
         parser_global_data_move(st, buf, len, 0);
+      }
       return PARSER_DROP;
     case 0x2:
       // Sequence Display Extension
-      if(!st->es_buf.sb_err)
+      /* Variable (depends on flags + number_of_frame_center_offsets and optional colour description)*/
+      if(!st->es_buf.sb_err) {
+        if(parse_mpeg2video_display_ext(t, st, &bs) != PARSER_APPEND)
+          return PARSER_RESET;
         parser_global_data_move(st, buf, len, 0);
+      }
       return PARSER_DROP;
+/* other information that can be added later on: 
+  TODO: add data in the future.
+    case 0x03:
+      // Quant Matrix Extension
+      // Variable (depends on which load_*_intra/non_intra flags are set → optional 8×64 matrices)
+      if(!st->es_buf.sb_err) {
+        parser_global_data_move(st, buf, len, 0);
+      }
+    case 0x04:
+      // Copyright extension
+      // Fixed (fixed-width fields)
+    case 0x05:
+      // Sequence scalable extension
+      // Fixed
+      if(!st->es_buf.sb_err) {
+        parser_global_data_move(st, buf, len, 0);
+      }
+    case 0x06:
+      // reserved
+    case 0x07:
+      // Picture display extension
+      // Variable (number_of_frame_center_offsets + repeated offset pairs)
+    case 0x08:
+      // Picture coding extension
+      // Fixed (long but fixed)
+    case 0x09:
+      // Picture spatial scalable extension
+      // Fixed
+    case 0x0A:
+      // Picture temporal scalable extension
+      // Fixed
+    case 0x0B:
+      // Camera parameter extension
+      // Fixed
+    case 0x0C:
+      // ITU-T T.35 extension
+      // Variable (length follows T.35 payload rules)
+    case 0x0D:
+    case 0x0E:
+      // reserved
+    case 0x0F:
+      // forbidden
+*/
     }
     break;
 
   case 0x01 ... 0xaf:
-    /* Slices */
-
+    /* 5. Slices:
+       These contain the actual macroblock data. We stay in this case until 
+       the 'next_startcode' indicates the end of the picture (a new pic or sequence). */
     if(next_startcode == 0x100 || next_startcode > 0x1af) {
-      /* Last picture slice (because next not a slice) */
+      /* This is the final slice of the current frame. */
       th_pkt_t *pkt = st->es_curpkt;
       size_t metalen = 0;
       if(pkt == NULL) {
         /* no packet, may've been discarded by sanity checks here */
         return PARSER_RESET;
       }
-
+      /* Attach accumulated global headers (SPS/PPS/GOP) to this packet's metadata. */
       if(st->es_global_data) {
         pkt->pkt_meta = pktbuf_make(st->es_global_data,
                                     metalen = st->es_global_data_len);
         st->es_global_data = NULL;
         st->es_global_data_len = 0;
       }
-
+      /* Check for stream errors before finalizing payload. */
       if (st->es_buf.sb_err) {
         pkt->pkt_err = st->es_buf.sb_err;
         st->es_buf.sb_err = 0;
       }
+      /* Payload handling:
+         If we have metadata, we must copy everything into a new buffer.
+         Otherwise, we "steal" the internal buffer to avoid a memory copy. */
       if (metalen) {
         pkt->pkt_payload = pktbuf_alloc(NULL, metalen + st->es_buf.sb_ptr - 4);
         memcpy(pktbuf_ptr(pkt->pkt_payload), pktbuf_ptr(pkt->pkt_meta), metalen);
@@ -1340,7 +1606,7 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
         sbuf_steal_data(&st->es_buf);
       }
       pkt->pkt_duration = st->es_frame_duration;
-
+      /* Deliver the packet to the next stage of the pipeline. */
       if (st->es_priv) {
         if (!TAILQ_EMPTY(&st->es_backlog))
           parser_do_backlog(t, st, NULL, pkt->pkt_meta);
@@ -1357,19 +1623,22 @@ parse_mpeg2video(parser_t *t, parser_es_t *st, size_t len,
     break;
 
   case 0xb8:
-    // GOP header
+    /* 6. Group of Pictures (GOP) Header:
+       Store this as global data so it's prepended to the next I-frame. */
     if(!st->es_buf.sb_err)
       parser_global_data_move(st, buf, len, 0);
     return PARSER_DROP;
 
   case 0xb2:
-    // User data
+    /* 7. User Data:
+       Usually contains closed captions or hardware-specific info. 
+       Currently ignored by this switch. */
     break;
 
   default:
     break;
   }
-
+  /* Continue accumulating data until a frame boundary is hit. */
   return PARSER_APPEND;
 }
 

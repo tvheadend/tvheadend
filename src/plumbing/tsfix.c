@@ -596,7 +596,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
     }
   }
 
-  int pdur = pkt->pkt_duration >> pkt->v.pkt_field;
+  int64_t pdur = pkt->pkt_duration >> pkt->v.pkt_field;
 
   if (pkt->pkt_dts == PTS_UNSET) {
     if (tfs->tfs_last_dts_in == PTS_UNSET) {
@@ -610,7 +610,7 @@ tsfix_input_packet(tsfix_t *tf, streaming_message_t *sm)
 
     if (pkt->pkt_payload != NULL || pkt->pkt_pts != PTS_UNSET) {
       pkt->pkt_dts = (tfs->tfs_last_dts_in + pdur) & PTS_MASK;
-      tvhtrace(LS_TSFIX, "%-12s DTS set to last %"PRId64" +%d == %"PRId64", PTS = %"PRId64,
+      tvhtrace(LS_TSFIX, "%-12s DTS set to last %"PRId64" +%"PRId64" == %"PRId64", PTS = %"PRId64,
 		streaming_component_type2txt(tfs->tfs_type),
 		tfs->tfs_last_dts_in, pdur, pkt->pkt_dts, pkt->pkt_pts);
     }
