@@ -345,7 +345,7 @@ typedef struct mpegts_psi_table
  * Assemble SI section
  */
 void mpegts_psi_section_reassemble
- ( mpegts_psi_table_t *mt, const char *logpref, const uint8_t *tsb, int crc,
+ ( mpegts_psi_table_t *mt, const char *logpref, const uint8_t *tsb, uint8_t crc,
    mpegts_psi_section_callback_t cb, void *opaque );
 
 /* PSI table parser helpers */
@@ -376,7 +376,7 @@ void dvb_table_parse_done ( mpegts_psi_table_t *mt);
 
 void dvb_table_parse
   (mpegts_psi_table_t *mt, const char *logprefix,
-   const uint8_t *tsb, int len, int crc, int full,
+   const uint8_t *tsb, int len, uint8_t crc, uint8_t full,
    mpegts_psi_parse_callback_t cb);
 
 int dvb_table_append_crc32(uint8_t *dst, int off, int maxlen);

@@ -71,11 +71,12 @@ static int
 mpegts_psi_section_reassemble0
   ( mpegts_psi_table_t *mt, const char *logpref,
     const uint8_t *data,
-    int len, int start, int crc,
+    int len, uint8_t start, uint8_t crc,
     mpegts_psi_section_callback_t cb, void *opaque)
 {
   uint8_t *p = mt->mt_sect.ps_data;
-  int excess, tsize;
+  uint16_t tsize;
+  int excess;
 
   if(len <= 0)
     return -1;
@@ -143,12 +144,12 @@ mpegts_psi_section_reassemble0
 void
 mpegts_psi_section_reassemble
   (mpegts_psi_table_t *mt, const char *logprefix,
-   const uint8_t *tsb, int crc,
+   const uint8_t *tsb, uint8_t crc,
    mpegts_psi_section_callback_t cb, void *opaque)
 {
-  int pusi   = tsb[1] & 0x40;
-  uint8_t cc = tsb[3];
-  int off    = cc & 0x20 ? tsb[4] + 5 : 4;
+  uint8_t pusi = (tsb[1] & 0x40) != 0;
+  uint8_t cc   = tsb[3];
+  uint16_t off = cc & 0x20 ? tsb[4] + 5 : 4;
   int r;
 
   if (cc & 0x10) {
@@ -166,25 +167,28 @@ mpegts_psi_section_reassemble
     return;
   }
 
-  if(pusi) {
-    uint8_t len2 = tsb[off++];
-    uint8_t off2 = off;
-    off += len2;
-    if (off > 188)
+  if (pusi) {
+    uint8_t pointer_field = tsb[off++];
+    uint16_t pre = off;
+    uint16_t pre_end = off + pointer_field;
+
+    if (pre_end > 188)
       goto wrong_state;
-    while (off2 < len2) {
-      r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off2, len2, 0, crc, cb, opaque);
-      if (r < 0)
+
+    while (pre < pre_end) {
+      int chunk = pre_end - pre;
+      r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + pre, chunk, 0, crc, cb, opaque);
+      if (r <= 0)
         goto wrong_state;
-      off2 += r;
-      len2 -= r;
+      pre += r;
     }
+    off = pre_end;
   }
 
   while(off < 188) {
     r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off, 188 - off, pusi, crc,
         cb, opaque);
-    if (r < 0)
+    if (r <= 0)
       goto wrong_state;
     off += r;
   }
@@ -489,7 +493,7 @@ dvb_table_parse_cb( const uint8_t *sec, size_t len, void *opaque )
 void dvb_table_parse
   (mpegts_psi_table_t *mt, const char *logprefix,
    const uint8_t *tsb, int len,
-   int crc, int full, mpegts_psi_parse_callback_t cb)
+   uint8_t crc, uint8_t full, mpegts_psi_parse_callback_t cb)
 {
   const uint8_t *end;
   struct psi_parse parse;
@@ -498,7 +502,7 @@ void dvb_table_parse
   parse.cb   = cb;
   parse.full = full ? 3 : 0;
 
-  for (end = tsb + len; tsb < end; tsb += 188)
+  for (end = tsb + len; tsb + 188 <= end; tsb += 188)
     mpegts_psi_section_reassemble(mt, logprefix, tsb, crc,
                                   dvb_table_parse_cb, &parse);
 }
