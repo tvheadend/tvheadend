@@ -32,11 +32,18 @@ typedef struct globalheaders {
 
   int gh_passthru;
 
+  /* Bounded scan windows already spent waiting for codec metadata on a
+   * cache replay START; see headers_complete() */
+  int gh_replay_rolls;
+
 } globalheaders_t;
 
 /* note: there up to 2.5 sec diffs in some sources! */
 #define MAX_SCAN_TIME   5000  // in ms
 #define MAX_NOPKT_TIME  2500  // in ms
+/* Scan windows a cache replay may spend before a stream is declared absent
+ * after all, so a stream which really is gone cannot stall the start */
+#define MAX_REPLAY_ROLLS 4
 
 /**
  *
@@ -217,7 +224,7 @@ headers_complete(globalheaders_t *gh)
   streaming_start_component_t *ssc;
   int64_t *qd;
   int64_t qd_max = 0;
-  int i, ncomp, threshold = 0, roll = 0;
+  int i, ncomp, threshold = 0, roll = 0, rolls_left;
   int replay;
 
   assert(ss != NULL);
@@ -230,6 +237,7 @@ headers_complete(globalheaders_t *gh)
   qd = alloca((size_t)ncomp * sizeof(*qd));
 
   replay = !!(ss->ss_flags & STREAMING_START_CACHE_REPLAY);
+  rolls_left = replay && gh->gh_replay_rolls < MAX_REPLAY_ROLLS;
 
   for(i = 0; i < ncomp; i++) {
     ssc = &ss->ss_components[i];
@@ -255,6 +263,18 @@ headers_complete(globalheaders_t *gh)
        * The former remains the existing "stream absent" case.
        */
       if(qd[i] <= 0 && qd_max > (MAX_NOPKT_TIME * 90)) {
+        if(rolls_left) {
+          /*
+           * A parser started cold at a random point in cached MPEG-TS can
+           * take longer than this window to emit the first packet of a
+           * stream.  Absent packets are then not evidence of an absent
+           * stream, so ask for another bounded window instead.
+           */
+          ssc->ssc_disabled = 0;
+          roll = 1;
+          continue;
+        }
+
         ssc->ssc_disabled = 1;
 
         tvhdebug(LS_GLOBALHEADERS,
@@ -269,7 +289,7 @@ headers_complete(globalheaders_t *gh)
 
       } else if(threshold) {
 
-        if(replay) {
+        if(rolls_left) {
           /*
            * Random access into cached MPEG-TS may begin between codec
            * header repetitions.  The stream is demonstrably present, so
@@ -337,6 +357,7 @@ headers_complete(globalheaders_t *gh)
 static void
 gh_start(globalheaders_t *gh, streaming_message_t *sm)
 {
+  gh->gh_replay_rolls = 0;
   gh->gh_ss = streaming_start_copy(sm->sm_data);
   streaming_msg_free(sm);
 }
@@ -383,6 +404,7 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
         break;
 
       if(h == GH_HEADERS_ROLL) {
+        gh->gh_replay_rolls++;
         /*
          * Keep gh_ss: apply_header() has already accumulated any codec
          * metadata found in this window.  Only packet payload references
@@ -391,8 +413,8 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
          */
         tvhdebug(LS_GLOBALHEADERS,
                  "gh cache replay: codec headers incomplete after %d ms, "
-                 "continuing scan",
-                 MAX_SCAN_TIME);
+                 "continuing scan (window %d/%d)",
+                 MAX_SCAN_TIME, gh->gh_replay_rolls, MAX_REPLAY_ROLLS);
 
         pktref_clear_queue(&gh->gh_holdq);
         break;
