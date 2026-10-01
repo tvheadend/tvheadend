@@ -36,12 +36,24 @@
  *
  * Nested submenu shape: an `ActionDef` with non-empty `children`
  * becomes a parent. Inline (parent fits in the row): rendered as
- * a button with a chevron-down; click opens a submenu popover
- * anchored under the button. Overflow (parent in the `…` popover):
- * the children flatten under a non-clickable section title — keeps
+ * a button with a chevron-down; click opens a submenu popover under
+ * the button, teleported and positioned the same way as the `…`
+ * popover. Overflow (parent in the `…` popover): the children
+ * flatten under a non-clickable section title — keeps
  * popover-in-popover off the table on narrow viewports.
  */
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, type CSSProperties } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+  type CSSProperties,
+  type Ref,
+  type ShallowRef,
+} from 'vue'
 import { ChevronDown, MoreHorizontal } from 'lucide-vue-next'
 import type { ActionDef } from '@/types/action'
 import { useI18n } from '@/composables/useI18n'
@@ -136,10 +148,15 @@ onMounted(() => {
    * have real widths. */
   nextTick(recompute)
   if (typeof ResizeObserver !== 'undefined' && root.value) {
-    resizeObserver = new ResizeObserver(() => recompute())
+    resizeObserver = new ResizeObserver(() => {
+      recompute()
+      /* After the row re-renders: a new count moves `…`. */
+      void nextTick(placeOpenPopovers)
+    })
     resizeObserver.observe(root.value)
   }
   document.addEventListener('click', onDocClick)
+  document.addEventListener('scroll', onAnyScroll, { capture: true, passive: true })
   globalThis.window?.addEventListener('resize', onWindowResize)
 })
 onBeforeUnmount(() => {
@@ -147,7 +164,9 @@ onBeforeUnmount(() => {
     resizeObserver.disconnect()
     resizeObserver = null
   }
+  if (placeFrame) globalThis.cancelAnimationFrame(placeFrame)
   document.removeEventListener('click', onDocClick)
+  document.removeEventListener('scroll', onAnyScroll, { capture: true })
   globalThis.window?.removeEventListener('resize', onWindowResize)
 })
 
@@ -188,19 +207,31 @@ watch(
  *     only one parent's submenu can be open at a time.
  *
  * Opening one closes the other so the user never sees both at once.
- * Outside-click closes both. */
+ * Outside-click closes both, and so does scrolling a container that
+ * holds the menu (see `onAnyScroll`). A popover whose trigger leaves
+ * the row closes too (see the watchers after `showPopover`). */
 
 const overflowOpen = ref(false)
 const openSubmenuId = ref<string | null>(null)
 
-/* Overflow popover positioning.
+/* The inline parent whose submenu is open. Looked up in the inline
+ * slice, so a parent that moves into the overflow stops rendering
+ * its submenu, and the watcher below then closes it for good. */
+const openSubmenu = computed(
+  () => inlineActions.value.find((a) => a.id === openSubmenuId.value && isParent(a)) ?? null,
+)
+
+/* Popover positioning, shared by the `…` popover and the inline
+ * submenu.
  *
- * The popover is teleported to <body> (see template) so it escapes
- * any host clip context. The drawer this menu typically lives in
- * has `.p-drawer-content { overflow-y: auto }` (which clips
+ * Both popovers are teleported to <body> (see template) so they
+ * escape any host clip context. The drawer this menu typically lives
+ * in has `.p-drawer-content { overflow-y: auto }` (which clips
  * horizontally too) AND a `transform: translate3d(...)` on the
  * drawer root that makes `position: fixed` ineffective. Teleport +
- * viewport-coord positioning sidesteps both.
+ * viewport-coord positioning sidesteps both. A submenu rendered
+ * inside the row instead would widen such a host's scroll area when
+ * its parent is the last inline button.
  *
  * Three-tier position ladder, recomputed on every open:
  *   1. Default: left-align to the trigger button.
@@ -214,10 +245,18 @@ const openSubmenuId = ref<string | null>(null)
 const overflowTriggerEl = ref<HTMLElement | null>(null)
 const overflowPopoverEl = ref<HTMLElement | null>(null)
 const overflowPopoverStyle = shallowRef<CSSProperties>({})
+const submenuTriggerEl = ref<HTMLElement | null>(null)
+const submenuPopoverEl = ref<HTMLElement | null>(null)
+const submenuPopoverStyle = shallowRef<CSSProperties>({})
 
 function toggleOverflow() {
   overflowOpen.value = !overflowOpen.value
   if (overflowOpen.value) openSubmenuId.value = null
+}
+
+function closePopovers(): void {
+  overflowOpen.value = false
+  openSubmenuId.value = null
 }
 
 /* Breathing-room margin: popover stays this far from each viewport
@@ -225,9 +264,11 @@ function toggleOverflow() {
  * clip point. */
 const POPOVER_VIEWPORT_MARGIN_PX = 8
 
-function positionOverflowPopover(): void {
-  const trigger = overflowTriggerEl.value
-  const popover = overflowPopoverEl.value
+function placePopover(
+  trigger: HTMLElement | null,
+  popover: HTMLElement | null,
+  style: ShallowRef<CSSProperties>,
+): void {
   if (!trigger || !popover) return
   const triggerRect = trigger.getBoundingClientRect()
   const viewportWidth = globalThis.window?.innerWidth ?? 0
@@ -243,50 +284,180 @@ function positionOverflowPopover(): void {
       left = POPOVER_VIEWPORT_MARGIN_PX
     }
   }
-  overflowPopoverStyle.value = {
+  style.value = {
     position: 'fixed',
     top: `${top}px`,
     left: `${left}px`,
   }
 }
 
-watch(overflowOpen, async (isOpen) => {
+const FOCUSABLE = 'button:not(:disabled), select:not(:disabled)'
+
+/* Two-step open: first frame paints the popover offscreen so we
+ * can measure its natural width without flicker; second frame
+ * applies the final position. Focus then moves to the first item:
+ * the teleported popover is not next to its trigger in the tab
+ * order, so Tab from the trigger would not reach it. A button goes
+ * first, ahead of a compound's picker, so the arrow keys work from
+ * the start instead of changing the picker's value. */
+async function showPopover(
+  trigger: Ref<HTMLElement | null>,
+  popover: Ref<HTMLElement | null>,
+  style: ShallowRef<CSSProperties>,
+): Promise<void> {
+  style.value = { position: 'fixed', top: '-9999px', left: '-9999px' }
+  await nextTick()
+  placePopover(trigger.value, popover.value, style)
+  const first =
+    popover.value?.querySelector<HTMLElement>('button:not(:disabled)') ??
+    popover.value?.querySelector<HTMLElement>(FOCUSABLE)
+  first?.focus({ preventScroll: true })
+}
+
+watch(overflowOpen, (isOpen) => {
   if (!isOpen) {
     overflowPopoverStyle.value = {}
     return
   }
-  /* Two-step open: first frame paints the popover offscreen so we
-   * can measure its natural width without flicker; second frame
-   * applies the final position. */
-  overflowPopoverStyle.value = {
-    position: 'fixed',
-    top: '-9999px',
-    left: '-9999px',
-  }
-  await nextTick()
-  positionOverflowPopover()
+  void showPopover(overflowTriggerEl, overflowPopoverEl, overflowPopoverStyle)
 })
 
-/* Reposition on viewport resize while the popover is open — the
- * three-tier ladder's choice can flip if the viewport gets
- * narrower or wider mid-display. */
-function onWindowResize(): void {
-  if (overflowOpen.value) positionOverflowPopover()
+/* A popover whose trigger left the row (its parent moved into `…`,
+ * or `…` went away because everything fits) closes for good rather
+ * than coming back unasked, at a stale place and taking focus, the
+ * next time the trigger renders. */
+watch(
+  () => overflowActions.value.length === 0,
+  (none) => {
+    if (none) overflowOpen.value = false
+  },
+)
+
+watch(
+  () => openSubmenu.value?.id ?? null,
+  (id) => {
+    if (id !== null) {
+      void showPopover(submenuTriggerEl, submenuPopoverEl, submenuPopoverStyle)
+      return
+    }
+    submenuPopoverStyle.value = {}
+    submenuTriggerEl.value = null
+    /* Still set when the parent left the inline slice. */
+    openSubmenuId.value = null
+  },
+)
+
+/* When a width change takes away the control that held focus (an
+ * inline button moving into `…`, `…` itself, or a popover closed
+ * above), focus goes to the end of the row, where those items now
+ * are, not to <body>. */
+watch(visibleCount, () => {
+  const active = document.activeElement
+  const holders = [root.value, overflowPopoverEl.value, submenuPopoverEl.value]
+  if (!active || !holders.some((el) => el?.contains(active))) return
+  void nextTick(() => {
+    if (active.isConnected) return
+    const target =
+      overflowTriggerEl.value ??
+      Array.from(row.value?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).pop()
+    target?.focus({ preventScroll: true })
+  })
+})
+
+/* Reposition while a popover is open, on viewport resize (the
+ * three-tier ladder's choice can flip) and on a resize of the menu
+ * itself (the EPG drawer's drag handle moves the triggers without a
+ * window resize). */
+function placeOpenPopovers(): void {
+  if (overflowOpen.value) {
+    placePopover(overflowTriggerEl.value, overflowPopoverEl.value, overflowPopoverStyle)
+  }
+  if (openSubmenu.value) {
+    placePopover(submenuTriggerEl.value, submenuPopoverEl.value, submenuPopoverStyle)
+  }
 }
 
-function toggleSubmenu(id: string) {
+/* The window's resize event comes before the page has reacted to it,
+ * such as the EPG drawer switching between its phone and desktop
+ * width, so place in the next animation frame, which runs after. */
+let placeFrame = 0
+function onWindowResize(): void {
+  if (placeFrame || (!overflowOpen.value && !openSubmenu.value)) return
+  placeFrame = globalThis.requestAnimationFrame(() => {
+    placeFrame = 0
+    placeOpenPopovers()
+  })
+}
+
+/* The popovers are `position: fixed`, so scrolling a container that
+ * holds the menu (the drawer body, the page) would leave them behind
+ * their trigger. Close them instead, as PrimeVue's own overlays do.
+ * Scrolls that don't move the menu (a grid body next to it, the
+ * popover's own content) are ignored. */
+function onAnyScroll(ev: Event): void {
+  if (!overflowOpen.value && openSubmenuId.value === null) return
+  const target = ev.target
+  if (target instanceof Node && root.value && target.contains(root.value)) closePopovers()
+}
+
+/* Keyboard inside an open popover: the arrow keys move between
+ * items, Escape closes it and returns focus to its trigger. Tab and
+ * Shift+Tab walk its controls, a compound's picker included, as if
+ * the popover sat inline after its trigger: Shift+Tab from the first
+ * one lands on the trigger, Tab from the last one hands focus to the
+ * trigger and the browser's Tab carries on from there. Escape stops
+ * here: hosts such as the EPG drawer close themselves on a
+ * document-level Escape. */
+function onPopoverKeydown(ev: KeyboardEvent): void {
+  const popover = ev.currentTarget as HTMLElement
+  const target = ev.target as HTMLElement
+  const trigger =
+    popover === overflowPopoverEl.value ? overflowTriggerEl.value : submenuTriggerEl.value
+  const leave = (): void => {
+    closePopovers()
+    trigger?.focus()
+  }
+  if (ev.key === 'Escape') {
+    ev.preventDefault()
+    ev.stopPropagation()
+    leave()
+    return
+  }
+  if (ev.key === 'Tab') {
+    const controls = Array.from(popover.querySelectorAll<HTMLElement>(FOCUSABLE))
+    const edge = ev.shiftKey ? controls[0] : controls[controls.length - 1]
+    if (target !== edge) return
+    if (ev.shiftKey) ev.preventDefault()
+    leave()
+    return
+  }
+  if (ev.key !== 'ArrowDown' && ev.key !== 'ArrowUp') return
+  /* A <select> (compound action) uses the arrows itself. */
+  if (target.tagName === 'SELECT') return
+  const items = Array.from(popover.querySelectorAll<HTMLElement>('button:not(:disabled)'))
+  if (items.length === 0) return
+  ev.preventDefault()
+  const i = items.indexOf(target)
+  let next: number
+  if (i < 0) next = ev.key === 'ArrowDown' ? 0 : items.length - 1
+  else next = (i + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+  items[next].focus()
+}
+
+function toggleSubmenu(id: string, trigger: HTMLElement | null) {
   if (openSubmenuId.value === id) {
     openSubmenuId.value = null
   } else {
+    submenuTriggerEl.value = trigger
     openSubmenuId.value = id
     overflowOpen.value = false
   }
 }
 
-async function clickInline(action: ActionDef) {
+async function clickInline(action: ActionDef, ev?: MouseEvent) {
   if (effectiveDisabled(action)) return
   if (isParent(action)) {
-    toggleSubmenu(action.id)
+    toggleSubmenu(action.id, (ev?.currentTarget as HTMLElement | null) ?? null)
     return
   }
   /* Dismiss any submenu left open by another inline action before
@@ -297,8 +468,7 @@ async function clickInline(action: ActionDef) {
 
 async function clickMenuItem(action: ActionDef) {
   if (action.disabled) return
-  overflowOpen.value = false
-  openSubmenuId.value = null
+  closePopovers()
   if (action.onClick) await action.onClick()
 }
 
@@ -306,14 +476,14 @@ function onDocClick(ev: MouseEvent) {
   if (!root.value) return
   const target = ev.target as Node | null
   if (target && root.value.contains(target)) return
-  /* The overflow popover is teleported to <body> — clicks inside it
+  /* The popovers are teleported to <body> — clicks inside them
    * are OUTSIDE root.value's subtree but still part of the menu's
    * interaction surface. Don't dismiss when the user clicks within
-   * the popover (the inline menu items handle their own dismissal
-   * via `clickMenuItem`). */
+   * a popover (the menu items handle their own dismissal via
+   * `clickMenuItem`). */
   if (target && overflowPopoverEl.value?.contains(target)) return
-  overflowOpen.value = false
-  openSubmenuId.value = null
+  if (target && submenuPopoverEl.value?.contains(target)) return
+  closePopovers()
 }
 
 /*
@@ -370,8 +540,7 @@ defineExpose({ visibleCount })
       </template>
     </div>
     <!-- Visible row: only the buttons that fit, plus the `…` if any
-         overflow. Parents wrap their button in a relative anchor so
-         the submenu popover positions against the button. -->
+         overflow. -->
     <div ref="row" class="action-menu__row">
       <template v-for="a in inlineActions" :key="a.id">
         <!--
@@ -408,41 +577,22 @@ defineExpose({ visibleCount })
             {{ a.label }}
           </button>
         </div>
-        <!-- Parent (has children) — button + chevron + submenu popover anchor. -->
-        <div v-else-if="isParent(a)" class="action-menu__submenu-anchor">
-          <button
-            v-tooltip.bottom="a.tooltip ?? a.label"
-            type="button"
-            class="action-menu__btn"
-            :disabled="effectiveDisabled(a)"
-            :aria-haspopup="'menu'"
-            :aria-expanded="openSubmenuId === a.id"
-            @click="clickInline(a)"
-          >
-            <component :is="a.icon" v-if="a.icon" :size="16" :stroke-width="2" />
-            {{ a.label }}
-            <ChevronDown :size="14" :stroke-width="2" />
-          </button>
-          <div
-            v-if="openSubmenuId === a.id"
-            class="action-menu__popover"
-            role="menu"
-          >
-            <button
-              v-for="c in a.children"
-              :key="c.id"
-              v-tooltip.right="c.tooltip ?? c.label"
-              type="button"
-              class="action-menu__item"
-              role="menuitem"
-              :disabled="c.disabled"
-              @click="clickMenuItem(c)"
-            >
-              <component :is="c.icon" v-if="c.icon" :size="14" :stroke-width="2" />
-              {{ c.label }}
-            </button>
-          </div>
-        </div>
+        <!-- Parent (has children) — button + chevron. Its submenu is
+             the teleported popover after the row. -->
+        <button
+          v-else-if="isParent(a)"
+          v-tooltip.bottom="a.tooltip ?? a.label"
+          type="button"
+          class="action-menu__btn action-menu__btn--parent"
+          :disabled="effectiveDisabled(a)"
+          :aria-haspopup="'menu'"
+          :aria-expanded="openSubmenuId === a.id"
+          @click="clickInline(a, $event)"
+        >
+          <component :is="a.icon" v-if="a.icon" :size="16" :stroke-width="2" />
+          {{ a.label }}
+          <ChevronDown :size="14" :stroke-width="2" />
+        </button>
         <!-- Leaf — plain inline button. -->
         <button
           v-else
@@ -497,6 +647,7 @@ defineExpose({ visibleCount })
             class="action-menu__popover action-menu__popover--floating"
             :style="overflowPopoverStyle"
             role="menu"
+            @keydown="onPopoverKeydown"
           >
           <template v-for="a in overflowActions" :key="a.id">
             <!--
@@ -590,6 +741,36 @@ defineExpose({ visibleCount })
         </Teleport>
       </div>
     </div>
+    <!--
+      Inline parent's submenu — teleported and positioned like the
+      `…` popover (see `placePopover`), so a host that scrolls or
+      clips, such as the EPG drawer body, neither clips it nor grows
+      a horizontal scroll range for it.
+    -->
+    <Teleport to="body">
+      <div
+        v-if="openSubmenu"
+        ref="submenuPopoverEl"
+        class="action-menu__popover action-menu__popover--floating action-menu__popover--submenu"
+        :style="submenuPopoverStyle"
+        role="menu"
+        @keydown="onPopoverKeydown"
+      >
+        <button
+          v-for="c in openSubmenu.children"
+          :key="c.id"
+          v-tooltip.right="c.tooltip ?? c.label"
+          type="button"
+          class="action-menu__item"
+          role="menuitem"
+          :disabled="c.disabled"
+          @click="clickMenuItem(c)"
+        >
+          <component :is="c.icon" v-if="c.icon" :size="14" :stroke-width="2" />
+          {{ c.label }}
+        </button>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -707,15 +888,6 @@ defineExpose({ visibleCount })
   display: inline-flex;
 }
 
-/* Same anchor pattern for the per-parent inline submenu. The
-   button itself stays a regular flex child of the row; the
-   wrapping div just supplies the `position: relative` so the
-   popover positions under the button. */
-.action-menu__submenu-anchor {
-  position: relative;
-  display: inline-flex;
-}
-
 .action-menu__popover {
   position: absolute;
   top: calc(100% + 4px);
@@ -737,20 +909,19 @@ defineExpose({ visibleCount })
   flex-direction: column;
 }
 
-/* Floating modifier — applied to the teleported overflow popover
- * (see script's `positionOverflowPopover`). Position is fully
- * computed inline (position: fixed + viewport-coord top/left), so
- * the base rules `position: absolute; top: calc(100% + 4px);
- * left: 0` from `.action-menu__popover` don't apply. The popover
- * lives directly under <body>, escaping any host's clip context.
+/* Floating modifier — applied to both teleported popovers, the
+ * overflow one and the inline submenu (see script's
+ * `placePopover`). Position is fully computed inline (position:
+ * fixed + viewport-coord top/left), so the base rules `position:
+ * absolute; top: calc(100% + 4px); left: 0` from
+ * `.action-menu__popover` don't apply. The popover lives directly
+ * under <body>, escaping any host's clip context.
  *
  * `z-index: 9999` sits above PrimeVue's overlay tier (PrimeVue's
  * ZIndexUtils assigns Drawer / Dialog / overlay panels values in
  * the 1000-2000 range starting from a `--p-overlay-*` base). The
- * base rule's `z-index: 50` is fine for inline submenus that
- * share the drawer's stacking context, but the teleported popover
- * is a sibling of <body> and competes with PrimeVue's overlays at
- * the root document level. */
+ * teleported popover is a sibling of <body> and competes with
+ * PrimeVue's overlays at the root document level. */
 .action-menu__popover--floating {
   z-index: 9999;
   /* Stay clear of host theme classes that scope styling to
