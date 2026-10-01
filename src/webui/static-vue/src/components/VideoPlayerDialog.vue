@@ -133,6 +133,19 @@ const headerTitle = computed(() => player.current.value?.title ?? t('Live TV'))
 const profiles = computed(() => streamProfiles.playableProfiles)
 const selectedProfile = player.profile
 
+/* Profiles that failed on the current channel earlier this session.
+ * The same profile may play another channel fine, so the flag is per
+ * channel (see the streamProfiles store). */
+const failedHere = computed(() =>
+  streamProfiles.failedProfiles.get(player.current.value?.channelUuid ?? ''),
+)
+/* i18n: new string */
+const failedProfileText = computed(() => t('Failed to play this channel earlier this session'))
+
+function profileLabel(name: string): string {
+  return profiles.value.find((p) => p.name === name)?.label ?? name
+}
+
 const videoSrc = computed(() => {
   const target = player.current.value
   const profile = player.profile.value
@@ -223,21 +236,26 @@ function onError(): void {
     const label = MEDIA_ERROR_LABELS[err.code] ?? `error ${err.code}`
     playbackErrorDetail.value = err.message ? `${label} — ${err.message}` : label
     /* A decode (3) or unsupported-format (4) error is the profile's
-     * own codecs failing — flag it for the session so the dropdown
-     * warns. Aborted (1) and network (2) errors are transient and
-     * not the profile's fault, so they are not flagged. */
+     * codecs failing on this channel — flag it for the session so
+     * the dropdown warns. Aborted (1) and network (2) errors are
+     * transient and not the profile's fault, so they are not
+     * flagged. */
     if (err.code === 3 || err.code === 4) {
-      streamProfiles.markProfileFailed(player.profile.value)
+      streamProfiles.markProfileFailed(
+        player.profile.value,
+        player.current.value?.channelUuid ?? '',
+      )
     }
   }
 }
 
 /* Stream is up — clear the transient "switching" hint, and drop any
- * earlier-this-session failure flag on this profile: it just played. */
+ * earlier-this-session failure flag on this profile and channel: it
+ * just played. */
 function onPlaying(): void {
   switching.value = false
   hasPlayed.value = true
-  streamProfiles.clearProfileFailed(player.profile.value)
+  streamProfiles.clearProfileFailed(player.profile.value, player.current.value?.channelUuid ?? '')
 }
 </script>
 
@@ -255,7 +273,10 @@ function onPlaying(): void {
     <!-- Channel + profile switchers. The Channel dropdown is how you
          pick what to watch (and switch live); the profile switcher
          appears only when there is more than one profile. A profile
-         that failed to play earlier this session is flagged. -->
+         that failed to play this channel earlier this session is
+         flagged, in the list and on the selected value. The icon's
+         wrapper carries the tooltip: PrimeVue measures the target's
+         size only for an HTMLElement, not an <svg>. -->
     <div class="video-player-dialog__toolbar">
       <label class="video-player-dialog__field-label" for="video-player-channel">
         {{ t('Channel') }}
@@ -285,15 +306,31 @@ function onPlaying(): void {
           option-value="name"
           class="video-player-dialog__profile-select"
         >
+          <template #value="{ value }">
+            <span class="video-player-dialog__profile-option">
+              <span
+                v-if="failedHere?.has(value)"
+                v-tooltip.top="failedProfileText"
+                class="video-player-dialog__profile-warn"
+                role="img"
+                :aria-label="failedProfileText"
+              >
+                <TriangleAlert :size="14" :stroke-width="2" aria-hidden="true" />
+              </span>
+              <span>{{ profileLabel(value) }}</span>
+            </span>
+          </template>
           <template #option="{ option }">
             <span class="video-player-dialog__profile-option">
-              <TriangleAlert
-                v-if="streamProfiles.failedProfiles.has(option.name)"
-                :size="14"
-                :stroke-width="2"
+              <span
+                v-if="failedHere?.has(option.name)"
+                v-tooltip.top="failedProfileText"
                 class="video-player-dialog__profile-warn"
-                :aria-label="t('Failed to play earlier this session')"
-              />
+                role="img"
+                :aria-label="failedProfileText"
+              >
+                <TriangleAlert :size="14" :stroke-width="2" aria-hidden="true" />
+              </span>
               <span>{{ option.label }}</span>
             </span>
           </template>
@@ -303,12 +340,16 @@ function onPlaying(): void {
     <div class="video-player-dialog__body">
       <!-- The <video> stays mounted across errors and switches so
            teardown / reload always target a stable element; the
-           error and switching states render as overlays. -->
+           error and switching states render as overlays.
+           controlslist hides Chrome's Download and Playback speed
+           items. A download of a live stream never ends, and a
+           speed makes no sense for live TV. -->
       <video
         ref="videoEl"
         class="video-player-dialog__video"
         :src="videoSrc"
         controls
+        controlslist="nodownload noplaybackrate"
         autoplay
         playsinline
         @error="onError"
@@ -359,15 +400,18 @@ function onPlaying(): void {
   min-width: 200px;
 }
 
-/* A profile option in the dropdown: optional warning icon + label. */
+/* A profile in the dropdown or the selected value: optional warning
+ * icon + label. */
 .video-player-dialog__profile-option {
   display: flex;
   align-items: center;
   gap: var(--tvh-space-2);
 }
 
-/* Marks a profile that failed to play earlier this session. */
+/* Marks a profile that failed to play this channel earlier this
+ * session. */
 .video-player-dialog__profile-warn {
+  display: inline-flex;
   flex: none;
   color: var(--tvh-warning);
 }
