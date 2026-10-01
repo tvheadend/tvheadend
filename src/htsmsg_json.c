@@ -24,85 +24,85 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <cJSON.h>
+
 #include "htsmsg_json.h"
 #include "htsbuf.h"
 #include "misc/json.h"
-#include "misc/dbl.h"
 
 
 /**
- *
+ * Convert htsmsg to cJSON object
  */
-static void
-htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
-		  int indent, int pretty)
+static cJSON *
+htsmsg_to_cjson(htsmsg_t *msg)
 {
   htsmsg_field_t *f;
+  cJSON *obj;
+  cJSON *item;
   char buf[100];
-  static const char *indentor = "\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t";
-  const char *s;
 
-  htsbuf_append(hq, isarray ? "[" : "{", 1);
+  if (msg->hm_islist)
+    obj = cJSON_CreateArray();
+  else
+    obj = cJSON_CreateObject();
 
-  TAILQ_FOREACH(f, &msg->hm_fields, hmf_link) {
+  if (obj == NULL)
+    return NULL;
 
-    if(pretty) 
-      htsbuf_append(hq, indentor, indent < 16 ? indent : 16);
+  HTSMSG_FOREACH(f, msg) {
+    const char *name = msg->hm_islist ? NULL : htsmsg_field_name(f);
 
-    if(!isarray) {
-      htsbuf_append_and_escape_jsonstr(hq, htsmsg_field_name(f));
-      htsbuf_append(hq, ": ", pretty ? 2 : 1);
-    }
-
-    switch(f->hmf_type) {
+    switch (f->hmf_type) {
     case HMF_MAP:
-      htsmsg_json_write(f->hmf_msg, hq, 0, indent + 1, pretty);
-      break;
-
     case HMF_LIST:
-      htsmsg_json_write(f->hmf_msg, hq, 1, indent + 1, pretty);
+      item = htsmsg_to_cjson(f->hmf_msg);
       break;
 
     case HMF_STR:
-      htsbuf_append_and_escape_jsonstr(hq, f->hmf_str);
+      item = cJSON_CreateString(f->hmf_str);
       break;
 
     case HMF_UUID:
       uuid_get_hex((tvh_uuid_t *)f->hmf_uuid, buf);
-      htsbuf_append_and_escape_jsonstr(hq, buf);
+      item = cJSON_CreateString(buf);
       break;
 
     case HMF_BIN:
-      htsbuf_append_and_escape_jsonstr(hq, "binary");
+      item = cJSON_CreateString("binary");
       break;
 
     case HMF_BOOL:
-      s = f->hmf_bool ? "true" : "false";
-      htsbuf_append_str(hq, s);
+      item = cJSON_CreateBool(f->hmf_bool);
       break;
 
     case HMF_S64:
-      snprintf(buf, sizeof(buf), "%" PRId64, f->hmf_s64);
-      htsbuf_append_str(hq, buf);
+      item = cJSON_CreateNumber((double)f->hmf_s64);
       break;
 
     case HMF_DBL:
-      my_double2str(buf, sizeof(buf), f->hmf_dbl);
-      htsbuf_append_str(hq, buf);
+      item = cJSON_CreateNumber(f->hmf_dbl);
       break;
 
     default:
-      abort();
+      item = NULL;
+      break;
     }
 
-    if(TAILQ_NEXT(f, hmf_link))
-      htsbuf_append(hq, ",", 1);
+    if (item == NULL) {
+      cJSON_Delete(obj);
+      return NULL;
+    }
+
+    if (msg->hm_islist)
+      cJSON_AddItemToArray(obj, item);
+    else
+      cJSON_AddItemToObject(obj, name, item);
   }
-  
-  if(pretty) 
-    htsbuf_append(hq, indentor, indent-1 < 16 ? indent-1 : 16);
-  htsbuf_append(hq, isarray ? "]" : "}", 1);
+
+  return obj;
 }
+
 
 /**
  *
@@ -110,9 +110,26 @@ htsmsg_json_write(htsmsg_t *msg, htsbuf_queue_t *hq, int isarray,
 void
 htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 {
-  htsmsg_json_write(msg, hq, msg->hm_islist, 2, pretty);
-  if(pretty) 
-    htsbuf_append(hq, "\n", 1);
+  cJSON *obj;
+  char *str;
+
+  obj = htsmsg_to_cjson(msg);
+  if (obj == NULL)
+    return;
+
+  if (pretty)
+    str = cJSON_Print(obj);
+  else
+    str = cJSON_PrintUnformatted(obj);
+
+  cJSON_Delete(obj);
+
+  if (str != NULL) {
+    htsbuf_append_str(hq, str);
+    if (pretty)
+      htsbuf_append(hq, "\n", 1);
+    cJSON_free(str);
+  }
 }
 
 
@@ -122,12 +139,19 @@ htsmsg_json_serialize(htsmsg_t *msg, htsbuf_queue_t *hq, int pretty)
 char *
 htsmsg_json_serialize_to_str(htsmsg_t *msg, int pretty)
 {
-  htsbuf_queue_t hq;
+  cJSON *obj;
   char *str;
-  htsbuf_queue_init(&hq, 0);
-  htsmsg_json_serialize(msg, &hq, pretty);
-  str = htsbuf_to_string(&hq);
-  htsbuf_queue_flush(&hq);
+
+  obj = htsmsg_to_cjson(msg);
+  if (obj == NULL)
+    return NULL;
+
+  if (pretty)
+    str = cJSON_Print(obj);
+  else
+    str = cJSON_PrintUnformatted(obj);
+
+  cJSON_Delete(obj);
   return str;
 }
 
