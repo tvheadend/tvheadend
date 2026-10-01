@@ -1246,7 +1246,17 @@ htsp_build_autorecentry(htsp_connection_t *htsp, dvr_autorec_entry_t *dae, const
   htsmsg_add_u32(out, "broadcastType", dae->dae_btype);
   htsmsg_add_str2(out, "comment",    dae->dae_comment);
 
-  if(dae->dae_title) {
+  if(dae->dae_expression && dae->dae_expression[0] != '\0') {
+    /* Smart entry: the expression is not representable over HTSP and
+     * every flat selector sits at its no-constraint default, so the
+     * message is truthful except for the title, which carries a fixed
+     * sentinel so clients do not render a record-everything rule. The
+     * sentinel is never evaluated as a pattern server-side and HTSP
+     * updates on smart entries are rejected. */
+    htsmsg_add_str(out, "title",     "[smart autorec]");
+    htsmsg_add_u32(out, "fulltext",  0);
+    htsmsg_add_u32(out, "mergetext", 0);
+  } else if(dae->dae_title) {
     htsmsg_add_str(out, "title",     dae->dae_title);
     htsmsg_add_u32(out, "fulltext",  dae->dae_fulltext >= 1 ? 1 : 0);
     htsmsg_add_u32(out, "mergetext", dae->dae_mergetext >= 1 ? 1 : 0);
@@ -2367,6 +2377,11 @@ htsp_method_updateAutorecEntry(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 0))
     return htsp_error(htsp, N_("User does not have access"));
+
+  /* Smart entries are read-only over HTSP: an update would write flat
+   * selector fields the expression supersedes (delete stays allowed) */
+  if(dae->dae_expression && dae->dae_expression[0] != '\0')
+    return htsp_error(htsp, N_("Smart entries cannot be updated over HTSP"));
 
   /* Do we have a channel? No = keep old one */
   if (!htsmsg_get_s64(in, "channelId", &s64)) //s64 -> -1 = any channel

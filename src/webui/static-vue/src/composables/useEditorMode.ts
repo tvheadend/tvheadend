@@ -124,8 +124,13 @@ export interface EditorModeHandle {
    * The grid's exposed `effectiveLevel` flows to the editor's `level`
    * prop via `editorLevel` below — single source of truth so the
    * editor renders the same view-level the grid is filtered to.
+   * `store` is the grid's exposed data store, for flows that must
+   * force a refetch the Comet patch path can't cover — a change that
+   * moves a row OUT of a filtering endpoint (autorec convert: the
+   * rule leaves `dvr/autorec/grid` for `grid_smart`, but the change
+   * notification only patches loaded rows in place).
    */
-  gridRef: Ref<{ effectiveLevel: UiLevel } | null>
+  gridRef: Ref<{ effectiveLevel: UiLevel; store?: { fetch: () => Promise<void> } } | null>
   editorLevel: ComputedRef<UiLevel>
   /**
    * Active field-list — switches between createList (in create mode)
