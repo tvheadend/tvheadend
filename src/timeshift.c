@@ -41,6 +41,18 @@ struct timeshift_conf timeshift_conf;
 memoryinfo_t timeshift_memoryinfo = { .my_name = "Timeshift" };
 memoryinfo_t timeshift_memoryinfo_ram = { .my_name = "Timeshift RAM buffer" };
 
+void
+timeshift_play_start_set(timeshift_t *ts, streaming_start_t *ss)
+{
+  if (ss == ts->smt_play)
+    return;
+  if (ss)
+    streaming_start_ref(ss);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
+  ts->smt_play = ss;
+}
+
 /*
  * Packet log
  */
@@ -86,8 +98,12 @@ void timeshift_init ( void )
   /* Defaults */
   memset(&timeshift_conf, 0, sizeof(timeshift_conf));
   timeshift_conf.idnode.in_class = &timeshift_conf_class;
-  timeshift_conf.max_period       = 60;                      // Hr (60mins)
-  timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
+  timeshift_conf.max_period                 = 60;
+  timeshift_conf.cache_keepalive            = 15;
+  timeshift_conf.cache_keepalive_min_period = 60;
+  timeshift_conf.cache_keepalive_max        = 4;
+  timeshift_conf.cache_staging              = 32;
+  timeshift_conf.max_size                   = 10000 * (size_t)1048576; // 10G
 
   idclass_register(&timeshift_conf_class);
 
@@ -299,6 +315,66 @@ const idclass_t timeshift_conf_class = {
       .off    = offsetof(timeshift_conf_t, teletext),
       .opts   = PO_EXPERT,
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "record_cache",
+      .name   = N_("Record from cache"),
+      .desc   = N_("Keep the last \"Maximum period\" of every tuned "
+                   "channel, so a recording started after its programme "
+                   "began also gets the part already broadcast, as far "
+                   "back as the cache reaches. HTSP clients timeshift "
+                   "through the same cache instead of a buffer of their "
+                   "own. Each tuned channel uses one cache, within the "
+                   "storage path and the maximum size above."),
+      .off    = offsetof(timeshift_conf_t, record_cache),
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive",
+      .name   = N_("Keep tuned channels (mins)"),
+      .desc   = N_("Keep a recently tuned channel and its shared cache "
+                   "active for this many minutes after the last normal "
+                   "subscription leaves. The keepalive uses the lowest "
+                   "subscription priority, so tuners remain available for "
+                   "live TV and recordings. Zero disables this feature."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_min_period",
+      .name   = N_("Minimum cache for keepalive (secs)"),
+      .desc   = N_("Only keep an idle tuned channel after the last normal "
+                   "subscription leaves when its shared cache already "
+                   "contains at least this many seconds of history. This "
+                   "avoids prolonged cache writes after brief channel "
+                   "zapping. Zero disables this minimum."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_min_period),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_max",
+      .name   = N_("Maximum cache keepalives"),
+      .desc   = N_("Maximum number of idle channel-cache keepalives. When "
+                   "the limit is full, the caches with the longest retained "
+                   "history are preferred. Active live TV and recording "
+                   "subscriptions do not count. Zero means unlimited."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_max),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_staging",
+      .name   = N_("Channel cache write-behind RAM (MB)"),
+      .desc   = N_("RAM the shared channel caches may use together to hold "
+                   "blocks on their way to storage. Raise it when the log "
+                   "reports cache gaps from a \"storage writer backlog\" on "
+                   "a busy server or slow storage. This is transient memory, "
+                   "separate from the retained \"Maximum RAM size\"."),
+      .off    = offsetof(timeshift_conf_t, cache_staging),
+      .opts   = PO_EXPERT,
+    },
     {}
   }
 };
@@ -327,6 +403,60 @@ timeshift_packet( timeshift_t *ts, streaming_message_t *sm )
   return 0;
 }
 
+static int64_t
+timeshift_packet_rebase_target(int64_t last_pts, int64_t adjusted_pts)
+{
+  int64_t delta;
+
+  if (adjusted_pts >= last_pts - 90000)
+    return adjusted_pts;
+
+  /* Keep a normal 33-bit wrap unwrapped on the monotonic timeshift axis.
+   * The two-second window matches the discontinuity handling in tsfix. */
+  delta = pts_diff(last_pts, adjusted_pts);
+  if (delta >= 0 && delta <= 2 * 90000)
+    return last_pts + delta;
+
+  return last_pts + 1;
+}
+
+static void
+timeshift_packet_rebase( timeshift_t *ts, streaming_message_t *sm )
+{
+  th_pkt_t *pkt = sm->sm_data;
+  th_pkt_t *pkt2;
+
+  if (ts->pts_rebase_pending &&
+      pkt->pkt_pts != PTS_UNSET &&
+      pkt->pkt_type != SCT_TELETEXT) {
+    int64_t adjusted_pts = pkt->pkt_pts + ts->start_pts;
+    int64_t last_pts = ts_rescale_inv(ts->last_wr_time, 1000000);
+    int64_t target_pts =
+      timeshift_packet_rebase_target(last_pts, adjusted_pts);
+
+    if (target_pts != adjusted_pts) {
+      ts->start_pts = target_pts - pkt->pkt_pts;
+      tvhdebug(LS_TIMESHIFT,
+               "ts %d rebase packet clock after source reconfiguration:"
+               " offset=%"PRId64,
+               ts->id, ts->start_pts);
+    }
+    ts->pts_rebase_pending = 0;
+  }
+
+  if (ts->start_pts) {
+    pkt2 = pkt_copy_shallow(pkt);
+    pkt_ref_dec(pkt);
+    sm->sm_data = pkt2;
+    if (pkt2->pkt_pts != PTS_UNSET)
+      pkt2->pkt_pts += ts->start_pts;
+    if (pkt2->pkt_dts != PTS_UNSET)
+      pkt2->pkt_dts += ts->start_pts;
+    if (pkt2->pkt_pcr != PTS_UNSET)
+      pkt2->pkt_pcr += ts->start_pts;
+  }
+}
+
 /*
  * Receive data
  */
@@ -335,7 +465,6 @@ static void timeshift_input
 {
   int type = sm->sm_type;
   timeshift_t *ts = opaque;
-  th_pkt_t *pkt, *pkt2;
 
   if (ts->exit)
     return;
@@ -349,19 +478,16 @@ static void timeshift_input
     streaming_msg_free(sm);
   } else {
 
-    /* Change PTS/DTS offsets */
-    if (ts->packet_mode && ts->start_pts && type == SMT_PACKET) {
-      pkt = sm->sm_data;
-      pkt2 = pkt_copy_shallow(pkt);
-      pkt_ref_dec(pkt);
-      sm->sm_data = pkt2;
-      if (pkt2->pkt_pts != PTS_UNSET) pkt2->pkt_pts += ts->start_pts;
-      if (pkt2->pkt_dts != PTS_UNSET) pkt2->pkt_dts += ts->start_pts;
-    }
+    /* Keep the packet clock monotonic across a source reconfiguration. */
+    if (ts->packet_mode && type == SMT_PACKET)
+      timeshift_packet_rebase(ts, sm);
 
-    /* Check for exit */
+    /* Check for exit / source reconfiguration. */
+    if (type == SMT_STOP && sm->sm_code == SM_CODE_SOURCE_RECONFIGURED)
+      ts->pts_rebase_pending = 1;
     else if (type == SMT_EXIT ||
-        (type == SMT_STOP && sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
+             (type == SMT_STOP &&
+              sm->sm_code != SM_CODE_SOURCE_RECONFIGURED))
       ts->exit = 1;
 
     else if (type == SMT_MPEGTS)
@@ -439,6 +565,8 @@ timeshift_destroy(streaming_target_t *pad)
 
   if (ts->smt_start)
     streaming_start_unref(ts->smt_start);
+  if (ts->smt_play)
+    streaming_start_unref(ts->smt_play);
 
   if (ts->path)
     free(ts->path);
@@ -479,6 +607,7 @@ streaming_target_t *timeshift_create
   ts->last_wr_time = 0;
   ts->buf_time   = 0;
   ts->start_pts  = 0;
+  ts->pts_rebase_pending = 0;
   ts->ref_time   = 0;
   ts->seek.file  = NULL;
   ts->seek.frame = NULL;

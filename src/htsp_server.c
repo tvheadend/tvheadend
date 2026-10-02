@@ -205,6 +205,15 @@ typedef struct htsp_subscription {
 
   uint32_t hs_data_errors;
 
+#if ENABLE_TIMESHIFT
+  /*
+   * Last shared-timeshift position reported by the server.
+   * shift uses Tvheadend's internal 90 kHz base.
+   */
+  int64_t hs_timeshift_shift;
+  int64_t hs_timeshift_status_mono;
+#endif
+
 } htsp_subscription_t;
 
 
@@ -376,6 +385,102 @@ htsp_image(htsp_connection_t *htsp, const char *image,
   return ret;
 }
 
+#if ENABLE_TIMESHIFT
+
+/*
+ * Where the viewer of this subscription is, in wall clock.
+ *
+ * Watching live is the common case and counts just as much: the viewer is at
+ * the live edge, which in a recording backfilled from the cache is however far
+ * the programme has got.  A position behind live is taken from what svcts
+ * reports, as long as it reported recently enough to be trusted.
+ */
+static int
+htsp_cache_playhead ( htsp_subscription_t *hs, time_t *when )
+{
+  int64_t shift_us = 0;
+
+  if (hs->hs_s == NULL || hs->hs_s->ths_channel == NULL)
+    return 0;
+
+  if (hs->hs_timeshift_status_mono &&
+      mclk() - hs->hs_timeshift_status_mono <= sec2mono(5))
+    shift_us = ts_rescale(hs->hs_timeshift_shift, 1000000);
+  if (shift_us < 0)
+    shift_us = 0;
+
+  *when = gclk() - (time_t)(shift_us / 1000000);
+  return 1;
+}
+
+/*
+ * Remember inside the recording where the viewer had got to.
+ *
+ * Record pressed half an hour into a film, then the television goes off: the
+ * recording carries on, and the next day the client should resume where the
+ * viewer stopped rather than at the programme's start.  tvheadend already
+ * keeps that as de_playposition and hands it to clients over HTSP -- what was
+ * missing is writing it while the channel cache is what feeds the recording.
+ *
+ * 'only' restricts the update to one entry (just created, so not recording
+ * yet); NULL updates whatever is recording that channel around the playhead.
+ * global_lock held.
+ *
+ * A viewer who only passed through leaves a position a few seconds in, which
+ * is what "resume where I stopped" means for it as much as for a film.
+ */
+static void
+htsp_cache_record_position
+  ( htsp_connection_t *htsp, htsp_subscription_t *hs )
+{
+  dvr_entry_t *de;
+  channel_t *ch;
+  time_t when, file_start, file_stop;
+  int filecount;
+  uint32_t pos;
+
+  lock_assert(&global_lock);
+
+  if (!htsp_cache_playhead(hs, &when))
+    return;
+  ch = hs->hs_s->ths_channel;
+
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    if (de->de_sched_state != DVR_RECORDING)
+      continue;
+    /* Watching the channel says nothing about who owns what is being
+     * recorded on it: the position is this connection's to write only on an
+     * entry it may write */
+    if (dvr_entry_verify(de, htsp->htsp_granted_access, 0))
+      continue;
+    if (when < dvr_entry_get_start_time(de, 0) ||
+        when > dvr_entry_get_stop_time(de))
+      continue;
+    /*
+     * The position counts from the start of the file, and a backfilled
+     * recording begins where the cache reached, which is the scheduled start
+     * only when the cache went back that far.  So measure against the file and
+     * write nothing without one: falling back to the scheduled start -- which
+     * can include pre-recording padding the file will never hold -- overshoots
+     * by however much the cache could not supply, and the client then resumes
+     * past the end of what was recorded.
+     */
+    if (dvr_get_files_details(de, &file_start, &file_stop, &filecount) ||
+        filecount != 1 || file_start <= 0 || file_start > when)
+      continue;
+    pos = when - file_start;
+    if (de->de_playposition == pos)
+      continue;
+    de->de_playposition = pos;
+    idnode_changed(&de->de_id);
+    tvhdebug(LS_HTSP, "%s: play position of \"%s\" set to %u s",
+             htsp->htsp_logname, lang_str_get(de->de_title, NULL) ?: "",
+             pos);
+  }
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
 /**
  *
  */
@@ -383,6 +488,11 @@ static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   th_subscription_t *ts = hs->hs_s;
+
+#if ENABLE_TIMESHIFT
+  /* the viewer is leaving: keep its place in whatever it was recording */
+  htsp_cache_record_position(htsp, hs);
+#endif
 
   hs->hs_s = NULL;
   mtimer_disarm(&hs->hs_s_bytes_out_timer);
@@ -1444,6 +1554,8 @@ htsp_build_event
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
       if (de->de_bcast != e)
         continue;
+      if (de->de_cache_only)
+        continue;
       if (dvr_entry_verify(de, htsp->htsp_granted_access, 1))
         continue;
       htsmsg_add_u32(out, "dvrId", idnode_get_short_uuid(&de->de_id));
@@ -1720,17 +1832,20 @@ htsp_method_async(htsp_connection_t *htsp, htsmsg_t *in)
 
   /* Send all autorecs */
   TAILQ_FOREACH(dae, &autorec_entries, dae_link)
-    if (!dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
+    if ((!dae->dae_config || !dae->dae_config->dvr_cache_only) &&
+        !dvr_autorec_entry_verify(dae, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_autorecentry(htsp, dae, "autorecEntryAdd"), NULL);
 
   /* Send all timerecs */
   TAILQ_FOREACH(dte, &timerec_entries, dte_link)
-    if (!dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
+    if ((!dte->dte_config || !dte->dte_config->dvr_cache_only) &&
+        !dvr_timerec_entry_verify(dte, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_timerecentry(htsp, dte, "timerecEntryAdd"), NULL);
 
   /* Send all DVR entries */
   LIST_FOREACH(de, &dvrentries, de_global_link)
-    if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1))
+    if (!de->de_cache_only &&
+        !dvr_entry_verify(de, htsp->htsp_granted_access, 1))
       htsp_send_message(htsp, htsp_build_dvrentry(htsp, de, "dvrEntryAdd", htsp->htsp_language, 0), NULL);
 
   /* Send EPG updates */
@@ -1996,7 +2111,7 @@ htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
   l = htsmsg_create_list();
 
   LIST_FOREACH(cfg, &dvrconfigs, config_link)
-    if (cfg->dvr_enabled) {
+    if (cfg->dvr_enabled && !cfg->dvr_cache_only) {
       uuid = idnode_uuid_as_str(&cfg->dvr_id, ubuf);
       if (htsp->htsp_granted_access->aa_dvrcfgs) {
         HTSMSG_FOREACH(f, htsp->htsp_granted_access->aa_dvrcfgs) {
@@ -2022,6 +2137,134 @@ htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
   return out;
 }
 
+
+#if ENABLE_TIMESHIFT
+
+/*
+ * Return the DVR event which should be used for a Record request.
+ *
+ * Normal/current playback keeps normal HTSP semantics.
+ *
+ * When the same HTSP connection is demonstrably playing history from the
+ * shared channel cache, Record means:
+ *
+ *   current EPG event + replay from oldest available channel cache.
+ *
+ * addDvrEntry contains no subscriptionId, so any fresh same-channel
+ * subscription which is live/current makes the request ambiguous and we
+ * leave normal behaviour untouched.
+ */
+static epg_broadcast_t *
+htsp_cache_record_target ( htsp_connection_t *htsp,
+                           epg_broadcast_t *requested,
+                           int *cache_full )
+{
+  htsp_subscription_t *hs;
+  channel_t *ch;
+  epg_broadcast_t *current;
+  int64_t now_mono, shift_us;
+  time_t now, when;
+  int historical = 0;
+
+  *cache_full = 0;
+
+  if (requested == NULL ||
+      (ch = requested->channel) == NULL ||
+      !timeshift_conf.enabled ||
+      !timeshift_conf.record_cache)
+    return requested;
+
+  now = gclk();
+  now_mono = mclk();
+  current = ch->ch_epg_now;
+
+  if (current == NULL ||
+      current->start > now ||
+      current->stop <= now)
+    return requested;
+
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link) {
+    if (hs->hs_prch.prch_svcts == NULL ||
+        hs->hs_s == NULL ||
+        hs->hs_s->ths_channel != ch)
+      continue;
+
+    /* svcts sends status once a second and immediately with seek replies. */
+    if (hs->hs_timeshift_status_mono == 0 ||
+        now_mono - hs->hs_timeshift_status_mono > sec2mono(5))
+      continue;
+
+    shift_us = ts_rescale(hs->hs_timeshift_shift, 1000000);
+
+    /*
+     * A second fresh subscription which is live or still inside the
+     * current programme makes addDvrEntry attribution ambiguous.
+     */
+    if (shift_us <= 0)
+      return requested;
+
+    when = now - (time_t)(shift_us / 1000000);
+
+    if (when >= current->start) {
+      /*
+       * The playhead is already inside the current programme.  Kodi can
+       * briefly still send the eventId from the programme it was playing
+       * before a seek.  Correct only an already-ended stale event; future
+       * or otherwise deliberate DVR requests keep normal HTSP semantics.
+       */
+      if (requested != current && requested->stop <= now) {
+        tvhdebug(LS_HTSP,
+                 "%s: correcting stale Record event %u to current event %u "
+                 "on \"%s\"",
+                 htsp->htsp_logname,
+                 requested->id, current->id,
+                 channel_get_name(ch, channel_blank_name));
+        return current;
+      }
+      return requested;
+    }
+
+    /*
+     * Kodi normally names the event at the playhead.  If it supplied an
+     * already-ended event, require the playhead actually to lie in it.
+     * The EPG-retention code keeps this old eventId resolvable.
+     *
+     * If a client instead names the current event while its playhead is
+     * historical, the server-side playhead is still authoritative and
+     * the same full-cache semantics apply.
+     */
+    if (requested != current) {
+      if (requested->stop > now ||
+          when + 2 < requested->start ||
+          when >= requested->stop + 2)
+        return requested;
+    }
+
+    historical++;
+  }
+
+  if (historical == 0)
+    return requested;
+
+  *cache_full = 1;
+
+  tvhinfo(LS_HTSP,
+          "%s: Record while playing historical shared cache on \"%s\": "
+          "requested event %u \"%s\"; recording current event %u \"%s\" "
+          "from oldest available cache",
+          htsp->htsp_logname,
+          channel_get_name(ch, channel_blank_name),
+          requested->id,
+          epg_broadcast_get_title(requested, NULL),
+          current->id,
+          epg_broadcast_get_title(current, NULL));
+
+  return current;
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
+
 /**
  * add a Dvrentry
  */
@@ -2038,19 +2281,60 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   int64_t start, stop;
   uint32_t u32;
   channel_t *ch = NULL;
+#if ENABLE_TIMESHIFT
+  int cache_full = 0;
+#endif
 
-  if(!htsmsg_get_u32(in, "channelId", &u32))
-    ch = channel_find_by_id(u32);
-  if(!htsmsg_get_u32(in, "eventId", &eventid)) {
-    e = epg_broadcast_find_by_id(eventid);
-    ch = e ? e->channel : ch;
+  {
+    int have_channel, have_event;
+
+    have_channel = !htsmsg_get_u32(in, "channelId", &u32);
+    if (have_channel)
+      ch = channel_find_by_id(u32);
+
+    have_event = !htsmsg_get_u32(in, "eventId", &eventid);
+    if (have_event) {
+      e = epg_broadcast_find_by_id(eventid);
+      ch = e ? e->channel : ch;
+    }
+
+    tvhinfo(LS_HTSP,
+            "%s: addDvrEntry: eventId=%s%u channelId=%s%u "
+            "event=%s channel=%s",
+            htsp->htsp_logname,
+            have_event ? "" : "<none>", have_event ? eventid : 0,
+            have_channel ? "" : "<none>", have_channel ? u32 : 0,
+            e ? "found" : "NOT FOUND",
+            ch ? "found" : "NOT FOUND");
+
+    if (have_event && e == NULL)
+      tvhwarn(LS_HTSP,
+              "%s: addDvrEntry: EPG eventId %u no longer exists",
+              htsp->htsp_logname, eventid);
   }
 
+#if ENABLE_TIMESHIFT
+  if (e) {
+    e = htsp_cache_record_target(htsp, e, &cache_full);
+    if (e)
+      ch = e->channel;
+  }
+#endif
+
   /* Check access */
-  if (!htsp_user_access_channel(htsp, ch))
-    return htsp_error(htsp, N_("User does not have access"));
-  if (!ch)
+  if (!ch) {
+    tvhwarn(LS_HTSP,
+            "%s: addDvrEntry rejected: no channel could be resolved",
+            htsp->htsp_logname);
     return htsp_error(htsp, N_("Channel does not exist"));
+  }
+
+  if (!htsp_user_access_channel(htsp, ch)) {
+    tvhwarn(LS_HTSP,
+            "%s: addDvrEntry rejected: channel access denied",
+            htsp->htsp_logname);
+    return htsp_error(htsp, N_("User does not have access"));
+  }
 
   /* Options */
   conf = htsmsg_create_map();
@@ -2110,10 +2394,42 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
       htsmsg_add_u32(conf, "age_rating", u32);
   }
 
+#if ENABLE_TIMESHIFT
+  /*
+   * Historical shared-cache playback records the CURRENT programme, but
+   * its first DVR subscription begins at the oldest available cache.
+   * It must catch live and retain the current programme's ordinary stop.
+   *
+   * Outside that specific playback context retain the existing
+   * retrospective-event behaviour from the previously working fork.
+   */
+  if (cache_full)
+    htsmsg_add_u32(conf, "__cache_full", 1);
+  else if (e && gclk() >= e->stop)
+    htsmsg_add_u32(conf, "__cache_retro", 1);
+#endif
+
   /* Create the dvr entry */
   de = dvr_entry_create_from_htsmsg(conf, e);
 
   htsmsg_destroy(conf);
+
+  if (de == NULL)
+    tvhwarn(LS_HTSP,
+            "%s: addDvrEntry: dvr_entry_create_from_htsmsg() returned NULL",
+            htsp->htsp_logname);
+  else
+    tvhinfo(LS_HTSP,
+            "%s: addDvrEntry: DVR entry created, state=%d",
+            htsp->htsp_logname, (int)de->de_sched_state);
+
+  /*
+   * Recording what is being watched from the cache records the viewer's place
+   * in it, so a client resumes there instead of at the programme's start.  It
+   * is written when the viewer leaves, in htsp_subscription_destroy(): the
+   * position is measured against the recording's file, and there is none yet
+   * at the moment the entry is created here.
+   */
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -2150,7 +2466,8 @@ htsp_findDvrEntry(htsp_connection_t *htsp, htsmsg_t *in, htsmsg_t **out, int rea
     return NULL;
   }
 
-  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL) {
+  if((de = dvr_entry_find_by_id(dvrEntryId)) == NULL ||
+     de->de_cache_only) {
     *out = htsp_error(htsp, N_("DVR entry not found"));
     return NULL;
   }
@@ -2895,6 +3212,10 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
   memset(&skip, 0, sizeof(skip));
   skip.type = SMT_SKIP_LIVE;
   tvhtrace(LS_HTSP_SUB, "live");
+#if ENABLE_TIMESHIFT
+  hs->hs_timeshift_shift = 0;
+  hs->hs_timeshift_status_mono = mclk();
+#endif
   subscription_set_skip(hs->hs_s, &skip);
 
   htsp_reply(htsp, in, htsmsg_create_map());
@@ -3893,6 +4214,9 @@ _htsp_dvr_entry_update(dvr_entry_t *de, const char *method, htsmsg_t *msg)
 void
 htsp_dvr_entry_add(dvr_entry_t *de)
 {
+  if (de->de_cache_only)
+    return;
+
   _htsp_dvr_entry_update(de, "dvrEntryAdd", NULL);
 }
 
@@ -3902,6 +4226,11 @@ htsp_dvr_entry_add(dvr_entry_t *de)
 void
 htsp_dvr_entry_update(dvr_entry_t *de)
 {
+  if (de->de_cache_only) {
+    htsp_dvr_entry_delete(de);
+    return;
+  }
+
   _htsp_dvr_entry_update(de, "dvrEntryUpdate", NULL);
 }
 
@@ -3912,6 +4241,9 @@ void
 htsp_dvr_entry_update_stats(dvr_entry_t *de)
 {
   htsp_connection_t *htsp;
+
+  if (de->de_cache_only)
+    return;
   LIST_FOREACH(htsp, &htsp_async_connections, htsp_async_link) {
     if (htsp->htsp_async_mode & HTSP_ASYNC_ON){
       if (!dvr_entry_verify(de, htsp->htsp_granted_access, 1)) {
@@ -3959,6 +4291,9 @@ _htsp_autorec_entry_update(dvr_autorec_entry_t *dae, const char *method, htsmsg_
 void
 htsp_autorec_entry_add(dvr_autorec_entry_t *dae)
 {
+  if (dae->dae_config && dae->dae_config->dvr_cache_only)
+    return;
+
   _htsp_autorec_entry_update(dae, "autorecEntryAdd", NULL);
 }
 
@@ -3968,6 +4303,11 @@ htsp_autorec_entry_add(dvr_autorec_entry_t *dae)
 void
 htsp_autorec_entry_update(dvr_autorec_entry_t *dae)
 {
+  if (dae->dae_config && dae->dae_config->dvr_cache_only) {
+    htsp_autorec_entry_delete(dae);
+    return;
+  }
+
   _htsp_autorec_entry_update(dae, "autorecEntryUpdate", NULL);
 }
 
@@ -4013,6 +4353,9 @@ _htsp_timerec_entry_update(dvr_timerec_entry_t *dte, const char *method, htsmsg_
 void
 htsp_timerec_entry_add(dvr_timerec_entry_t *dte)
 {
+  if (dte->dte_config && dte->dte_config->dvr_cache_only)
+    return;
+
   _htsp_timerec_entry_update(dte, "timerecEntryAdd", NULL);
 }
 
@@ -4022,6 +4365,11 @@ htsp_timerec_entry_add(dvr_timerec_entry_t *dte)
 void
 htsp_timerec_entry_update(dvr_timerec_entry_t *dte)
 {
+  if (dte->dte_config && dte->dte_config->dvr_cache_only) {
+    htsp_timerec_entry_delete(dte);
+    return;
+  }
+
   _htsp_timerec_entry_update(dte, "timerecEntryUpdate", NULL);
 }
 
@@ -4566,6 +4914,9 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
 static void
 htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *status)
 {
+  hs->hs_timeshift_shift = status->shift;
+  hs->hs_timeshift_status_mono = mclk();
+
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "timeshiftStatus");
   htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);

@@ -32,6 +32,9 @@
 #include "compat.h"
 #include "string_list.h"
 #include "epggrab.h" //Needed to get the epggrab_conf.epgdb_processparentallabels flag.
+#if ENABLE_TIMESHIFT
+#include "timeshift.h"
+#endif
 
 struct dvr_entry_list dvrentries;
 static int dvr_in_init;
@@ -154,9 +157,10 @@ int dvr_entry_is_finished(dvr_entry_t *entry, int flags)
   if (!flags || (flags & DVR_FINISHED_ALL))
     return 1;
 
-  int removed = entry->de_file_removed ||                       /* Removed by tvheadend */
-                (entry->de_sched_state != DVR_MISSED_TIME &&
-                 dvr_get_filesize(entry, 0) < 0);		/* Removed externally? */
+  int removed = !entry->de_cache_only &&
+                (entry->de_file_removed ||                            /* Removed by tvheadend */
+                 (entry->de_sched_state != DVR_MISSED_TIME &&
+                  dvr_get_filesize(entry, 0) < 0));                   /* Removed externally? */
   int success = entry->de_sched_state == DVR_COMPLETED;
 
   if (success) {
@@ -365,7 +369,17 @@ dvr_entry_get_start_time( dvr_entry_t *de, int warm )
 time_t
 dvr_entry_get_stop_time( dvr_entry_t *de )
 {
-  return time_t_out_of_range((int64_t)de->de_stop + dvr_entry_get_segment_stop_extra(de) + dvr_entry_get_extra_time_post(de));
+  int64_t extra = dvr_entry_get_extra_time_post(de);
+
+  /*
+   * Cache-only timers have an explicit wall-clock lifetime. In
+   * particular, their individual stop_extra is authoritative and must
+   * not be extended by segmented-programme EIT handling.
+   */
+  if (!de->de_cache_only)
+    extra += dvr_entry_get_segment_stop_extra(de);
+
+  return time_t_out_of_range((int64_t)de->de_stop + extra);
 }
 
 time_t
@@ -676,7 +690,8 @@ dvr_entry_status(dvr_entry_t *de)
       default:
         break;
     }
-    if (dvr_get_filesize(de, 0) < 0 && !de->de_file_removed)
+    if (!de->de_cache_only &&
+        dvr_get_filesize(de, 0) < 0 && !de->de_file_removed)
       return N_("File missing");
     if(de->de_last_error != SM_CODE_FORCE_OK &&
        dvr_entry_data_error_limit_reached(de))
@@ -716,7 +731,8 @@ dvr_entry_schedstatus(dvr_entry_t *de)
   case DVR_COMPLETED:
     s = "completed";
     if(!dvr_entry_is_completed_ok(de) ||
-       (dvr_get_filesize(de, 0) < 0 && !de->de_file_removed))
+       (!de->de_cache_only &&
+        dvr_get_filesize(de, 0) < 0 && !de->de_file_removed))
       s = "completedError";
     rerecord = de->de_dont_rerecord ? 0 : dvr_entry_get_rerecord_errors(de);
     if(rerecord && (de->de_errors || de->de_data_errors > rerecord))
@@ -746,7 +762,7 @@ dvr_usage_count(access_t *aa)
   uint32_t used = 0;
 
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    if (de->de_sched_state != DVR_RECORDING)
+    if (de->de_sched_state != DVR_RECORDING || de->de_cache_only)
       continue;
     if (de->de_owner && de->de_owner[0]) {
       if (!strcmp(de->de_owner, aa->aa_username ?: ""))
@@ -765,7 +781,8 @@ dvr_entry_allow_fanart_lookup(const dvr_entry_t *de)
   char ubuf[UUID_HEX_SIZE];
 
   /* User doesn't want us to fetch artwork? */
-  if (!de || !de->de_config || !de->de_config->dvr_fetch_artwork)
+  if (!de || de->de_cache_only ||
+      !de->de_config || !de->de_config->dvr_fetch_artwork)
     return 0;
 
   /* Entry already have artwork? So nothing to do */
@@ -854,10 +871,36 @@ dvr_entry_set_timer(dvr_entry_t *de)
   if (dvr_in_init)
     return;
 
-  start = dvr_entry_get_start_time(de, 1);
+  start = dvr_entry_get_start_time(de, de->de_cache_only ? 0 : 1);
   stop  = dvr_entry_get_stop_time(de);
 
   dvr_entry_trace_time2(de, "start", start, "stop", stop, "set timer");
+
+#if ENABLE_TIMESHIFT
+  /*
+   * de_cache_retro stays set for the whole replay and the entry's stop is in
+   * the past by definition, so without a state check every dvr_entry_set_timer()
+   * reaching here while the replay runs -- a web UI edit, an EPG update --
+   * starts the recording a second time.  dvr_rec_subscribe() asserts de_s is
+   * NULL; a release build gets a second subscription and a second DVR thread
+   * for one entry, which is what a completed recording replaying its cache
+   * again looks like.
+   */
+  if (de->de_cache_retro &&
+      de->de_sched_state != DVR_RECORDING &&
+      de->de_sched_state != DVR_COMPLETED &&
+      de->de_sched_state != DVR_MISSED_TIME &&
+      now >= stop &&
+      !de->de_dont_reschedule &&
+      de->de_channel &&
+      de->de_channel->ch_enabled) {
+    dvr_entry_trace_time2(de, "start", dvr_entry_get_start_time(de, 0),
+                         "stop", stop,
+                         "starting retrospective channel-cache recording");
+    dvr_timer_start_recording(de);
+    return;
+  }
+#endif
 
   if (now >= stop || de->de_dont_reschedule) {
 
@@ -1069,6 +1112,55 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
 
   idnode_load(&de->de_id, conf);
 
+#if ENABLE_TIMESHIFT
+  /*
+   * A dedicated DVR configuration can act as the cache-warmup profile.
+   * An explicit per-entry value still wins.
+   */
+  if (de->de_config &&
+      (conf == NULL || !htsmsg_field_find(conf, "cache_only")))
+    de->de_cache_only = de->de_config->dvr_cache_only;
+#endif
+
+#if ENABLE_TIMESHIFT
+  /*
+   * Internal one-shot marker used by HTSP historical playback.
+   * It is not an idnode property and is therefore never persisted.
+   */
+  if (!clone &&
+      htsmsg_get_u32_or_default(conf, "__cache_full", 0) &&
+      timeshift_conf.enabled &&
+      timeshift_conf.record_cache)
+    de->de_cache_full = 1;
+
+  /*
+   * Retrospective recording must be explicitly requested by the caller.
+   * In particular, DVR entries loaded from the database at startup must
+   * never become retrospective merely because their stop time is past.
+   */
+  if (htsmsg_get_u32_or_default(conf, "__cache_retro", 0) &&
+      de->de_bcast != NULL &&
+      timeshift_conf.enabled &&
+      timeshift_conf.record_cache &&
+      gclk() >= de->de_bcast->stop &&
+      (timeshift_conf.unlimited_period ||
+       (timeshift_conf.max_period > 0 &&
+        dvr_entry_get_stop_time(de) + 2 >=
+          gclk() - (time_t)timeshift_conf.max_period * 60))) {
+    de->de_cache_retro = 1;
+
+    tvhinfo(LS_DVR,
+            "retrospective cache DVR armed for \"%s\" on \"%s\": "
+            "from=%"PRItime_t" to=%"PRItime_t,
+            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+            dvr_entry_get_start_time(de, 0),
+            dvr_entry_get_stop_time(de));
+  }
+#endif
+
+
+
+
   /* Time the node was created. */
   if (!htsmsg_get_s64(conf, "create", &create)) {
       de->de_create = create;
@@ -1123,7 +1215,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
    * Note: this check has to be done _after_ insert in to de_global_link
    * otherwise the destroy will abort.
    */
-  if (_dvr_duplicate_event(de)) {
+  if (!de->de_cache_retro && _dvr_duplicate_event(de)) {
       tvhtrace(LS_DVR, "Entry was duplicate for %s \"%s\" on \"%s\" start time %"PRId64", "
           "scheduled for recording by \"%s\"",
           idnode_uuid_as_str(&de->de_id, ubuf),
@@ -1151,6 +1243,7 @@ dvr_entry_create(const char *uuid, htsmsg_t *conf, int clone)
         return NULL;
       }
   }
+
 
   if (!clone)
     dvr_entry_set_timer(de);
@@ -1379,11 +1472,24 @@ dvr_entry_clone(dvr_entry_t *de)
   htsmsg_destroy(conf);
 
   if (n) {
+    n->de_cache_retro = de->de_cache_retro;
+    n->de_cache_full  = de->de_cache_full;
+
     if(de->de_sched_state == DVR_RECORDING) {
-      dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
-      dvr_rec_migrate(de, n);
-      n->de_start = gclk();
-      dvr_entry_start_recording(n, 1);
+      if (de->de_cache_only) {
+        /*
+         * Cache-only has no DVR worker or muxer to migrate. Stop the
+         * old low-priority tuner hold and start the cloned timer normally.
+         */
+        dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 0);
+        n->de_start = gclk();
+        dvr_entry_start_recording(n, 0);
+      } else {
+        dvr_stop_recording(de, SM_CODE_SOURCE_RECONFIGURED, 1, 1);
+        dvr_rec_migrate(de, n);
+        n->de_start = gclk();
+        dvr_entry_start_recording(n, 1);
+      }
     } else {
       dvr_entry_set_timer(n);
     }
@@ -1408,7 +1514,7 @@ dvr_entry_rerecord(dvr_entry_t *de)
   uint32_t warm;
   htsmsg_t *conf;
 
-  if (dvr_in_init || de->de_dont_rerecord)
+  if (de->de_cache_only || dvr_in_init || de->de_dont_rerecord)
     return 0;
   rerecord = dvr_entry_get_rerecord_errors(de);
   if (rerecord == 0)
@@ -1736,6 +1842,9 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
  */
 static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 {
+  if (de->de_cache_only)
+    return NULL;
+
   static _dvr_duplicate_fcn_t fcns[] = {
     [DVR_AUTOREC_RECORD_UNIQUE]                    = _dvr_duplicate_unique_match,
     [DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER]  = _dvr_duplicate_epnum,
@@ -1811,7 +1920,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 
   if (record < DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER || record == DVR_AUTOREC_RECORD_UNIQUE) {
     LIST_FOREACH(de2, &dvrentries, de_global_link) {
-      if (de == de2)
+      if (de == de2 || de2->de_cache_only)
         continue;
 
       // check for valid states
@@ -1844,7 +1953,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
     }
   } else {
     LIST_FOREACH(de2, &de->de_autorec->dae_spawns, de_autorec_link) {
-      if (de == de2)
+      if (de == de2 || de2->de_cache_only)
         continue;
 
       // check for valid states
@@ -2301,8 +2410,8 @@ static void
 dvr_entry_watched_timer_arm(dvr_entry_t* de)
 {
   if (!de || !de->de_watched ||
-      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER ||
-      !de->de_config || !de->de_config->dvr_removal_after_playback)
+      !de->de_config || !de->de_config->dvr_removal_after_playback ||
+      dvr_entry_get_removal_days(de) == DVR_RET_REM_FOREVER)
     return;
 
   char t1buf[32];
@@ -2461,6 +2570,19 @@ static dvr_entry_t *_dvr_entry_update
   }
 
   if (!dvr_entry_is_editable(de)) {
+#if ENABLE_TIMESHIFT
+    /*
+     * Once a cache-only warmup is running, its start cannot be changed
+     * meaningfully anymore.  An EPG update may still extend its stop,
+     * but must never shorten the already reserved cache window.
+     */
+    if (de->de_cache_only) {
+      if (e && e->stop > stop)
+        stop = e->stop;
+      if (stop > 0 && stop < de->de_stop)
+        stop = de->de_stop;
+    }
+#endif
     if (stop > 0) {
       if (stop < gclk())
         stop = gclk();
@@ -2529,6 +2651,19 @@ static dvr_entry_t *_dvr_entry_update
   if (e) {
     start = e->start;
     stop  = e->stop;
+#if ENABLE_TIMESHIFT
+    /*
+     * EPG corrections must never shorten a cache-only warmup.
+     * Before it starts, the scheduled window may only expand:
+     * start may move earlier and stop may move later.
+     */
+    if (de->de_cache_only) {
+      if (de->de_start && start > de->de_start)
+        start = de->de_start;
+      if (de->de_stop && stop < de->de_stop)
+        stop = de->de_stop;
+    }
+#endif
   }
   if (start && (start != de->de_start)) {
     de->de_start = start;
@@ -2730,11 +2865,43 @@ dvr_event_replaced(epg_broadcast_t *e, epg_broadcast_t *new_e)
                           channel_get_name(ch, channel_blank_name));
 
     /* Ignore - already in progress */
-    if (de->de_sched_state != DVR_SCHEDULED)
+    if (de->de_sched_state != DVR_SCHEDULED) {
+#if ENABLE_TIMESHIFT
+      /*
+       * A running cache-only warmup follows a replacement EPG event only
+       * when that can extend its end.  Re-link it so later updates of the
+       * replacement event can extend the same warmup as well.
+       */
+      if (de->de_cache_only && de->de_sched_state == DVR_RECORDING) {
+        dvr_entry_assign_broadcast(de, new_e);
+        _dvr_entry_update(de, -1, NULL, new_e,
+                          NULL, NULL, NULL, NULL, NULL, NULL,
+                          0, 0, 0, 0, DVR_PRIO_NOTSET,
+                          0, 0, -1, -1, 0, NULL, NULL);
+        idnode_changed(&de->de_id);
+        continue;
+      }
+#endif
       return;
+    }
 
     /* If this was created by autorec - just remove it, it'll get recreated */
     if (de->de_autorec) {
+#if ENABLE_TIMESHIFT
+      /*
+       * Keep the existing cache-only envelope when the replacement event
+       * still matches the same autorec rule.  _dvr_entry_update() may
+       * expand start/stop, but the cache-only clamps prevent shortening.
+       */
+      if (de->de_cache_only &&
+          dvr_autorec_cmp(de->de_autorec, new_e)) {
+        _dvr_entry_update(de, -1, NULL, new_e,
+                          NULL, NULL, NULL, NULL, NULL, NULL,
+                          0, 0, 0, 0, DVR_PRIO_NOTSET,
+                          0, 0, -1, -1, 0, NULL, NULL);
+        continue;
+      }
+#endif
 
       dvr_entry_assign_broadcast(de, NULL);
       dvr_entry_destroy(de, 1);
@@ -2797,7 +2964,11 @@ void dvr_event_updated(epg_broadcast_t *e)
   while (de != NULL) {
     de_next = LIST_NEXT(de, de_bcast_link);
     assert(de->de_bcast == e);
-    if (de->de_sched_state == DVR_SCHEDULED)
+    if (de->de_sched_state == DVR_SCHEDULED
+#if ENABLE_TIMESHIFT
+        || (de->de_cache_only && de->de_sched_state == DVR_RECORDING)
+#endif
+       )
       _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                         NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL, NULL);
     de = de_next;
@@ -2836,6 +3007,16 @@ void dvr_event_running(epg_broadcast_t *e, epg_running_t running)
            channel_get_name(e->channel, channel_blank_name),
            running);
   LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
+#if ENABLE_TIMESHIFT
+    /*
+     * Cache-only warmups follow the scheduled EPG start/stop times plus
+     * their explicit pre/post padding. EPG running-state signalling must
+     * neither start them early nor stop them before stop_extra expires.
+     */
+    if (de->de_cache_only)
+      continue;
+#endif
+
     if (running == EPG_RUNNING_NOW && de->de_dvb_eid == e->dvb_eid) {
       if (de->de_running_pause) {
         tvhdebug(LS_DVR, "dvr entry %s event %s on %s - EPG unpause",
@@ -3092,11 +3273,196 @@ dvr_create_recording_scene_markers(dvr_entry_t *de)
 /**
  *
  */
+#if ENABLE_TIMESHIFT
+
+/*
+ * A scheduled cache warmup needs a real channel subscription so the
+ * service is tuned and svcbuf_service_start() can create the shared cache,
+ * but it deliberately consumes none of the stream.
+ */
+static void
+dvr_cache_only_sink_input(void *opaque, streaming_message_t *sm)
+{
+  streaming_msg_free(sm);
+}
+
+static htsmsg_t *
+dvr_cache_only_sink_info(void *opaque, htsmsg_t *list)
+{
+  htsmsg_add_str(list, NULL, "timeshift cache warmup sink");
+  return list;
+}
+
+static streaming_ops_t dvr_cache_only_sink_ops = {
+  .st_cb   = dvr_cache_only_sink_input,
+  .st_info = dvr_cache_only_sink_info,
+};
+
+static int
+dvr_cache_only_subscribe(dvr_entry_t *de)
+{
+  profile_chain_t *prch;
+  streaming_target_t *sink;
+  th_subscription_t *sub, *s, *next;
+  int error = 0;
+
+  if (!timeshift_conf.enabled || !timeshift_conf.record_cache)
+    return -EINVAL;
+
+  prch = calloc(1, sizeof(*prch));
+  sink = calloc(1, sizeof(*sink));
+  if (prch == NULL || sink == NULL) {
+    free(prch);
+    free(sink);
+    return -ENOMEM;
+  }
+
+  /*
+   * No stream profile, muxer or DVR writer is needed.  The profile-chain
+   * object is only the lifetime container required by the channel
+   * subscription API.
+   */
+  profile_chain_init(prch, NULL, de->de_channel, 0);
+  streaming_target_init(sink, &dvr_cache_only_sink_ops, de, 0);
+  prch->prch_st = sink;
+
+  sub = subscription_create_from_channel
+    (prch, NULL, SUBSCRIPTION_PRIO_KEEP,
+     "timeshift cache warmup",
+     SUBSCRIPTION_ONESHOT | SUBSCRIPTION_CONTACCESS,
+     NULL, de->de_owner ?: "", "timeshift-cache-warmup", &error);
+
+  if (sub == NULL) {
+    profile_chain_close(prch);
+    free(sink);
+    free(prch);
+    tvherror(LS_DVR,
+             "\"%s\" on \"%s\": unable to start timeshift cache warmup: %s",
+             lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+             streaming_code2txt(error ?: SM_CODE_BAD_SOURCE));
+    return -EIO;
+  }
+
+  /*
+   * A previously-created automatic post-viewer keepalive may already
+   * hold exactly this service and its existing svcbuf. The scheduled
+   * warmup now owns that lifetime, so remove those helpers while this
+   * subscription keeps the same service running. No cache is lost.
+   *
+   * This also guarantees that the individual DVR stop_extra remains
+   * authoritative instead of being followed by another global
+   * cache_keepalive interval.
+   */
+  if (sub->ths_service) {
+    for (s = LIST_FIRST(&sub->ths_service->s_subscriptions);
+         s != NULL;
+         s = next) {
+      next = LIST_NEXT(s, ths_service_link);
+
+      if (s != sub && s->ths_cache_keepalive)
+        subscription_unsubscribe
+          (s, UNSUBSCRIBE_QUIET | UNSUBSCRIBE_FINAL);
+    }
+  }
+
+  /*
+   * Deliberately do not store 'sub' in de_s. An ONESHOT subscription
+   * may be removed and destroyed by the scheduler when its tuner is
+   * needed by a higher-priority request. Keeping that pointer in the
+   * DVR entry would then leave a dangling de_s.
+   *
+   * The profile-chain itself remains owned by this cache-only DVR entry
+   * and uniquely identifies a still-existing subscription.
+   */
+  de->de_s = NULL;
+  de->de_chain = prch;
+  de->de_cache_sink = sink;
+
+  return 0;
+}
+
+static void
+dvr_cache_only_unsubscribe(dvr_entry_t *de)
+{
+  profile_chain_t *prch = de->de_chain;
+  streaming_target_t *sink = de->de_cache_sink;
+  th_subscription_t *s, *sub = NULL;
+
+  /*
+   * The ONESHOT subscription may already have been destroyed after a
+   * higher-priority request took its tuner. Do not retain a raw pointer
+   * to it in the DVR entry; locate a surviving subscription by the
+   * profile-chain that this cache-only entry owns.
+   */
+  if (prch) {
+    LIST_FOREACH(s, &subscriptions, ths_global_link) {
+      if (s->ths_prch == prch) {
+        sub = s;
+        break;
+      }
+    }
+  }
+
+  if (sub) {
+    /*
+     * Suppress creation of the ordinary post-viewer keepalive here.
+     * The scheduled cache-only timer, including its stop_extra, owns
+     * the final lifetime.
+     */
+    sub->ths_cache_keepalive = 1;
+    subscription_unsubscribe
+      (sub, UNSUBSCRIBE_QUIET | UNSUBSCRIBE_FINAL);
+  }
+
+  de->de_s = NULL;
+  de->de_chain = NULL;
+  de->de_cache_sink = NULL;
+
+  if (prch) {
+    profile_chain_close(prch);
+    free(prch);
+  }
+
+  free(sink);
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
+
 void
 dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone)
 {
   dvr_rs_state_t rec_state = de->de_rec_state;
   dvr_autorec_entry_t *dae = de->de_autorec;
+
+  if (de->de_cache_only) {
+#if ENABLE_TIMESHIFT
+    dvr_cache_only_unsubscribe(de);
+#endif
+    de->de_dont_reschedule = 1;
+
+    /*
+     * Cache-only entries are transient scheduler objects, not
+     * recordings. Mark the run finished for scheduler/autorec
+     * accounting, then remove the entry asynchronously. There is
+     * no recording file and therefore no retention lifecycle.
+     */
+    dvr_entry_set_state(de, DVR_COMPLETED, DVR_RS_FINISHED, stopcode);
+
+    tvhinfo(LS_DVR,
+            "\"%s\" on \"%s\": timeshift cache warmup ended: %s",
+            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de),
+            streaming_code2txt(stopcode));
+
+    if (dae) {
+      dvr_autorec_completed(dae, stopcode);
+      if (dvr_autorec_get_max_sched_count(dae) > 0)
+        dvr_autorec_changed(dae, 0);
+    }
+
+    dvr_entry_deferred_destroy(de);
+    return;
+  }
 
   if (!clone)
     dvr_rec_unsubscribe(de);
@@ -3171,6 +3537,39 @@ dvr_timer_stop_recording(void *aux)
                         "rstart", de->de_running_start,
                         "rstop", de->de_running_stop,
                         "stop recording timer called");
+
+  /*
+   * A cache-only warmup has an explicit stop boundary including its
+   * individual stop_extra. Do not extend it using EPG running-state logic.
+   */
+  if (de->de_cache_only) {
+    dvr_stop_recording(de, SM_CODE_OK, 1, 0);
+    return;
+  }
+
+#if ENABLE_TIMESHIFT
+  /*
+   * Full-cache replay may still be processing historical bytes when the
+   * current programme reaches its wall-clock stop.  The gate knows the
+   * exact historical stop boundary, so keep the subscription alive until
+   * the gate reaches it.
+   */
+  if (de->de_cache_full && de->de_s && de->de_s->ths_replaying) {
+    dvr_entry_trace(de,
+                    "full-cache replay active at DVR stop; "
+                    "waiting for cache stop boundary");
+    gtimer_arm_rel(&de->de_timer, dvr_timer_stop_recording, de, 1);
+    return;
+  }
+
+  /*
+   * If full-cache already caught live, the ordinary DVR timer is again
+   * authoritative.  Clear the transient marker before final stop.
+   */
+  if (de->de_cache_full)
+    de->de_cache_full = 0;
+#endif
+
   /* EPG thinks that the program is running */
   if (de->de_segment_stop_extra) {
     const time_t stop = dvr_entry_get_stop_time(de);
@@ -3186,6 +3585,31 @@ dvr_timer_stop_recording(void *aux)
   dvr_stop_recording(aux, SM_CODE_OK, 1, 0);
 }
 
+
+
+/*
+ * Complete a cache-owned recording after its DVR worker consumed the
+ * gate's terminal STOP.  The stop is deferred because dvr_stop_recording()
+ * joins the worker thread and so cannot be called by that worker itself --
+ * which is what dvr_stop_recording_deferred() exists for.
+ *
+ * Clearing the cache flags first keeps dvr_entry_set_timer() from starting
+ * the historical replay over again in the meantime.
+ */
+void
+dvr_entry_cache_replay_done(dvr_entry_t *de)
+{
+  lock_assert(&global_lock);
+
+  if (de->de_sched_state != DVR_RECORDING ||
+      (!de->de_cache_retro && !de->de_cache_full))
+    return;
+
+  de->de_cache_retro = 0;
+  de->de_cache_full  = 0;
+
+  dvr_stop_recording_deferred(de, de->de_last_error);
+}
 
 
 /**
@@ -3206,6 +3630,34 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
 
   tvhinfo(LS_DVR, "\"%s\" on \"%s\" recorder starting",
 	  lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
+
+  if (de->de_cache_only) {
+#if ENABLE_TIMESHIFT
+    if ((r = dvr_cache_only_subscribe(de)) < 0) {
+      de->de_dont_reschedule = 1;
+      dvr_entry_completed(de, SM_CODE_BAD_SOURCE);
+      return;
+    }
+
+    de->de_segment_stop_extra = 0;
+    stop = dvr_entry_get_stop_time(de);
+
+    dvr_entry_set_state(de, DVR_RECORDING, DVR_RS_RUNNING, SM_CODE_OK);
+
+    tvhinfo(LS_DVR,
+            "\"%s\" on \"%s\": timeshift cache warmup started",
+            lang_str_get(de->de_title, NULL), DVR_CH_NAME(de));
+
+    dvr_entry_trace_time2(de, "start", gclk(), "stop", stop,
+                          "cache warmup stop timer set");
+
+    gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de, stop);
+#else
+    de->de_dont_reschedule = 1;
+    dvr_entry_completed(de, SM_CODE_INVALID_TARGET);
+#endif
+    return;
+  }
 
   /*
    * The running flag is updated only on the event change. When the DVR
@@ -3237,6 +3689,13 @@ dvr_entry_start_recording(dvr_entry_t *de, int clone)
   de->de_segment_stop_extra = 0;
   stop = dvr_entry_get_stop_time(de);
 
+  if (de->de_cache_retro) {
+    dvr_entry_trace_time2(de, "start", dvr_entry_get_start_time(de, 0),
+                         "stop", stop,
+                         "cache replay owns retrospective stop boundary");
+    return;
+  }
+
   dvr_entry_trace_time2(de, "original stop", de->de_stop, "stop", stop, "stop timer set");
 
   gtimer_arm_absn(&de->de_timer, dvr_timer_stop_recording, de, stop);
@@ -3257,7 +3716,7 @@ dvr_timer_start_recording(void *aux)
   }
 
   // if duplicate, then delete it now, don't record!
-  if (_dvr_duplicate_event(de)) {
+  if (!de->de_cache_retro && _dvr_duplicate_event(de)) {
     dvr_entry_cancel_delete(de, 1);
     return;
   }
@@ -3501,6 +3960,15 @@ dvr_entry_class_start_extra_set(void *o, const void *v)
   dvr_entry_t *de = (dvr_entry_t *)o;
   return dvr_entry_class_time_set(de, &de->de_start_extra, *(time_t *)v);
 }
+
+#if ENABLE_TIMESHIFT
+static int
+dvr_entry_class_cache_only_set(void *o, const void *v)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  return dvr_entry_class_int_set(de, &de->de_cache_only, *(int *)v);
+}
+#endif
 
 static int
 dvr_entry_class_stop_set(void *o, const void *_v)
@@ -4532,6 +5000,19 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Enable/disable the entry."),
       .off      = offsetof(dvr_entry_t, de_enabled),
     },
+#if ENABLE_TIMESHIFT
+    {
+      .type     = PT_BOOL,
+      .id       = "cache_only",
+      .name     = N_("Timeshift cache only"),
+      .desc     = N_("Tune the channel and fill its shared timeshift cache "
+                     "without creating a recording file. The normal "
+                     "pre- and post-recording padding apply to this entry."),
+      .off      = offsetof(dvr_entry_t, de_cache_only),
+      .set      = dvr_entry_class_cache_only_set,
+      .opts     = PO_ADVANCED,
+    },
+#endif
     {
       .type     = PT_TIME,
       .id       = "create",

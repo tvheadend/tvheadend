@@ -38,6 +38,11 @@ typedef struct timeshift_conf {
   int       ram_only;
   int       ram_fit;
   int       teletext;
+  int       record_cache;
+  uint32_t  cache_keepalive;
+  uint32_t  cache_keepalive_min_period;
+  uint32_t  cache_keepalive_max;
+  uint32_t  cache_staging;    ///< Write-behind RAM for disk cache blocks, MB
 } timeshift_conf_t;
 
 extern struct timeshift_conf timeshift_conf;
