@@ -157,7 +157,11 @@ struct svcbuf_gate {
   time_t               from;
   time_t               to;      ///< Historical end; 0 means catch up to live
   int                  all;     ///< Begin at oldest available block
-  int                  state;   ///< Changed under s_stream_mutex
+  volatile int         state;   ///< Owned by s_stream_mutex; the replay
+                                ///< thread reads it under sb->lock as a
+                                ///< hint and re-checks under that mutex
+                                ///< before acting, so those reads go
+                                ///< through atomic_get()
   int                 *replaying; ///< Mirrors state == GATE_REPLAY
   time_t              *replay_start; ///< Set to where the replay begins
   streaming_queue_t   *sq;      ///< Consumer queue to pace on, or NULL
@@ -414,7 +418,7 @@ svcbuf_mark_replays_no_space_locked ( svcbuf_t *sb )
   int n = 0;
 
   LIST_FOREACH(g, &sb->gates, link) {
-    if (g->state == GATE_REPLAY && g->blk != NULL) {
+    if (atomic_get(&g->state) == GATE_REPLAY && g->blk != NULL) {
       g->no_space = 1;
       n++;
     }
@@ -949,7 +953,7 @@ svcbuf_release ( svcbuf_t *sb )
 static void
 svcbuf_gate_set_state ( svcbuf_gate_t *g, int state )
 {
-  g->state = state;
+  atomic_set(&g->state, state);
   *g->replaying = state == GATE_REPLAY;
 }
 
@@ -1039,7 +1043,8 @@ svcbuf_gate_thread ( void *aux )
 
   tvh_mutex_lock(&sb->lock);
 
-  while (g->state == GATE_REPLAY) {
+  /* A hint only: every action below re-checks under s_stream_mutex */
+  while (atomic_get(&g->state) == GATE_REPLAY) {
     if (g->no_space) {
       tvh_mutex_unlock(&sb->lock);
       tvh_mutex_lock(&t->s_stream_mutex);
@@ -1232,7 +1237,7 @@ svcbuf_gate_thread ( void *aux )
     tvh_mutex_unlock(&t->s_stream_mutex);
   }
 
-  if (!live && g->state == GATE_REPLAY) {
+  if (!live && atomic_get(&g->state) == GATE_REPLAY) {
     tvh_mutex_unlock(&sb->lock);
     tvh_mutex_lock(&t->s_stream_mutex);
 
