@@ -33,6 +33,9 @@ void svcts_destroy ( streaming_target_t *pad );
 
 /* The client's subscription linked to / unlinked from a service
  * (s_stream_mutex held) */
+/* Depth (90 kHz) of the shared cache behind this target, 0 if none */
+int64_t svcts_cache_depth ( streaming_target_t *pad );
+
 void svcts_attach ( streaming_target_t *pad, struct service *t );
 void svcts_detach ( streaming_target_t *pad );
 

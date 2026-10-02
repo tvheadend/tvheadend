@@ -774,8 +774,31 @@ profile_sharer_deliver(profile_chain_t *prch, streaming_message_t *sm)
     if (!prch->prch_ts_delta)
       goto deliver;
     th_pkt_t *pkt = sm->sm_data;
-    if (prch->prch_ts_delta == PTS_UNSET)
-      prch->prch_ts_delta = MAX(0, pkt->pkt_dts - 10000);
+    if (prch->prch_ts_delta == PTS_UNSET) {
+      /*
+       * Tuning a channel whose shared cache already holds history: put the
+       * client's zero at the start of that cache rather than at its own
+       * first packet, so the whole cache is reachable on a positive
+       * timestamp.  Left at zero, the oldest seekable point reported to the
+       * client is negative, and seeking there delivered negative DTS --
+       * which a player cannot order (frozen picture, audio limping on).
+       */
+      int64_t shift = 0;
+#if ENABLE_TIMESHIFT
+      if (prch->prch_svcts)
+        shift = svcts_cache_depth(prch->prch_svcts);
+#endif
+      if (!shift && !prch->prch_ts_rebase) {
+        /* nothing to correct: keep the shared clock, and the packet as it is */
+        prch->prch_ts_delta = 0;
+        goto deliver;
+      }
+      prch->prch_ts_delta =
+        (prch->prch_ts_rebase ? MAX(0, pkt->pkt_dts - 10000) : 0) - shift;
+      /* zero means "no correction", so step off it when one is wanted */
+      if (prch->prch_ts_delta == 0)
+        prch->prch_ts_delta = -1;
+    }
     /*
      * time correction here
      */
@@ -960,7 +983,15 @@ profile_sharer_create(profile_sharer_t *prsh,
 {
   prch->prch_post_share = dst;
   tvh_mutex_lock(&prsh->prsh_queue_mutex);
-  prch->prch_ts_delta = LIST_EMPTY(&prsh->prsh_chains) ? 0 : PTS_UNSET;
+  /* A late joiner needs a zero of its own; a chain with a shared channel
+   * cache needs one computed from the cache depth.  Both are decided on the
+   * first packet, when that depth is known. */
+  prch->prch_ts_rebase = !LIST_EMPTY(&prsh->prsh_chains);
+  prch->prch_ts_delta = prch->prch_ts_rebase
+#if ENABLE_TIMESHIFT
+                        || prch->prch_svcts
+#endif
+                        ? PTS_UNSET : 0;
   LIST_INSERT_HEAD(&prsh->prsh_chains, prch, prch_sharer_link);
   prch->prch_sharer = prsh;
   if (!prsh->prsh_master)

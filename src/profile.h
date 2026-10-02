@@ -83,6 +83,7 @@ typedef struct profile_chain {
   void                     *prch_id;
 
   int64_t                   prch_ts_delta;
+  int                       prch_ts_rebase;  /* late joiner: own zero */
 
   int                       prch_flags;
   int                       prch_stop;
