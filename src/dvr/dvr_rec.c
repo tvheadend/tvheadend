@@ -1994,8 +1994,19 @@ dvr_thread(void *aux)
 
         goto fin;
 
-      } else if (de->de_last_error != sm->sm_code) {
-	 // Error during recording
+      } else if (de->de_last_error != sm->sm_code ||
+                 de->de_cache_retro || de->de_cache_full) {
+	 /*
+	  * Error during recording.
+	  *
+	  * A cache-owned recording ends on this STOP and on nothing else:
+	  * dvr_entry_start_recording() arms no stop timer for it.  The gate
+	  * can report a code SMT_SERVICE_STATUS has already set, and then
+	  * de_last_error matches and every branch here is skipped -- while
+	  * the gate, now GATE_DONE, drops whatever follows.  The thread would
+	  * wait for a message that cannot come, the entry stay DVR_RECORDING
+	  * and the subscription keep its tuner.
+	  */
 
 	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
 	tvherror(LS_DVR, "Recording stopped: \"%s\": %s",
