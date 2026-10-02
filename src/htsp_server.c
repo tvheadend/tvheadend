@@ -431,7 +431,7 @@ htsp_cache_playhead ( htsp_subscription_t *hs, time_t *when )
  */
 static void
 htsp_cache_record_position
-  ( htsp_connection_t *htsp, htsp_subscription_t *hs, dvr_entry_t *only )
+  ( htsp_connection_t *htsp, htsp_subscription_t *hs )
 {
   dvr_entry_t *de;
   channel_t *ch;
@@ -446,9 +446,12 @@ htsp_cache_record_position
   ch = hs->hs_s->ths_channel;
 
   LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
-    if (only && de != only)
+    if (de->de_sched_state != DVR_RECORDING)
       continue;
-    if (!only && de->de_sched_state != DVR_RECORDING)
+    /* Watching the channel says nothing about who owns what is being
+     * recorded on it: the position is this connection's to write only on an
+     * entry it may write */
+    if (dvr_entry_verify(de, htsp->htsp_granted_access, 0))
       continue;
     if (when < dvr_entry_get_start_time(de, 0) ||
         when > dvr_entry_get_stop_time(de))
@@ -488,7 +491,7 @@ htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 
 #if ENABLE_TIMESHIFT
   /* the viewer is leaving: keep its place in whatever it was recording */
-  htsp_cache_record_position(htsp, hs, NULL);
+  htsp_cache_record_position(htsp, hs);
 #endif
 
   hs->hs_s = NULL;
