@@ -20,8 +20,11 @@ pre-recording padding), or as far back as the cache reaches, instead of
 the moment it was requested. It works with every stream profile.
 
 The cache holds the channel's stream as received, in the *Storage path*
-(or in RAM with *RAM only*, bounded by *Maximum RAM size*), and is removed
-once nothing watches or records the channel any more.
+(or in RAM with *RAM only*, bounded by *Maximum RAM size*). It is removed
+once nothing watches or records the channel any more -- unless *Keep tuned
+channels* still holds it, or a *Timeshift cache only* DVR entry is warming
+it up, either of which keeps the channel tuned and its cache alive with no
+viewer and no recording.
 
 HTSP clients (Kodi) pausing, rewinding or skipping through live TV then use
 that same cache instead of writing a buffer of their own: one cache per
