@@ -111,8 +111,14 @@ static int
 tvh_codec_profile_base_open(TVHCodecProfile *self, AVDictionary **opts)
 {
     AV_DICT_SET_TVH_REQUIRE_META(LST_NONE, opts, 1);
-    // profile is set and is available
-    if (self->profile != FF_AV_PROFILE_UNKNOWN &&
+    // profile is set and is available.
+    // Profile 0 is AAC Main, but it is also the zeroed value of a profile
+    // loaded from a config without an explicit "profile" field (the class
+    // default FF_AV_PROFILE_UNKNOWN is only applied to brand-new nodes). The
+    // native aac encoder rejects Main ("Profile not supported!" -> EINVAL),
+    // so only emit a positive (explicitly chosen) profile and let the encoder
+    // pick its own default otherwise.
+    if (self->profile > 0 &&
         _is_profile_available(self->codec, self->profile)) {
         AV_DICT_SET_INT(LST_CODEC, opts, "profile", self->profile, 0);
     }

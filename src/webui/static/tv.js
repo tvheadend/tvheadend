@@ -59,27 +59,27 @@ tv.ui.VideoPlayer = Ext.extend(Ext.Panel, (function() {
             mimetype:  'video/MP2T'
         },
         webm: {
-            profile:   'webtv-vp8-vorbis-webm',
+            profile:   'webtv-vp8-software-vorbis-webm',
             playlist:  false,
             mimetype:  'video/webm; codecs="vp8.0, vorbis"'
         },
         hls: {
-            profile:   'webtv-h264-aac-mpegts',
+            profile:   'webtv-h264-software-aac-mpegts',
             playlist:  true,
             mimetype:  'application/x-mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
         },
         apple: {
-            profile:   'webtv-h264-aac-mpegts',
+            profile:   'webtv-h264-software-aac-mpegts',
             playlist:  true,
             mimetype:  'application/vnd.apple.mpegURL; codecs="avc1.42E01E, mp4a.40.2"'
         },
         ts: {
-            profile:   'webtv-h264-aac-mpegts',
+            profile:   'webtv-h264-software-aac-mpegts',
             playlist:  false,
             mimetype:  'video/MP2T; codecs="avc1.42E01E, mp4a.40.2"'
         },
         mkv: {
-            profile:   'webtv-h264-aac-matroska',
+            profile:   'webtv-h264-software-aac-mkv',
             playlist:  false,
             mimetype:  'video/x-matroska; codecs="avc1.42E01E, mp4a.40.2"'
         }
