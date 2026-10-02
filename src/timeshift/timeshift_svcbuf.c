@@ -884,6 +884,8 @@ svcbuf_unref ( svcbuf_t *sb )
   }
   tvh_cond_destroy(&sb->cond);
   tvh_mutex_destroy(&sb->lock);
+  if (sb->service)
+    service_unref(sb->service);
   free(sb);
 }
 
@@ -901,6 +903,10 @@ svcbuf_service_start ( service_t *t )
     return;
 
   sb = calloc(1, sizeof(*sb));
+  /* The cache outlives the service stopping -- a reader or a keepalive can
+   * still hold it -- and its threads dereference sb->service for the stream
+   * mutex and the name, so hold the service for as long as the cache lives */
+  service_ref(t);
   sb->service  = t;
   sb->refcount = 1;
   sb->id       = svcbuf_index++;
