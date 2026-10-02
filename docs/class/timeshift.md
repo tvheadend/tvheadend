@@ -32,6 +32,11 @@ channel, however many clients and recordings share it. A client paused
 for longer than the cache holds goes on, when it resumes, from a little
 after the oldest data still there.
 
+A client can rewind only as far back as the moment it tuned the channel,
+even when the cache holds more because another viewer tuned it earlier or
+*Keep tuned channels* held it. A recording is not limited that way: it
+still starts at the programme's start, as far back as the cache reaches.
+
 ---
 
 ## Buttons
