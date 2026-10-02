@@ -1782,7 +1782,8 @@ dvr_thread(void *aux)
     dvr_entry_get_epg_running(de) <= 0;
   real_start = dvr_entry_get_start_time(de, 0);
   tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
-           idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
+           idnode_uuid_as_str(&de->de_id, ubuf),
+           lang_str_get(de->de_title, NULL) ?: "");
   if (!running_disabled && de->de_bcast) {
     now = gclk();
     switch (de->de_bcast->running) {
