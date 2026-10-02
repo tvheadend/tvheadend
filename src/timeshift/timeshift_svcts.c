@@ -1742,22 +1742,6 @@ svcts_destroy ( streaming_target_t *pad )
   free(st);
 }
 
-/* Depth (90 kHz) the shared cache already holds, 0 if there is none.
- * The client's time base is shifted forward by this much, so cache older
- * than the subscription still lands on a positive timestamp. */
-int64_t
-svcts_cache_depth ( streaming_target_t *pad )
-{
-  svcts_t *st = (svcts_t *)pad;
-  int64_t oldest, newest, depth = 0;
-
-  tvh_mutex_lock(&st->lock);
-  if (st->sb && svcbuf_span(st->sb, &oldest, &newest) && newest > oldest)
-    depth = ts_rescale_inv(newest - oldest, 1000000);
-  tvh_mutex_unlock(&st->lock);
-  return depth;
-}
-
 void
 svcts_attach ( streaming_target_t *pad, service_t *t )
 {
