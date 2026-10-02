@@ -348,7 +348,19 @@ svcts_queue_clear ( svcts_t *st )
   }
 }
 
-/* Oldest time (us, client base) the client may go back to, 0 if none */
+/* Oldest time (us, client base) the client may go back to, 0 if none.
+ *
+ * The cache can reach further back than this subscription has existed, when
+ * another viewer tuned the channel first or the keepalive held it.  That part
+ * of it sits before the client's own zero, and a client's clock has no way to
+ * express it: never offer it.  Reported as the oldest seekable point it was
+ * answered with negative timestamps, which a player cannot order -- a frozen
+ * picture with sound, until playback reached the moment the viewer tuned in.
+ *
+ * Recording from the cache is not affected: the DVR replays it on a time base
+ * of its own, which is what lets a recording still start at the programme's
+ * start.
+ */
 static int64_t
 svcts_oldest ( svcts_t *st )
 {
@@ -359,6 +371,8 @@ svcts_oldest ( svcts_t *st )
   t = st->live_time - (st->live_mono - oldest) + SVCTS_PREROLL;
   if (st->max_time && t < st->live_time - st->max_time)
     t = st->live_time - st->max_time;
+  if (t < 0)
+    t = 0;
   return MIN(t, st->live_time);
 }
 
