@@ -877,7 +877,19 @@ dvr_entry_set_timer(dvr_entry_t *de)
   dvr_entry_trace_time2(de, "start", start, "stop", stop, "set timer");
 
 #if ENABLE_TIMESHIFT
+  /*
+   * de_cache_retro stays set for the whole replay and the entry's stop is in
+   * the past by definition, so without a state check every dvr_entry_set_timer()
+   * reaching here while the replay runs -- a web UI edit, an EPG update --
+   * starts the recording a second time.  dvr_rec_subscribe() asserts de_s is
+   * NULL; a release build gets a second subscription and a second DVR thread
+   * for one entry, which is what a completed recording replaying its cache
+   * again looks like.
+   */
   if (de->de_cache_retro &&
+      de->de_sched_state != DVR_RECORDING &&
+      de->de_sched_state != DVR_COMPLETED &&
+      de->de_sched_state != DVR_MISSED_TIME &&
       now >= stop &&
       !de->de_dont_reschedule &&
       de->de_channel &&
