@@ -435,7 +435,7 @@ htsp_cache_record_position
 {
   dvr_entry_t *de;
   channel_t *ch;
-  time_t when, start, file_start, file_stop;
+  time_t when, file_start, file_stop;
   int filecount;
   uint32_t pos;
 
@@ -450,18 +450,22 @@ htsp_cache_record_position
       continue;
     if (!only && de->de_sched_state != DVR_RECORDING)
       continue;
-    start = dvr_entry_get_start_time(de, 0);
-    if (when < start || when > dvr_entry_get_stop_time(de))
+    if (when < dvr_entry_get_start_time(de, 0) ||
+        when > dvr_entry_get_stop_time(de))
       continue;
     /*
      * The position counts from the start of the file, and a backfilled
-     * recording begins where the cache reached, which is the scheduled
-     * start only when the cache went back that far.
+     * recording begins where the cache reached, which is the scheduled start
+     * only when the cache went back that far.  So measure against the file and
+     * write nothing without one: falling back to the scheduled start -- which
+     * can include pre-recording padding the file will never hold -- overshoots
+     * by however much the cache could not supply, and the client then resumes
+     * past the end of what was recorded.
      */
-    if (!dvr_get_files_details(de, &file_start, &file_stop, &filecount) &&
-        filecount == 1 && file_start > 0 && file_start <= when)
-      start = file_start;
-    pos = when - start;
+    if (dvr_get_files_details(de, &file_start, &file_stop, &filecount) ||
+        filecount != 1 || file_start <= 0 || file_start > when)
+      continue;
+    pos = when - file_start;
     if (de->de_playposition == pos)
       continue;
     de->de_playposition = pos;
@@ -2416,20 +2420,13 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
             "%s: addDvrEntry: DVR entry created, state=%d",
             htsp->htsp_logname, (int)de->de_sched_state);
 
-#if ENABLE_TIMESHIFT
   /*
-   * Recording what is being watched from the cache: start the entry with the
-   * viewer's place in it, so a client resumes there instead of at the start.
+   * Recording what is being watched from the cache records the viewer's place
+   * in it, so a client resumes there instead of at the programme's start.  It
+   * is written when the viewer leaves, in htsp_subscription_destroy(): the
+   * position is measured against the recording's file, and there is none yet
+   * at the moment the entry is created here.
    */
-  if (de != NULL) {
-    htsp_subscription_t *hs;
-    LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
-      if (hs->hs_s && hs->hs_s->ths_channel == de->de_channel) {
-        htsp_cache_record_position(htsp, hs, de);
-        break;
-      }
-  }
-#endif
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
