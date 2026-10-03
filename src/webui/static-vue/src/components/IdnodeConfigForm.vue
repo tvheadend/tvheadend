@@ -82,7 +82,7 @@ const props = withDefaults(
     /* Field ids whose change forces `globalThis.location.reload()`
      * after a successful save — reserved for fields whose effect
      * cannot be applied in-place (e.g. `language_ui`, which re-bakes
-     * every translated string from /locale.js). Default empty:
+     * every translated string from /locale-vue.js). Default empty:
      * page-specific configs (Image Cache, SAT>IP) don't need it. */
     reloadFields?: readonly string[]
     /* Field ids whose change triggers an `access/whoami` refetch
@@ -742,7 +742,7 @@ async function save() {
 
     if (needsReload) {
       /* Forced reload — reserved for changes the SPA can't apply
-       * in place (language_ui re-bakes /locale.js strings). The
+       * in place (language_ui re-bakes /locale-vue.js strings). The
        * reconnect's first accessUpdate carries fresh values for
        * the affected user-pref fields. */
       globalThis.location.reload()

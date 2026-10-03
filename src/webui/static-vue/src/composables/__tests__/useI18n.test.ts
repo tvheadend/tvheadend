@@ -182,12 +182,12 @@ describe('useI18n() reactive composable', () => {
 })
 
 describe('loadLocale()', () => {
-  it('appends a script tag with the locale.js source', async () => {
+  it('appends a script tag with the locale-vue.js source', async () => {
     const { loadLocale } = await import('../useI18n')
     const promise = loadLocale()
     expect(capturedScripts).toHaveLength(1)
     const script = capturedScripts[0]
-    expect(script.src).toContain('/locale.js?_=')
+    expect(script.src).toContain('/redir/locale-vue.js?_=')
     expect(script.id).toBe('tvh-locale-script')
     /* Resolve the promise so the test doesn't leak. */
     script.onload?.(new Event('load'))
@@ -212,7 +212,7 @@ describe('loadLocale()', () => {
     const secondScript = capturedScripts[1]
     /* Each call creates a fresh element so the browser
      * refetches against the user's current per-language
-     * /locale.js. The cache-bust query string differs. */
+     * /locale-vue.js. The cache-bust query string differs. */
     expect(secondScript).not.toBe(firstScript)
     expect(secondScript.src).not.toBe(firstSrc)
     secondScript.onload?.(new Event('load'))
@@ -225,6 +225,6 @@ describe('loadLocale()', () => {
     const script = capturedScripts[0]
     expect(script).toBeDefined()
     script.onerror?.(new Event('error'))
-    await expect(promise).rejects.toThrow(/locale\.js/)
+    await expect(promise).rejects.toThrow(/locale-vue\.js/)
   })
 })

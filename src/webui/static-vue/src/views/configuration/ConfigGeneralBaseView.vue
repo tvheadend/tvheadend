@@ -17,7 +17,7 @@
  *     prefs: a save that changes one re-pulls `api/access/whoami`
  *     and the store's reactive consumers apply the change live.
  *     `RELOAD_FIELDS` keeps the full-reload path for the one field
- *     the SPA can't apply in place (`language_ui` — /locale.js is
+ *     the SPA can't apply in place (`language_ui` — /locale-vue.js is
  *     loaded once at bootstrap). ExtJS still hard-reloads for all
  *     of them — config.js:35-61.
  *   - Start wizard button — admin-only toolbar action mirroring
@@ -56,7 +56,7 @@ async function startWizard() {
 }
 
 /* Fields whose change genuinely needs a full page reload: a UI
- * language switch re-bakes every translated string from /locale.js,
+ * language switch re-bakes every translated string from /locale-vue.js,
  * which the SPA loads once at bootstrap. */
 const RELOAD_FIELDS: readonly string[] = ['language_ui']
 

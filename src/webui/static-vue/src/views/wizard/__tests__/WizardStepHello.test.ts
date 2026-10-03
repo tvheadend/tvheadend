@@ -8,7 +8,7 @@
  *      - On loaded, captures the initial ui_lang.
  *      - On save, the beforeNext hook compares submitted
  *        ui_lang to that baseline; if different, refetches
- *        /locale.js + invalidates the wizard metadata cache.
+ *        /locale-vue.js + invalidates the wizard metadata cache.
  *        If unchanged, it does nothing.
  *      - Soft-refresh: never calls window.location.reload —
  *        relies on loadLocale to bump the reactive locale
@@ -135,7 +135,7 @@ describe('WizardStepHello — Save & Next (beforeNext) orchestration', () => {
     expect(loadLocaleMock).not.toHaveBeenCalled()
   })
 
-  it('refetches /locale.js when ui_lang changed', async () => {
+  it('refetches /locale-vue.js when ui_lang changed', async () => {
     mountHello()
     emitLoaded.value?.([{ id: 'ui_lang', value: 'eng' }])
     await flushPromises()

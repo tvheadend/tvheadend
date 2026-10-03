@@ -113,13 +113,11 @@ async function bootstrap() {
    * Three independent bootstrap resources, fetched in parallel so the
    * blank-screen window pays one round trip instead of three:
    *
-   *   - i18n locale dictionary: fetches `redir/locale.js` (the same
-   *     endpoint that powers the ExtJS UI's `_()` lookups), populating
-   *     `globalThis.tvh_locale` + `tvh_locale_lang`. The wizard slice
-   *     consumes this via `useI18n.t()`; the rest of the Vue UI keeps
-   *     hardcoded English for now (ADR 0007 retrofit pending). Awaited
-   *     so the first paint already has translations — no flash of
-   *     untranslated content. Failure is non-fatal (script tag onerror
+   *   - i18n locale dictionary: fetches `redir/locale-vue.js` (the
+   *     Vue UI's own catalog, built from `intl/vue`), populating
+   *     `globalThis.tvh_locale` + `tvh_locale_lang` for `useI18n.t()`.
+   *     Awaited so the first paint already has translations — no flash
+   *     of untranslated content. Failure is non-fatal (script tag onerror
    *     just rejects; `t()` falls back to the English literal silently).
    *
    *   - shared `marked` library (same script the ExtJS UI ships). The

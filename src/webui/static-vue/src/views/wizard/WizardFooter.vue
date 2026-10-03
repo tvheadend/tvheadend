@@ -131,7 +131,7 @@ async function handleCancel(): Promise<void> {
    * doesn't have a cancel button (the wizard runs in a closable
    * dialog whose close-X just hides the modal without server
    * cleanup), so this prompt is novel. Falls back to English
-   * until xgettext is taught to scan Vue files. */
+   * until it is translated in intl/vue. */
   const ok = await ask(
     t(
       'Cancelling will exit the setup wizard, but any settings you have already saved on previous steps will remain. Continue?',
@@ -180,8 +180,8 @@ async function handleCancel(): Promise<void> {
            long-running scan step (status) so the user isn't
            stuck waiting through the polling interval; the
            status step flips the label to "Next" at 100 % so the
-           button reads as a continuation. Both fall back to
-           English until xgettext is taught to scan Vue files. -->
+           button reads as a continuation. Both go through t(skipLabel),
+           which make intl cannot extract yet, so they stay English. -->
       <Button
         v-if="showSkip"
         :label="t(skipLabel)"

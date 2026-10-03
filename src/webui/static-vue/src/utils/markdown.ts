@@ -8,9 +8,7 @@
  * Why share ExtJS's `marked.js` instead of installing the npm
  * package: identical rendering to the ExtJS wizard, zero Vue
  * bundle impact, and one fewer place to update if the library
- * ever needs a security bump. Mirrors the `/locale.js` pattern
- * established by `useI18n.ts` — same "share with ExtJS where
- * possible" principle.
+ * ever needs a security bump.
  *
  * The script defines `globalThis.marked` as a function
  * `(src: string, opts?: object) => string`. We don't reach into

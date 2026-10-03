@@ -9,10 +9,10 @@
  * delegates the actual view body to the active child route via
  * <router-view>.
  *
- * Tab labels are the verbatim strings used by the existing ExtJS UI
- * (see src/webui/static/app/dvr.js — `titleP` of each sub-tab) so
- * translation reuse is automatic when ADR 0007 (vue-i18n via the
- * existing /locale.js infrastructure) ships.
+ * Tab labels follow the ExtJS sub-tabs (`titleP` in
+ * src/webui/static/app/dvr.js), some of them shortened. The ones that
+ * match an ExtJS string verbatim (Failed, Autorecs, Timers) got their
+ * Classic UI translations when intl/vue was seeded from intl/js.
  *
  * **Per-tab uilevel gate.** ExtJS hides the Removed Recordings sub-
  * tab from non-expert users via `uilevel: 'expert'` on its grid
