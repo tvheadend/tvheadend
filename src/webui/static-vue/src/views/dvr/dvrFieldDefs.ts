@@ -160,11 +160,11 @@ const fmtSize = (v: unknown) => {
 /* Weekdays renderer for autorec / timerec. The C-side `weekdays`
  * field is PT_U32 with `islist: 1`, so it arrives as an array of
  * day numbers (1=Mon … 7=Sun, ISO 8601). All seven → "Every day";
- * empty/missing → empty string. English-only for now; vue-i18n via
- * the existing /locale.js infrastructure (ADR 0007) will swap the
- * day names for localised ones when wired. ExtJS uses
+ * empty/missing → empty string. The day names go through t(), so
+ * they come from the Vue UI catalog at /redir/locale-vue.js like
+ * every other string. ExtJS uses
  * `tvheadend.weekdaysRenderer(st)` against the enum store; we
- * hard-code the names here and revisit when i18n lands. */
+ * hard-code the English names here as the msgids. */
 const fmtWeekdays = (v: unknown) => {
   if (!Array.isArray(v) || v.length === 0) return ''
   if (v.length === 7) return t('Every day')

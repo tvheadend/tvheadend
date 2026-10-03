@@ -64,7 +64,7 @@ interface Props {
   /* Optional async hook that fires AFTER a successful save and
    * BEFORE the navigation to the next step. The hello step's
    * wrapper uses this to detect a `ui_lang` change and refetch
-   * `/locale.js` (soft refresh) before letting navigation
+   * `/locale-vue.js` (soft refresh) before letting navigation
    * proceed. Receives the values that were just POSTed (still
    * in `currentValues` at this point — `saved` emits before
    * the post-save load refresh).

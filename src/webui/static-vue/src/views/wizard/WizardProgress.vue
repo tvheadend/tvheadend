@@ -23,10 +23,10 @@
  * pending live-propagation of cursor changes server-side.
  *
  * Step labels match the C-side `ic_caption` strings (`wizard.c`
- * — `N_("Welcome")`, etc.) so once `xgettext` is extended to
- * scan `static-vue/` (pending), these strings get extracted
- * automatically and the Transifex round-trip provides
- * translations. Until then they fall back to English on every
+ * — `N_("Welcome")`, etc.). They reach `t()` through a variable,
+ * so `make intl` does not extract them into `intl/vue`. Until a
+ * follow-up marks them for extraction and the Transifex round-trip
+ * provides translations, they fall back to English on every
  * locale.
  */
 import { computed } from 'vue'
@@ -61,11 +61,11 @@ const activeStep = computed<string>(() => routeNameToStep(route.name))
 /*
  * Step labels mirror the C-side `ic_caption` strings declared in
  * `src/wizard.c`. These literals are NOVEL to the Vue UI's
- * client-side i18n surface today — the JS `/locale.js`
- * dictionary is generated from `static/app/*.js` only and
- * doesn't include the C-side `N_(...)` strings. They fall
- * back to English on every locale until xgettext is taught to
- * scan `static-vue/` files (pending). Each is marked
+ * client-side i18n surface — the Classic UI catalog never had
+ * them, so seeding `intl/vue` brought no translations. They
+ * reach `t()` through `STEP_LABELS`, which `make intl` cannot
+ * extract, so they fall back to English on every locale until a
+ * follow-up marks them for extraction. Each is marked
  * `/* i18n: new string *\/` so a future audit finds them. */
 const STEP_LABELS: Record<WizardStepName, string> = {
   /* i18n: new string */ hello: 'Welcome',

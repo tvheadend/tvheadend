@@ -82,9 +82,11 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
   `useStaleDataRecovery` composable refetches after a long disconnect.
 - **i18n.** Server-defined strings (column captions, field labels,
   enum options) localise automatically via the server metadata.
-  UI-chrome strings use a `t(…)` composable backed by the same
-  `/locale.js` catalog the ExtJS UI uses, so shared wording is
-  translated once.
+  UI-chrome strings use a `t(…)` composable backed by the Vue UI's
+  own catalog: `make intl` extracts the `t('…')` calls into
+  `intl/vue/tvheadend.vue.pot`, translators work on
+  `intl/vue/tvheadend.vue.<lang>.po`, and the server serves the
+  result at `/redir/locale-vue.js`.
 - **Themes.** Four themes (Blue / Grey / Dark / Access) are
   server-driven via the access object and applied through CSS custom
   properties. Blue and Grey are light; Dark is the low-glare night
@@ -133,8 +135,9 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
   apply to Teleported or slotted content — style those from a
   non-scoped block or via tokens.
 - **i18n** — wrap every user-facing string in `t('…')` (from
-  `composables/useI18n`). Reuse the wording the ExtJS UI already uses
-  where it matches, so the string is already translated.
+  `composables/useI18n`) and pass the English text as a literal, so
+  `make intl` can extract it. Reuse the wording the ExtJS UI already
+  uses where it matches, so translators can reuse its translation.
 - **Permissions** — gate admin-only UI on `access.has('admin')` (or
   `'dvr'`) and set `meta.permission` on routes; the router guard
   enforces it. Anonymous / limited users must not trigger admin-only

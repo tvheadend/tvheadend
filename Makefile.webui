@@ -192,6 +192,7 @@ CSS_TV_SRC     = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
 #
 PO-FILES = $(foreach f,$(LANGUAGES),intl/js/tvheadend.js.$(f).po)
 JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh.$(f).js.gz)
+VUE-JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh-vue.$(f).js.gz)
 
 # The Vue UI has its own template, extracted from its sources
 VUE_I18N_SRC = $(shell find $(WEBDIR)/static-vue/src \( -name '*.ts' -o -name '*.vue' \) \
@@ -295,7 +296,8 @@ $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz: $(CSS_TV_SRC)
 compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz $(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
-             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES)
+             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES) \
+             $(VUE-JSI-FILES)
 	@echo "WEBUI std finished"
 
 .PHONY: compile-debug
@@ -327,6 +329,9 @@ intl/js/tvheadend.js.pot:
 #	$(call merge-po,$@,$<)
 
 src/webui/static/intl/tvh.%.js.gz: intl/js/tvheadend.js.%.po
+	$(call go-po,$@,$<)
+
+src/webui/static/intl/tvh-vue.%.js.gz: intl/vue/tvheadend.vue.%.po
 	$(call go-po,$@,$<)
 
 .PHONY:

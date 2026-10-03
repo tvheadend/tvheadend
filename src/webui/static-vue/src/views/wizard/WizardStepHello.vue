@@ -10,7 +10,7 @@
  * 1. LIVE PREVIEW (on dropdown change, before Save & Next).
  *    When the user picks a different `ui_lang` value, we save
  *    the form's current values in place (no navigation), then
- *    refetch /locale.js + the step's idnode metadata so the
+ *    refetch /locale-vue.js + the step's idnode metadata so the
  *    hello-page chrome (form field labels, group headers,
  *    description Markdown, footer buttons) flips to the new
  *    language without a page reload. The user sees the wizard
@@ -31,7 +31,7 @@
  *
  * Soft refresh, not page reload: ADR 0015 §4 — locked. Both
  * paths keep the wizard chrome mounted and update locale via
- * a fresh `/locale.js` `<script>` tag.
+ * a fresh `/locale-vue.js` `<script>` tag.
  */
 import { onBeforeUnmount, ref, watch } from 'vue'
 import WizardStepGeneric from './WizardStepGeneric.vue'
@@ -103,7 +103,7 @@ async function runLivePreview(newLang: string): Promise<void> {
     try {
       await loadLocale()
     } catch (e) {
-      console.warn('[wizard] /locale.js refetch failed:', e)
+      console.warn('[wizard] /locale-vue.js refetch failed:', e)
     }
     /* Refresh the form's idnode metadata so its labels +
      * group headers + the description Markdown all flip to
@@ -136,7 +136,7 @@ async function handleLangChange(savedValues: Record<string, unknown>): Promise<v
   try {
     await loadLocale()
   } catch (e) {
-    console.warn('[wizard] /locale.js refetch failed:', e)
+    console.warn('[wizard] /locale-vue.js refetch failed:', e)
   }
 }
 </script>
