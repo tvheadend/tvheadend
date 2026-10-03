@@ -16,7 +16,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #include "htsmsg.h"
 #include "htsmsg_json.h"
@@ -131,14 +131,16 @@ comet_mailbox_create(const char *lang)
   uint8_t sum[20];
   char id[20 * 2 + 1];
   int i;
-  SHA_CTX sha1;
+  EVP_MD_CTX *sha1;
 
   gettimeofday(&tv, NULL);
 
-  SHA1_Init(&sha1);
-  SHA1_Update(&sha1, (void *)&tv, sizeof(tv));
-  SHA1_Update(&sha1, (void *)&mailbox_tally, sizeof(uint32_t));
-  SHA1_Final(sum, &sha1);
+  sha1 = EVP_MD_CTX_new();
+  EVP_DigestInit_ex(sha1, EVP_sha1(), NULL);
+  EVP_DigestUpdate(sha1, (void *)&tv, sizeof(tv));
+  EVP_DigestUpdate(sha1, (void *)&mailbox_tally, sizeof(uint32_t));
+  EVP_DigestFinal_ex(sha1, sum, NULL);
+  EVP_MD_CTX_free(sha1);
 
   for(i = 0; i < sizeof(sum); i++) {
     id[i * 2 + 0] = "0123456789abcdef"[sum[i] >> 4];
