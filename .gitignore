@@ -50,6 +50,7 @@ intl/tvheadend.en_CZ.po
 intl/*.new
 intl/js/tvheadend.js.en_CZ.po
 intl/js/*.new
+intl/vue/*.new
 src/webui/static/intl
 
 #############

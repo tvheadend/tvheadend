@@ -18,3 +18,9 @@ file_filter = intl/js/tvheadend.js.<lang>.po
 source_file = intl/js/tvheadend.js.pot
 source_lang = en
 type = PO
+
+[tvheadend.vue]
+file_filter = intl/vue/tvheadend.vue.<lang>.po
+source_file = intl/vue/tvheadend.vue.pot
+source_lang = en
+type = PO

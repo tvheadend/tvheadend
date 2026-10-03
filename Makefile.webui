@@ -38,6 +38,7 @@ GZIPCMD += -n
 XGETTEXT2 ?= $(XGETTEXT) --language=JavaScript --from-code=utf-8  --add-comments=/ -k_ -kN_ -s
 MSGMERGE ?= msgmerge
 POJS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/pojs.py
+VUE_XGETTEXT_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/vue_xgettext.py
 
 ifeq ($(WEBUI),std)
 DEBUG =
@@ -192,6 +193,12 @@ CSS_TV_SRC     = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
 PO-FILES = $(foreach f,$(LANGUAGES),intl/js/tvheadend.js.$(f).po)
 JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh.$(f).js.gz)
 
+# The Vue UI has its own template, extracted from its sources
+VUE_I18N_SRC = $(shell find $(WEBDIR)/static-vue/src \( -name '*.ts' -o -name '*.vue' \) \
+                 ! -name '*.test.ts' ! -path '*/__tests__/*' ! -path '*/__helpers__/*' \
+                 ! -path '*/views/_dev/*' | LC_ALL=C sort)
+VUE_I18N_TMP = $(BUILDDIR)/intl-vue
+
 endif # WEBUI defined
 
 ifndef V
@@ -301,6 +308,12 @@ intl:
 	@printf "Building intl/js/tvheadend.js.pot\n"
 	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(filter-out $(WEBDIR)/$(MARKED),$(JAVASCRIPT_SRC))
 	@sed -e 's/^"Language: /"Language: en/' < intl/js/tvheadend.js.pot.new > intl/js/tvheadend.js.pot
+	@printf "Building intl/vue/tvheadend.vue.pot\n"
+	@rm -rf $(VUE_I18N_TMP)
+	@$(VUE_XGETTEXT_PY) --out=$(VUE_I18N_TMP) $(VUE_I18N_SRC)
+	@$(XGETTEXT2) -D $(VUE_I18N_TMP) -o intl/vue/tvheadend.vue.pot.new $(VUE_I18N_SRC)
+	@sed -e 's/^"Language: /"Language: en/' < intl/vue/tvheadend.vue.pot.new > intl/vue/tvheadend.vue.pot
+	@rm -rf $(VUE_I18N_TMP)
 
 intl/js/tvheadend.js.pot:
 
