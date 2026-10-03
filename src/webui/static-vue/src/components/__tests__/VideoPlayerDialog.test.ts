@@ -134,6 +134,8 @@ function mountDialog() {
   return mount(VideoPlayerDialog, {
     global: {
       stubs: {
+        /* Tested on its own, see PlayerRecordButton.test.ts. */
+        PlayerRecordButton: true,
         Dialog: DIALOG_PASSTHROUGH_STUB,
         Select: SelectStub,
       },

@@ -33,6 +33,7 @@ import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { channelStreamUrl } from '@/utils/playUrl'
 import { apiCall } from '@/api/client'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
+import PlayerRecordButton from '@/components/PlayerRecordButton.vue'
 import type { GridResponse, FilterDef } from '@/types/grid'
 
 const { t } = useI18n()
@@ -336,6 +337,13 @@ function onPlaying(): void {
           </template>
         </Select>
       </template>
+      <!-- Record split button (DVR users only), at the end of the row.
+           Not the header title for the name: from the EPG that is the
+           programme's title. -->
+      <PlayerRecordButton
+        :channel-uuid="selectedChannel"
+        :channel-name="channels.find((c) => c.uuid === selectedChannel)?.name ?? ''"
+      />
     </div>
     <div class="video-player-dialog__body">
       <!-- The <video> stays mounted across errors and switches so
@@ -376,6 +384,7 @@ function onPlaying(): void {
 <style scoped>
 .video-player-dialog__toolbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--tvh-space-2);
   padding-bottom: var(--tvh-space-2);
