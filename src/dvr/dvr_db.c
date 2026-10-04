@@ -3327,7 +3327,7 @@ dvr_cache_only_subscribe(dvr_entry_t *de)
   prch->prch_st = sink;
 
   sub = subscription_create_from_channel
-    (prch, NULL, SUBSCRIPTION_PRIO_KEEP,
+    (prch, NULL, SUBSCRIPTION_PRIO_CACHE_WARMUP,
      "timeshift cache warmup",
      SUBSCRIPTION_ONESHOT | SUBSCRIPTION_CONTACCESS,
      NULL, de->de_owner ?: "", "timeshift-cache-warmup", &error);
