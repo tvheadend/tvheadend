@@ -3344,6 +3344,17 @@ dvr_cache_only_subscribe(dvr_entry_t *de)
   }
 
   /*
+   * ONESHOT gives the warmup a synchronous initial attachment, which is
+   * needed here so an existing service/cache can be adopted immediately.
+   *
+   * Once that initial attachment succeeded, make the subscription
+   * reschedulable. A low-priority warmup may legitimately lose its tuner
+   * to live TV or a recording; keeping the subscription alive lets the
+   * normal subscription scheduler attach it again when capacity returns.
+   */
+  sub->ths_flags &= ~SUBSCRIPTION_ONESHOT;
+
+  /*
    * A previously-created automatic post-viewer keepalive may already
    * hold exactly this service and its existing svcbuf. The scheduled
    * warmup now owns that lifetime, so remove those helpers while this
@@ -3366,13 +3377,9 @@ dvr_cache_only_subscribe(dvr_entry_t *de)
   }
 
   /*
-   * Deliberately do not store 'sub' in de_s. An ONESHOT subscription
-   * may be removed and destroyed by the scheduler when its tuner is
-   * needed by a higher-priority request. Keeping that pointer in the
-   * DVR entry would then leave a dangling de_s.
-   *
-   * The profile-chain itself remains owned by this cache-only DVR entry
-   * and uniquely identifies a still-existing subscription.
+   * Deliberately do not store 'sub' in de_s. The profile-chain remains
+   * owned by this cache-only DVR entry and uniquely identifies the
+   * warmup subscription across scheduler detach/reattach cycles.
    */
   de->de_s = NULL;
   de->de_chain = prch;
@@ -3389,10 +3396,9 @@ dvr_cache_only_unsubscribe(dvr_entry_t *de)
   th_subscription_t *s, *sub = NULL;
 
   /*
-   * The ONESHOT subscription may already have been destroyed after a
-   * higher-priority request took its tuner. Do not retain a raw pointer
-   * to it in the DVR entry; locate a surviving subscription by the
-   * profile-chain that this cache-only entry owns.
+   * Locate the warmup subscription by the profile-chain owned by this
+   * cache-only entry. The subscription may currently be detached from a
+   * service while waiting for the scheduler to make an input available.
    */
   if (prch) {
     LIST_FOREACH(s, &subscriptions, ths_global_link) {
