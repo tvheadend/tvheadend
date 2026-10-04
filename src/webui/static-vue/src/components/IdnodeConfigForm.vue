@@ -10,8 +10,8 @@
  *
  * Owns:
  *   - load (`apiCall(loadEndpoint, { meta: 1 })`)
- *   - dirty detection (shallow primitive comparison vs `baseline`)
- *   - save (`apiCall(saveEndpoint, { node: JSON.stringify(currentValues) })`)
+ *   - dirty detection (per-field comparison vs `baseline`)
+ *   - save (`apiCall(saveEndpoint, { node: JSON.stringify(edited fields) })`)
  *   - undo (reset currentValues to baseline)
  *   - live refresh when Comet reports a change made elsewhere
  *   - error / loading state
@@ -72,13 +72,13 @@ const props = withDefaults(
      * the other. Required when `uuid` is not set. */
     loadEndpoint?: string
     /* Server endpoint for save (singleton-config mode). The form
-     * POSTs `{ node: JSON.stringify(currentValues) }`. Required
+     * POSTs `{ node: JSON.stringify(<edited fields>) }`. Required
      * when `loadEndpoint` is set. */
     saveEndpoint?: string
     /* When set, switches the form into multi-instance mode: load
      * via `idnode/load?uuid=<uuid>&meta=1`, save via
-     * `idnode/save` with `{ node: JSON.stringify({ uuid, ...
-     * currentValues }) }`. Watching this prop drives reload-on-
+     * `idnode/save` with `{ node: JSON.stringify({ uuid,
+     * ...<edited fields> }) }`. Watching this prop drives reload-on-
      * selection-change in master-detail layouts. Mutually
      * exclusive with `loadEndpoint` / `saveEndpoint`. */
     uuid?: string | null
@@ -166,7 +166,10 @@ const props = withDefaults(
      * (one click = start a mapping job, regardless of whether
      * the form's options changed since last save). Mirrors
      * Classic's `idnode_editor_win({ alwaysDirty: true })` flag
-     * at `static/app/idnode.js:1155`.
+     * at `static/app/idnode.js:1155`. Such a form also posts
+     * every field, not only the edited ones, as each click is a
+     * fresh run (the Service Mapper keeps no services selection
+     * between runs).
      *
      * Default false — every existing edit-form / singleton-config
      * consumer (Base / Image cache / SAT>IP / Timeshift /
@@ -206,7 +209,7 @@ const props = withDefaults(
     mandatoryFields?: ReadonlyArray<string>
     /* Field IDs to suppress from the auto-rendered form body.
      * The field's value is still loaded into `currentValues` and
-     * still saved on the next POST — only the rendered input is
+     * still saved once it changes — only the rendered input is
      * hidden. Use when a wrapper view renders a custom editor for
      * the field above/below the form (Config → Debugging's
      * subsystem pickers are the canonical consumer: the multiline
@@ -567,26 +570,13 @@ const displayedGroups = computed(() => {
 
 /* ---- Dirty detection ---- */
 
-/* Shallow comparison: works for the primitives this form deals
- * with (str / int / u32 / u16 / s64 / dbl / bool). PT_LORDER
- * list-shaped fields currently route to the placeholder renderer
- * — the user can't change them, so currentValues[k] stays
- * referentially equal to baseline[k] by definition. */
-const isDirty = computed(() => {
-  const b = baseline.value
-  const c = currentValues.value
-  for (const k of Object.keys(b)) {
-    if (b[k] !== c[k]) return true
-  }
-  return false
-})
-
 /* Per-field dirty set — drives the small `•` marker on each
  * field's label so the user can spot which fields they've
- * touched without scanning every value. JSON-stringify lets
- * the comparison work for any value shape (matches
- * IdnodeEditor.vue's same-purpose computed). The overall
- * `isDirty` above stays for the Save / Undo gate. */
+ * touched without scanning every value, the Save / Undo gate,
+ * and what Save posts. JSON-stringify lets the comparison work
+ * for any value shape, lists included (matches IdnodeEditor.vue's
+ * same-purpose computed), so a list ticked back to its saved
+ * items is not dirty. */
 const dirtyIds = computed(() => {
   const ids = new Set<string>()
   const c = currentValues.value
@@ -596,6 +586,8 @@ const dirtyIds = computed(() => {
   }
   return ids
 })
+
+const isDirty = computed(() => dirtyIds.value.size > 0)
 
 function isFieldDirty(id: string): boolean {
   return dirtyIds.value.has(id)
@@ -721,28 +713,23 @@ async function save() {
   try {
     /* Snapshot the reload / access-refetch decisions against the
      * PRE-save baseline before the api call mutates anything we're
-     * tracking. */
-    const needsReload = props.reloadFields.some(
-      (k) => currentValues.value[k] !== baseline.value[k]
-    )
-    const needsAccessRefetch = props.accessRefetchFields.some(
-      (k) => currentValues.value[k] !== baseline.value[k]
-    )
+     * tracking. Same per-field comparison as Save and Undo. */
+    const needsReload = props.reloadFields.some((k) => dirtyIds.value.has(k))
+    const needsAccessRefetch = props.accessRefetchFields.some((k) => dirtyIds.value.has(k))
 
-    /* uuid mode: idnode/save with the uuid baked into the node
+    /* Post only the edited fields, as inline grid edits do: the
+     * server leaves fields missing from the node as they are
+     * (prop_write_values), so a value another session saved after
+     * the last refresh is not written back. Trigger forms
+     * (`alwaysDirty`) post every field.
+     *
+     * uuid mode: idnode/save with the uuid baked into the node
      * payload — server's `idnode/save` handler reads `uuid` out of
      * the parsed node and dispatches to the matching idnode. */
+    const values = props.alwaysDirty ? currentValues.value : editedValues()
     const [endpoint, body] = props.uuid
-      ? [
-          'idnode/save',
-          {
-            node: JSON.stringify({ uuid: props.uuid, ...currentValues.value }),
-          },
-        ]
-      : [
-          props.saveEndpoint as string,
-          { node: JSON.stringify(currentValues.value) },
-        ]
+      ? ['idnode/save', { node: JSON.stringify({ uuid: props.uuid, ...values }) }]
+      : [props.saveEndpoint as string, { node: JSON.stringify(values) }]
     if (!endpoint) {
       error.value = t('Configuration form misconfigured (no save endpoint)')
       return
@@ -783,6 +770,13 @@ async function save() {
   }
 }
 
+/* The edited fields with their current values. */
+function editedValues(): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const id of dirtyIds.value) out[id] = currentValues.value[id]
+  return out
+}
+
 function undo() {
   if (!isDirty.value) return
   changedElsewhere.value = []
@@ -798,8 +792,7 @@ function undo() {
  * …) as `{ reload: 1 }` (notify_reload), a multi-instance entry as
  * `{ change: [uuid, …] }`. Classic reloads its forms on these
  * (idnode.js:3017-3020). Without it a form left open while another
- * session saved kept the old values, and the next Save, which
- * posts every field, wrote them back.
+ * session saved kept showing the old values.
  *
  * The refresh is quiet: no loading state, so the form and its
  * scroll position stay. Untouched fields take the server value.
@@ -888,11 +881,13 @@ const changedElsewhereCaptions = computed(() =>
  *     is in flight;
  *   - reads `loading` to gate UI on the initial fetch;
  *   - reads `currentValues` at `saved`-emit time to inspect
- *     what was just POSTed (e.g. the wizard's hello-step
+ *     what was just saved (e.g. the wizard's hello-step
  *     wrapper compares pre/post `ui_lang` to detect a
- *     language change). `saved` fires BEFORE the post-save
- *     `load()` refresh, so `currentValues` still reflects the
- *     submitted shape at that moment. */
+ *     language change). For an `alwaysDirty` form such as the
+ *     wizard that is exactly what was POSTed, while other forms
+ *     POST only the edited fields. `saved` fires BEFORE the
+ *     post-save `load()` refresh, so `currentValues` still
+ *     holds the saved values at that moment. */
 defineExpose({ save, reload: load, loading, saving, currentValues })
 
 /* ---- Hash-driven field focus ---------------------------------

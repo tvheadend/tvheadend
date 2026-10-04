@@ -2,14 +2,15 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * IdnodeConfigForm — live refresh from Comet.
+ * IdnodeConfigForm — live refresh from Comet, and what Save posts.
  *
  * The server notifies a singleton config class (config, imagecache,
  * satip_server, tvhlog_conf, …) with `{ reload: 1 }` under the
  * class's `event`, and a multi-instance entry with
  * `{ change: [uuid] }`. The form refetches quietly, takes the new
  * values on fields the user has not touched and keeps the user's
- * edits, so the next Save no longer writes stale values back.
+ * edits. Save posts only the edited fields (every field for an
+ * `alwaysDirty` form), so it does not write stale values back.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
@@ -51,22 +52,58 @@ function params(name: string, comment: string) {
   ]
 }
 
-async function mountSingleton() {
+async function mountForm(
+  props: Record<string, unknown>,
+  entry: Record<string, unknown>,
+  fields: Array<Record<string, unknown>> = params('a', 'x'),
+) {
   const access = useAccessStore()
   access.data = { admin: true, dvr: true, uilevel: 'basic' }
-  apiMock.mockResolvedValueOnce({
-    entries: [{ class: 'config', event: 'config', params: params('a', 'x') }],
-  })
-  const wrapper = mount(IdnodeConfigForm, {
-    props: { loadEndpoint: 'config/load', saveEndpoint: 'config/save' },
-  })
+  apiMock.mockResolvedValueOnce({ entries: [{ ...entry, params: fields }] })
+  const wrapper = mount(IdnodeConfigForm, { props })
   await flushPromises()
   return wrapper
 }
 
-function inputs(wrapper: Awaited<ReturnType<typeof mountSingleton>>) {
+const SINGLETON = { loadEndpoint: 'config/load', saveEndpoint: 'config/save' }
+
+function mountSingleton(extraProps: Record<string, unknown> = {}) {
+  return mountForm({ ...SINGLETON, ...extraProps }, { class: 'config', event: 'config' })
+}
+
+function mountUuid() {
+  return mountForm({ uuid: 'u1' }, { uuid: 'u1', class: 'dvrconfig', event: 'dvrconfig' })
+}
+
+/* A singleton with a hidden list field `tags`, saved as ['a'], that
+ * the test sets through the exposed currentValues. */
+async function mountWithList(extraProps: Record<string, unknown> = {}) {
+  const list = { id: 'tags', type: 'str', list: 1, caption: 'Tags', value: ['a'] }
+  const wrapper = await mountForm(
+    { ...SINGLETON, hideFields: ['tags'], ...extraProps },
+    { class: 'config', event: 'config' },
+    [...params('a', 'x'), list],
+  )
+  const values = (wrapper.vm as unknown as { currentValues: Record<string, unknown> })
+    .currentValues
+  return { wrapper, values }
+}
+
+type Wrapper = Awaited<ReturnType<typeof mountForm>>
+
+function inputs(wrapper: Wrapper) {
   const [name, comment] = wrapper.findAll('input[type="text"]')
   return { name: name!, comment: comment! }
+}
+
+/* Click Save and return the endpoint and the node it posted. */
+async function save(wrapper: Wrapper) {
+  apiMock.mockResolvedValueOnce({}) /* save */
+  apiMock.mockResolvedValueOnce({ entries: [{ params: params('a', 'x') }] }) /* reload */
+  await wrapper.find('.idnode-config-form__btn--save').trigger('click')
+  await flushPromises()
+  const [endpoint, body] = apiMock.mock.calls.find(([e]) => String(e).endsWith('/save')) ?? []
+  return { endpoint, node: JSON.parse((body as { node: string }).node) }
 }
 
 async function reloadWith(name: string, comment: string) {
@@ -150,21 +187,6 @@ describe('IdnodeConfigForm — Comet refresh (singleton)', () => {
     expect(wrapper.find('.idnode-config-form__changed-elsewhere').exists()).toBe(false)
   })
 
-  it('saves the refreshed values of untouched fields, not the stale ones', async () => {
-    const wrapper = await mountSingleton()
-    await inputs(wrapper).name.setValue('mine')
-    await reloadWith('a', 'y')
-
-    apiMock.mockResolvedValueOnce({}) /* save */
-    apiMock.mockResolvedValueOnce({ entries: [{ params: params('mine', 'y') }] })
-    await wrapper.find('.idnode-config-form__btn--save').trigger('click')
-    await flushPromises()
-
-    expect(apiMock).toHaveBeenCalledWith('config/save', {
-      node: JSON.stringify({ name: 'mine', comment: 'y' }),
-    })
-  })
-
   it('ignores notifications without reload and unsubscribes on unmount', async () => {
     const wrapper = await mountSingleton()
     const calls = apiMock.mock.calls.length
@@ -179,13 +201,7 @@ describe('IdnodeConfigForm — Comet refresh (singleton)', () => {
 
 describe('IdnodeConfigForm — Comet refresh (uuid mode)', () => {
   it('refetches on a change for its own uuid only', async () => {
-    const access = useAccessStore()
-    access.data = { admin: true, dvr: true, uilevel: 'basic' }
-    apiMock.mockResolvedValueOnce({
-      entries: [{ uuid: 'u1', class: 'dvrconfig', event: 'dvrconfig', params: params('a', 'x') }],
-    })
-    const wrapper = mount(IdnodeConfigForm, { props: { uuid: 'u1' } })
-    await flushPromises()
+    const wrapper = await mountUuid()
     const calls = apiMock.mock.calls.length
 
     fire('dvrconfig', { change: ['u2'] })
@@ -201,5 +217,55 @@ describe('IdnodeConfigForm — Comet refresh (uuid mode)', () => {
 
     expect(apiMock).toHaveBeenLastCalledWith('idnode/load', { uuid: 'u1' })
     expect((wrapper.find('input[type="text"]').element as HTMLInputElement).value).toBe('b')
+  })
+})
+
+describe('IdnodeConfigForm — what Save posts', () => {
+  it('posts only the edited fields of a singleton', async () => {
+    const wrapper = await mountSingleton()
+    await inputs(wrapper).name.setValue('mine')
+    expect(await save(wrapper)).toEqual({ endpoint: 'config/save', node: { name: 'mine' } })
+  })
+
+  it('posts the uuid and the edited fields in uuid mode', async () => {
+    const wrapper = await mountUuid()
+    await inputs(wrapper).comment.setValue('note')
+    expect(await save(wrapper)).toEqual({
+      endpoint: 'idnode/save',
+      node: { uuid: 'u1', comment: 'note' },
+    })
+  })
+
+  it('posts every field of an alwaysDirty form', async () => {
+    const wrapper = await mountSingleton({ alwaysDirty: true })
+    await inputs(wrapper).name.setValue('mine')
+    expect((await save(wrapper)).node).toEqual({ name: 'mine', comment: 'x' })
+  })
+
+  it('does not post a field that a refresh changed but the user did not edit', async () => {
+    const wrapper = await mountSingleton()
+    await inputs(wrapper).name.setValue('mine')
+    await reloadWith('a', 'y')
+    expect((await save(wrapper)).node).toEqual({ name: 'mine' })
+  })
+
+  it('posts an edited list field and takes an equal list as unchanged', async () => {
+    const { wrapper, values } = await mountWithList()
+    values.tags = ['a']
+    await flushPromises()
+    expect(wrapper.find('.idnode-config-form__btn--save').attributes('disabled')).toBeDefined()
+
+    values.tags = ['a', 'b']
+    await flushPromises()
+    expect((await save(wrapper)).node).toEqual({ tags: ['a', 'b'] })
+  })
+
+  it('does not re-pull access/whoami for a list set back to its saved items', async () => {
+    const { wrapper, values } = await mountWithList({ accessRefetchFields: ['tags'] })
+    values.tags = ['a']
+    await inputs(wrapper).name.setValue('mine')
+
+    expect((await save(wrapper)).node).toEqual({ name: 'mine' })
+    expect(apiMock.mock.calls.map(([endpoint]) => endpoint)).not.toContain('access/whoami')
   })
 })
