@@ -441,19 +441,19 @@ export function useGridStore<Row extends { uuid?: string } = Record<string, unkn
       function setSort(key: string | undefined, dir: SortDir = 'ASC') {
         sort.value = { key, dir }
         start.value = 0 // reset to first page on sort change
-        fetch()
+        void fetch()
       }
 
       function setFilter(filters: FilterDef[]) {
         filter.value = filters
         start.value = 0
-        fetch()
+        void fetch()
       }
 
       function setPage(s: number, l: number) {
         start.value = s
         limit.value = l
-        fetch()
+        void fetch()
       }
 
       /*
@@ -477,13 +477,13 @@ export function useGridStore<Row extends { uuid?: string } = Record<string, unkn
         if (opts.filter) filter.value = opts.filter
         if (opts.start !== undefined) start.value = opts.start
         if (opts.limit !== undefined) limit.value = opts.limit
-        fetch()
+        void fetch()
       }
 
       function setExtraParams(next: Record<string, unknown>) {
         extraParams.value = { ...next }
         start.value = 0 // reset paginator on filter change
-        fetch()
+        void fetch()
       }
 
       /*
