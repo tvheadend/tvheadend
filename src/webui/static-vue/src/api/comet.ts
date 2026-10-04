@@ -88,7 +88,7 @@ class CometClient {
      * an empty username and the UI was stuck at "anonymous" even though
      * the browser had valid cached credentials. A `fetch()` to
      * /comet/poll always carries cached auth correctly, so we poll. */
-    this.connectPoll()
+    void this.connectPoll()
   }
 
   disconnect(): void {
@@ -213,7 +213,7 @@ class CometClient {
     this.reconnectTimer = globalThis.setTimeout(() => {
       this.reconnectTimer = undefined
       if (this.userDisconnected) return
-      this.connectPoll()
+      void this.connectPoll()
     }, delay)
   }
 
