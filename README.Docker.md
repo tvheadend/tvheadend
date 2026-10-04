@@ -401,8 +401,6 @@ services:
     healthcheck:
       test: wget localhost:8888 2>&1 | grep -q 'connected'
 
-
-services:
   tvheadend:
     image: ghcr.io/tvheadend/tvheadend:latest
     cap_drop:
@@ -415,7 +413,7 @@ services:
     devices:
       - /dev/dvb/
     environment:
-      - TZ: 'Europe/Amsterdam'
+      TZ: 'Europe/Amsterdam'
     volumes:
       - tvheadend:/var/lib/tvheadend:rw
       - /export/recordings:/var/lib/tvheadend/recordings:rw
