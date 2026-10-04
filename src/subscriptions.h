@@ -52,6 +52,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_PRIO_SCAN_INIT   5 ///< Initial scan
 #define SUBSCRIPTION_PRIO_SCAN_USER   6 ///< User defined scan
 #define SUBSCRIPTION_PRIO_MAPPER      7 ///< Channel mapper
+#define SUBSCRIPTION_PRIO_CACHE_WARMUP 8 ///< Scheduled timeshift cache warmup
 #define SUBSCRIPTION_PRIO_MIN        10 ///< User defined / Normal levels
 
 /* Unsubscribe flags */
