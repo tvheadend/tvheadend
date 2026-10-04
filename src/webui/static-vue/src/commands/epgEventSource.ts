@@ -10,6 +10,11 @@
  * bounded, avoids per-keystroke fan-out for short queries that
  * would match too much).
  *
+ * The server compiles `title` as a caseless regex (`src/epg.c`
+ * epg_query), so the typed text is regex-escaped and matches as
+ * plain text. Unescaped, "C++" would match every title with a "c"
+ * and an unbalanced parenthesis would not compile, finding nothing.
+ *
  * Each event becomes a Command:
  *
  *   id          : `epg-event:<eventId>`
@@ -35,6 +40,7 @@ import { Calendar } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
 import { createDebounce } from '@/utils/debounce'
+import { regexEscape } from '@/utils/regexEscape'
 import { t } from '@/composables/useI18n'
 import type { useAccessStore } from '@/stores/access'
 import type { useToastNotify } from '@/composables/useToastNotify'
@@ -127,7 +133,7 @@ async function fire(q: string, deps: EpgEventSourceDeps): Promise<void> {
   const myToken = activeToken
   try {
     const resp = await apiCall<EpgEventResponse>('epg/events/grid', {
-      title: q,
+      title: regexEscape(q),
       limit: RESULT_LIMIT,
       sort: 'start',
       dir: 'ASC',

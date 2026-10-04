@@ -125,6 +125,20 @@ describe('epgEventSource', () => {
       })
     })
 
+    it.each([
+      ['C++', String.raw`C\+\+`],
+      ['News (Late', String.raw`News \(Late`],
+      ['Mr. Bean', String.raw`Mr\. Bean`],
+    ])('searches for %s as plain text, not as a regex', async (typed, sent) => {
+      apiMock.mockResolvedValue({ entries: [] })
+      updateEpgQuery(typed, deps)
+      await vi.advanceTimersByTimeAsync(400)
+      expect(apiMock).toHaveBeenCalledWith(
+        'epg/events/grid',
+        expect.objectContaining({ title: sent })
+      )
+    })
+
     it('builds one Command per entry under the EPG section', async () => {
       apiMock.mockResolvedValue({
         entries: [
@@ -196,7 +210,8 @@ describe('epgEventSource', () => {
       apiMock.mockResolvedValue({
         entries: [{ eventId: 1, title: 'Afrika z výšky (S1, E3)', start: 1700000000 }],
       })
-      updateEpgQuery('afrika', deps)
+      /* Only the search text is escaped, not the title handed on. */
+      updateEpgQuery('výšky (S1', deps)
       await vi.advanceTimersByTimeAsync(400)
       await getEpgEventCommands().value[0].action()
       expect(fakeRouter.push).toHaveBeenCalledWith({
