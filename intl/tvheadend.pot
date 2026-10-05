@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 02:21+0000\n"
+"POT-Creation-Date: 2026-10-05 02:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2472,7 +2472,7 @@ msgstr ""
 msgid "Default language."
 msgstr ""
 
-#: src/http.c:715
+#: src/http.c:717
 msgid "Default login"
 msgstr ""
 
@@ -5821,7 +5821,7 @@ msgstr ""
 msgid "New / premiere / unknown"
 msgstr ""
 
-#: src/http.c:718
+#: src/http.c:720
 msgid "New login"
 msgstr ""
 
