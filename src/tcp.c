@@ -509,31 +509,6 @@ tcp_get_ip_from_str(const char *src, struct sockaddr_storage *sa)
 static tvhpoll_t *tcp_server_poll;
 static uint32_t tcp_server_launch_id;
 
-typedef struct tcp_server {
-  int serverfd;
-  struct sockaddr_storage bound;
-  tcp_server_ops_t ops;
-  void *opaque;
-  LIST_ENTRY(tcp_server) link;
-} tcp_server_t;
-
-typedef struct tcp_server_launch {
-  pthread_t tid;
-  uint32_t id;
-  int fd;
-  int streaming;
-  tcp_server_ops_t ops;
-  void *opaque;
-  char *representative;
-  void (*status) (void *opaque, htsmsg_t *m);
-  struct sockaddr_storage peer;
-  struct sockaddr_storage self;
-  time_t started;
-  LIST_ENTRY(tcp_server_launch) link;
-  LIST_ENTRY(tcp_server_launch) alink;
-  LIST_ENTRY(tcp_server_launch) jlink;
-} tcp_server_launch_t;
-
 static LIST_HEAD(, tcp_server) tcp_server_delete_list = { 0 };
 static LIST_HEAD(, tcp_server_launch) tcp_server_launches = { 0 };
 static LIST_HEAD(, tcp_server_launch) tcp_server_active = { 0 };
