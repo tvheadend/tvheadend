@@ -634,7 +634,11 @@ linuxdvb_adapter_del ( const char *path )
       }
     if (!th) return;
 
-    idnode_save_check(&la->th_id, 0);
+    /* mpegts_done() removes DVB networks before linuxdvb_done() deletes
+     * adapters. During shutdown, do not flush a queued adapter save here:
+     * it would persist the temporary, unlinked frontend state. Keep the
+     * normal save behavior for runtime device removal. */
+    idnode_save_check(&la->th_id, !tvheadend_is_running());
   
     /* Delete the frontends */
     for (lfe = LIST_FIRST(&la->la_frontends); lfe != NULL; lfe = lfe_next) {
