@@ -35,8 +35,14 @@ const fmtHexId = (v: unknown) => {
   return ('0000000' + v.toString(16).toUpperCase()).slice(-8)
 }
 
+/* `in` / `out` are BYTES per second (the 1-second byte delta;
+ * subscriptions.c). The column header is kb/s (kilobits), so
+ * convert bytes/s -> kbit/s = *8 / 1000. Matches Classic's
+ * subscriptions renderer (status.js: value / 125), which the
+ * previous /1024 diverged from by a factor of ~8. The Number.isFinite
+ * guard keeps malformed data from rendering as "NaN" / "Infinity". */
 const fmtKbps = (v: unknown) =>
-  typeof v === 'number' ? Math.round(v / 1024).toString() : ''
+  typeof v === 'number' && Number.isFinite(v) ? Math.round((v * 8) / 1000).toString() : ''
 
 const fmtPids = (v: unknown) => {
   if (!Array.isArray(v) || v.length === 0) return ''

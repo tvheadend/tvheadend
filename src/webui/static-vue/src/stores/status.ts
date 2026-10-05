@@ -58,6 +58,20 @@ import { cometClient } from '@/api/comet'
 
 const COMET_REFETCH_DEBOUNCE_MS = 100
 
+/* Comet envelope fields — stripped before a notification payload is
+ * merged onto a row so they don't pollute the row's data fields:
+ * the structural / update flags plus `notificationClass`, the
+ * dispatch discriminator every Comet message carries. */
+const CONTROL_KEYS = new Set([
+  'reload',
+  'update',
+  'updateEntry',
+  'create',
+  'change',
+  'delete',
+  'notificationClass',
+])
+
 /*
  * Row alias — Status entries are loosely typed records; the grid's
  * `keyField` prop tells consumers which field is the identifier
@@ -166,14 +180,46 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
       }
 
       /*
-       * Comet listener — refetch silently on any notification
-       * carrying `reload`, an `update*` field, or a `delete` array.
-       * Silent mode skips the loading flag, avoiding the
-       * loading-overlay flash on every 2-second bandwidth update.
-       * The status notification shapes vary per class (input_status
-       * uses `update`, subscriptions uses `updateEntry` + `id`, etc.)
-       * so this is a permissive check rather than tight type
-       * narrowing.
+       * `input_status` carries a reset-on-read bandwidth counter: the
+       * server's 1-second timer reads-and-resets `bps` and pushes the
+       * full-second value in the notification. The generic refetch
+       * path below would then re-poll api/status/inputs, which resets
+       * the counter AGAIN mid-window, so the poll returns only a
+       * fraction of a second's data — bandwidth reads ~8-10x too low
+       * and the refresh cadence is erratic. For this class we apply
+       * the pushed payload in place instead (matching the Classic UI's
+       * update handler), so no counter-resetting poll fires.
+       * subscriptions / connections read their counters without
+       * resetting, so they keep the simpler full-refetch path.
+       */
+      const mergeFromNotification = notificationClass === 'input_status'
+
+      /*
+       * Merge a per-row notification payload onto the matching
+       * existing row, in place (same object identity, reactive fields
+       * update one-by-one — same mechanism mergeByKey relies on).
+       * Returns false when the row is unknown (a newly-started stream
+       * the caller must refetch to pick up).
+       */
+      function applyNotification(msg: Record<string, unknown>): boolean {
+        const key = msg[keyField]
+        if (key == null) return false
+        const existing = (entries.value as Row[]).find((r) => r[keyField] === key)
+        if (!existing) return false
+        const row = existing as Record<string, unknown>
+        for (const [k, v] of Object.entries(msg)) {
+          if (!CONTROL_KEYS.has(k)) row[k] = v
+        }
+        return true
+      }
+
+      /*
+       * Comet listener — refetch silently on any notification carrying
+       * `reload`, an `update*` field, a `change`, `create` or `delete`.
+       * Silent mode skips the loading flag, avoiding the loading-
+       * overlay flash on every bandwidth update. The notification
+       * shapes vary per class (input_status uses `update`, subscriptions
+       * uses `updateEntry` + `id`, etc.) so this is a permissive check.
        */
       cometClient.on(notificationClass, (msg) => {
         const note = msg as IdnodeNotification & {
@@ -181,16 +227,25 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
           updateEntry?: unknown
           update?: unknown
         }
+        const structural =
+          !!note.reload ||
+          (note.create?.length ?? 0) > 0 ||
+          (note.delete?.length ?? 0) > 0
+        const fieldUpdate =
+          !!note.update || !!note.updateEntry || (note.change?.length ?? 0) > 0
+        if (!structural && !fieldUpdate) return
+
+        /* Apply the pushed row in place for reset-on-read endpoints so
+         * no counter-resetting poll fires; unknown rows fall through
+         * to the refetch below. */
         if (
-          !note.reload &&
-          !note.updateEntry &&
-          !note.update &&
-          (note.create?.length ?? 0) === 0 &&
-          (note.change?.length ?? 0) === 0 &&
-          (note.delete?.length ?? 0) === 0
+          !structural &&
+          mergeFromNotification &&
+          applyNotification(msg as Record<string, unknown>)
         ) {
           return
         }
+
         clearTimeout(refetchTimer)
         refetchTimer = globalThis.setTimeout(() => {
           void fetch({ silent: true })
