@@ -116,6 +116,7 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   pass_muxer_t *pm;
   uint8_t out[1024], *ob;
+  uint8_t present[8192 / 8] = { 0 };
   uint16_t sid, pid;
   int l, ol, i;
   const streaming_start_component_t *ssc;
@@ -134,6 +135,14 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   if (sid != pm->pm_src_sid)
     return;
 
+  /* Do not combine a PMT with the other component generation. */
+  pid = (buf[5] & 0x1f) << 8 | buf[6];
+  if (pid != pm->pm_ss->ss_pcr_pid) {
+    tvhdebug(LS_PASS, "%s: defer PMT: PCR PID %d != current %d",
+             pm->pm_filename ?: "Pass muxer", pid, pm->pm_ss->ss_pcr_pid);
+    return;
+  }
+
   out[ol + 0] = pm->pm_dst_sid >> 8;
   out[ol + 1] = pm->pm_dst_sid & 0xff;
   memcpy(out + ol + 2, buf + 2, 7);
@@ -148,6 +157,7 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 
   while (len >= 5) {
     pid = (buf[1] & 0x1f) << 8 | buf[2];
+    present[pid / 8] |= 1 << (pid % 8);
     l   = (buf[3] & 0xf) << 8 | buf[4];
 
     if (l > len - 5)
@@ -175,6 +185,23 @@ pass_muxer_pmt_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   /* The PMT and streaming start may arrive in either order on a PID change. */
   if (ol == 12)
     return;
+
+  /* A partial overlap (for example unchanged teletext) is not sufficient.
+   * Check selected ES, rather than rejecting unselected broadcast data PIDs.
+   * A dedicated PCR component need not have an ES entry in the PMT. */
+  for (i = 0; i < pm->pm_ss->ss_num_components; i++) {
+    ssc = &pm->pm_ss->ss_components[i];
+    if (ssc->es_pid < 0 || ssc->es_pid >= 8192 ||
+        (!SCT_ISAV(ssc->es_type) && ssc->es_type != SCT_TELETEXT &&
+         ssc->es_type != SCT_DVBSUB))
+      continue;
+    pid = ssc->es_pid;
+    if (!(present[pid / 8] & (1 << (pid % 8)))) {
+      tvhdebug(LS_PASS, "%s: defer PMT: selected PID %d is absent",
+               pm->pm_filename ?: "Pass muxer", pid);
+      return;
+    }
+  }
 
   /* update section length */
   out[1] = (out[1] & 0xf0) | ((ol + 4 - 3) >> 8);
