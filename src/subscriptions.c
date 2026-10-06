@@ -1091,8 +1091,8 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
     htsmsg_add_str(m, "service", s->ths_dvrfile ?: "");
   }
 
-  htsmsg_add_u32(m, "in", atomic_get(&s->ths_bytes_in_avg));
-  htsmsg_add_u32(m, "out", atomic_get(&s->ths_bytes_out_avg));
+  htsmsg_add_s64(m, "in", atomic_get_u64(&s->ths_bytes_in_avg) * 8);
+  htsmsg_add_s64(m, "out", atomic_get_u64(&s->ths_bytes_out_avg) * 8);
   htsmsg_add_s64(m, "total_in", atomic_get_u64(&s->ths_total_bytes_in));
   htsmsg_add_s64(m, "total_out", atomic_get_u64(&s->ths_total_bytes_out));
 
@@ -1119,8 +1119,8 @@ subscription_status_callback ( void *p )
     uint64_t out_curr = atomic_get_u64(&s->ths_total_bytes_out);
     uint64_t out_prev = atomic_exchange_u64(&s->ths_total_bytes_out_prev, out_curr);
 
-    atomic_set(&s->ths_bytes_in_avg, (int)(in_curr - in_prev));
-    atomic_set(&s->ths_bytes_out_avg, (int)(out_curr - out_prev));
+    atomic_set_u64(&s->ths_bytes_in_avg, in_curr - in_prev);
+    atomic_set_u64(&s->ths_bytes_out_avg, out_curr - out_prev);
 
     htsmsg_t *m = subscription_create_msg(s, NULL);
     htsmsg_add_u32(m, "updateEntry", 1);
