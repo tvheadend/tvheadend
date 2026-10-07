@@ -1551,7 +1551,12 @@ dvr_thread_global_lock(dvr_entry_t *de, int *run)
     *run = 0;
     return 0;
   }
-  tvh_mutex_lock(&global_lock);
+  while (tvh_mutex_timedlock(&global_lock, 10000)) {
+    if (atomic_get(&de->de_thread_shutdown) > 1) {
+      *run = 0;
+      return 0;
+    }
+  }
   return 1;
 }
 
