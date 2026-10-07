@@ -262,3 +262,16 @@ describe('LogView — subsystem options', () => {
     expect(opts).toEqual(['epg', 'http', 'mpegts'])
   })
 })
+
+describe('LogView — accessibility', () => {
+  it('does not announce the line counter on every new line', () => {
+    seed([makeLine({ id: 1 })])
+    const w = mountView()
+    expect(w.find('.log-view__count').attributes('aria-live')).toBeUndefined()
+  })
+
+  it('names the regex toggle for screen readers', () => {
+    const w = mountView()
+    expect(w.find('.log-view__regex-toggle').attributes('aria-label')).toBe('Regular expression')
+  })
+})

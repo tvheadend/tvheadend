@@ -10,9 +10,10 @@
  *
  * Owns:
  *   - load (`apiCall(loadEndpoint, { meta: 1 })`)
- *   - dirty detection (shallow primitive comparison vs `baseline`)
- *   - save (`apiCall(saveEndpoint, { node: JSON.stringify(currentValues) })`)
+ *   - dirty detection (per-field comparison vs `baseline`)
+ *   - save (`apiCall(saveEndpoint, { node: JSON.stringify(edited fields) })`)
  *   - undo (reset currentValues to baseline)
+ *   - live refresh when Comet reports a change made elsewhere
  *   - error / loading state
  *   - per-page UI-level override via `<LevelMenu>` (defaults to
  *     `access.uilevel`, honours `access.locked` cap; pages can
@@ -38,6 +39,8 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { apiCall } from '@/api/client'
+import { cometClient } from '@/api/comet'
+import type { IdnodeNotification } from '@/types/comet'
 import { useAccessStore } from '@/stores/access'
 import { levelMatches, propLevel, type IdnodeProp, type PropertyGroup } from '@/types/idnode'
 import type { UiLevel } from '@/types/access'
@@ -69,13 +72,13 @@ const props = withDefaults(
      * the other. Required when `uuid` is not set. */
     loadEndpoint?: string
     /* Server endpoint for save (singleton-config mode). The form
-     * POSTs `{ node: JSON.stringify(currentValues) }`. Required
+     * POSTs `{ node: JSON.stringify(<edited fields>) }`. Required
      * when `loadEndpoint` is set. */
     saveEndpoint?: string
     /* When set, switches the form into multi-instance mode: load
      * via `idnode/load?uuid=<uuid>&meta=1`, save via
-     * `idnode/save` with `{ node: JSON.stringify({ uuid, ...
-     * currentValues }) }`. Watching this prop drives reload-on-
+     * `idnode/save` with `{ node: JSON.stringify({ uuid,
+     * ...<edited fields> }) }`. Watching this prop drives reload-on-
      * selection-change in master-detail layouts. Mutually
      * exclusive with `loadEndpoint` / `saveEndpoint`. */
     uuid?: string | null
@@ -163,7 +166,10 @@ const props = withDefaults(
      * (one click = start a mapping job, regardless of whether
      * the form's options changed since last save). Mirrors
      * Classic's `idnode_editor_win({ alwaysDirty: true })` flag
-     * at `static/app/idnode.js:1155`.
+     * at `static/app/idnode.js:1155`. Such a form also posts
+     * every field, not only the edited ones, as each click is a
+     * fresh run (the Service Mapper keeps no services selection
+     * between runs).
      *
      * Default false — every existing edit-form / singleton-config
      * consumer (Base / Image cache / SAT>IP / Timeshift /
@@ -203,7 +209,7 @@ const props = withDefaults(
     mandatoryFields?: ReadonlyArray<string>
     /* Field IDs to suppress from the auto-rendered form body.
      * The field's value is still loaded into `currentValues` and
-     * still saved on the next POST — only the rendered input is
+     * still saved once it changes — only the rendered input is
      * hidden. Use when a wrapper view renders a custom editor for
      * the field above/below the form (Config → Debugging's
      * subsystem pickers are the canonical consumer: the multiline
@@ -298,6 +304,9 @@ interface LoadResponse {
   entries?: Array<{
     uuid?: string
     class?: string
+    /* Comet notification class for this entry (`ic_event`, see
+     * IdnodeEditor's LoadEntry). Drives the live refresh below. */
+    event?: string
     params?: IdnodeProp[]
     meta?: { groups?: PropertyGroup[]; props?: IdnodeProp[] }
   }>
@@ -311,6 +320,12 @@ const currentValues = ref<Record<string, unknown>>({})
 const loading = ref(true)
 const saving = ref(false)
 const error = ref<string | null>(null)
+/* Edited fields that another session changed meanwhile (see the
+ * Comet refresh below). */
+const changedElsewhere = ref<string[]>([])
+/* Bumped by every load(), so a quiet Comet refresh that raced a
+ * load drops its stale response. */
+let loadSeq = 0
 
 /* Class id of the loaded entry — keyed lookup into `CLASS_RULES`
  * for required / cross-field / minLength rules. Server emits it on
@@ -318,6 +333,7 @@ const error = ref<string | null>(null)
  * (e.g. `config/load`). Falls back to null when absent — `applyClassRules`
  * treats null as "no class-level rules", same default as IdnodeEditor. */
 const currentClass = ref<string | null>(null)
+const currentEvent = ref<string | null>(null)
 
 /* Touched fields — error messages stay hidden on untouched fields so
  * opening a fresh form with empty required fields doesn't immediately
@@ -340,7 +356,9 @@ async function load() {
     return
   }
   loading.value = true
+  loadSeq++
   error.value = null
+  changedElsewhere.value = []
   try {
     /* uuid mode: idnode/load with uuid + meta. Server returns the
      * same `{ entries: [{ params, meta: { groups } }] }` shape as
@@ -363,6 +381,7 @@ async function load() {
     fieldProps.value = entry.params ?? []
     groups.value = entry.meta?.groups ?? []
     currentClass.value = entry.class ?? null
+    currentEvent.value = entry.event ?? null
     /* Fresh load resets the touch tracking so previously-touched
      * fields don't carry their visible-error state across a reload
      * of the same form (e.g. after Save). */
@@ -551,26 +570,13 @@ const displayedGroups = computed(() => {
 
 /* ---- Dirty detection ---- */
 
-/* Shallow comparison: works for the primitives this form deals
- * with (str / int / u32 / u16 / s64 / dbl / bool). PT_LORDER
- * list-shaped fields currently route to the placeholder renderer
- * — the user can't change them, so currentValues[k] stays
- * referentially equal to baseline[k] by definition. */
-const isDirty = computed(() => {
-  const b = baseline.value
-  const c = currentValues.value
-  for (const k of Object.keys(b)) {
-    if (b[k] !== c[k]) return true
-  }
-  return false
-})
-
 /* Per-field dirty set — drives the small `•` marker on each
  * field's label so the user can spot which fields they've
- * touched without scanning every value. JSON-stringify lets
- * the comparison work for any value shape (matches
- * IdnodeEditor.vue's same-purpose computed). The overall
- * `isDirty` above stays for the Save / Undo gate. */
+ * touched without scanning every value, the Save / Undo gate,
+ * and what Save posts. JSON-stringify lets the comparison work
+ * for any value shape, lists included (matches IdnodeEditor.vue's
+ * same-purpose computed), so a list ticked back to its saved
+ * items is not dirty. */
 const dirtyIds = computed(() => {
   const ids = new Set<string>()
   const c = currentValues.value
@@ -580,6 +586,8 @@ const dirtyIds = computed(() => {
   }
   return ids
 })
+
+const isDirty = computed(() => dirtyIds.value.size > 0)
 
 function isFieldDirty(id: string): boolean {
   return dirtyIds.value.has(id)
@@ -705,28 +713,23 @@ async function save() {
   try {
     /* Snapshot the reload / access-refetch decisions against the
      * PRE-save baseline before the api call mutates anything we're
-     * tracking. */
-    const needsReload = props.reloadFields.some(
-      (k) => currentValues.value[k] !== baseline.value[k]
-    )
-    const needsAccessRefetch = props.accessRefetchFields.some(
-      (k) => currentValues.value[k] !== baseline.value[k]
-    )
+     * tracking. Same per-field comparison as Save and Undo. */
+    const needsReload = props.reloadFields.some((k) => dirtyIds.value.has(k))
+    const needsAccessRefetch = props.accessRefetchFields.some((k) => dirtyIds.value.has(k))
 
-    /* uuid mode: idnode/save with the uuid baked into the node
+    /* Post only the edited fields, as inline grid edits do: the
+     * server leaves fields missing from the node as they are
+     * (prop_write_values), so a value another session saved after
+     * the last refresh is not written back. Trigger forms
+     * (`alwaysDirty`) post every field.
+     *
+     * uuid mode: idnode/save with the uuid baked into the node
      * payload — server's `idnode/save` handler reads `uuid` out of
      * the parsed node and dispatches to the matching idnode. */
+    const values = props.alwaysDirty ? currentValues.value : editedValues()
     const [endpoint, body] = props.uuid
-      ? [
-          'idnode/save',
-          {
-            node: JSON.stringify({ uuid: props.uuid, ...currentValues.value }),
-          },
-        ]
-      : [
-          props.saveEndpoint as string,
-          { node: JSON.stringify(currentValues.value) },
-        ]
+      ? ['idnode/save', { node: JSON.stringify({ uuid: props.uuid, ...values }) }]
+      : [props.saveEndpoint as string, { node: JSON.stringify(values) }]
     if (!endpoint) {
       error.value = t('Configuration form misconfigured (no save endpoint)')
       return
@@ -767,12 +770,101 @@ async function save() {
   }
 }
 
+/* The edited fields with their current values. */
+function editedValues(): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const id of dirtyIds.value) out[id] = currentValues.value[id]
+  return out
+}
+
 function undo() {
   if (!isDirty.value) return
+  changedElsewhere.value = []
   /* Spread the baseline so currentValues becomes a fresh object
    * — triggers reactive updates on every field input. */
   currentValues.value = { ...baseline.value }
 }
+
+/* ---- Live refresh from Comet ----
+ *
+ * The server notifies a change under the entry's `event`: a
+ * singleton config (Base, Image Cache, SAT>IP Server, Debugging,
+ * …) as `{ reload: 1 }` (notify_reload), a multi-instance entry as
+ * `{ change: [uuid, …] }`. Classic reloads its forms on these
+ * (idnode.js:3017-3020). Without it a form left open while another
+ * session saved kept showing the old values.
+ *
+ * The refresh is quiet: no loading state, so the form and its
+ * scroll position stay. Untouched fields take the server value.
+ * Edited fields keep the user's value, but their baseline moves to
+ * the server value too, so Undo returns to what is saved now. An
+ * edited field the server also changed is named above the form. */
+const COMET_REFRESH_DEBOUNCE_MS = 250
+let cometRefreshTimer: ReturnType<typeof setTimeout> | null = null
+let cometUnsub: (() => void) | null = null
+
+function mergeFromServer(serverParams: IdnodeProp[]): void {
+  const dirty = dirtyIds.value
+  const nextBaseline = { ...baseline.value }
+  const nextCurrent = { ...currentValues.value }
+  const conflicts = new Set(changedElsewhere.value)
+  for (const p of serverParams) {
+    if (!(p.id in nextBaseline)) continue
+    const value = p.value ?? null
+    if (!dirty.has(p.id)) {
+      nextCurrent[p.id] = value
+    } else if (JSON.stringify(value) !== JSON.stringify(baseline.value[p.id])) {
+      conflicts.add(p.id)
+    }
+    nextBaseline[p.id] = value
+  }
+  baseline.value = nextBaseline
+  currentValues.value = nextCurrent
+  changedElsewhere.value = [...conflicts]
+}
+
+async function refreshFromServer(): Promise<void> {
+  /* A load or save in flight ends with a fresh load anyway. */
+  if (loading.value || saving.value) return
+  const seq = loadSeq
+  const [endpoint, params] = props.uuid
+    ? ['idnode/load', { uuid: props.uuid }]
+    : [props.loadEndpoint, {}]
+  if (!endpoint) return
+  try {
+    const res = await apiCall<LoadResponse>(endpoint, params)
+    if (seq !== loadSeq || loading.value || saving.value) return
+    const entry = res.entries?.[0]
+    if (entry?.params) mergeFromServer(entry.params)
+  } catch {
+    /* Quiet: the next notification tries again. */
+  }
+}
+
+function onCometNotification(msg: unknown): void {
+  const note = msg as IdnodeNotification
+  const relevant = props.uuid ? !!note.change?.includes(props.uuid) : !!note.reload
+  if (!relevant) return
+  if (cometRefreshTimer !== null) clearTimeout(cometRefreshTimer)
+  cometRefreshTimer = setTimeout(() => {
+    cometRefreshTimer = null
+    void refreshFromServer()
+  }, COMET_REFRESH_DEBOUNCE_MS)
+}
+
+watch(currentEvent, (event) => {
+  cometUnsub?.()
+  cometUnsub = event ? cometClient.on(event, onCometNotification) : null
+})
+
+/* A field the user has since set back to the saved value is no
+ * longer in conflict. */
+const changedElsewhereCaptions = computed(() =>
+  changedElsewhere.value
+    .filter((id) => dirtyIds.value.has(id))
+    .map((id) => fieldProps.value.find((p) => p.id === id)?.caption ?? id)
+    .join(', '),
+)
 
 /* Expose imperative handles for wrappers that render their own
  * action chrome (setup wizard's WizardFooter is the canonical
@@ -789,11 +881,13 @@ function undo() {
  *     is in flight;
  *   - reads `loading` to gate UI on the initial fetch;
  *   - reads `currentValues` at `saved`-emit time to inspect
- *     what was just POSTed (e.g. the wizard's hello-step
+ *     what was just saved (e.g. the wizard's hello-step
  *     wrapper compares pre/post `ui_lang` to detect a
- *     language change). `saved` fires BEFORE the post-save
- *     `load()` refresh, so `currentValues` still reflects the
- *     submitted shape at that moment. */
+ *     language change). For an `alwaysDirty` form such as the
+ *     wizard that is exactly what was POSTed, while other forms
+ *     POST only the edited fields. `saved` fires BEFORE the
+ *     post-save `load()` refresh, so `currentValues` still
+ *     holds the saved values at that moment. */
 defineExpose({ save, reload: load, loading, saving, currentValues })
 
 /* ---- Hash-driven field focus ---------------------------------
@@ -904,6 +998,9 @@ watch(
 
 onBeforeUnmount(() => {
   if (targetedTimer !== null) clearTimeout(targetedTimer)
+  if (cometRefreshTimer !== null) clearTimeout(cometRefreshTimer)
+  cometUnsub?.()
+  cometUnsub = null
 })
 </script>
 
@@ -976,7 +1073,19 @@ onBeforeUnmount(() => {
     >
       {{ error }}
     </div>
-    <form v-else class="idnode-config-form__form" @submit.prevent="save">
+    <p
+      v-if="changedElsewhereCaptions && !loading && !error"
+      class="idnode-config-form__changed-elsewhere"
+      role="status"
+    >
+      {{
+        t(
+          'Changed elsewhere while you were editing: {0}. Save keeps your values, Undo shows the new ones.',
+          changedElsewhereCaptions,
+        )
+      }}
+    </p>
+    <form v-if="!loading && !error" class="idnode-config-form__form" @submit.prevent="save">
       <!-- Optional caller-supplied content rendered above the
            auto-rendered groups but INSIDE the scroll area. Used by
            views that supplement the standard form with custom
@@ -1140,6 +1249,19 @@ onBeforeUnmount(() => {
 .idnode-config-form__status--error {
   color: var(--tvh-text);
   border-color: color-mix(in srgb, var(--tvh-primary) 40%, var(--tvh-border));
+}
+
+/* A notice above the still-mounted form, not an error: the edit
+ * is kept. */
+.idnode-config-form__changed-elsewhere {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--tvh-space-2) var(--tvh-space-3);
+  background: color-mix(in srgb, var(--tvh-warning) 10%, var(--tvh-bg-surface));
+  border: 1px solid var(--tvh-warning);
+  border-radius: var(--tvh-radius-sm);
+  color: var(--tvh-text);
+  font-size: var(--tvh-text-md);
 }
 
 .idnode-config-form__form {

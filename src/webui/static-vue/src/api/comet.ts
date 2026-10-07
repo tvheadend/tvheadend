@@ -88,7 +88,7 @@ class CometClient {
      * an empty username and the UI was stuck at "anonymous" even though
      * the browser had valid cached credentials. A `fetch()` to
      * /comet/poll always carries cached auth correctly, so we poll. */
-    this.connectPoll()
+    void this.connectPoll()
   }
 
   disconnect(): void {
@@ -141,7 +141,11 @@ class CometClient {
       try {
         const body = new URLSearchParams()
         if (this.boxid) body.append('boxid', this.boxid)
-        body.append('immediate', '0')
+        /* After a failed poll ask for an immediate answer, as Classic
+         * does (static/app/comet.js). Otherwise a mailbox that survived
+         * the outage holds the first poll for up to 10 s, and the UI
+         * learns that the server is back only then. */
+        body.append('immediate', this.reconnectAttempt > 0 ? '1' : '0')
 
         const res = await fetch(serverUrl('comet/poll'), {
           method: 'POST',
@@ -209,7 +213,7 @@ class CometClient {
     this.reconnectTimer = globalThis.setTimeout(() => {
       this.reconnectTimer = undefined
       if (this.userDisconnected) return
-      this.connectPoll()
+      void this.connectPoll()
     }, delay)
   }
 

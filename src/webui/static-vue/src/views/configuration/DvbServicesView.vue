@@ -455,11 +455,15 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
    * surface; ActionMenu auto-collapses extras into a `…` menu
    * on narrow widths. */
   return [
+    /* Edit — one row opens the plain editor, two or more open the
+     * multi-edit drawer (useEditorMode), like Classic
+     * (`idnode.js:1809-1810`). */
     {
       id: 'edit',
       label: t('Edit'),
-      tooltip: t('Edit the selected service'),
-      disabled: selection.length !== 1,
+      tooltip:
+        selection.length > 1 ? t('Edit the selected services') : t('Edit the selected service'),
+      disabled: selection.length === 0,
       onClick: () => openEditor(selection),
     },
     /* Info — opens the per-PID stream details dialog. Same

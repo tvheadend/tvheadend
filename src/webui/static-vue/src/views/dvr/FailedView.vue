@@ -29,8 +29,9 @@
  * framework's del button). Final Vue order: Edit, Delete, Re-record,
  * Move to finished, Download.
  *
- * Per-row Play icon (lcol in ExtJS dvr.js:932-944) is part of the
- * broader per-row inline-action work; not mounted here yet.
+ * Per-row Play icon (lcol in ExtJS dvr.js:932-944) leads the
+ * column set, same as Finished, so a partial recording can be
+ * checked before it is re-recorded or deleted.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -63,7 +64,8 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
 })
 
 /* Column set from dvr.js:912-914 — adds `status` to the entry-list
- * baseline; includes filesize / playcount / filename like Finished.
+ * baseline; includes the Play icon and filesize / playcount /
+ * filename like Finished.
  *
  * `phoneFields: ['status']` promotes the failure-reason text to
  * the phone-card. Its phoneOrder of 99 in DVR_FIELDS parks it as
@@ -71,6 +73,7 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
  * width row at the bottom of the card — giving the failure
  * reason the room a 2-up cell wouldn't. */
 const cols = dvrEntryColumns(kodiFmt, {
+  play: true,
   status: true,
   filesize: true,
   playcount: true,

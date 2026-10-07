@@ -42,8 +42,6 @@ import type { BaseRow } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
 import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
-import { useToastNotify } from '@/composables/useToastNotify'
-import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
@@ -147,36 +145,16 @@ const remove = useBulkAction({
   failPrefix: t('Failed to delete'),
 })
 
-/* Force Scan — POST `api/bouquet/scan` with `uuid: <list>`.
- * `useBulkAction` would handle error toasts + inflight, but
- * Force Scan also wants a success toast (the operation
- * completes silently otherwise) and `useBulkAction` is
- * deliberately success-silent. Writing it inline is cleaner
- * than working around that — same shape as the helper, plus
- * a final `toast.success`. */
-const scanInflight = ref(false)
-const toast = useToastNotify()
-
-async function onForceScan(selection: BaseRow[], clearSelection: () => void) {
-  const uuids = selection.map((r) => r.uuid).filter((u): u is string => !!u)
-  if (uuids.length === 0) return
-  scanInflight.value = true
-  try {
-    await apiCall('bouquet/scan', { uuid: JSON.stringify(uuids) })
-    toast.success(
-      uuids.length === 1
-        ? t('Bouquet scan triggered.')
-        : t('Scan triggered for {0} bouquets.', uuids.length),
-    )
-    clearSelection()
-  } catch (err) {
-    toast.error(
-      t('Failed to trigger scan: {0}', err instanceof Error ? err.message : String(err)),
-    )
-  } finally {
-    scanInflight.value = false
-  }
-}
+/* Force Scan — POST `api/bouquet/scan` with `uuid: <list>`. The
+ * request only triggers the re-fetch (`bouquet_scan`), the grid
+ * shows nothing until it is done, so a toast says it started. Same
+ * shape as Force Scan on Networks. */
+const scan = useBulkAction({
+  endpoint: 'bouquet/scan',
+  failPrefix: t('Failed to trigger scan'),
+  successText: (n) =>
+    n === 1 ? t('Bouquet scan triggered.') : t('Scan triggered for {0} bouquets.', n),
+})
 
 function buildActions(selection: BaseRow[], clearSelection: () => void): ActionDef[] {
   const base = buildAddEditDeleteActions({
@@ -193,10 +171,12 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
   const insertAt = deleteIdx === -1 ? base.length : deleteIdx
   const forceScan: ActionDef = {
     id: 'force-scan',
-    label: scanInflight.value ? t('Scanning…') : t('Force Scan'),
+    /* Static label: the request returns as soon as the scan is
+     * triggered, so "Scanning…" would only flash for that moment. */
+    label: t('Force Scan'),
     tooltip: t('Re-fetch and re-apply mapping for the selected bouquets'),
-    disabled: selection.length === 0 || scanInflight.value,
-    onClick: () => onForceScan(selection, clearSelection),
+    disabled: selection.length === 0 || scan.inflight.value,
+    onClick: () => scan.run(selection, clearSelection),
   }
   return [...base.slice(0, insertAt), forceScan, ...base.slice(insertAt)]
 }

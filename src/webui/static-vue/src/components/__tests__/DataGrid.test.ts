@@ -672,6 +672,65 @@ describe('DataGrid', () => {
     })
   })
 
+  describe('column header tooltip', () => {
+    /* The th title is where a clipped header can be read in full,
+     * so it names the column before explaining it. */
+    function headerTitles(resolveDescription?: (col: ColumnDef) => string): string[] {
+      const wrapper = mountGrid({
+        entries: [{ uuid: 'a', title: 'A', bytes: 1 }],
+        resolveDescription,
+      })
+      return wrapper.findAll('thead th').map((th) => th.attributes('title') ?? '')
+    }
+
+    it('reads "Label: description" when the column has a description', () => {
+      const titles = headerTitles((col) =>
+        col.field === 'title' ? 'Title of the programme.' : '',
+      )
+      expect(titles).toEqual(['Title: Title of the programme.', 'Bytes'])
+    })
+
+    it('falls back to the label without a resolver', () => {
+      expect(headerTitles()).toEqual(['Title', 'Bytes'])
+    })
+
+    it('does not repeat a description that only restates the label', () => {
+      /* "Title: Title" would add nothing. */
+      expect(headerTitles((col) => ` ${col.label} `)).toEqual(['Title', 'Bytes'])
+    })
+  })
+
+  describe('column header title', () => {
+    /* Titles may take two lines, and a lone "#" on the first line of
+     * "# Services" says nothing. Only the visible title ties it to the
+     * next word, the tooltip and the column menu keep the plain label. */
+    const hashCols: ColumnDef[] = [
+      { field: 'num_svc', label: '# Services' },
+      { field: 'scanq_length', label: 'Scan queue length' },
+      { field: 'number', label: '#' },
+    ]
+
+    function mountHashGrid() {
+      return mountGrid({ columns: hashCols, entries: [{ uuid: 'a', num_svc: 1 }] })
+    }
+
+    it('ties a leading one-character word to the next word', () => {
+      const titles = mountHashGrid()
+        .findAll('.p-datatable-column-title')
+        .map((s) => s.text())
+      expect(titles).toEqual(['# Services', 'Scan queue length', '#'])
+    })
+
+    it('keeps the plain label in the tooltip and the column menu', () => {
+      const wrapper = mountHashGrid()
+      const plain = ['# Services', 'Scan queue length', '#']
+      expect(wrapper.findAll('thead th').map((th) => th.attributes('title'))).toEqual(plain)
+      expect(
+        wrapper.findAllComponents(ColumnHeaderMenu).map((m) => m.props('label')),
+      ).toEqual(plain)
+    })
+  })
+
   describe('metaKeySelection gating', () => {
     it('defaults to false (clicks select rows for normal grids)', () => {
       const wrapper = mountGrid({

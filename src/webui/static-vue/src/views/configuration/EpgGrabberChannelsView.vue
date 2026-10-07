@@ -180,11 +180,17 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
    * instead of `buildAddEditDeleteActions` (which mandates an
    * `onAdd` handler). Same shape as `DvbServicesView.vue`. */
   return [
+    /* Edit — one row opens the plain editor, two or more open the
+     * multi-edit drawer (useEditorMode), like Classic
+     * (`idnode.js:1809-1810`). */
     {
       id: 'edit',
       label: t('Edit'),
-      tooltip: t('Edit the selected EPG grabber channel'),
-      disabled: selection.length !== 1,
+      tooltip:
+        selection.length > 1
+          ? t('Edit the selected EPG grabber channels')
+          : t('Edit the selected EPG grabber channel'),
+      disabled: selection.length === 0,
       onClick: () => openEditor(selection),
     },
     {
