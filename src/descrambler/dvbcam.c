@@ -302,11 +302,9 @@ dvbcam_mtd_pid_mapper ( void *opaque, uint16_t pid,
 
   (void)kind;
 
-  /* uniq == 0 means the per-context remap table is exhausted (already
-   * logged inside linuxdvb_ddci_mtd_map_pid()) - leave the real PID in
-   * place rather than write a bogus PID 0 (PAT) into the CA-PMT, which
-   * would be actively misleading to the CAM */
-  return uniq ? uniq : pid;
+  /* Never send an unmapped real PID to a shared CAM.  The CA-PMT
+   * builder treats 0xffff as an invalid mapping and aborts. */
+  return uniq ? uniq : 0xffff;
 }
 
 static uint16_t
@@ -527,21 +525,29 @@ dvbcam_service_destroy(th_descrambler_t *td)
 int
 dvbcam_ddci_emm_put(service_t *t, uint16_t pid, const uint8_t *tsb, int len)
 {
-  th_descrambler_runtime_t *dr = ((mpegts_service_t *)t)->s_descramble;
+  th_descrambler_runtime_t *dr;
   dvbcam_active_service_t *as;
+  linuxdvb_ddci_t *lddci;
 
   /* EMM PIDs are subscribed as MPS_SERVICE entries but are not elementary
    * streams, so ts_recv_packet1() does not pass them through the normal
    * descrambler path. Forward CAT-discovered EMM PIDs into DDCI here so they
    * use the same MTD PID mapping as the service traffic. */
-  if (dr == NULL || dr->dr_descrambler == NULL)
+  tvh_mutex_lock(&dvbcam_mutex);
+  dr = ((mpegts_service_t *)t)->s_descramble;
+  if (dr == NULL || dr->dr_descrambler == NULL) {
+    tvh_mutex_unlock(&dvbcam_mutex);
     return 0;
+  }
   as = (dvbcam_active_service_t *)dr->dr_descrambler;
   if (as->ac == NULL || as->lddci == NULL ||
-      !mpegts_pid_rexists(&as->cat_pids, pid))
+      !mpegts_pid_rexists(&as->cat_pids, pid)) {
+    tvh_mutex_unlock(&dvbcam_mutex);
     return 0;
-
-  linuxdvb_ddci_put(as->ac->ca->lca_transport->lddci, t, tsb, len);
+  }
+  lddci = as->lddci;
+  linuxdvb_ddci_put(lddci, t, tsb, len);
+  tvh_mutex_unlock(&dvbcam_mutex);
   return 1;
 }
 
@@ -667,6 +673,14 @@ end_of_search_for_cam:
   if ((as = calloc(1, sizeof(*as))) == NULL)
     goto end;
 
+#if ENABLE_DDCI
+  lcat = ac->ca->lca_transport;
+  if (lcat->lddci && linuxdvb_ddci_assign(lcat->lddci, t, dc->limit) < 0) {
+    free(as);
+    goto end;
+  }
+#endif
+
   ac->allocated_programs++;
 
   as->ac = ac;
@@ -729,10 +743,7 @@ end_of_search_for_cam:
   dr->dr_descrambler = td;
   dr->dr_descramble = descrambler_pass;
 #if ENABLE_DDCI
-  lcat = ac->ca->lca_transport;
   if (lcat->lddci) {
-    /* assign the service to the DD CI CAM */
-    linuxdvb_ddci_assign(lcat->lddci, t, dc->limit);
     dr->dr_descramble = dvbcam_descramble_ddci;
     as->lddci = lcat->lddci;
   }

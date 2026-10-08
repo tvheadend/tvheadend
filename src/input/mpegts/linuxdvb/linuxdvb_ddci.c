@@ -568,10 +568,10 @@ linuxdvb_ddci_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_sid )
   int i;
 
   if (ctx_id < 0)
-    return real_sid;
+    return 0xffff;
   ctx_idx = linuxdvb_ddci_find_mux_ctx_id(lddci, ctx_id);
   if (ctx_idx < 0)
-    return real_sid;
+    return 0xffff;
 
   ctx = &lddci->lddci_mux_ctx[ctx_idx];
   for (i = 0; i < ctx->ctx_sid_count; i++)
@@ -583,7 +583,7 @@ linuxdvb_ddci_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_sid )
              "CAM %s: MTD slot %d SID namespace exhausted while mapping "
              "ctx #%d SID %d (%04X)",
              lddci->lddci_id, ctx->ctx_slot, ctx_id, real_sid, real_sid);
-    return real_sid;
+    return 0xffff;
   }
 
   i = ctx->ctx_sid_count++;
@@ -1211,6 +1211,7 @@ linuxdvb_ddci_send_buffer_put
     } else {
       int i;
       int free_lane = -1;
+      int empty_lane = -1;
       int lane_idx = -1;
       for (i = 0; i < LDDCI_MTD_RR_LANES; i++) {
         if (ddci_snd_buf->lddci_send_lanes[i].ctx_id == ctx_id) {
@@ -1219,10 +1220,15 @@ linuxdvb_ddci_send_buffer_put
         }
         if (free_lane < 0 && ddci_snd_buf->lddci_send_lanes[i].ctx_id < 0)
           free_lane = i;
+        if (empty_lane < 0 && TAILQ_EMPTY(&ddci_snd_buf->lddci_send_lanes[i].queue))
+          empty_lane = i;
       }
-      if (lane_idx < 0) lane_idx = free_lane;
+      if (lane_idx < 0)
+        lane_idx = free_lane >= 0 ? free_lane : empty_lane;
       if (lane_idx < 0) {
-        /* No queue lane is available for this MTD context. */
+        /* All lanes contain packets for another MTD context. */
+        if (tvhlog_limit(&ddci_snd_buf->lddci_send_buf_loglimit, 10))
+          tvhwarn(LS_DDCI, "no send queue lane available for MTD context %d, discarding packet", ctx_id);
         ddci_snd_buf->lddci_send_buf_size -= len;
         ddci_snd_buf->lddci_send_buf_pkgCntW -= len / LDDCI_TS_SIZE;
         free(sp);
@@ -1912,7 +1918,7 @@ linuxdvb_ddci_mtd_map_pid ( linuxdvb_ddci_t *lddci, const service_t *t,
   int svc_idx;
 
   if (lddci == NULL || t == NULL)
-    return real_pid;
+    return 0;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
   svc_idx = linuxdvb_ddci_find_svc_ctx(lddci, t);
@@ -1932,7 +1938,7 @@ linuxdvb_ddci_mtd_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_si
   uint16_t r;
 
   if (lddci == NULL || ctx_id < 0)
-    return real_sid;
+    return 0xffff;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
   r = linuxdvb_ddci_map_sid(lddci, ctx_id, real_sid);
@@ -2061,10 +2067,9 @@ linuxdvb_ddci_put
   lddci->lddci_prev_tsb = tsb;
   lddci->lddci_prev_ctx_id = ctx_id;
 
-  /* Teardown race: preserve native behaviour. */
+  /* A missing MTD assignment must never forward native PIDs to the shared CAM. */
   if (svc_idx < 0 || ctx_id < 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
-    linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len);
     return;
   }
 
@@ -2200,7 +2205,7 @@ linuxdvb_ddci_put
   }
 }
 
-void
+int
 linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
 {
   mpegts_service_t *s = (mpegts_service_t *)t;
@@ -2214,7 +2219,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
   /* The dynamic service-context table is the authoritative assignment state. */
   if (linuxdvb_ddci_find_svc_ctx(lddci, t) >= 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
-    return;
+    return 0;
   }
 
   /* Defensive duplicate of dvbcam admission control: the user-configured
@@ -2223,7 +2228,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
     tvherror(LS_DDCI, "CAM %s: configured Service limit %d reached, "
              "refusing to assign %p", lddci->lddci_id, svc_limit, t);
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
-    return;
+    return -1;
   }
 
   if (linuxdvb_ddci_ensure_svc_capacity(
@@ -2231,7 +2236,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
     tvherror(LS_DDCI, "CAM %s: out of memory growing MTD service table",
              lddci->lddci_id);
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
-    return;
+    return -1;
   }
 
   ctx_idx = linuxdvb_ddci_find_mux_ctx(lddci, s->s_dvb_mux);
@@ -2242,7 +2247,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
       tvherror(LS_DDCI, "CAM %s: out of memory growing MTD mux table",
                lddci->lddci_id);
       tvh_mutex_unlock(&lddci->lddci_mux_lock);
-      return;
+      return -1;
     }
     {
       int slot = linuxdvb_ddci_alloc_mux_slot_locked(lddci);
@@ -2252,7 +2257,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
                  lddci->lddci_id, LDDCI_MTD_SLOT_MAX,
                  s->s_dvb_mux ? s->s_dvb_mux->mm_nicename : "?");
         tvh_mutex_unlock(&lddci->lddci_mux_lock);
-        return;
+        return -1;
       }
       ctx_idx = lddci->lddci_mux_ctx_count++;
       ctx = &lddci->lddci_mux_ctx[ctx_idx];
@@ -2287,6 +2292,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
             lddci->lddci_mux_ctx[ctx_idx].ctx_refcount);
 
   tvh_mutex_unlock(&lddci->lddci_mux_lock);
+  return 0;
 }
 
 void
@@ -2373,8 +2379,16 @@ int
 linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, const service_t *t, int multi,
                               int svc_limit )
 {
-  (void)t;
+  const mpegts_service_t *s = (const mpegts_service_t *)t;
+
   tvh_mutex_lock(&lddci->lddci_mux_lock);
+
+  /* An available service slot does not imply a free mux namespace slot. */
+  if (linuxdvb_ddci_find_mux_ctx(lddci, s->s_dvb_mux) < 0 &&
+      linuxdvb_ddci_alloc_mux_slot_locked(lddci) < 0) {
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    return 1;
+  }
 
   if (lddci->lddci_svc_ctx_count == 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
