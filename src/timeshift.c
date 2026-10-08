@@ -375,6 +375,22 @@ const idclass_t timeshift_conf_class = {
       .off    = offsetof(timeshift_conf_t, cache_staging),
       .opts   = PO_EXPERT,
     },
+    {
+      .type   = PT_BOOL,
+      .id     = "cache_seek_tunein",
+      .name   = N_("Cache seek before tune-in"),
+      .desc   = N_("Let a client rewind into the part of a shared channel "
+                   "cache that is older than its own subscription, filled "
+                   "because another viewer tuned the channel first or "
+                   "\"Keep tuned channels\" held it. That part is answered "
+                   "with negative positions: enable it only for clients that "
+                   "order them correctly, since a client that does not shows "
+                   "a frozen picture with sound until playback reaches the "
+                   "moment it tuned in. Recording from the cache is not "
+                   "affected either way."),
+      .off    = offsetof(timeshift_conf_t, cache_seek_tunein),
+      .opts   = PO_EXPERT,
+    },
     {}
   }
 };
