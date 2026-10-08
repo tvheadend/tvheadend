@@ -29,6 +29,11 @@
 #include "epggrab.h"
 #include "descrambler/dvbcam.h"
 
+#if ENABLE_TIMESHIFT
+#include "subscriptions.h"
+#include "timeshift/timeshift_svcbuf.h"
+#endif
+
 /* **************************************************************************
  * Class definition
  * *************************************************************************/
@@ -379,6 +384,62 @@ mpegts_service_config_save ( service_t *t, char *filename, size_t fsize )
 /*
  * Service instance list
  */
+#if ENABLE_TIMESHIFT
+
+/*
+ * Return the total amount of channel-cache history which would disappear
+ * if this input were retuned.
+ *
+ * cache_only is set only when all subscriptions currently using the input
+ * are our disposable timeshift cache keepalives.  Real live/DVR/internal
+ * subscriptions therefore retain the normal scheduler tie-break rules.
+ */
+static int64_t
+mpegts_input_cache_retention ( mpegts_input_t *mi, int *cache_only )
+{
+  mpegts_mux_instance_t *mmi;
+  service_t *t;
+  th_subscription_t *ths;
+  int any = 0;
+  int64_t oldest, newest;
+  int64_t total = 0;
+
+  *cache_only = 1;
+
+  tvh_mutex_lock(&mi->mi_output_lock);
+
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    LIST_FOREACH(t, &mmi->mmi_mux->mm_transports, s_active_link) {
+
+      LIST_FOREACH(ths, &t->s_subscriptions, ths_service_link) {
+        any = 1;
+        if (!ths->ths_cache_keepalive)
+          *cache_only = 0;
+      }
+
+      /*
+       * svcbuf_span() reports the actual retained history, not merely
+       * how long the keepalive has existed.  Thus expiry caused by the
+       * configured period or storage limits is reflected here.
+       */
+      if (t->s_svcbuf &&
+          svcbuf_span(t->s_svcbuf, &oldest, &newest) &&
+          newest > oldest)
+        total += newest - oldest;
+    }
+  }
+
+  tvh_mutex_unlock(&mi->mi_output_lock);
+
+  if (!any)
+    *cache_only = 0;
+
+  return total;
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
+
 static int
 mpegts_service_enlist_raw
   ( service_t *t, tvh_input_t *ti, struct service_instance_list *sil,
@@ -387,6 +448,7 @@ mpegts_service_enlist_raw
   int p, w, r, added = 0, errcnt = 0;
   mpegts_service_t      *s = (mpegts_service_t*)t;
   mpegts_input_t        *mi;
+  service_instance_t     *si;
   mpegts_mux_t          *m = s->s_dvb_mux;
   mpegts_mux_instance_t *mmi;
 
@@ -431,7 +493,12 @@ mpegts_service_enlist_raw
         w = 0;
     }
 
-    service_instance_add(sil, t, mi->mi_instance, mi->mi_name, p, w);
+    si = service_instance_add(sil, t, mi->mi_instance,
+                              mi->mi_name, p, w);
+#if ENABLE_TIMESHIFT
+    si->si_cache_time =
+      mpegts_input_cache_retention(mi, &si->si_cache_only);
+#endif
     added++;
   }
 

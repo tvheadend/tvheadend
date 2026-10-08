@@ -31,6 +31,9 @@
 #include "settings.h"
 #include "epg.h"
 #include "dvr/dvr.h"
+#if ENABLE_TIMESHIFT
+#include "timeshift.h"
+#endif
 #include "htsp_server.h"
 #include "epggrab.h"
 #include "imagecache.h"
@@ -491,6 +494,166 @@ int epg_channel_ignore_broadcast(channel_t *ch, time_t start)
   return 0;
 }
 
+/*
+ * Recently expired broadcasts retained for retrospective recordings.
+ *
+ * They have already been removed from ch_epg_schedule, therefore they
+ * no longer participate in now/next or normal EPG queries.  The extra
+ * object reference only keeps their global EPG ID alive so an HTSP
+ * addDvrEntry(eventId) from Kodi can still resolve the broadcast while
+ * its programme may still overlap the channel timeshift cache.
+ */
+typedef struct epg_retro_event {
+  epg_broadcast_t *ebc;
+  time_t expires;              /* 0 = retain until channel unlink/shutdown */
+  LIST_ENTRY(epg_retro_event) link;
+} epg_retro_event_t;
+
+static LIST_HEAD(, epg_retro_event) epg_retro_events;
+static uint32_t epg_retro_count;
+
+/*
+ * With "Unlimited time" retention the holds below have no expiry of their
+ * own, so bound their number: only the most recent ones can still overlap
+ * what the channel caches actually hold.  Generous enough for a day of
+ * programmes on a large channel list, small next to an EPG database.
+ */
+#define EPG_RETRO_MAX 2048
+
+static void
+_epg_retro_release ( epg_retro_event_t *r )
+{
+  epg_broadcast_t *ebc = r->ebc;
+
+  LIST_REMOVE(r, link);
+  free(r);
+  epg_retro_count--;
+  ebc->ops->putref(ebc);
+}
+
+static void
+_epg_retro_purge ( void )
+{
+  epg_retro_event_t *r, *next, *oldest;
+  time_t now = gclk();
+
+  for (r = LIST_FIRST(&epg_retro_events); r != NULL; r = next) {
+    next = LIST_NEXT(r, link);
+    if (r->expires && r->expires <= now)
+      _epg_retro_release(r);
+  }
+
+  /* over the cap, the programme which ended first goes */
+  while (epg_retro_count > EPG_RETRO_MAX) {
+    oldest = LIST_FIRST(&epg_retro_events);
+    LIST_FOREACH(r, &epg_retro_events, link)
+      if (r->ebc->stop < oldest->ebc->stop)
+        oldest = r;
+    tvhdebug(LS_EPG,
+             "drop retained event %u (%s): %u retained events is the limit",
+             oldest->ebc->id,
+             epg_broadcast_get_title(oldest->ebc, NULL),
+             EPG_RETRO_MAX);
+    _epg_retro_release(oldest);
+  }
+}
+
+static void
+_epg_retro_hold ( epg_broadcast_t *ebc )
+{
+#if ENABLE_TIMESHIFT
+  epg_retro_event_t *r;
+  time_t expires, now;
+
+  if (!timeshift_conf.enabled || !timeshift_conf.record_cache)
+    return;
+
+  if (!timeshift_conf.unlimited_period && timeshift_conf.max_period == 0)
+    return;
+
+  now = gclk();
+
+  /*
+   * Best-effort retrospective recording remains useful until the last
+   * part of the programme has aged out of the configured time window.
+   * Two seconds match the svcbuf block-time tolerance.
+   *
+   * With unlimited time retention there is no time-derived expiry;
+   * channel unlink/shutdown will release the reference.
+   */
+  if (timeshift_conf.unlimited_period)
+    expires = 0;
+  else
+    expires = ebc->stop +
+              (time_t)timeshift_conf.max_period * 60 + 2;
+
+  if (expires && expires <= now)
+    return;
+
+  _epg_retro_purge();
+
+  LIST_FOREACH(r, &epg_retro_events, link) {
+    if (r->ebc == ebc) {
+      if (!r->expires || !expires)
+        r->expires = 0;
+      else if (expires > r->expires)
+        r->expires = expires;
+      return;
+    }
+  }
+
+  r = calloc(1, sizeof(*r));
+  if (r == NULL)
+    return;
+
+  ebc->ops->getref(ebc);
+
+  r->ebc = ebc;
+  r->expires = expires;
+  LIST_INSERT_HEAD(&epg_retro_events, r, link);
+  epg_retro_count++;
+
+  if (expires)
+    tvhdebug(LS_EPG,
+             "retain expired event %u (%s) on %s for retrospective "
+             "recording for %"PRItime_t"s",
+             ebc->id,
+             epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ebc->channel, channel_blank_name),
+             expires - now);
+  else
+    tvhdebug(LS_EPG,
+             "retain expired event %u (%s) on %s for retrospective "
+             "recording without time limit",
+             ebc->id,
+             epg_broadcast_get_title(ebc, NULL),
+             channel_get_name(ebc->channel, channel_blank_name));
+#else
+  (void)ebc;
+#endif
+}
+
+static void
+_epg_retro_drop_channel ( channel_t *ch )
+{
+  epg_retro_event_t *r, *next;
+
+  for (r = LIST_FIRST(&epg_retro_events); r != NULL; r = next) {
+    next = LIST_NEXT(r, link);
+    if (r->ebc->channel == ch)
+      _epg_retro_release(r);
+  }
+}
+
+static void
+_epg_retro_flush ( void )
+{
+  epg_retro_event_t *r;
+
+  while ((r = LIST_FIRST(&epg_retro_events)) != NULL)
+    _epg_retro_release(r);
+}
+
 static void _epg_channel_rem_broadcast
   ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
@@ -511,6 +674,8 @@ static void _epg_channel_timer_callback ( void *p )
   epg_broadcast_t *ebc, *cur, *nxt;
   channel_t *ch = (channel_t*)p;
   char tm1[32];
+
+  _epg_retro_purge(); /* retrospective EPG */
 
   /* Clear now/next */
   if ((cur = ch->ch_epg_now)) {
@@ -533,6 +698,7 @@ static void _epg_channel_timer_callback ( void *p )
       tvhdebug(LS_EPG, "expire event %u (%s) from %s",
                ebc->id, epg_broadcast_get_title(ebc, NULL),
                channel_get_name(ch, channel_blank_name));
+      _epg_retro_hold(ebc); /* retrospective EPG */
       _epg_channel_rem_broadcast(ch, ebc, NULL);
       continue; // skip to next
 
@@ -732,6 +898,8 @@ static epg_broadcast_t *_epg_channel_add_broadcast
 void epg_channel_unlink ( channel_t *ch )
 {
   epg_broadcast_t *ebc;
+
+  _epg_retro_drop_channel(ch); /* retrospective EPG */
   while ((ebc = RB_FIRST(&ch->ch_epg_schedule)))
     _epg_channel_rem_broadcast(ch, ebc, NULL);
   gtimer_disarm(&ch->ch_epg_timer);
@@ -1479,19 +1647,32 @@ int epg_broadcast_set_genre
   ( epg_broadcast_t *b, epg_genre_list_t *genre, epg_changes_t *changed )
 {
   int save = 0;
-  epg_genre_t *g1, *g2;
+  epg_genre_t *g1, *g2, *last = NULL;
 
   if (!b) return 0;
 
   if (changed) *changed |= EPG_CHANGED_GENRE;
 
-  g1 = LIST_FIRST(&b->genre);
+  /* Its own list: nothing to change, and it must not be emptied below
+   * while it is searched */
+  if (genre == &b->genre) return 0;
 
-  /* Remove old */
+  g1 = LIST_FIRST(&b->genre);
+  LIST_INIT(&b->genre);
+
+  /* Remove old: relink the entries still wanted, in order, and free the
+   * others.  Same result as unlinking them in place, but the list head is
+   * rewritten explicitly: static analysers do not follow LIST_REMOVE()
+   * updating it through le_prev, and took the head for a freed entry. */
   while (g1) {
     g2 = LIST_NEXT(g1, link);
-    if (!epg_genre_list_contains(genre, g1, 0)) {
-      LIST_REMOVE(g1, link);
+    if (epg_genre_list_contains(genre, g1, 0)) {
+      if (last)
+        LIST_INSERT_AFTER(last, g1, link);
+      else
+        LIST_INSERT_HEAD(&b->genre, g1, link);
+      last = g1;
+    } else {
       free(g1);
       save = 1;
     }
@@ -2808,6 +2989,8 @@ int epg_config_deserialize( htsmsg_t *m )
 void epg_skel_done(void)
 {
   epg_broadcast_t **broad;
+
+  _epg_retro_flush(); /* retrospective EPG */
 
   broad = _epg_broadcast_skel();
   free(*broad); *broad = NULL;
