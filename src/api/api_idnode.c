@@ -646,8 +646,11 @@ api_idnode_handler
           continue;
         }
         handler(perm, in);
-        if (!destroyed)
-          idnode_perm_unset(in);
+        if (!destroyed) {
+          in = idnode_find(uuid, idc, domain);
+          if (in)
+            idnode_perm_unset(in);
+        }
         cnt++;
       }
       tvh_mutex_unlock(&global_lock);
@@ -672,8 +675,11 @@ api_idnode_handler
         err = EPERM;
       } else {
         handler(perm, in);
-        if (!destroyed)
-          idnode_perm_unset(in);
+        if (!destroyed) {
+          in = idnode_find(uuid, idc, NULL);
+          if (in)
+            idnode_perm_unset(in);
+        }
       }
       htsmsg_destroy(msg);
     }
