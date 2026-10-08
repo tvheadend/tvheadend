@@ -362,12 +362,22 @@ svcts_queue_clear ( svcts_t *st )
  * of its own, which is what lets a recording still start at the programme's
  * start.
  */
+/* Whether a seekable range exists at all, whatever its bounds.  Kept apart
+ * from svcts_oldest(), which answers 0 both for "no cache" and for a range
+ * clamped to the client's own zero -- two things that mean the opposite to a
+ * client, so the presence of a range cannot be read from its value. */
+static int
+svcts_span ( svcts_t *st, int64_t *oldest, int64_t *newest )
+{
+  return st->sb != NULL && st->live_time != 0 &&
+         svcbuf_span(st->sb, oldest, newest);
+}
+
 static int64_t
 svcts_oldest ( svcts_t *st )
 {
   int64_t oldest, newest, t;
-  if (st->sb == NULL || st->live_time == 0 ||
-      !svcbuf_span(st->sb, &oldest, &newest))
+  if (!svcts_span(st, &oldest, &newest))
     return 0;
   t = st->live_time - (st->live_mono - oldest) + SVCTS_PREROLL;
   if (st->max_time && t < st->live_time - st->max_time)
@@ -381,12 +391,12 @@ static void
 svcts_fill_status ( svcts_t *st, timeshift_status_t *status )
 {
   int64_t cur = st->state == SVCTS_LIVE ? st->live_time : st->last_time;
-  int64_t start = svcts_oldest(st);
+  int64_t oldest, newest;
 
   status->full = 0;
   status->shift = ts_rescale_inv(MAX(0, st->live_time - cur), 1000000);
-  if (start) {
-    status->pts_start = ts_rescale_inv(start, 1000000);
+  if (svcts_span(st, &oldest, &newest)) {
+    status->pts_start = ts_rescale_inv(svcts_oldest(st), 1000000);
     status->pts_end   = ts_rescale_inv(st->live_time, 1000000);
   } else {
     status->pts_start = PTS_UNSET;
