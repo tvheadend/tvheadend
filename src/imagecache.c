@@ -268,8 +268,17 @@ imagecache_new_contents ( imagecache_image_t *img,
   if (!(fp = tvh_fopen(tpath, "wb")))
     return 1;
 
-  fwrite(data, dsize, 1, fp);
-  fclose(fp);
+  if (dsize && fwrite(data, dsize, 1, fp) != 1) {
+    tvherror(LS_IMAGECACHE, "unable to write file '%s'", tpath);
+    fclose(fp);
+    unlink(tpath);
+    return 1;
+  }
+  if (fclose(fp)) {
+    tvherror(LS_IMAGECACHE, "unable to close file '%s'", tpath);
+    unlink(tpath);
+    return 1;
+  }
   unlink(path);
   tvh_mutex_lock(&imagecache_lock);
   memcpy(img->sha1, sha1, 20);
