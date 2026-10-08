@@ -34,8 +34,11 @@ after the oldest data still there.
 
 A client can rewind only as far back as the moment it tuned the channel,
 even when the cache holds more because another viewer tuned it earlier or
-*Keep tuned channels* held it. A recording is not limited that way: it
-still starts at the programme's start, as far back as the cache reaches.
+*Keep tuned channels* held it. *Cache seek before tune-in* lifts that
+limit, for clients that order negative positions correctly; one that does
+not shows a frozen picture with sound until playback reaches the moment it
+tuned in. A recording is not limited either way: it still starts at the
+programme's start, as far back as the cache reaches.
 
 ---
 
