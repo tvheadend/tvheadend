@@ -128,7 +128,7 @@ int en50221_capmt_build
 {
   uint8_t *d, *x, *y, dtag, dlen, cmd_id;
   const uint8_t *p;
-  uint16_t l, caid, pid;
+  uint16_t l, caid, pid, mapped;
   size_t tl;
   int first = 0;
 
@@ -150,7 +150,10 @@ int en50221_capmt_build
     goto reterr;
   }
 
-  put_2byte(d + 1, smap ? smap(opaque, svcid) : svcid);
+  mapped = smap ? smap(opaque, svcid) : svcid;
+  if (smap && mapped == 0xffff)
+    goto reterr;
+  put_2byte(d + 1, mapped);
   /* Preserve the PMT version/current_next_indicator byte. PID/SID mapping
    * changes only the identifiers serialized into the CA-PMT and does not
    * alter PMT version semantics. This keeps mapped and native CA-PMTs
@@ -183,8 +186,12 @@ int en50221_capmt_build
           first = 0;
         }
         memcpy(x, p, dlen + 2);
-        if (pmap)
-          put_pid(x + 4, pmap(opaque, pid, CAPMT_PID_MAP_CA));
+        if (pmap) {
+          mapped = pmap(opaque, pid, CAPMT_PID_MAP_CA);
+          if (mapped == 0 || mapped >= 0x1fff)
+            goto reterr;
+          put_pid(x + 4, mapped);
+        }
         x += dlen + 2;
       }
     }
@@ -205,8 +212,12 @@ int en50221_capmt_build
     tl -= 5;
     if (en50221_capmt_check_pid(s, pid)) {
       memcpy(y = x, p - 5, 3); /* stream type, PID */
-      if (pmap)
-        put_pid(y + 1, pmap(opaque, pid, CAPMT_PID_MAP_ES));
+      if (pmap) {
+        mapped = pmap(opaque, pid, CAPMT_PID_MAP_ES);
+        if (mapped == 0 || mapped >= 0x1fff)
+          goto reterr;
+        put_pid(y + 1, mapped);
+      }
       x += 5;
       first = 1;
       while (l > 1) {
@@ -221,8 +232,12 @@ int en50221_capmt_build
               first = 0;
             }
             memcpy(x, p, dlen + 2);
-            if (pmap)
-              put_pid(x + 4, pmap(opaque, pid, CAPMT_PID_MAP_CA));
+            if (pmap) {
+              mapped = pmap(opaque, pid, CAPMT_PID_MAP_CA);
+              if (mapped == 0 || mapped >= 0x1fff)
+                goto reterr;
+              put_pid(x + 4, mapped);
+            }
             x += dlen + 2;
           }
         }
