@@ -313,26 +313,33 @@ mpegts_network_scan_mux_active ( mpegts_mux_t *mm )
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
 }
 
-/* Mux has been reactivated */
-int
+/*
+ * Mux has been reactivated - its TSID changed, so re-run the scan to pick
+ * up the new identity.
+ *
+ * Only a tuned mux may go to the active queue, and it must leave here with
+ * a scan timeout armed. An entry in mn_scan_active is not visited by
+ * mpegts_network_scan_timer_cb(), so nothing tunes it again, and the only
+ * two routes to mpegts_mux_scan_done() - the timeout, and
+ * mpegts_table_fastswitch() on a mux that is delivering data - are both
+ * closed for a mux that is neither tuned nor on a timer. Such a mux never
+ * returns to the idle state and blocks the network scan for good.
+ */
+void
 mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm )
 {
   mpegts_network_t *mn = mm->mm_network;
   if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
-    return 0;
-  /* Only a tuned mux may be moved to the active queue. Otherwise, the mux
-   * is orphaned - it is taken out of the scan queues, but nothing is able
-   * to finish the scan for it, so it never returns to the idle state.
-   */
+    return;
   if (mm->mm_active == NULL) {
     tvhtrace(LS_MPEGTS, "%s - scan not reactivated, mux is not tuned", mm->mm_nicename);
-    return 0;
+    return;
   }
   mpegts_network_scan_queue_del0(mm);
   mm->mm_scan_init  = 0;
   mm->mm_scan_state = MM_SCAN_STATE_ACTIVE;
   TAILQ_INSERT_TAIL(&mn->mn_scan_active, mm, mm_scan_link);
-  return 1;
+  mpegts_mux_scan_timeout_arm(mm, mm->mm_active->mmi_input);
 }
 
 /******************************************************************************
