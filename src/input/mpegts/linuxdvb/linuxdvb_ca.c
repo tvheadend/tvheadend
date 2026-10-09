@@ -93,6 +93,8 @@ struct linuxdvb_ca_write {
   uint8_t  data[0];
 };
 
+
+
 /*
  * CA thread routines
  */
