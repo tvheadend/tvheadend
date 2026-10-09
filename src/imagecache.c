@@ -1042,15 +1042,22 @@ imagecache_image_ready ( imagecache_image_t *i )
   if (i->updated)
     return 0;
 
-  /* Wait for the in-flight fetch */
+  /* Wait for the in-flight fetch.  imagecache_cond is signalled by several
+   * events, a transient failure parking the image in RETRY among them, so wait
+   * on the state rather than on a wakeup: returning on the first signal told
+   * the caller the image was ready when the fetch had just failed, and
+   * imagecache_filename() then built a path to a file that does not exist.
+   * IDLE cannot tell a success from a hard failure -- both land there and both
+   * set `updated` -- so only RETRY, where there is certainly no new data, is
+   * reported as a failure here. */
   if (i->state == FETCHING) {
     mono = mclk() + sec2mono(5);
-    do {
+    while (i->state == FETCHING) {
       e = tvh_cond_timedwait(&imagecache_cond, &imagecache_lock, mono);
       if (e == ETIMEDOUT)
         return -1;
-    } while (ERRNO_AGAIN(e));
-    return 0;
+    }
+    return i->state == RETRY ? -1 : 0;
   }
 
   /* Attempt to fetch directly */
