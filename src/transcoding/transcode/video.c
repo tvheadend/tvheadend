@@ -321,7 +321,15 @@ tvh_video_context_open_filters(TVHContext *self)
         return -1;
     }
 
-#if LIBAVCODEC_VERSION_MAJOR > 59
+#if TVH_BUFFERSINK_ARRAY_OPTS
+    int ret = tvh_context_open_filters(self,
+        "buffer", source_args,                                  // source
+        strlen(filters) ? filters : "null",                     // filters
+        "buffersink",                                           // sink
+        "pixel_formats", AV_OPT_SET_ARRAY,                      // sink option: pix_fmt
+        AV_OPT_TYPE_PIXEL_FMT, &self->oavctx->pix_fmt,
+        NULL);                                                  // _IMPORTANT!_
+#elif LIBAVCODEC_VERSION_MAJOR > 59
     int ret = tvh_context_open_filters(self,
         "buffer", source_args,                                  // source
         strlen(filters) ? filters : "null",                     // filters

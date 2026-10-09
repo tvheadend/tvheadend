@@ -287,7 +287,22 @@ tvh_audio_context_open_filters(TVHContext *self, AVDictionary **opts)
         return -1;
     }
 
-#if LIBAVCODEC_VERSION_MAJOR > 59
+#if TVH_BUFFERSINK_ARRAY_OPTS
+    int ret = tvh_context_open_filters(self,
+        "abuffer", source_args,                           // source
+        filters,                                          // filters
+        "abuffersink",                                    // sink
+        "channel_layouts", AV_OPT_SET_ARRAY,              // sink option: channel_layout
+        AV_OPT_TYPE_CHLAYOUT,
+        &self->oavctx->ch_layout,
+        "sample_formats",  AV_OPT_SET_ARRAY,              // sink option: sample_fmt
+        AV_OPT_TYPE_SAMPLE_FMT,
+        &self->oavctx->sample_fmt,
+        "samplerates",     AV_OPT_SET_ARRAY,              // sink option: sample_rate
+        AV_OPT_TYPE_INT,
+        &self->oavctx->sample_rate,
+        NULL);                                            // _IMPORTANT!_
+#elif LIBAVCODEC_VERSION_MAJOR > 59
     char ch_layout[64];
     av_channel_layout_describe(&self->oavctx->ch_layout, ch_layout, sizeof(ch_layout));
     
