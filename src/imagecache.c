@@ -578,6 +578,10 @@ error:
     tvhwarn(LS_IMAGECACHE, "failed to download %s", img->url);
   } else {
     img->attempts = 0;
+    if (img->failed) {
+      img->failed = 0;
+      imagecache_image_save(img);
+    }
     tvhdebug(LS_IMAGECACHE, "downloaded %s", img->url);
   }
   tvh_cond_signal(&imagecache_cond, 1);
