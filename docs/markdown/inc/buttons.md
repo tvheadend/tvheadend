@@ -4,5 +4,6 @@ easier to find, they've all been moved to a single table in the
 [Introduction](introduction) (*Using the Interface*).
 
 > Many of the buttons have tool-tips giving you a hint as to their
-function. If you don't see any, you may need to enable them in
-**Configuration -> General -> Base**.
+function. The *Tooltips* option in **Configuration -> General -> Base**
+(Advanced view level) can turn off the tool-tips that describe each
+setting.
