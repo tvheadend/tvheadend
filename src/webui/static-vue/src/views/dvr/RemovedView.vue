@@ -98,7 +98,7 @@ const rerecord = useBulkAction({
     :default-sort="{ key: 'start_real', dir: 'DESC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
     :phone-item-size="64"
-    count-label="recordings"
+    :count-label="t('Recordings')"
     :groupable-fields="DVR_GROUPABLE_FIELDS"
     class="removed__grid"
     @row-dblclick="(row) => openEditor([row])"

@@ -45,6 +45,7 @@ import {
   rewriteStaticUrls,
 } from '@/utils/markdown'
 import { serverUrl } from '@/utils/base'
+import { t } from '@/composables/useI18n'
 
 export interface HelpHistoryEntry {
   /* Page id, e.g. `firstconfig` or `class/mpegts_service`. The
@@ -114,7 +115,7 @@ function makeErrorEntry(page: string, message: string, labelHint?: string): Help
   const label = labelHint?.trim() || fallbackLabel
   const html =
     `<div class="help-panel__nav-error">` +
-    `<p><strong>Could not load this help page.</strong></p>` +
+    `<p><strong>${escapeHtml(t('Could not load this help page.'))}</strong></p>` +
     `<p><code>${escapeHtml(page)}</code></p>` +
     `<p>${escapeHtml(message)}</p>` +
     `</div>`

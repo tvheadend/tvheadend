@@ -2460,13 +2460,13 @@ async function onCreateAutoRecClick() {
       <template #empty>
         <p class="epg-table-grid__empty">
           <template v-if="queryLoading">
-            Searching the EPG…
+            {{ t('Searching the EPG…') }}
           </template>
           <template v-else-if="state.loading.value">
-            Loading events…
+            {{ t('Loading events…') }}
           </template>
           <template v-else-if="hasActiveFilter">
-            No events match the current filter.
+            {{ t('No events match the current filter.') }}
             <button
               type="button"
               class="epg-table-grid__clear-filters"
@@ -2476,8 +2476,11 @@ async function onCreateAutoRecClick() {
             </button>
           </template>
           <template v-else>
-            No EPG events available. Make sure your network's EPG grabbers are configured and have
-            run at least once.
+            {{
+              t(
+                "No EPG events available. Make sure your network's EPG grabbers are configured and have run at least once."
+              )
+            }}
           </template>
         </p>
       </template>

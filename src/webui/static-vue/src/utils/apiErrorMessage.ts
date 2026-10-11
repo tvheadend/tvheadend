@@ -28,11 +28,12 @@
  */
 
 import { ApiError } from '@/api/errors'
+import { t } from '@/composables/useI18n'
 
 export function apiErrorMessage(e: unknown): string {
   if (e instanceof ApiError) return apiErrorBody(e) ?? statusFallback(e.status)
   if (e instanceof Error) return e.message
-  return 'An unexpected error occurred.'
+  return t('An unexpected error occurred.')
 }
 
 /*
@@ -79,22 +80,22 @@ function jsonErrorField(body: string): string | null {
 function statusFallback(status: number): string {
   switch (status) {
     case 400:
-      return "The server rejected the change but didn't include a reason. The most likely cause is a value that failed validation — check the fields you edited."
+      return t("The server rejected the change but didn't include a reason. The most likely cause is a value that failed validation — check the fields you edited.")
     case 401:
-      return 'Authentication required. Sign in and try again.'
+      return t('Authentication required. Sign in and try again.')
     case 403:
-      return "You don't have permission for this action."
+      return t("You don't have permission for this action.")
     case 404:
-      return 'The item no longer exists. The page may need a refresh.'
+      return t('The item no longer exists. The page may need a refresh.')
     case 409:
-      return 'The change conflicts with the current state. Reload and try again.'
+      return t('The change conflicts with the current state. Reload and try again.')
     case 422:
-      return "The server rejected the change but didn't include a reason. The most likely cause is a value that failed validation."
+      return t("The server rejected the change but didn't include a reason. The most likely cause is a value that failed validation.")
     default:
       if (status >= 500 && status < 600) {
-        return 'Server error. Try again in a moment; if it persists, check the server logs.'
+        return t('Server error. Try again in a moment; if it persists, check the server logs.')
       }
-      return `Unexpected response from the server (status ${status}).`
+      return t('Unexpected response from the server (status {0}).', status)
   }
 }
 
