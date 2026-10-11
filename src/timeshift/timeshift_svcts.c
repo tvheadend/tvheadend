@@ -80,7 +80,6 @@ TAILQ_HEAD(svcts_pkt_queue, svcts_pkt);
 typedef struct svcts {
   streaming_target_t   input;
   streaming_target_t  *output;
-  int64_t              max_time;    ///< us the client may go back
   tvh_mutex_t          lock;
   tvh_cond_t           cond;
   pthread_t            thread;
@@ -350,9 +349,17 @@ svcts_queue_clear ( svcts_t *st )
 
 /* Oldest time (us, client base) the client may go back to, 0 if none.
  *
- * The cache can reach further back than this subscription has existed, when
- * another viewer tuned the channel first or the keepalive held it.  That part
- * of it sits before the client's own zero, so offering it means answering with
+ * Bounded by what the cache actually holds, not by the configured timeshift
+ * period.  Retention is svcbuf_expire()'s business, and it deliberately keeps
+ * blocks a reader still needs however old they are, so a cache feeding a
+ * recording reaches back to the programme's start whatever the period says.
+ * Applying the period again here would hide exactly the data that exception
+ * preserved, and the same bytes are served without complaint when the
+ * in-progress recording is played back instead.
+ *
+ * The cache can also reach further back than this subscription has existed,
+ * when another viewer tuned the channel first or the keepalive held it.  That
+ * part sits before the client's own zero, so offering it means answering with
  * negative timestamps, which a player that cannot order them renders as a
  * frozen picture with sound until playback reaches the moment the viewer tuned
  * in.  Clamped away by default; offered when "Cache seek before tune-in" is
@@ -380,8 +387,6 @@ svcts_oldest ( svcts_t *st )
   if (!svcts_span(st, &oldest, &newest))
     return 0;
   t = st->live_time - (st->live_mono - oldest) + SVCTS_PREROLL;
-  if (st->max_time && t < st->live_time - st->max_time)
-    t = st->live_time - st->max_time;
   if (!timeshift_conf.cache_seek_tunein && t < 0)
     t = 0;
   return MIN(t, st->live_time);
@@ -1712,12 +1717,11 @@ svcts_thread ( void *aux )
  * *************************************************************************/
 
 streaming_target_t *
-svcts_create ( streaming_target_t *out, time_t max_period )
+svcts_create ( streaming_target_t *out )
 {
   svcts_t *st = calloc(1, sizeof(*st));
 
   st->output   = out;
-  st->max_time = (int64_t)max_period * 1000000;
   st->state    = SVCTS_LIVE;
   st->speed    = 100;
   st->run      = 1;
