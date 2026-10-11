@@ -22,8 +22,10 @@
 import { computed } from 'vue'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -144,7 +146,7 @@ function onInput(ev: Event) {
       :step="showSeconds ? 1 : undefined"
       @input="onInput"
     />
-    <span v-if="isDuration" class="ifld__suffix">minutes</span>
+    <span v-if="isDuration" class="ifld__suffix">{{ t('minutes') }}</span>
   </div>
   <div v-else class="ifld">
     <label class="ifld__label" :for="prop.id">
@@ -163,7 +165,7 @@ function onInput(ev: Event) {
         :step="showSeconds ? 1 : undefined"
         @input="onInput"
       />
-      <span v-if="isDuration" class="ifld__suffix">minutes</span>
+      <span v-if="isDuration" class="ifld__suffix">{{ t('minutes') }}</span>
     </div>
   </div>
 </template>
