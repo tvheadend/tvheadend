@@ -48,6 +48,7 @@ import { Tv } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
 import { serverUrl } from '@/utils/base'
+import { currentLang, t } from '@/composables/useI18n'
 import type { useAccessStore } from '@/stores/access'
 import type { useEntityEditor } from '@/composables/useEntityEditor'
 import type { Command } from './commandRegistry'
@@ -79,6 +80,10 @@ export interface ChannelSourceDeps {
 
 const commands = ref<Command[]>([])
 let lastFetchAt = 0
+/* Language the labels were translated into. The setup wizard
+ * changes it without a page reload, so a change fetches the
+ * commands again even inside the TTL. */
+let lastFetchLang = ''
 let inflight: Promise<void> | null = null
 
 /* Reactive ref the palette consumes — re-render fires every time
@@ -92,7 +97,11 @@ export function getChannelCommands(): Ref<Command[]> {
 export function ensureChannelsLoaded(deps: ChannelSourceDeps): Promise<void> {
   const now = Date.now()
   if (inflight) return inflight
-  if (commands.value.length > 0 && now - lastFetchAt < CACHE_TTL_MS) {
+  if (
+    commands.value.length > 0 &&
+    now - lastFetchAt < CACHE_TTL_MS &&
+    lastFetchLang === currentLang()
+  ) {
     return Promise.resolve()
   }
   inflight = doFetch(deps)
@@ -105,6 +114,7 @@ async function doFetch(deps: ChannelSourceDeps): Promise<void> {
     const entries = resp.entries ?? []
     commands.value = entries.map((e) => buildChannelCommand(e, deps))
     lastFetchAt = Date.now()
+    lastFetchLang = currentLang()
   } catch {
     /* Silent fail — leave the previous cache in place so a transient
      * network blip doesn't wipe the palette's channel results. The
@@ -127,7 +137,7 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
      * enforced server-side. The commands the user receives back
      * from the API are the ones they have access to. */
     keywords: ['channel'],
-    actionLabel: 'Open in EPG',
+    actionLabel: t('Open in EPG'),
     action: () => {
       /* Pass the channel UUID, not the name. The server matches a
        * channel-name filter as a caseless, unanchored regex, so
@@ -147,7 +157,7 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
    * .m3u response triggers the OS player handler in a new tab so
    * the user isn't pulled out of the Vue UI. */
   cmd.secondaryAction = {
-    label: 'Watch in external player',
+    label: t('Watch in external player'),
     handler: () => openExternalPlayer(uuid, name),
   }
   /* Tertiary: Edit drawer — admin-only. The idnode editor opens for
@@ -157,7 +167,7 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
    * can't follow through. */
   if (deps.access.has('admin')) {
     cmd.tertiaryAction = {
-      label: 'Edit channel',
+      label: t('Edit channel'),
       handler: () => deps.entityEditor.open(uuid),
     }
   }
@@ -187,5 +197,6 @@ function openExternalPlayer(uuid: string, name: string): void {
 export function __resetChannelSourceForTests(): void {
   commands.value = []
   lastFetchAt = 0
+  lastFetchLang = ''
   inflight = null
 }

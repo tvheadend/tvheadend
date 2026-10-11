@@ -151,7 +151,7 @@ async function fire(q: string, deps: EpgEventSourceDeps): Promise<void> {
 }
 
 function buildEventCommand(entry: EpgEventEntry, deps: EpgEventSourceDeps): Command {
-  const title = entry.title ?? '(Untitled)'
+  const title = entry.title ?? t('(Untitled)')
   const cmd: Command = {
     id: `epg-event:${entry.eventId}`,
     label: title,
@@ -159,7 +159,7 @@ function buildEventCommand(entry: EpgEventEntry, deps: EpgEventSourceDeps): Comm
     section: 'EPG',
     icon: Calendar,
     keywords: ['show', 'epg', 'program'],
-    actionLabel: 'Open in EPG',
+    actionLabel: t('Open in EPG'),
     action: () => {
       /* Navigate with `?title=<title>` so TableView's URL watcher
        * applies the title filter. TableView treats the value as
@@ -186,11 +186,11 @@ function buildEventCommand(entry: EpgEventEntry, deps: EpgEventSourceDeps): Comm
    * as the single-event record, just a different endpoint. */
   if (deps.access.has('dvr')) {
     cmd.secondaryAction = {
-      label: 'Record',
+      label: t('Record'),
       handler: () => recordEvent(entry.eventId, title, deps.toast),
     }
     cmd.tertiaryAction = {
-      label: 'Record series',
+      label: t('Record series'),
       handler: () => recordSeries(entry.eventId, title, deps.toast),
     }
   }

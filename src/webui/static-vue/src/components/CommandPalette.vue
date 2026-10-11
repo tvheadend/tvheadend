@@ -40,7 +40,7 @@ import { useCommandPalette } from '@/composables/useCommandPalette'
 import { useAccessStore } from '@/stores/access'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useEntityEditor } from '@/composables/useEntityEditor'
-import { useI18n } from '@/composables/useI18n'
+import { N_, useI18n } from '@/composables/useI18n'
 import { useToastNotify } from '@/composables/useToastNotify'
 import { useWizardStore } from '@/stores/wizard'
 import {
@@ -68,10 +68,14 @@ import {
   ensureSettingsLoaded,
   getSettingsCommands,
 } from '@/commands/settingsSource'
-import { rankCommands, type RankedResult } from '@/commands/commandRanker'
-import type { Command } from '@/commands/commandRegistry'
+import {
+  rankCommands,
+  type EmptyStateGroup,
+  type RankedResult,
+} from '@/commands/commandRanker'
+import type { Command, CommandSection } from '@/commands/commandRegistry'
 
-const { t } = useI18n()
+const { t, currentLang } = useI18n()
 const palette = useCommandPalette()
 const access = useAccessStore()
 const router = useRouter()
@@ -148,16 +152,21 @@ const visibleProxy = computed({
  * can be unit-tested in isolation; the palette glues them together
  * by concatenating. Route + action commands are both static per
  * page load (routes don't change at runtime, and the action set is
- * hardcoded) so caching once is enough. */
-const allCommands = computed<readonly Command[]>(() => [
-  ...buildRouteCommands(router),
-  ...buildActionCommands({ toast, wizard, router, access, confirm }),
-  ...channelCommands.value,
-  ...recordingCommands.value,
-  ...autorecCommands.value,
-  ...epgEventCommands.value,
-  ...settingsCommands.value,
-])
+ * hardcoded) so caching once is enough. The builders translate
+ * with the static `t()`, which Vue does not track, so reading the
+ * language first builds them again after a language change. */
+const allCommands = computed<readonly Command[]>(() => {
+  currentLang()
+  return [
+    ...buildRouteCommands(router),
+    ...buildActionCommands({ toast, wizard, router, access, confirm }),
+    ...channelCommands.value,
+    ...recordingCommands.value,
+    ...autorecCommands.value,
+    ...epgEventCommands.value,
+    ...settingsCommands.value,
+  ]
+})
 
 const results = computed<RankedResult[]>(() => {
   const ranked = rankCommands({
@@ -281,12 +290,30 @@ watch(palette.isOpen, async (open) => {
  * the ranker leaves `emptyStateGroup` undefined and we fall back
  * to `command.section`. */
 interface ResultGroup {
-  section: string
+  section: CommandSection | EmptyStateGroup
   items: { result: RankedResult; flatIndex: number }[]
 }
 
-function groupLabelOf(result: RankedResult): string {
+function groupLabelOf(result: RankedResult): CommandSection | EmptyStateGroup {
   return result.emptyStateGroup ?? result.command.section
+}
+
+/* Group headers as shown. The section and group names stay English
+ * keys (the footer compares them), the header translates them. */
+const GROUP_HEADERS: Record<CommandSection | EmptyStateGroup, string> = {
+  Navigation: N_('Navigation'),
+  Actions: N_('Actions'),
+  Channels: N_('Channels'),
+  Recordings: N_('Recordings'),
+  Autorecs: N_('Autorecs'),
+  EPG: N_('EPG'),
+  Settings: N_('Settings'),
+  Recent: N_('Recent'),
+  Suggested: N_('Suggested'),
+}
+
+function groupHeader(section: CommandSection | EmptyStateGroup): string {
+  return t(GROUP_HEADERS[section] ?? section)
 }
 
 /* Build groups keyed by section label so same-section results
@@ -396,13 +423,13 @@ const isMac = computed<boolean>(() => {
   return /Mac|iPhone|iPad|iPod/i.test(p)
 })
 
-const secondaryModifierSymbol = computed<string>(() => (isMac.value ? '⌘' : 'Ctrl'))
+const secondaryModifierSymbol = computed<string>(() => (isMac.value ? '⌘' : t('Ctrl')))
 
 /* Tertiary modifier symbol. Mac convention is `⇧⌘` (Shift + Cmd
  * glued); Win/Linux convention is the literal "Shift+Ctrl". Both
  * read as "the modifier-stack before ↵". */
 const tertiaryModifierSymbol = computed<string>(() =>
-  isMac.value ? '⇧⌘' : 'Shift+Ctrl',
+  isMac.value ? '⇧⌘' : t('Shift+Ctrl'),
 )
 
 /* Footer-bar action hints derived from the currently-highlighted
@@ -417,8 +444,8 @@ interface FooterHint {
 }
 
 function defaultPrimaryLabel(section: string): string {
-  if (section === 'Actions') return 'Run'
-  return 'Open'
+  if (section === 'Actions') return t('Run')
+  return t('Open')
 }
 
 const footerHints = computed<FooterHint[]>(() => {
@@ -492,7 +519,7 @@ function onKeyDown(event: KeyboardEvent): void {
     class="command-palette"
     :style="{ width: '640px', maxWidth: 'calc(100vw - 32px)', marginTop: '12vh' }"
     :breakpoints="{ '768px': '100vw' }"
-    aria-label="Command palette"
+    :aria-label="t('Command palette')"
     :pt="{
       root: { style: 'overflow: hidden;' },
       content: {
@@ -537,7 +564,7 @@ function onKeyDown(event: KeyboardEvent): void {
             :key="group.section"
             class="command-palette__group"
           >
-            <p class="command-palette__group-header">{{ group.section }}</p>
+            <p class="command-palette__group-header">{{ groupHeader(group.section) }}</p>
             <div
               v-for="{ result, flatIndex } in group.items"
               :id="rowId(flatIndex)"

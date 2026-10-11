@@ -49,6 +49,7 @@ import type { useAccessStore } from '@/stores/access'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { useToastNotify } from '@/composables/useToastNotify'
 import type { useWizardStore } from '@/stores/wizard'
+import { t } from '@/composables/useI18n'
 import {
   cleanImageCache,
   discoverSatipServers,
@@ -216,6 +217,10 @@ function isPaletteCandidate(record: RouteRecordNormalized): boolean {
  * description carries the breadcrumb of ancestor titles
  * ("Configuration / DVB Inputs") so a "Networks" leaf is
  * distinguishable from any other Network-labelled item.
+ *
+ * The titles are English, marked with `N_()` in the router, and
+ * translated here. The English title stays a keyword, so a page
+ * is also found by its English name in every language.
  */
 export function buildRouteCommands(router: Router): Command[] {
   const commands: Command[] = []
@@ -238,9 +243,11 @@ export function buildRouteCommands(router: Router): Command[] {
     const ancestors = resolved.matched.slice(0, -1)
     const breadcrumb = ancestors
       .map((r) => r.meta?.title)
-      .filter((t): t is string => typeof t === 'string')
+      .filter((parent): parent is string => typeof parent === 'string')
+      .map((parent) => t(parent))
 
-    const label = String(record.meta!.title)
+    const title = String(record.meta!.title)
+    const label = t(title)
     const description = breadcrumb.length > 0 ? breadcrumb.join(' / ') : undefined
 
     commands.push({
@@ -249,6 +256,7 @@ export function buildRouteCommands(router: Router): Command[] {
       description,
       section: 'Navigation',
       icon: iconForRoute(name),
+      keywords: label === title ? undefined : [title],
       requires: record.meta!.permission,
       action: () => {
         /* NavigationFailure (e.g. router-guard redirect) swallowed
@@ -286,14 +294,15 @@ export interface ActionCommandDeps {
  * Build the static-actions source. Keywords carry the synonyms
  * users actually type ("find" for Scan, "guide" for EPG, …) so
  * fuzzy match surfaces them even when the user doesn't remember
- * the exact label.
+ * the exact label. Labels and descriptions are translated when the
+ * commands are built.
  */
 export function buildActionCommands(deps: ActionCommandDeps): Command[] {
   const commands: Command[] = [
     {
       id: 'action:scan-channels',
-      label: 'Scan for channels',
-      description: 'Look for new channels on every enabled network.',
+      label: t('Scan for channels'),
+      description: t('Look for new channels on every enabled network.'),
       section: 'Actions',
       icon: SatelliteDish,
       keywords: ['scan', 'find', 'channels', 'networks', 'discover'],
@@ -302,8 +311,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:refresh-epg',
-      label: 'Refresh TV guide',
-      description: 'Pull fresh listings from internal and over-the-air EPG grabbers.',
+      label: t('Refresh TV guide'),
+      description: t('Pull fresh listings from internal and over-the-air EPG grabbers.'),
       section: 'Actions',
       icon: RefreshCw,
       keywords: ['refresh', 'epg', 'guide', 'grabbers', 'reload', 'ota'],
@@ -312,8 +321,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:start-wizard',
-      label: 'Start setup wizard',
-      description: 'Re-run the setup wizard from the start.',
+      label: t('Start setup wizard'),
+      description: t('Re-run the setup wizard from the start.'),
       section: 'Actions',
       icon: PlayCircle,
       keywords: ['wizard', 'setup', 'restart'],
@@ -327,8 +336,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
      * shouldn't queue an OTA scan that needs a free tuner). */
     {
       id: 'action:epg-rerun-internal',
-      label: 'Re-run internal EPG grabbers',
-      description: 'Schedule the internal grabbers (XMLTV, scrapers) to run now.',
+      label: t('Re-run Internal EPG Grabbers'),
+      description: t('Schedule the internal grabbers (XMLTV, scrapers) to run now.'),
       section: 'Actions',
       icon: RefreshCw,
       keywords: ['epg', 'guide', 'internal', 'xmltv', 'grabber', 'rerun'],
@@ -337,8 +346,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:epg-trigger-ota',
-      label: 'Trigger OTA EPG grabber',
-      description: 'Capture programme listings from the broadcast stream (EIT / PSIP).',
+      label: t('Trigger OTA EPG Grabber'),
+      description: t('Capture programme listings from the broadcast stream (EIT / PSIP).'),
       section: 'Actions',
       icon: Rss,
       keywords: ['epg', 'guide', 'ota', 'eit', 'psip', 'opentv', 'broadcast', 'trigger'],
@@ -350,8 +359,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
      * editing channel-icon overrides. */
     {
       id: 'action:imagecache-clean',
-      label: 'Clean image cache',
-      description: 'Delete every cached logo / picon. The server re-fetches on demand.',
+      label: t('Clean image cache'),
+      description: t('Delete every cached logo / picon. The server re-fetches on demand.'),
       section: 'Actions',
       icon: Eraser,
       keywords: ['imagecache', 'cache', 'picons', 'logos', 'clean', 'clear', 'wipe'],
@@ -360,8 +369,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:imagecache-refetch',
-      label: 'Re-fetch images',
-      description: 'Force-refresh every cached logo / picon URL.',
+      label: t('Re-fetch images'),
+      description: t('Force-refresh every cached logo / picon URL.'),
       section: 'Actions',
       icon: Image,
       keywords: ['imagecache', 'cache', 'picons', 'logos', 'refresh', 'refetch'],
@@ -376,8 +385,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
      * error and we toast it). */
     {
       id: 'action:satip-discover',
-      label: 'Discover SAT>IP servers',
-      description: 'Scan the local network for SAT>IP devices.',
+      label: t('Discover SAT>IP servers'),
+      description: t('Scan the local network for SAT>IP devices.'),
       section: 'Actions',
       icon: SatelliteDish,
       keywords: ['satip', 'discover', 'scan', 'network', 'tuners', 'ssdp'],
@@ -393,8 +402,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
      * services, with every service preselected. */
     {
       id: 'action:channels-reorganize',
-      label: 'Reorganize channels',
-      description: 'Drag-to-reorder channels, bulk tag, bulk enable/disable.',
+      label: t('Reorganize channels'),
+      description: t('Drag-to-reorder channels, bulk tag, bulk enable/disable.'),
       section: 'Actions',
       icon: ListOrdered,
       keywords: ['channels', 'reorganize', 'reorganise', 'manage', 'order', 'drag', 'tag', 'bulk'],
@@ -403,8 +412,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:channels-map-services',
-      label: 'Map services to channels',
-      description: 'Open the Service Mapper to add channels from services.',
+      label: t('Map services to channels'),
+      description: t('Open the Service Mapper to add channels from services.'),
       section: 'Actions',
       icon: LinkIcon,
       keywords: ['channels', 'services', 'map', 'mapper', 'add'],
@@ -413,8 +422,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:channels-map-all-services',
-      label: 'Map all services',
-      description: 'Open the Service Mapper with every service preselected.',
+      label: t('Map all services'),
+      description: t('Open the Service Mapper with every service preselected.'),
       section: 'Actions',
       icon: LinkIcon,
       keywords: ['channels', 'services', 'map', 'mapper', 'all', 'add'],
@@ -426,8 +435,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
      * with channel-map refs get unlinked); confirm dialog gated. */
     {
       id: 'action:services-remove-unseen-pat',
-      label: 'Remove unseen services (PAT/SDT, 7+ days)',
-      description: 'Drop services not seen in PAT/SDT scans for at least 7 days.',
+      label: t('Remove unseen services (PAT/SDT, 7+ days)'),
+      description: t('Drop services not seen in PAT/SDT scans for at least 7 days.'),
       section: 'Actions',
       icon: Trash2,
       keywords: ['services', 'remove', 'cleanup', 'unseen', 'pat', 'sdt', 'stale'],
@@ -436,8 +445,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
     },
     {
       id: 'action:services-remove-unseen-all',
-      label: 'Remove all unseen services (7+ days)',
-      description: 'Drop every service not seen for at least 7 days.',
+      label: t('Remove all unseen services (7+ days)'),
+      description: t('Drop every service not seen for at least 7 days.'),
       section: 'Actions',
       icon: Trash2,
       keywords: ['services', 'remove', 'cleanup', 'unseen', 'stale', 'all'],
@@ -455,8 +464,8 @@ export function buildActionCommands(deps: ActionCommandDeps): Command[] {
   if (typeof deps.access.data?.username === 'string' && deps.access.data.username.length > 0) {
     commands.push({
       id: 'action:logout',
-      label: 'Logout',
-      description: 'Sign out of Tvheadend.',
+      label: t('Logout'),
+      description: t('Sign out of Tvheadend.'),
       section: 'Actions',
       icon: LogOut,
       keywords: ['logout', 'signout', 'exit'],
