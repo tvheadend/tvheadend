@@ -5,13 +5,16 @@
  * EpgEventDrawer — action order. ActionMenu overflows from the end
  * of its `actions` array, so the array order is the overflow
  * priority: the DVR state action (Record / Stop / Delete) sits right
- * after Play, and the browse-only Other showings comes last. The
- * ActionMenu is stubbed so the test reads the array it receives.
+ * after Play, and the browse-only Other showings comes last. Also
+ * that Record asks before it records a completed programme again.
+ * The ActionMenu is stubbed so the test reads the array it receives
+ * and runs its handlers directly.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest'
-import { enableAutoUnmount, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createTestingPinia } from '@pinia/testing'
 import EpgEventDrawer, { type EpgEventDetail } from '../EpgEventDrawer.vue'
+import { apiCall } from '@/api/client'
 import { useDvrConfigStore, type DvrConfigEntry } from '@/stores/dvrConfig'
 import type { ActionDef } from '@/types/action'
 import {
@@ -22,8 +25,9 @@ import {
 vi.mock('@/api/client', () => ({
   apiCall: vi.fn(async () => ({})),
 }))
+const ask = vi.hoisted(() => vi.fn(async () => true))
 vi.mock('@/composables/useConfirmDialog', () => ({
-  useConfirmDialog: () => ({ ask: vi.fn(async () => true) }),
+  useConfirmDialog: () => ({ ask }),
 }))
 vi.mock('@/composables/useToastNotify', () => ({
   useToastNotify: () => ({ error: vi.fn(), warn: vi.fn(), success: vi.fn() }),
@@ -123,7 +127,63 @@ describe('EpgEventDrawer action order', () => {
     expect(actionIds(w)).toEqual(['play', 'record', 'autorec', 'view', 'showings'])
   })
 
+  /* A finished entry while its programme is still on air, for example
+   * after Stop recording, keeps Record. */
+  it.each(['completed', 'completedError', 'completedWarning', 'completedRerecord'])(
+    '%s, live: Play, Record, Autorec, View DVR entry, Other showings',
+    (dvrState) => {
+      const w = mountDrawer(live({ dvrState, dvrUuid: 'dvr-1' }))
+      expect(actionIds(w)).toEqual(['play', 'record', 'autorec', 'view', 'showings'])
+    }
+  )
+
   it('no recorder access: Play, Other showings', () => {
     expect(actionIds(mountDrawer(live(), { dvr: false }))).toEqual(['play', 'showings'])
   })
+})
+
+const RECORD_AGAIN = 'This programme has already been recorded. Record it again?'
+
+/* Press Record and return what it sent to create_by_event, or
+ * undefined when it sent nothing. The profile list settles first, as
+ * it has by the time a user clicks. */
+async function pressRecord(wrapper: ReturnType<typeof mountDrawer>): Promise<unknown> {
+  await flushPromises()
+  await actionsOf(wrapper)
+    .find((a) => a.id === 'record')
+    ?.onClick?.()
+  await flushPromises()
+  return vi.mocked(apiCall).mock.calls.find((c) => c[0] === 'dvr/entry/create_by_event')?.[1]
+}
+
+describe('EpgEventDrawer Record confirmation', () => {
+  beforeEach(() => {
+    ask.mockReset()
+    vi.mocked(apiCall).mockClear()
+  })
+
+  it('completed: asks first, Yes records and closes the drawer', async () => {
+    const w = mountDrawer(live({ dvrState: 'completed', dvrUuid: 'dvr-1' }))
+    expect(await pressRecord(w)).toEqual({ event_id: 1, config_uuid: 'a' })
+    expect(ask).toHaveBeenCalledWith(RECORD_AGAIN)
+    expect(w.emitted('close')).toHaveLength(1)
+  })
+
+  it('completed: No sends nothing and keeps the drawer open', async () => {
+    ask.mockResolvedValueOnce(false)
+    const w = mountDrawer(live({ dvrState: 'completed', dvrUuid: 'dvr-1' }))
+    expect(await pressRecord(w)).toBeUndefined()
+    expect(ask).toHaveBeenCalledWith(RECORD_AGAIN)
+    expect(w.emitted('close')).toBeUndefined()
+  })
+
+  /* No DVR entry, or a failed or missed one. */
+  it.each([undefined, 'completedError', 'completedWarning', 'completedRerecord'])(
+    'dvrState %s: records without asking',
+    async (dvrState) => {
+      const w = mountDrawer(live(dvrState ? { dvrState, dvrUuid: 'dvr-1' } : {}))
+      expect(await pressRecord(w)).toEqual({ event_id: 1, config_uuid: 'a' })
+      expect(ask).not.toHaveBeenCalled()
+    }
+  )
 })
