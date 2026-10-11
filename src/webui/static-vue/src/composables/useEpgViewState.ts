@@ -49,7 +49,7 @@ import { useIsPhone } from './useIsPhone'
 import { apiCall } from '@/api/client'
 import { GRID_LIMIT_ALL } from '@/api/gridConstants'
 import { cometClient } from '@/api/comet'
-import { dropDeletedEvents, mergeFreshEvents } from './epgEventMerge'
+import { dropDeletedEvents, mergeDayEvents, mergeFreshEvents } from './epgEventMerge'
 import { decideCometTier } from './epgCometTiering'
 import { compareEvents, sortChannels } from './epgSort'
 import { shouldAdvanceDayStart } from './epgDayCursor'
@@ -64,7 +64,7 @@ import {
   type StickyPosition,
 } from './epgPositionStorage'
 import type { GridResponse, FilterDef } from '@/types/grid'
-import type { ConnectionState, IdnodeNotification } from '@/types/comet'
+import type { IdnodeNotification } from '@/types/comet'
 import type { EpgEventDetail } from '@/views/epg/EpgEventDrawer.vue'
 import {
   STATIC_CHANNEL_DEFAULTS,
@@ -633,10 +633,10 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
         /* Background tab was away long enough for the day caches
          * to be plausibly stale (server may have GC'd expired
          * EPG entries; new events may have appeared). Refresh
-         * every loaded day; dedupe in `loadDay` collapses the
-         * call with any concurrent re-fetch driven by the
-         * Comet-reconnect path below. `refreshAllEvents` picks
-         * the right shape for the active load strategy. */
+         * every loaded day. A concurrent re-fetch driven by the
+         * Comet-reconnect path below adds at most one more fetch
+         * per day in `loadDay`. `refreshAllEvents` picks the
+         * right shape for the active load strategy. */
         refreshAllEvents()
       }
     }
@@ -862,8 +862,8 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
   /* ---- Event store (continuous-scroll, per-day lazy fetch) ----
    *
    * `events.value` accumulates events across every day the user has
-   * scrolled into. Per-day fetches merge into the array and dedupe
-   * by `eventId` (a same-id row replaces, a new id appends). Loaded
+   * scrolled into. A per-day fetch replaces the rows of its day and
+   * keeps the others, deduped by `eventId` (`mergeDayEvents`). Loaded
    * days persist for the session — no eviction, since the worst
    * case (14 days) is a few MB and re-scrolling into a previously
    * visited day stays instant.
@@ -917,10 +917,12 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
    * broadcast that overlaps the [dayStart, dayStart+1day] window
    * (so a broadcast crossing midnight from yesterday into today
    * still appears in today's fetch — same predicate the legacy
-   * single-day loader used). Idempotent — re-calling for an in-
-   * flight day awaits the existing request rather than firing a
-   * second one. */
+   * single-day loader used). Re-calling for an in-flight day does
+   * not share that request. The server may have read the day before
+   * the change that asks for the call, so the day is fetched once
+   * more after it, however many calls come in meanwhile. */
   const inflightDayFetches = new Map<number, Promise<void>>()
+  const trailingDayFetches = new Map<number, Promise<void>>()
   /* Bumped when the loaded event set is invalidated wholesale (tag
    * change). An in-flight `loadDay` from a previous generation
    * discards its result — merging it would resurrect the previous
@@ -932,7 +934,18 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
 
   async function loadDay(epoch: number): Promise<void> {
     const existing = inflightDayFetches.get(epoch)
-    if (existing) return existing
+    if (existing) {
+      if (!trailingDayFetches.has(epoch)) {
+        const trailing: Promise<void> = existing.then(() => {
+          /* Gone if a tag change dropped the old tag's fetches. */
+          if (trailingDayFetches.get(epoch) !== trailing) return
+          trailingDayFetches.delete(epoch)
+          return loadDay(epoch)
+        })
+        trailingDayFetches.set(epoch, trailing)
+      }
+      return trailingDayFetches.get(epoch)
+    }
     const generation = dayFetchGeneration
     /* A local day may be 23/25 h — the fetch window must end at
      * the real next midnight, never start + 86400. */
@@ -959,10 +972,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
       .then((resp) => {
         if (generation !== dayFetchGeneration) return
         const incoming = resp.entries ?? []
-        const byId = new Map<number, EpgRow>()
-        for (const e of events.value) byId.set(e.eventId, e)
-        for (const e of incoming) byId.set(e.eventId, e)
-        events.value = [...byId.values()].sort(compareEvents)
+        events.value = mergeDayEvents(events.value, incoming, epoch, dEnd).sort(compareEvents)
         const next = new Set(loadedDays.value)
         next.add(epoch)
         loadedDays.value = next
@@ -988,9 +998,9 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
 
   /* For each day-start in the input, dispatch `loadDay()` if the
    * day isn't already loaded or in flight. Caller (the view's
-   * scroll listener) supplies the viewport range ± prefetch. The
-   * dedupe in `loadDay()` itself means concurrent calls for the
-   * same day collapse to one fetch. */
+   * scroll listener) supplies the viewport range ± prefetch. A day
+   * in flight is skipped here, as `loadDay()` would fetch it once
+   * more. */
   function ensureDaysLoaded(epochs: number[]): void {
     /* Remember the most recent viewport day range so a wholesale
      * invalidation (tag change) can re-request the days the user
@@ -1008,11 +1018,14 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
   /* Refetch every currently-loaded day in parallel. The Comet
    * `'channel'` / `'dvrentry'` handlers touch fields baked into
    * the row shape, so a re-fetch is the simplest correct path —
-   * `loadDay` dedupes by eventId so the result has no duplicates. */
+   * `loadDay` dedupes by eventId so the result has no duplicates,
+   * and drops the rows that a day's reply no longer lists. A day
+   * whose first fetch is still in flight is fetched again too, as
+   * its reply may predate the change. */
   async function loadAllLoadedDays(): Promise<void> {
-    const days = [...loadedDays.value]
-    if (days.length === 0) return
-    await Promise.all(days.map((d) => loadDay(d)))
+    const days = new Set([...loadedDays.value, ...inflightDayFetches.keys()])
+    if (days.size === 0) return
+    await Promise.all([...days].map((d) => loadDay(d)))
   }
 
   /* Fetch the full forward-EPG window in a single call (no day
@@ -1564,6 +1577,7 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
        * never re-fetch it under the new tag). */
       dayFetchGeneration += 1
       inflightDayFetches.clear()
+      trailingDayFetches.clear()
       loadingDays.value = new Set()
       eventsLoading.value = false
       events.value = []
@@ -1765,6 +1779,11 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
       })
       return
     }
+
+    /* A day fetch in flight may have been read before these
+     * changes, and its reply would undo them. Fetch such a day once
+     * more after it. */
+    for (const d of inflightDayFetches.keys()) void loadDay(d)
 
     /* Surgical tier: apply deletes + fetch+merge updates. Shared
      * by eager mode (every id is in slice) and lazy mode (the
@@ -1982,23 +2001,32 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
      * replays buffered notifications via boxid resume, but the
      * server's mailbox can be GC'd during long sleep — any events
      * that came and went during the gap are then lost to us. A
-     * full refetch of every loaded day on the disconnected →
-     * connected transition makes the EPG converge on the server's
-     * truth regardless of mailbox-replay coverage.
+     * full refetch of every loaded day once the connection is back
+     * makes the EPG converge on the server's truth regardless of
+     * mailbox-replay coverage. The channels and tags are reloaded
+     * too, as nothing else brings back their changes from the gap.
+     * The client goes disconnected → connecting → connected (and
+     * back to disconnected after a failed retry), so the loss is
+     * remembered until the next connected, as in
+     * `useStaleDataRecovery`.
      *
      * Pairs with the visibility-regain refetch in
      * `onVisibilityChange` (above): one catches the screen-wake
      * case before Comet reconnects, the other catches the case
      * where the WS was alive in zombie state and only `onclose`
-     * fires when the kernel notices. The dedupe in `loadDay`
-     * (`inflightDayFetches`) collapses concurrent calls, so
+     * fires when the kernel notices. A day in flight is fetched
+     * at most once more in `loadDay` (`trailingDayFetches`), so
      * having both is safe. */
-    let lastCometState: ConnectionState = cometClient.getState()
+    let cometConnectionLost = cometClient.getState() === 'disconnected'
     unsubCometState = cometClient.onStateChange((s) => {
-      if (s === 'connected' && lastCometState === 'disconnected') {
-        refreshAllEvents()
+      if (s === 'disconnected') {
+        cometConnectionLost = true
+      } else if (s === 'connected' && cometConnectionLost) {
+        cometConnectionLost = false
+        void loadChannels()
+        void loadTags()
+        void refreshAllEvents()
       }
-      lastCometState = s
     })
   })
 

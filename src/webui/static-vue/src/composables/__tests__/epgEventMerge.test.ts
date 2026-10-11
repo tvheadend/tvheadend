@@ -12,7 +12,7 @@
  */
 
 import { describe, expect, it } from 'vitest'
-import { dropDeletedEvents, mergeFreshEvents } from '../epgEventMerge'
+import { dropDeletedEvents, mergeDayEvents, mergeFreshEvents } from '../epgEventMerge'
 import type { EpgRow } from '../useEpgViewState'
 
 const ev = (eventId: number, start: number, stop: number, channelUuid = 'ch-1'): EpgRow =>
@@ -105,5 +105,44 @@ describe('mergeFreshEvents', () => {
     const out = mergeFreshEvents(current, [tomorrowEvent])
     expect(out).toHaveLength(2)
     expect(out.map((e) => e.eventId).sort((a, b) => a - b)).toEqual([1, 2])
+  })
+})
+
+describe('mergeDayEvents', () => {
+  const DAY_START = T_TODAY_NOON - 12 * ONE_HOUR
+  const DAY_END = DAY_START + ONE_DAY
+  const ids = (rows: EpgRow[]) => rows.map((e) => e.eventId).sort((a, b) => a - b)
+
+  it('drops a row of the day that the reply no longer lists', () => {
+    const current = [
+      ev(1, DAY_START + ONE_HOUR, DAY_START + 2 * ONE_HOUR),
+      ev(2, DAY_START + 2 * ONE_HOUR, DAY_START + 3 * ONE_HOUR),
+    ]
+    const out = mergeDayEvents(current, [{ ...current[0], title: 'Renamed' }], DAY_START, DAY_END)
+    expect(out).toEqual([{ ...current[0], title: 'Renamed' }])
+  })
+
+  it('keeps the rows of other days and the rows that only touch the day', () => {
+    const current = [
+      ev(1, DAY_START - ONE_HOUR, DAY_START),
+      ev(2, DAY_END, DAY_END + ONE_HOUR),
+      ev(3, DAY_END + ONE_HOUR, DAY_END + 2 * ONE_HOUR),
+    ]
+    expect(ids(mergeDayEvents(current, [], DAY_START, DAY_END))).toEqual([1, 2, 3])
+  })
+
+  it('keeps an event across midnight once after the replies of both days', () => {
+    const cross = ev(1, DAY_END - ONE_HOUR, DAY_END + ONE_HOUR)
+    const first = mergeDayEvents([cross], [cross], DAY_START, DAY_END)
+    expect(mergeDayEvents(first, [cross], DAY_END, DAY_END + ONE_DAY)).toEqual([cross])
+  })
+
+  it('keeps an event moved to the next day once, whichever reply comes first', () => {
+    const before = ev(1, DAY_START + ONE_HOUR, DAY_START + 2 * ONE_HOUR)
+    const after = ev(1, DAY_END + ONE_HOUR, DAY_END + 2 * ONE_HOUR)
+    const day = (rows: EpgRow[]) => mergeDayEvents(rows, [], DAY_START, DAY_END)
+    const nextDay = (rows: EpgRow[]) => mergeDayEvents(rows, [after], DAY_END, DAY_END + ONE_DAY)
+    expect(nextDay(day([before]))).toEqual([after])
+    expect(day(nextDay([before]))).toEqual([after])
   })
 })
