@@ -1104,7 +1104,7 @@ async function loadRow(uuid: string) {
      * per-field via v-model. */
     currentValues.value = { ...init }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
+    error.value = e instanceof Error ? e.message : t('Failed to load: {0}', String(e))
     fieldProps.value = []
     propertyGroups.value = []
     currentClass.value = null
@@ -1249,7 +1249,7 @@ async function loadCreate() {
     initialValues.value = init
     currentValues.value = { ...init }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
+    error.value = e instanceof Error ? e.message : t('Failed to load: {0}', String(e))
     fieldProps.value = []
     propertyGroups.value = []
     currentClass.value = null
@@ -1795,7 +1795,7 @@ onBeforeUnmount(() => {
                   />
                   <p v-else class="idnode-editor__placeholder">
                     <strong>{{ p.caption ?? p.id }}:</strong>
-                    editor support not implemented for this field type
+                    {{ t('editor support not implemented for this field type') }}
                   </p>
                   <!--
                     Error message under the input. Visible when the

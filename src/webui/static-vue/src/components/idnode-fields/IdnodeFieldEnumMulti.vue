@@ -165,7 +165,7 @@ const triggerDisplay = computed<{ display: string; full?: string }>(() => {
         {{ prop.caption ?? prop.id }}
       </span>
     </span>
-    <output v-if="isEmpty" class="ifld__empty">(no options available)</output>
+    <output v-if="isEmpty" class="ifld__empty">{{ t('(no options available)') }}</output>
     <MultiSelect
       v-else-if="useDropdown"
       :model-value="modelValue"

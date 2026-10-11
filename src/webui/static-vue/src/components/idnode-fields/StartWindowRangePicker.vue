@@ -40,8 +40,10 @@ import Checkbox from 'primevue/checkbox'
 import Slider from 'primevue/slider'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 /* Stable id linking the field caption to its control group, so the
  * caption labels the whole picker (Any-time + slider + From/To)
@@ -233,13 +235,13 @@ const durationLabel = computed(() => {
   const w = stopMin.value
   if (s === null || w === null) return ''
   if (s === w) {
-    return `0 min · matches only events starting at exactly ${formatTime(s)}`
+    return t('0 min · matches only events starting at exactly {0}', formatTime(s))
   }
   const minutes = s < w ? w - s : 24 * 60 - s + w
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  const dur = h > 0 ? `${h} h ${m} min` : `${m} min`
-  return s > w ? `${dur} · crosses midnight` : dur
+  const dur = h > 0 ? t('{0} h {1} min', h, m) : t('{0} min', m)
+  return s > w ? t('{0} · crosses midnight', dur) : dur
 })
 
 /* Hour-tick rail labels — every 3 hours so a typical drawer
@@ -255,7 +257,7 @@ const isReadonly = computed(
   () => !!props.disabled || !!startProp.value?.rdonly || !!stopProp.value?.rdonly,
 )
 
-const label = computed(() => 'Time window')
+const label = computed(() => t('Time window'))
 const description = computed(() =>
   startProp.value?.description ?? stopProp.value?.description ?? '',
 )
@@ -321,7 +323,7 @@ const sliderStyle = computed(() => {
           @update:model-value="onAnyToggle"
         />
         <label for="start-window-any" class="start-window-picker__any-label">
-          Any time
+          {{ t('Any time') }}
         </label>
       </div>
 
@@ -360,36 +362,36 @@ const sliderStyle = computed(() => {
         </div>
         <div class="start-window-picker__inputs">
           <label class="start-window-picker__input-label">
-            From
+            {{ t('From') }}
             <input
               v-model="startText"
               type="text"
               inputmode="numeric"
               class="start-window-picker__input"
               :disabled="isReadonly"
-              aria-label="Start after"
+              :aria-label="t('Start after')"
               @blur="onStartBlur"
               @keydown.enter.prevent="onStartBlur"
             />
           </label>
           <label class="start-window-picker__input-label">
-            To
+            {{ t('To') }}
             <input
               v-model="stopText"
               type="text"
               inputmode="numeric"
               class="start-window-picker__input"
               :disabled="isReadonly"
-              aria-label="Start before"
+              :aria-label="t('Start before')"
               @blur="onStopBlur"
               @keydown.enter.prevent="onStopBlur"
             />
             <span
               v-if="wrapsMidnight"
               class="start-window-picker__next-day"
-              aria-label="next day"
+              :aria-label="t('next day')"
             >
-              +1d
+              {{ t('+1d') }}
             </span>
           </label>
         </div>
