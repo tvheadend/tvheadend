@@ -23,6 +23,7 @@
  * `app.use(ToastService)` in main.ts.
  */
 import { useToast as primeUseToast } from 'primevue/usetoast'
+import { t } from '@/composables/useI18n'
 
 export interface ToastOptions {
   /** Header line — defaults vary by severity (see error / warn / etc.). */
@@ -37,7 +38,7 @@ export function useToastNotify() {
   function error(detail: string, opts: ToastOptions = {}) {
     toast.add({
       severity: 'error',
-      summary: opts.summary ?? 'Error',
+      summary: opts.summary ?? t('Error'),
       detail,
       life: opts.life ?? 0,
     })
@@ -46,7 +47,7 @@ export function useToastNotify() {
   function warn(detail: string, opts: ToastOptions = {}) {
     toast.add({
       severity: 'warn',
-      summary: opts.summary ?? 'Warning',
+      summary: opts.summary ?? t('Warning'),
       detail,
       life: opts.life ?? 8000,
     })
@@ -55,7 +56,7 @@ export function useToastNotify() {
   function success(detail: string, opts: ToastOptions = {}) {
     toast.add({
       severity: 'success',
-      summary: opts.summary ?? 'Done',
+      summary: opts.summary ?? t('Done'),
       detail,
       life: opts.life ?? 3000,
     })
@@ -64,7 +65,7 @@ export function useToastNotify() {
   function info(detail: string, opts: ToastOptions = {}) {
     toast.add({
       severity: 'info',
-      summary: opts.summary ?? 'Info',
+      summary: opts.summary ?? t('Info'),
       detail,
       life: opts.life ?? 5000,
     })
