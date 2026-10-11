@@ -313,7 +313,7 @@ intl:
 	@printf "Building intl/vue/tvheadend.vue.pot\n"
 	@rm -rf $(VUE_I18N_TMP)
 	@$(VUE_XGETTEXT_PY) --out=$(VUE_I18N_TMP) $(VUE_I18N_SRC)
-	@$(XGETTEXT2) -D $(VUE_I18N_TMP) -o intl/vue/tvheadend.vue.pot.new $(VUE_I18N_SRC)
+	@$(XGETTEXT2) -k_n:1,2 -D $(VUE_I18N_TMP) -o intl/vue/tvheadend.vue.pot.new $(VUE_I18N_SRC)
 	@sed -e 's/^"Language: /"Language: en/' < intl/vue/tvheadend.vue.pot.new > intl/vue/tvheadend.vue.pot
 	@rm -rf $(VUE_I18N_TMP)
 
