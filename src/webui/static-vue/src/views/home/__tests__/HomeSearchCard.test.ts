@@ -14,13 +14,6 @@ import { ref } from 'vue'
 import HomeSearchCard from '../HomeSearchCard.vue'
 import type { EpgEventDetail } from '@/views/epg/EpgEventDrawer.vue'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (s: string, ...args: Array<string | number>) =>
-      s.replace(/\{(\d+)\}/g, (_m, i) => String(args[Number(i)] ?? _m)),
-  }),
-}))
-
 /* Controllable mock of the search composable. Tests mutate the refs
  * before mount to drive each render branch. */
 const mockSearch = {

@@ -23,7 +23,7 @@ import { useAccessStore } from '@/stores/access'
 import { useStatusStore } from '@/stores/status'
 import { formatBytes } from '@/utils/formatBytes'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const access = useAccessStore()
 
 /* Tuner inputs from status/inputs. */
@@ -67,8 +67,7 @@ const activeSubscriptions = computed(() =>
 const subscriptionsLabel = computed(() => {
   const n = activeSubscriptions.value
   if (n === 0) return t('Idle')
-  if (n === 1) return t('1 active subscription')
-  return t('{0} active subscriptions', n)
+  return tn('{0} active subscription', '{0} active subscriptions', n)
 })
 
 /* The label is a router-link to Status → Subscriptions for

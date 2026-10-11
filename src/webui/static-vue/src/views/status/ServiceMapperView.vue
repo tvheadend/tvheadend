@@ -29,7 +29,7 @@ import { useServiceMapperStore } from '@/stores/serviceMapper'
 import { useI18n } from '@/composables/useI18n'
 import { useHelp } from '@/composables/useHelp'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const help = useHelp()
 
 const store = useServiceMapperStore()
@@ -42,18 +42,45 @@ function onHelpClick(): void {
 
 /* Last-run summary as one whole sentence per case, so translators
  * get full sentences and the template cannot drop or add spaces
- * between fragments. */
+ * between fragments. The plural form follows the total, the noun
+ * it counts. */
 const idleSummary = computed(() => {
   const { ok, total, fail, ignore } = store.status
   if (total <= 0) {
     return t('Open Configuration → Channel/EPG → Channels or Configuration → DVB Inputs → Services to start mapping.')
   }
   if (fail > 0 && ignore > 0) {
-    return t('Last run mapped {0} of {1} services, {2} failed, {3} ignored.', ok, total, fail, ignore)
+    return tn(
+      'Last run mapped {0} of {1} service, {2} failed, {3} ignored.',
+      'Last run mapped {0} of {1} services, {2} failed, {3} ignored.',
+      total,
+      ok,
+      total,
+      fail,
+      ignore,
+    )
   }
-  if (fail > 0) return t('Last run mapped {0} of {1} services, {2} failed.', ok, total, fail)
-  if (ignore > 0) return t('Last run mapped {0} of {1} services, {2} ignored.', ok, total, ignore)
-  return t('Last run mapped {0} of {1} services.', ok, total)
+  if (fail > 0) {
+    return tn(
+      'Last run mapped {0} of {1} service, {2} failed.',
+      'Last run mapped {0} of {1} services, {2} failed.',
+      total,
+      ok,
+      total,
+      fail,
+    )
+  }
+  if (ignore > 0) {
+    return tn(
+      'Last run mapped {0} of {1} service, {2} ignored.',
+      'Last run mapped {0} of {1} services, {2} ignored.',
+      total,
+      ok,
+      total,
+      ignore,
+    )
+  }
+  return tn('Last run mapped {0} of {1} service.', 'Last run mapped {0} of {1} services.', total, ok, total)
 })
 
 onMounted(() => {

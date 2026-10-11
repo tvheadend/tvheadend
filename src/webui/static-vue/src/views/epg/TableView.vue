@@ -138,7 +138,7 @@ import type { FilterDef, GridResponse, GroupableFieldDef } from '@/types/grid'
 import { apiCall } from '@/api/client'
 import { fmtDate, fmtGroupDate } from '@/utils/formatTime'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const ONE_DAY = 24 * 60 * 60
 
@@ -2235,7 +2235,11 @@ function buildAutoRecSummary(input: AutoRecSummaryInput): string {
   const countLine =
     input.matchCount === null
       ? ''
-      : t('Currently this will match (and record) {0} events.', input.matchCount) + ' '
+      : tn(
+          'Currently this will match (and record) {0} event.',
+          'Currently this will match (and record) {0} events.',
+          input.matchCount,
+        ) + ' '
   return (
     t(
       'This will create an automatic rule that continuously scans the EPG for programs to record that match this query:',
