@@ -26,6 +26,7 @@ struct imagecache_config {
   idnode_t  idnode;
   int       enabled;
   int       ignore_sslcert;
+  int       reuse_conn;
   uint32_t  expire;
   uint32_t  ok_period;
   uint32_t  fail_period;
@@ -45,7 +46,15 @@ void imagecache_trigger  ( void );
 // Note: will return 0 if invalid (must serve original URL)
 int imagecache_get_id  ( const char *url );
 
+// As above; airtime (epoch) of the earliest airing using this image
+// prioritizes the fetch queue (soonest first, 0 = fetch asap)
+int imagecache_get_id_prio ( const char *url, int64_t airtime );
+
 const char *imagecache_get_propstr ( const char *image, char *buf, size_t buflen );
+
+// As above, for the image of an EPG event airing at airtime
+const char *imagecache_get_propstr_prio ( const char *image, char *buf,
+                                          size_t buflen, int64_t airtime );
 
 int imagecache_filename ( int id, char *name, size_t len );
 
