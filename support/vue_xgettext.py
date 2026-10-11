@@ -4,16 +4,23 @@
 #
 # xgettext cannot read the Vue UI sources itself. It has no parser for .vue
 # files, and the gettext found on most build hosts has no TypeScript parser
-# either. This script finds the t('...') and i18n.t('...') calls in .ts
-# files and in the <script> blocks and template expressions of .vue files.
-# For every source it writes a JavaScript copy with the same relative path
-# below --out=DIR, holding only those calls as _("...") on the line of the
-# original string. xgettext -D DIR then builds the template from the
-# copies, and its references point at the real sources.
+# either. This script finds the t('...'), tn('...', '...') and N_('...')
+# calls, t() and tn() also as i18n.t() and i18n.tn(), in .ts files and in
+# the <script> blocks and template expressions of .vue files. For every
+# source it writes a JavaScript copy with the same relative path below
+# --out=DIR, holding only those calls on the line of the original string:
+# _("...") for t() and N_(), and _n("singular", "plural") for tn(), which
+# xgettext -k_n:1,2 turns into an entry with msgid_plural. xgettext -D DIR
+# then builds the template from the copies, and its references point at
+# the real sources.
 #
-# A call is extracted when its first argument is a string literal or a
-# concatenation of string literals. Calls such as t(label) are skipped and
-# listed when V=1 is set.
+# A call is extracted when its first argument (the first two for tn()) is
+# a string literal or a concatenation of string literals. Calls such as
+# t(label) are skipped and listed when V=1 is set.
+#
+# The run stops when a text is used with and without a plural form, or
+# with two different plural forms. xgettext only warns about the first and
+# keeps one of the plurals in the second without a word.
 #
 # Most syntax this simple tokenizer cannot follow stops the run with an
 # error that names the file and line. One known gap: a regular expression
@@ -263,33 +270,67 @@ def is_punct(toks, k, value):
   return k < len(toks) and toks[k].kind == 'punct' and toks[k].value == value
 
 
-def find_calls(toks, fn, found):
-  """Collect t('...') and i18n.t('...') calls from a token list."""
-  for k, tok in enumerate(toks):
-    if tok.kind != 'id' or tok.value != 't' or not is_punct(toks, k + 1, '('):
-      continue
-    if k > 0:
-      prev = toks[k - 1]
-      if is_punct(toks, k - 1, '.'):
-        if k < 2 or toks[k - 2].kind != 'id' or toks[k - 2].value != 'i18n':
-          continue
-      elif prev.kind == 'id' and prev.value == 'function':
-        continue
-    j = k + 2
-    parts = []
-    while j < len(toks) and toks[j].kind in ('str', 'tpl'):
-      parts.append(toks[j])
+# t('text', ...), tn('singular', 'plural', n, ...) and N_('text')
+KEYWORDS = ('t', 'tn', 'N_')
+
+
+def is_call(toks, k):
+  """Whether toks[k] starts a t(), tn() or N_() call, t() and tn() also
+  as i18n.t() and i18n.tn(). Not function t( or other.t(."""
+  tok = toks[k]
+  if tok.kind != 'id' or tok.value not in KEYWORDS or not is_punct(toks, k + 1, '('):
+    return False
+  if k == 0:
+    return True
+  if is_punct(toks, k - 1, '.'):
+    return tok.value != 'N_' and k >= 2 and toks[k - 2].kind == 'id' and \
+           toks[k - 2].value == 'i18n'
+  return toks[k - 1].kind != 'id' or toks[k - 1].value != 'function'
+
+
+def literal(toks, j):
+  """A string literal or a concatenation of them starting at toks[j].
+  Returns the text, its line and the index after it. The text is ''
+  when there is none."""
+  parts = []
+  while j < len(toks) and toks[j].kind in ('str', 'tpl'):
+    parts.append(toks[j])
+    j += 1
+    if is_punct(toks, j, '+') and j + 1 < len(toks) and \
+       toks[j + 1].kind in ('str', 'tpl'):
       j += 1
-      if is_punct(toks, j, '+') and j + 1 < len(toks) and \
-         toks[j + 1].kind in ('str', 'tpl'):
-        j += 1
-        continue
-      break
-    msgid = ''.join(p.value for p in parts)
+      continue
+    break
+  if not parts:
+    return '', 0, j
+  return ''.join(p.value for p in parts), parts[0].line, j
+
+
+def call_texts(toks, k):
+  """The msgid, msgid_plural (None for t() and N_()), line and index
+  after the texts of the call at toks[k]. The msgid is '' when the call
+  has no string literals, or tn() only one."""
+  msgid, line, j = literal(toks, k + 2)
+  if not msgid or toks[k].value != 'tn':
+    return msgid, None, line, j
+  if not is_punct(toks, j, ','):
+    return '', None, line, j
+  plural, _, j = literal(toks, j + 1)
+  if not plural:
+    return '', None, line, j
+  return msgid, plural, line, j
+
+
+def find_calls(toks, fn, found):
+  """Collect t(), tn() and N_() calls from a token list."""
+  for k, tok in enumerate(toks):
+    if not is_call(toks, k):
+      continue
+    msgid, plural, line, j = call_texts(toks, k)
     if msgid and (is_punct(toks, j, ',') or is_punct(toks, j, ')')):
-      found.append((parts[0].line, msgid))
+      found.append((line, msgid, plural))
     elif VERBOSE:
-      info('%s:%d: t() without a string literal, not extracted', fn, tok.line)
+      info('%s:%d: %s() without string literals, not extracted', fn, tok.line, tok.value)
 
 
 def scan_script(src, fn, line, found):
@@ -388,6 +429,29 @@ def jsstr(s):
   return '"' + ''.join(out) + '"'
 
 
+# msgid -> (msgid_plural or None, first place), over all files of the run
+MSGIDS = {}
+
+
+def check_plural(msgid, plural, where):
+  """Stop when a msgid is used with and without a plural form, or with
+  two different plural forms."""
+  seen, first = MSGIDS.setdefault(msgid, (plural, where))
+  if seen == plural:
+    return
+  if seen is None or plural is None:
+    error('%s: "%s" is used with and without a plural form (also at %s)',
+          where, msgid, first)
+  error('%s: "%s" has two plural forms, "%s" and "%s" (also at %s)',
+        where, msgid, seen, plural, first)
+
+
+def xgettext_call(msgid, plural):
+  if plural is None:
+    return '_(%s);' % jsstr(msgid)
+  return '_n(%s, %s);' % (jsstr(msgid), jsstr(plural))
+
+
 def convert(fn, outdir):
   if os.path.isabs(fn) or '..' in fn.split(os.sep):
     error('%s: use a relative path below the source tree', fn)
@@ -399,8 +463,9 @@ def convert(fn, outdir):
   else:
     scan_script(src, fn, 1, found)
   lines = {}
-  for line, msgid in found:
-    lines.setdefault(line, []).append('_(%s);' % jsstr(msgid))
+  for line, msgid, plural in found:
+    check_plural(msgid, plural, '%s:%d' % (fn, line))
+    lines.setdefault(line, []).append(xgettext_call(msgid, plural))
   dst = os.path.join(outdir, fn)
   os.makedirs(os.path.dirname(dst), exist_ok=True)
   with open(dst, 'w', encoding='utf-8') as f:
