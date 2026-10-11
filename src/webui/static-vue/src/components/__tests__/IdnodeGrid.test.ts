@@ -3112,12 +3112,14 @@ describe('IdnodeGrid', () => {
    * is no longer on screen.
    */
   describe('comet stale-data recovery', () => {
-    it('refetches the grid on the comet disconnected -> connected transition', () => {
+    it('refetches the grid once the comet connection is back', () => {
       const wrapper = mountGrid()
       /* Isolate the reconnect-driven refetch from any mount-time call. */
       mockStore.fetch.mockClear()
 
+      /* The order the comet client reports a lost and regained poll. */
       cometStateListener!('disconnected')
+      cometStateListener!('connecting')
       cometStateListener!('connected')
       expect(mockStore.fetch).toHaveBeenCalledTimes(1)
 
@@ -3130,6 +3132,7 @@ describe('IdnodeGrid', () => {
       mockStore.fetch.mockClear()
 
       cometStateListener?.('disconnected')
+      cometStateListener?.('connecting')
       cometStateListener?.('connected')
       expect(mockStore.fetch).not.toHaveBeenCalled()
       expect(cometStateUnsub).toBe(true)

@@ -3,7 +3,7 @@
 
 /*
  * useStaleDataRecovery unit tests. Verifies the two refetch triggers
- * — the comet disconnected->connected transition and a long
+ * — the first comet connected state after a lost connection and a long
  * visibility-regain — and that `onScopeDispose` cleanup removes both
  * listeners. The cleanup test is what guards against an unmounted
  * view continuing to refetch.
@@ -17,13 +17,15 @@ import { effectScope } from 'vue'
 import type { ConnectionState } from '@/types/comet'
 
 /* Capture the state listener the composable registers so tests can
- * drive synthetic connection transitions without a real WebSocket. */
+ * drive synthetic connection transitions without a real poll.
+ * `cometState` is what getState() reports when the composable is set up. */
 let stateListener: ((s: ConnectionState) => void) | null = null
 let stateUnsubscribed = false
+let cometState: ConnectionState = 'idle'
 
 vi.mock('@/api/comet', () => ({
   cometClient: {
-    getState: () => 'idle' as ConnectionState,
+    getState: () => cometState,
     onStateChange: (listener: (s: ConnectionState) => void) => {
       stateListener = listener
       return () => {
@@ -48,6 +50,7 @@ function setHidden(value: boolean) {
 beforeEach(() => {
   stateListener = null
   stateUnsubscribed = false
+  cometState = 'idle'
   hidden = false
   Object.defineProperty(document, 'hidden', {
     configurable: true,
@@ -59,40 +62,78 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+/* Report the given states to the composable, in order. */
+function drive(...states: ConnectionState[]) {
+  for (const s of states) stateListener!(s)
+}
+
+/* The comet client never reports connected right after disconnected.
+ * Every retry goes through connecting first (`connectPoll` in
+ * api/comet.ts) and a failed retry goes back to disconnected. */
 describe('useStaleDataRecovery — comet reconnect', () => {
-  it('refetches on the disconnected -> connected transition', () => {
+  it('refetches once the connection is back', () => {
+    cometState = 'connected'
     const refetch = vi.fn()
     const scope = effectScope()
     scope.run(() => useStaleDataRecovery({ refetch }))
 
-    stateListener!('disconnected')
-    stateListener!('connected')
+    drive('disconnected', 'connecting')
+    expect(refetch).not.toHaveBeenCalled()
+    drive('connected')
     expect(refetch).toHaveBeenCalledTimes(1)
 
     scope.stop()
   })
 
-  it('does not refetch on connected when not coming from disconnected', () => {
+  it('refetches once after several failed retries', () => {
+    cometState = 'connected'
     const refetch = vi.fn()
     const scope = effectScope()
     scope.run(() => useStaleDataRecovery({ refetch }))
 
-    stateListener!('connecting')
-    stateListener!('connected')
+    drive('disconnected', 'connecting', 'disconnected', 'connecting', 'disconnected')
+    drive('connecting', 'connected')
+    expect(refetch).toHaveBeenCalledTimes(1)
+
+    scope.stop()
+  })
+
+  it('does not refetch on the first connect', () => {
+    const refetch = vi.fn()
+    const scope = effectScope()
+    scope.run(() => useStaleDataRecovery({ refetch }))
+
+    drive('connecting', 'connected')
     expect(refetch).not.toHaveBeenCalled()
 
     scope.stop()
   })
 
-  it('does not refetch on a repeated connected state', () => {
+  it('refetches when set up while the connection is down', () => {
+    cometState = 'disconnected'
     const refetch = vi.fn()
     const scope = effectScope()
     scope.run(() => useStaleDataRecovery({ refetch }))
 
-    stateListener!('disconnected')
-    stateListener!('connected')
-    stateListener!('connected')
+    drive('connecting', 'connected')
     expect(refetch).toHaveBeenCalledTimes(1)
+
+    scope.stop()
+  })
+
+  it('refetches once per lost connection', () => {
+    cometState = 'connected'
+    const refetch = vi.fn()
+    const scope = effectScope()
+    scope.run(() => useStaleDataRecovery({ refetch }))
+
+    drive('disconnected', 'connecting', 'connected')
+    /* reset() after a login: disconnect(), then connect() */
+    drive('idle', 'connecting', 'connected')
+    expect(refetch).toHaveBeenCalledTimes(1)
+
+    drive('disconnected', 'connecting', 'connected')
+    expect(refetch).toHaveBeenCalledTimes(2)
 
     scope.stop()
   })

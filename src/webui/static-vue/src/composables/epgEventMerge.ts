@@ -11,7 +11,8 @@
  * Comet `'epg'` notifications carry create / update / delete
  * arrays of event ids; the consumer fetches fresh rows for the
  * created / updated ids and merges them in, then drops rows for
- * the deleted ids.
+ * the deleted ids. A day fetch (`loadDay`) replaces the rows of its
+ * day instead, see `mergeDayEvents`.
  *
  * NOTE on the absence of a per-day window filter: an earlier
  * version of `mergeFreshEvents` filtered fresh rows to a single
@@ -48,4 +49,30 @@ export function mergeFreshEvents(current: EpgRow[], fresh: EpgRow[]): EpgRow[] {
   const existingIds = new Set(replaced.map((e) => e.eventId))
   const additions = fresh.filter((e) => !existingIds.has(e.eventId))
   return additions.length > 0 ? [...replaced, ...additions] : replaced
+}
+
+/* Merge the reply of a day fetch into `current`. The reply lists
+ * every event of the day [dayStart, dayEnd) that has not ended, so
+ * it replaces the rows of that day and a row it no longer lists is
+ * gone on the server. Every incoming row is kept, and so are the
+ * rows of other days. An event across midnight is in the replies of
+ * both days and is kept once. Returns a new array. */
+export function mergeDayEvents(
+  current: EpgRow[],
+  incoming: EpgRow[],
+  dayStart: number,
+  dayEnd: number
+): EpgRow[] {
+  const byId = new Map<number, EpgRow>()
+  for (const e of current) {
+    if (!overlapsDay(e, dayStart, dayEnd)) byId.set(e.eventId, e)
+  }
+  for (const e of incoming) byId.set(e.eventId, e)
+  return [...byId.values()]
+}
+
+/* Strict overlap, narrower than the server's day filter, which is
+ * inclusive at both ends. A row that only touches the day stays. */
+function overlapsDay(e: EpgRow, dayStart: number, dayEnd: number): boolean {
+  return e.start !== undefined && e.stop !== undefined && e.start < dayEnd && e.stop > dayStart
 }
