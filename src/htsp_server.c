@@ -352,14 +352,12 @@ htsp_image(htsp_connection_t *htsp, const char *image,
     if (htsp->htsp_version < version) {
       struct sockaddr_storage addr;
       socklen_t addrlen;
-      char abuf[50];
+      char abuf[64];
       addrlen = sizeof(addr);
       getsockname(htsp->htsp_fd, (struct sockaddr*)&addr, &addrlen);
-      tcp_get_str_from_ip(&addr, abuf, sizeof(abuf));
-      snprintf(buf, buflen, "http://%s%s%s:%d%s/imagecache/%d",
-                      (addr.ss_family == AF_INET6)?"[":"",
+      tcp_get_url_host_from_ip(&addr, abuf, sizeof(abuf));
+      snprintf(buf, buflen, "http://%s:%d%s/imagecache/%d",
                       abuf,
-                      (addr.ss_family == AF_INET6)?"]":"",
                       tvheadend_webui_port,
                       tvheadend_webroot ?: "",
                       id);

@@ -481,6 +481,31 @@ tcp_get_str_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
 }
 
 /**
+ * Write the address as the host part of a URL. An IPv4-mapped IPv6
+ * address, as -6 gives for IPv4 clients, is written as plain IPv4.
+ * Other IPv6 addresses go in brackets. maxlen should be at least
+ * INET6_ADDRSTRLEN + 2.
+ */
+char *
+tcp_get_url_host_from_ip(const struct sockaddr_storage *sa, char *dst, size_t maxlen)
+{
+  const struct in6_addr *in6;
+  char buf[INET6_ADDRSTRLEN];
+
+  if (sa == NULL || dst == NULL || sa->ss_family != AF_INET6)
+    return tcp_get_str_from_ip(sa, dst, maxlen);
+
+  in6 = &((const struct sockaddr_in6 *)sa)->sin6_addr;
+  if (IN6_IS_ADDR_V4MAPPED(in6)) {
+    inet_ntop(AF_INET, &in6->s6_addr[12], dst, maxlen);
+  } else {
+    inet_ntop(AF_INET6, in6, buf, sizeof(buf));
+    snprintf(dst, maxlen, "[%s]", buf);
+  }
+  return dst;
+}
+
+/**
  *
  */
 struct sockaddr_storage *
