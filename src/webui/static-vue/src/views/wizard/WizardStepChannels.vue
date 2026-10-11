@@ -7,19 +7,20 @@
  * WizardStepChannels — the final summary step. Renders the
  * server-emitted icon + Markdown description (which thanks the
  * user + warns about the default-admin-entry removal when an
- * admin was created via the wizard, per src/wizard.c:1179-1208
+ * admin was created via the wizard, per src/wizard.c:1179-1211
  * choosing between `channels` and `channels2` doc variants).
  *
  * Finish flow:
  *   1. POST wizard/cancel — clears `config.wizard` so the
  *      wizard auto-trigger doesn't re-fire on next session.
  *   2. POST wizard/channels/save — triggers the C-side
- *      `channels_changed` callback (src/wizard.c:1157) which
+ *      `channels_changed` callback (src/wizard.c:1160) which
  *      removes the wide-open default access entry when a
- *      wizard-created admin exists. If it fails after a
- *      successful cancel, POST wizard/start puts the wizard back.
- *   3. Navigate to `/gui/` (the EPG route) — the user is dropped
- *      into the regular UI, or into the wizard again after 2.
+ *      wizard-created admin exists. If it fails, POST
+ *      wizard/start puts the wizard back.
+ *   3. Reload at `/gui/` (the EPG route), only after a
+ *      successful save. When 1 or 2 fails, the step stays,
+ *      shows the error and Finish can be retried.
  *
  * No IdnodeConfigForm — the channels step has no form fields
  * (just icon + description + PREV / LAST markers). Mirroring
@@ -31,6 +32,8 @@ import { useRouter } from 'vue-router'
 import WizardFooter from './WizardFooter.vue'
 import { useWizardStore } from '@/stores/wizard'
 import { apiCall } from '@/api/client'
+import { useI18n } from '@/composables/useI18n'
+import { apiErrorMessage } from '@/utils/apiErrorMessage'
 import { markSetupComplete } from '@/utils/setupGreeting'
 import { appBase } from '@/utils/base'
 import { addExternalLinkAttrs, renderMarkdown, rewriteStaticUrls } from '@/utils/markdown'
@@ -38,10 +41,13 @@ import type { IdnodeProp } from '@/types/idnode'
 
 const router = useRouter()
 const wizard = useWizardStore()
+const { t } = useI18n()
 
 const iconUrl = ref<string>('')
 const descriptionHtml = ref<string>('')
 const finishing = ref(false)
+/* Why the last Finish stopped early, shown until the next try. */
+const finishError = ref<string | null>(null)
 
 interface WizardLoadResponse {
   entries?: { params?: IdnodeProp[] }[]
@@ -75,7 +81,7 @@ function normalizeStaticUrl(u: string): string {
 async function handleFinish(): Promise<void> {
   if (finishing.value) return
   finishing.value = true
-  let saved = false
+  finishError.value = null
   try {
     /* Cancel first, then save, the order Classic uses (the cancel
      * in presave, static/app/wizard.js). The save's
@@ -83,52 +89,43 @@ async function handleFinish(): Promise<void> {
      * access entry once a wizard admin exists (src/wizard.c), and
      * wizard/cancel needs admin rights. Sent after the save, the
      * cancel could hit a credentials prompt and leave the wizard
-     * active. The save still runs when the cancel fails, because
-     * it is what removes the wide-open entry. */
-    let cancelled = false
-    try {
-      await wizard.cancel()
-      cancelled = true
-    } catch (e) {
-      console.warn('[wizard] cancel failed:', e)
-    }
+     * active. A failed cancel stops here, before the save, so the
+     * wizard and the wide-open entry stay as they are. */
+    await wizard.cancel()
     try {
       await apiCall('wizard/channels/save', { node: JSON.stringify({}) })
-      saved = true
     } catch (e) {
-      /* Without the save the wide-open entry stays. After a
-       * successful cancel, start the wizard again so the reload
-       * below lands in it and the setup can still be finished. */
-      if (cancelled) await wizard.start()
+      /* Without the save the wide-open entry stays, so put the
+       * wizard back. Previous and a page reload then stay in it.
+       * A failed restart is only logged, the save error is the
+       * one shown. The wizard stays off in that case, so Previous
+       * and a reload lead to the normal UI with the default entry
+       * kept. Finish still completes the setup. */
+      await wizard.start().catch((err: unknown) => {
+        console.warn('[wizard] could not restart after a failed save:', err)
+      })
       throw e
     }
   } catch (e) {
-    console.warn('[wizard] finish flow failed:', e)
-  } finally {
+    /* Stay on the step with the reason. Finish can be retried,
+     * and Previous and Cancel work again. */
+    console.warn('[wizard] finish failed:', e)
+    finishError.value = t('Could not finish the setup wizard: {0}', apiErrorMessage(e))
     finishing.value = false
+    return
   }
-  /* Page reload, not router.push — mirrors ExtJS at
-   * static/app/wizard.js:154. The finish path is the END of the
-   * wizard, not a step transition: (1) the channels_changed
-   * callback may have just removed the wide-open default
-   * access entry that the user was authenticated via, so the
-   * browser needs a fresh auth round-trip; (2) `accessUpdate`
-   * isn't re-broadcast when config.wizard clears (server only
-   * emits at mailbox creation, per src/webui/comet.c:300) so a
-   * soft router.push would land back on /wizard/hello via the
-   * stale-cursor guard. Reloading at /gui/ forces a fresh WS
-   * connection that carries the now-empty wizard field; the
-   * regular UI mounts cleanly. ADR 0015 §4's soft-refresh
-   * decision applies to in-wizard transitions, not to the
-   * exit. Runs even if one of the POSTs threw — the user
-   * explicitly chose to finish; trapping them on the channels
-   * step is worse than slight server-side inconsistency
-   * (recoverable from the Configuration UI). */
-  /* Flag the Home dashboard's "Setup complete" greeting for after
-   * the reload — sessionStorage survives the full reload, in-memory
-   * state does not. The Home reads + clears it once. Only after a
-   * successful save, since the setup is not complete otherwise. */
-  if (saved) markSetupComplete()
+  /* Reload at /gui/ instead of router.push, and only after a
+   * successful save, as Classic does in its postsave
+   * (static/app/wizard.js:144-156). channels_changed may have
+   * just removed the default entry the browser got in through,
+   * so the browser needs a fresh auth round trip, and the new
+   * comet mailbox brings the access rights that apply now.
+   * ADR 0015 §4's soft refresh is for in-wizard transitions,
+   * not for the exit. Flag the Home dashboard's "Setup complete"
+   * greeting first. sessionStorage survives the reload, and the
+   * Home reads and clears it once. `finishing` stays set, so the
+   * footer buttons stay disabled until the new page loads. */
+  markSetupComplete()
   globalThis.location.assign(appBase)
 }
 
@@ -155,6 +152,7 @@ async function handleCancel(): Promise<void> {
         <div v-if="descriptionHtml" class="wizard-step__description" v-html="descriptionHtml"></div>
       </header>
     </div>
+    <p v-if="finishError" class="wizard-step__error" role="alert">{{ finishError }}</p>
     <WizardFooter
       :prev-step="'mapping'"
       :is-final="true"
@@ -234,6 +232,25 @@ async function handleCancel(): Promise<void> {
   height: auto;
 }
 
+/* Finish failure, styled like the save error of the other steps
+ * (IdnodeConfigForm). It sits between the scroll area and the
+ * footer, so it shows right above Finish even when the long
+ * description fills a short screen. The side margins follow the
+ * padding of the scroll area and the footer. */
+.wizard-step__error {
+  flex-shrink: 0;
+  margin-top: var(--tvh-space-2);
+  margin-bottom: var(--tvh-space-2);
+  margin-left: calc(var(--tvh-space-6) + env(safe-area-inset-left));
+  margin-right: calc(var(--tvh-space-6) + env(safe-area-inset-right));
+  padding: var(--tvh-space-2) var(--tvh-space-3);
+  background: color-mix(in srgb, var(--tvh-error) 8%, var(--tvh-bg-surface));
+  border: 1px solid var(--tvh-error);
+  border-radius: var(--tvh-radius-sm);
+  color: var(--tvh-text);
+  font-size: var(--tvh-text-md);
+}
+
 @media (max-width: 767px) {
   .wizard-step__scroll {
     padding-top: var(--tvh-space-3);
@@ -249,6 +266,11 @@ async function handleCancel(): Promise<void> {
 
   .wizard-step__icon {
     display: none;
+  }
+
+  .wizard-step__error {
+    margin-left: calc(var(--tvh-space-3) + env(safe-area-inset-left));
+    margin-right: calc(var(--tvh-space-3) + env(safe-area-inset-right));
   }
 }
 </style>
