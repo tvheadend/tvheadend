@@ -13,14 +13,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (s: string) => s,
-    currentLang: () => '',
-  }),
-  t: (s: string) => s,
-}))
-
 vi.mock('vue-router', () => ({
   useRoute: () => ({ fullPath: '/wizard/hello' }),
 }))

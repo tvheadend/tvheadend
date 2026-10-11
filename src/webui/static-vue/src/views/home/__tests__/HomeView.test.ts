@@ -12,20 +12,6 @@ import { createMemoryHistory, createRouter } from 'vue-router'
 import HomeView from '../HomeView.vue'
 import type { HomeCapabilities, InstallState } from '@/composables/useHomeState'
 
-/* Pure i18n stub — single substitution helper reused for both the
- * static `t` export (consumed by `actionHandlers.ts`) and the
- * reactive `useI18n().t` (consumed by setup contexts). vi.mock is
- * hoisted to the top of the file by Vitest, so any reference inside
- * the factory must go through vi.hoisted (which runs before mocks). */
-const { tStub } = vi.hoisted(() => ({
-  tStub: (s: string, ...args: Array<string | number>) =>
-    s.replace(/\{(\d+)\}/g, (m, i) => String(args[Number(i)] ?? m)),
-}))
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: tStub }),
-  t: tStub,
-}))
-
 /* Controllable useHomeState — set state / caps per test, then mount. */
 const mockHomeState = {
   state: ref<InstallState>('healthy'),
