@@ -72,9 +72,10 @@ typedef struct eit_private
 
 #define EIT_CONV_HUFFMAN            1
 
-#define EIT_HACK_INTEREST4E         (1<<0)
-#define EIT_HACK_EXTRAMUXLOOKUP     (1<<1)
-#define EIT_HACK_SVCNETLOOKUP       (1<<2)
+#define EIT_HACK_INTEREST4E           (1<<0)
+#define EIT_HACK_EXTRAMUXLOOKUP       (1<<1)
+#define EIT_HACK_SVCNETLOOKUP         (1<<2)
+#define EIT_HACK_USE_MUX_TSID_FOR_EIT (1<<3)
 
 /* Queued data structure */
 typedef struct eit_data
@@ -1046,6 +1047,18 @@ _eit_callback
   /* Basic info */
   sid     = ptr[0] << 8 | ptr[1];
   tsid    = ptr[5] << 8 | ptr[6];
+  
+  //If the 'EIT_HACK_USE_MUX_TSID_FOR_EIT' / 'use-mux-tsid-for-eit' hack is enabled
+  //via the EIT grabber config file, overwrite the EIT TSID with the Mux TSID.
+  //For this to work, 'EIT_HACK_SVCNETLOOKUP' / 'svc-net-lookup' also needs to be set.
+  //Used for NZ because EPG in areas outside of Auckland still use Auckland's TSID in the EIT.
+  //https://freeviewnz.tv/Media/o4pp5qwe/freeview-specification-2022-v15.pdf
+
+  if((hacks & EIT_HACK_USE_MUX_TSID_FOR_EIT) !=0)
+  {
+    tsid = mt->mt_mux->mm_tsid;
+  }
+
   onid    = ptr[7] << 8 | ptr[8];
   seg     = ptr[9];
   extraid = ((uint32_t)tsid << 16) | sid;
@@ -1695,7 +1708,9 @@ static void eit_init_one ( const char *id, htsmsg_t *conf )
       else if (strcmp(htsmsg_field_name(f), "extra-mux-lookup") == 0)
         priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
       else if (strcmp(htsmsg_field_name(f), "svc-net-lookup") == 0)
-        priv->hacks |= EIT_HACK_EXTRAMUXLOOKUP;
+        priv->hacks |= EIT_HACK_SVCNETLOOKUP;
+      else if (strcmp(htsmsg_field_name(f), "use-mux-tsid-for-eit") == 0)
+        priv->hacks |= EIT_HACK_USE_MUX_TSID_FOR_EIT;
       else if (strcmp(htsmsg_field_name(f), "bat") == 0) {
         if (!(e = htsmsg_field_get_map(f))) continue;
         priv->bat_pid = htsmsg_get_s32_or_default(e, "pid", 0);
