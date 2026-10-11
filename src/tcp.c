@@ -1200,8 +1200,23 @@ pthread_t tcp_server_tid;
 void
 tcp_server_preinit(int opt_ipv6)
 {
-  if(opt_ipv6)
-    tcp_preferred_address_family = AF_INET6;
+  int fd;
+
+  if (!opt_ipv6)
+    return;
+
+  /* A kernel without IPv6 (ipv6.disable=1) cannot open the dual-stack
+   * listening sockets, so stay on IPv4 instead of listening on nothing.
+   * This only checks the socket family. Binding is left to the servers,
+   * and tcp_server_create() logs any bind error. */
+  fd = tvh_socket(AF_INET6, SOCK_STREAM, 0);
+  if (fd < 0) {
+    tvhwarn(LS_TCP, "IPv6 is not available (%s), listening on IPv4 only",
+            strerror(errno));
+    return;
+  }
+  close(fd);
+  tcp_preferred_address_family = AF_INET6;
 }
 
 void
