@@ -3,7 +3,7 @@
 # Convert .po file to javascript
 #
 
-import sys, os
+import sys, os, re
 
 VERBOSE = 'V' in os.environ and len(os.environ['V']) > 0
 TVHDIR = os.path.realpath('.')
@@ -91,9 +91,13 @@ class PO:
     self.po_finish(msgid, msgstr)
 
 def jsstr(s):
-  return s.replace('\t', '\\t').\
-           replace('\n', '\\n').\
-           replace("'", "\\'");
+  # the backslash first, so a translation cannot end the literal early
+  s = s.replace('\\', '\\\\').\
+        replace('\t', '\\t').\
+        replace('\n', '\\n').\
+        replace('\r', '\\r').\
+        replace("'", "\\'")
+  return re.sub(r'[\x00-\x1f]', lambda m: '\\x%02x' % ord(m.group(0)), s)
 
 def cnv(fn):
 
