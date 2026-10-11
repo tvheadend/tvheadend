@@ -4,8 +4,8 @@
 /*
  * useI18n unit tests. Covers the gettext-text-as-key lookup
  * surface that the wizard slice consumes — fallback to English
- * literal, current-language read, locale (re)load + reactive
- * bump.
+ * literal, plural forms, current-language read, locale (re)load +
+ * reactive bump.
  *
  * happy-dom note: appending a `<script src=...>` to the DOM
  * synchronously fires `onerror` with "JavaScript file loading is
@@ -19,17 +19,32 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { computed, isRef } from 'vue'
 
 interface TvhLocaleGlobals {
-  tvh_locale?: Record<string, string>
+  tvh_locale?: Record<string, string | string[]>
+  tvh_locale_plural?: (n: number) => number
   tvh_locale_lang?: string
 }
 
 const g = globalThis as unknown as TvhLocaleGlobals
+
+/* A Czech plural entry in the shape support/pojs.py writes: one
+ * form per msgstr[N], and the rule for cs ("nplurals=4; plural=
+ * (n == 1 && n % 1 == 0) ? 0 : (n >= 2 && n <= 4 && n % 1 == 0) ?
+ * 1: (n % 1 != 0 ) ? 2 : 3;") as a function. */
+const CZECH_ROWS = ['{0} řádek', '{0} řádky', '{0} řádku', '{0} řádků']
+
+function czechPlural(n: number): number {
+  if (n === 1) return 0
+  if (n >= 2 && n <= 4 && n % 1 === 0) return 1
+  if (n % 1 !== 0) return 2
+  return 3
+}
 
 let capturedScripts: HTMLScriptElement[] = []
 let appendChildSpy: ReturnType<typeof vi.spyOn> | null = null
 
 beforeEach(() => {
   delete g.tvh_locale
+  delete g.tvh_locale_plural
   delete g.tvh_locale_lang
   capturedScripts = []
   /* Capture script elements without triggering happy-dom's
@@ -48,6 +63,7 @@ beforeEach(() => {
 
 afterEach(() => {
   delete g.tvh_locale
+  delete g.tvh_locale_plural
   delete g.tvh_locale_lang
   appendChildSpy?.mockRestore()
   appendChildSpy = null
@@ -131,6 +147,76 @@ describe('t() — positional {N} substitution', () => {
   })
 })
 
+describe('tn() — plural forms', () => {
+  it('takes the English singular for one and the plural otherwise', async () => {
+    const { tn } = await import('../useI18n')
+    expect(tn('{0} row', '{0} rows', 0)).toBe('0 rows')
+    expect(tn('{0} row', '{0} rows', 1)).toBe('1 row')
+    expect(tn('{0} row', '{0} rows', 2)).toBe('2 rows')
+  })
+
+  it('substitutes explicit args instead of the count', async () => {
+    const { tn } = await import('../useI18n')
+    expect(tn('{0} ({1} entry)', '{0} ({1} entries)', 1, 'Edit', 1)).toBe('Edit (1 entry)')
+    expect(tn('{0} ({1} entry)', '{0} ({1} entries)', 3, 'Edit', 3)).toBe('Edit (3 entries)')
+  })
+
+  it('picks the form for the count from the catalog', async () => {
+    g.tvh_locale = { '{0} row': CZECH_ROWS }
+    g.tvh_locale_plural = czechPlural
+    const { tn } = await import('../useI18n')
+    expect([1, 2, 4, 5, 21, 22].map((n) => tn('{0} row', '{0} rows', n))).toEqual([
+      '1 řádek',
+      '2 řádky',
+      '4 řádky',
+      '5 řádků',
+      '21 řádků',
+      '22 řádků',
+    ])
+  })
+
+  it('falls back to English when the entry, the rule or the form is unusable', async () => {
+    const { tn } = await import('../useI18n')
+    g.tvh_locale_plural = czechPlural
+    g.tvh_locale = { '{0} row': '{0} řádek' }
+    expect(tn('{0} row', '{0} rows', 2)).toBe('2 rows')
+
+    g.tvh_locale = { '{0} row': CZECH_ROWS }
+    delete g.tvh_locale_plural
+    expect(tn('{0} row', '{0} rows', 2)).toBe('2 rows')
+
+    g.tvh_locale_plural = () => 7
+    expect(tn('{0} row', '{0} rows', 1)).toBe('1 row')
+
+    g.tvh_locale_plural = czechPlural
+    expect(tn('{0} row', '{0} rows', Number.NaN)).toBe('NaN rows')
+  })
+
+  it('ignores a rule left over from the previous language', async () => {
+    /* The server's empty catalog for English resets only
+     * tvh_locale and tvh_locale_lang, so the Czech rule stays. */
+    g.tvh_locale = {}
+    g.tvh_locale_plural = czechPlural
+    const { tn } = await import('../useI18n')
+    expect(tn('{0} row', '{0} rows', 2)).toBe('2 rows')
+  })
+
+  it('leaves plural entries to tn(), t() gives the English text', async () => {
+    g.tvh_locale = { '{0} row': CZECH_ROWS }
+    g.tvh_locale_plural = czechPlural
+    const { t } = await import('../useI18n')
+    expect(t('{0} row')).toBe('{0} row')
+    expect(t('{0} row', 3)).toBe('3 row')
+  })
+})
+
+describe('N_()', () => {
+  it('returns the text it marks', async () => {
+    const { N_ } = await import('../useI18n')
+    expect(N_('Welcome')).toBe('Welcome')
+  })
+})
+
 describe('currentLang()', () => {
   it('returns empty string when no locale loaded', async () => {
     const { currentLang } = await import('../useI18n')
@@ -145,10 +231,11 @@ describe('currentLang()', () => {
 })
 
 describe('useI18n() reactive composable', () => {
-  it('exposes t and currentLang functions', async () => {
+  it('exposes t, tn and currentLang functions', async () => {
     const { useI18n } = await import('../useI18n')
-    const { t, currentLang } = useI18n()
+    const { t, tn, currentLang } = useI18n()
     expect(typeof t).toBe('function')
+    expect(typeof tn).toBe('function')
     expect(typeof currentLang).toBe('function')
   })
 
@@ -178,6 +265,21 @@ describe('useI18n() reactive composable', () => {
     await promise
 
     expect(computedLabel.value).toBe('Einrichtungsassistent')
+  })
+
+  it('reactive plural consumers re-evaluate after a locale swap', async () => {
+    const { useI18n, loadLocale } = await import('../useI18n')
+    const { tn } = useI18n()
+    const computedLabel = computed(() => tn('{0} row', '{0} rows', 3))
+    expect(computedLabel.value).toBe('3 rows')
+
+    g.tvh_locale = { '{0} row': CZECH_ROWS }
+    g.tvh_locale_plural = czechPlural
+    const promise = loadLocale()
+    capturedScripts[0].onload?.(new Event('load'))
+    await promise
+
+    expect(computedLabel.value).toBe('3 řádky')
   })
 })
 
