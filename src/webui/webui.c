@@ -2077,7 +2077,7 @@ hdhomerun_server_discover(http_connection_t *hc, const char *remain, void *opaqu
   const char *server_name = hdhomerun_get_server_name();
   const uint32_t deviceid = hdhomerun_get_deviceid();
 
-  tcp_get_str_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
+  tcp_get_url_host_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
 
   // The contents below for the discovery message are based on jkaberg/tvhProxy 
   htsmsg_t *msg = htsmsg_create_map();
@@ -2138,7 +2138,7 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
     (config.chname_src ? CHANNEL_ENAME_SOURCES : 0);
   int is_first = 1;
 
-  tcp_get_str_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
+  tcp_get_url_host_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
   htsbuf_append_str(hq, "[");
   tvh_mutex_lock(&global_lock);
@@ -2234,7 +2234,7 @@ hdhomerun_server_device_xml(http_connection_t *hc, const char *remain, void *opa
   html_escape(model_name_escaped, model_name, sizeof(model_name_escaped));
 
   // The contents below for the discovery message are based on jkaberg/tvhProxy 
-  tcp_get_str_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
+  tcp_get_url_host_from_ip(hc->hc_self, http_ip, sizeof(http_ip));
   htsbuf_qprintf(hq, "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
                  "<specVersion>"
                  "<major>1</major>"
