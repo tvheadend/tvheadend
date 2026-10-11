@@ -35,7 +35,7 @@ import { Video } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
 import { serverUrl } from '@/utils/base'
-import { t } from '@/composables/useI18n'
+import { currentLang, t } from '@/composables/useI18n'
 import type { useAccessStore } from '@/stores/access'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { useEntityEditor } from '@/composables/useEntityEditor'
@@ -77,6 +77,10 @@ export interface RecordingSourceDeps {
 
 const commands = ref<Command[]>([])
 let lastFetchAt = 0
+/* Language the labels were translated into. The setup wizard
+ * changes it without a page reload, so a change fetches the
+ * commands again even inside the TTL. */
+let lastFetchLang = ''
 let inflight: Promise<void> | null = null
 
 export function getRecordingCommands(): Ref<Command[]> {
@@ -86,7 +90,11 @@ export function getRecordingCommands(): Ref<Command[]> {
 export function ensureRecordingsLoaded(deps: RecordingSourceDeps): Promise<void> {
   const now = Date.now()
   if (inflight) return inflight
-  if (commands.value.length > 0 && now - lastFetchAt < CACHE_TTL_MS) {
+  if (
+    commands.value.length > 0 &&
+    now - lastFetchAt < CACHE_TTL_MS &&
+    lastFetchLang === currentLang()
+  ) {
     return Promise.resolve()
   }
   inflight = doFetch(deps)
@@ -103,6 +111,7 @@ async function doFetch(deps: RecordingSourceDeps): Promise<void> {
     })
     commands.value = (resp.entries ?? []).map((e) => buildRecordingCommand(e, deps))
     lastFetchAt = Date.now()
+    lastFetchLang = currentLang()
   } catch {
     /* Silent fail — non-dvr users get an empty list (their
      * access is the actual gate), and a transient network blip
@@ -117,7 +126,7 @@ function buildRecordingCommand(
   deps: RecordingSourceDeps,
 ): Command {
   const uuid = entry.uuid
-  const title = entry.disp_title ?? '(Untitled)'
+  const title = entry.disp_title ?? t('(Untitled)')
   const cmd: Command = {
     id: `recording:${uuid}`,
     label: titleWithExtras(title, entry.disp_extratext),
@@ -125,10 +134,10 @@ function buildRecordingCommand(
     section: 'Recordings',
     icon: Video,
     keywords: ['recording', 'recorded', 'dvr'],
-    actionLabel: 'Show details',
+    actionLabel: t('Show details'),
     action: () => deps.entityEditor.open(uuid),
     secondaryAction: {
-      label: 'Play in external player',
+      label: t('Play in external player'),
       handler: () => openExternalPlayer(uuid, title),
     },
   }
@@ -139,7 +148,7 @@ function buildRecordingCommand(
    * a safeguard; we match the DVR view's Delete-button UX. */
   if (deps.access.has('dvr')) {
     cmd.tertiaryAction = {
-      label: 'Delete recording',
+      label: t('Delete recording'),
       handler: () => deleteRecording(uuid, title, deps.toast, deps.confirm),
     }
   }
@@ -208,5 +217,6 @@ async function deleteRecording(
 export function __resetRecordingSourceForTests(): void {
   commands.value = []
   lastFetchAt = 0
+  lastFetchLang = ''
   inflight = null
 }

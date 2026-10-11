@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Tvheadend contributors
 
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter, type RouteRecordRaw } from 'vue-router'
 import { buildRouteCommands } from '../commandRegistry'
+import { clearLocale } from '@/test/__helpers__/switchLocale'
 
 /* Build a minimal router stand-in for the registry. Production
  * uses the full `src/router/index.ts`, but for unit testing we
@@ -19,6 +20,10 @@ function makeTestRouter(routes: RouteRecordRaw[]) {
 const noop = { render: () => null }
 
 describe('buildRouteCommands', () => {
+  afterEach(() => {
+    clearLocale()
+  })
+
   it('produces a command for every leaf route with meta.title', () => {
     const router = makeTestRouter([
       { path: '/a', name: 'a', component: noop, meta: { title: 'Alpha' } },
@@ -139,6 +144,41 @@ describe('buildRouteCommands', () => {
     const networks = commands.find((c) => c.id === 'nav:cfg-dvb-networks')
     expect(networks?.label).toBe('Networks')
     expect(networks?.description).toBe('Configuration / DVB Inputs')
+  })
+
+  it('translates the label and the breadcrumb, the English title stays a keyword', () => {
+    ;(globalThis as unknown as { tvh_locale?: Record<string, string> }).tvh_locale = {
+      Configuration: 'Konfigurace',
+      'DVB Inputs': 'DVB vstupy',
+      Networks: 'Sítě',
+    }
+    const router = makeTestRouter([
+      {
+        path: '/cfg',
+        component: noop,
+        meta: { title: 'Configuration' },
+        children: [
+          {
+            path: 'dvb',
+            component: noop,
+            meta: { title: 'DVB Inputs' },
+            children: [
+              { path: 'networks', name: 'cfg-dvb-networks', component: noop, meta: { title: 'Networks' } },
+              { path: 'muxes', name: 'cfg-dvb-muxes', component: noop, meta: { title: 'Muxes' } },
+            ],
+          },
+        ],
+      },
+    ])
+    const commands = buildRouteCommands(router)
+    const networks = commands.find((c) => c.id === 'nav:cfg-dvb-networks')
+    expect(networks?.label).toBe('Sítě')
+    expect(networks?.description).toBe('Konfigurace / DVB vstupy')
+    expect(networks?.keywords).toEqual(['Networks'])
+    /* No translation, nothing to add. */
+    const muxes = commands.find((c) => c.id === 'nav:cfg-dvb-muxes')
+    expect(muxes?.label).toBe('Muxes')
+    expect(muxes?.keywords).toBeUndefined()
   })
 
   it('does not set a description when there are no ancestors', () => {
