@@ -28,7 +28,7 @@ struct service;
 int svcts_enabled ( void );
 
 /* In a client chain, where timeshift_create() would go */
-streaming_target_t *svcts_create ( streaming_target_t *out, time_t max_period );
+streaming_target_t *svcts_create ( streaming_target_t *out );
 void svcts_destroy ( streaming_target_t *pad );
 
 /* The client's subscription linked to / unlinked from a service
