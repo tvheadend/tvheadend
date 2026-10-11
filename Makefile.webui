@@ -328,10 +328,10 @@ intl/js/tvheadend.js.pot:
 #intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
 #	$(call merge-po,$@,$<)
 
-src/webui/static/intl/tvh.%.js.gz: intl/js/tvheadend.js.%.po
+src/webui/static/intl/tvh.%.js.gz: intl/js/tvheadend.js.%.po support/pojs.py
 	$(call go-po,$@,$<)
 
-src/webui/static/intl/tvh-vue.%.js.gz: intl/vue/tvheadend.vue.%.po
+src/webui/static/intl/tvh-vue.%.js.gz: intl/vue/tvheadend.vue.%.po support/pojs.py
 	$(call go-po,$@,$<)
 
 .PHONY:
