@@ -51,7 +51,7 @@
 
   "nz_freeview2": {
     "name": {
-      "eng": "New Zealand: Freeview Local"
+      "eng": "New Zealand: Outside Auckland (Freeview Local)"
     },
     "nit": {
       "Freeview ": {
@@ -63,13 +63,14 @@
     "prio": 5,
     "conv": "huffman",
     "hacks": {
-      "svc-net-lookup": 1
+      "svc-net-lookup": 1,
+      "use-mux-tsid-for-eit": 1
     }
   },
 
   "nz_freeview1": {
     "name": {
-      "eng": "New Zealand: Freeview Base"
+      "eng": "New Zealand: Auckland (Freeview Base)"
     },
     "nit": {
       "Freeview ": {
