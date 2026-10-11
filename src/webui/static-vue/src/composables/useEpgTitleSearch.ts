@@ -22,6 +22,12 @@
  * then quickly typing more to "houses" could let the slower first
  * response clobber the more-recent one.
  *
+ * The server compiles `title` as a caseless regex (`src/epg.c`
+ * epg_query), so the typed text is regex-escaped and matches as
+ * plain text, as in the command palette. Unescaped, "C++" would
+ * match every title with a "c" and an unbalanced parenthesis would
+ * not compile, finding nothing.
+ *
  * Deliberately not coupled to `useEpgViewState`: that carries the
  * EPG views' full filter / pagination / drawer machinery, which a
  * Home search box has no use for. Just `apiCall` directly.
@@ -29,6 +35,7 @@
 import { onScopeDispose, ref, watch } from 'vue'
 import { apiCall } from '@/api/client'
 import { createDebounce } from '@/utils/debounce'
+import { regexEscape } from '@/utils/regexEscape'
 import type { GridResponse } from '@/types/grid'
 import type { EpgEventDetail } from '@/views/epg/EpgEventDrawer.vue'
 
@@ -72,7 +79,7 @@ export function useEpgTitleSearch() {
     try {
       const resp = await apiCall<GridResponse<EpgEventDetail>>(
         'epg/events/grid',
-        { title: q, limit: RESULT_LIMIT, sort: 'start', dir: 'ASC' },
+        { title: regexEscape(q), limit: RESULT_LIMIT, sort: 'start', dir: 'ASC' },
       )
       /* Drop out-of-order responses. */
       if (myToken !== activeToken) return
