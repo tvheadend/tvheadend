@@ -62,6 +62,12 @@ describe('ServiceMapperView', () => {
     )
   })
 
+  it('uses the singular for a run over one service', async () => {
+    respond({ total: 1, ok: 1, fail: 0, ignore: 0 })
+    const w = await mountView()
+    expect(w.find('.service-mapper__idle').text()).toBe('Idle. Last run mapped 1 of 1 service.')
+  })
+
   it('shows the service name, not its uuid, when opened during a job', async () => {
     const uuid = '0123456789abcdef0123456789abcdef'
     respond({ total: 19, ok: 3, fail: 0, ignore: 0, active: uuid }, 'BBC One')

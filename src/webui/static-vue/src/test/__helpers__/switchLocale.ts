@@ -46,6 +46,15 @@ export async function switchLocale(
   await nextTick()
 }
 
+/* The plural rule support/pojs.py writes for Czech: one, few (2 to
+ * 4), fractions and many. For tests that install plural entries. */
+export function czechPlural(n: number): number {
+  if (n === 1) return 0
+  if (n >= 2 && n <= 4 && n % 1 === 0) return 1
+  if (n % 1 !== 0) return 2
+  return 3
+}
+
 export function clearLocale(): void {
   const g = globalThis as unknown as TvhLocaleGlobals
   delete g.tvh_locale

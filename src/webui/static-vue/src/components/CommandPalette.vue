@@ -75,7 +75,7 @@ import {
 } from '@/commands/commandRanker'
 import type { Command, CommandSection } from '@/commands/commandRegistry'
 
-const { t, currentLang } = useI18n()
+const { t, tn, currentLang } = useI18n()
 const palette = useCommandPalette()
 const access = useAccessStore()
 const router = useRouter()
@@ -612,7 +612,7 @@ function onKeyDown(event: KeyboardEvent): void {
       </div>
 
       <div class="command-palette__live" aria-live="polite">
-        <template v-if="palette.query.value">{{ results.length }} {{ t('results') }}</template>
+        <template v-if="palette.query.value">{{ tn('{0} result', '{0} results', results.length) }}</template>
       </div>
     </div>
   </Dialog>

@@ -49,7 +49,7 @@
  * against-Y" into `crossField`.
  */
 
-import { t } from '@/composables/useI18n'
+import { t, tn } from '@/composables/useI18n'
 
 /* Validation messages are plain `string`. A type alias would be
  * nominally identical to `string` (no nominal-typing in TS), so the
@@ -122,7 +122,7 @@ function applyMinLength(
   for (const [id, min] of Object.entries(minLength)) {
     const v = values[id]
     if (typeof v === 'string' && v.length > 0 && v.length < min && !errors.has(id)) {
-      errors.set(id, `Must be at least ${min} characters`)
+      errors.set(id, tn('Must be at least {0} character', 'Must be at least {0} characters', min))
     }
   }
 }

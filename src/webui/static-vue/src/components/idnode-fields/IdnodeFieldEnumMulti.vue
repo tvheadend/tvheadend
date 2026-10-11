@@ -49,7 +49,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useEnumOptions } from './useEnumOptions'
 
 const access = useAccessStore()
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -151,8 +151,9 @@ const triggerDisplay = computed<{ display: string; full?: string }>(() => {
     })
   }
   if (items.length === 1) return { display: items[0].label }
+  const rest = items.length - 1
   return {
-    display: t('{0}, +{1} more', items[0].label, items.length - 1),
+    display: tn('{0}, +{1} more', '{0}, +{1} more', rest, items[0].label, rest),
     full: items.map((it) => it.label).join(', '),
   }
 })
