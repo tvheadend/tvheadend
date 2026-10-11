@@ -149,6 +149,25 @@ describe('useEpgTitleSearch — debounce + params', () => {
 
     unmount()
   })
+
+  it.each([
+    ['C++', String.raw`C\+\+`],
+    ['News (Late', String.raw`News \(Late`],
+    ['Mr. Bean', String.raw`Mr\. Bean`],
+  ])('searches for %s as plain text, not as a regex', async (typed, sent) => {
+    apiCallMock.mockResolvedValue({ entries: [], totalCount: 0 })
+    const { api, unmount } = mountHarness()
+
+    api.query.value = typed
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    expect(apiCallMock).toHaveBeenCalledWith(
+      'epg/events/grid',
+      expect.objectContaining({ title: sent }),
+    )
+
+    unmount()
+  })
 })
 
 describe('useEpgTitleSearch — response handling', () => {
@@ -172,6 +191,28 @@ describe('useEpgTitleSearch — response handling', () => {
     expect(api.totalCount.value).toBe(47)
     expect(api.loading.value).toBe(false)
     expect(api.error.value).toBeNull()
+
+    unmount()
+  })
+
+  it('escapes only the text sent, not the query or the titles', async () => {
+    apiCallMock.mockResolvedValue({
+      entries: [{ eventId: 1, title: 'Afrika z výšky (S1, E3)' }],
+      totalCount: 1,
+    })
+    const { api, unmount } = mountHarness()
+
+    api.query.value = 'výšky (S1'
+    await nextTick()
+    vi.advanceTimersByTime(300)
+    await flushPromises()
+
+    expect(apiCallMock).toHaveBeenCalledWith(
+      'epg/events/grid',
+      expect.objectContaining({ title: String.raw`výšky \(S1` }),
+    )
+    expect(api.query.value).toBe('výšky (S1')
+    expect(api.events.value[0].title).toBe('Afrika z výšky (S1, E3)')
 
     unmount()
   })
