@@ -5,8 +5,8 @@
 
 # Tvheadend Vue web UI
 
-A Vue 3 single-page admin interface for Tvheadend, served at `/vue/`
-alongside the ExtJS UI. It talks to the server over the **existing**
+A Vue 3 single-page admin interface for Tvheadend, served at `/gui/`
+as its web interface. It talks to the server over the **existing**
 JSON REST API and the Comet push channel — there are no Vue-specific
 server endpoints or protocols.
 
@@ -18,12 +18,12 @@ docs see the in-app Help and the project documentation site.
 
 - The C side that mounts the app is `src/webui/vue.c` (registered from
   `webui_init()` in `src/webui/webui.c`). It serves the SPA shell at
-  `/vue` and its built assets under `/vue/static`, both gated on
+  `/gui` and its built assets under `/gui/static`, both gated on
   `ACCESS_WEB_INTERFACE`.
 - The compiled app lives in `dist/` and is served from disk. When the
-  UI is not built, `/vue` serves a small fallback page instead.
+  UI is not built, `/gui` serves a small fallback page instead.
 - **Data flow.** Everything the UI shows or changes goes through the
-  same API the ExtJS UI uses:
+  server's existing API:
   - **REST** — `src/api/client.ts` wraps `POST /api/<endpoint>`
     (form-encoded in, JSON out, cookies/auth included).
   - **Comet** — `src/api/comet.ts` is the server→browser push channel
@@ -136,8 +136,7 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
   non-scoped block or via tokens.
 - **i18n** — wrap every user-facing string in `t('…')` (from
   `composables/useI18n`) and pass the English text as a literal, so
-  `make intl` can extract it. Reuse the wording the ExtJS UI already
-  uses where it matches, so translators can reuse its translation.
+  `make intl` can extract it.
 - **Permissions** — gate admin-only UI on `access.has('admin')` (or
   `'dvr'`) and set `meta.permission` on routes; the router guard
   enforces it. Anonymous / limited users must not trigger admin-only
@@ -177,8 +176,8 @@ optional-feature pattern of e.g. `--enable-libav`):
 - `--enable-vue_cache` / `--disable-vue_build` — fetch a prebuilt
   bundle instead of building locally (for packagers without a Node
   toolchain).
-- With both disabled, the daemon still builds and `/vue` serves the
-  fallback page.
+- With both disabled, the daemon still builds but has no web
+  interface: `/gui` serves the fallback page.
 
 Working on the UI directly (from this directory):
 
