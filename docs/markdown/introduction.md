@@ -336,8 +336,8 @@ these values.
 
 !["Column options"](static/img/doc/introduction/columnoptions.png)
 
-Note, a cookie is used to remember your column/filtering preferences; Clearing
-your cookies will reset the interface to default.
+Note, the browser's local storage is used to remember your column/filtering
+preferences; Clearing your site data will reset the interface to default.
 
 ### Split panels
 

@@ -61,7 +61,6 @@ export interface Access {
   useddiskspace?: number
   totaldiskspace?: number
 
-  cookie_expires?: number
   ticket_expires?: number
   info_area?: string
 
