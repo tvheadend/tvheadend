@@ -2362,10 +2362,9 @@ async function onSaveEdits() {
       isInEditMode.value = false
     }
   } catch (err) {
-    /* Keep the dirty state — user can fix and retry. The
-     * error toast is the consumer view's responsibility once
-     * a higher-level error surface lands; for now the
-     * console-level log is enough to debug. */
+    /* save() has already shown the error dialog and kept the
+     * dirty store. Stay in edit mode with the pending edits on
+     * screen so the user can fix them and press Save again. */
     console.error('inline-edit save failed:', err)
   }
 }

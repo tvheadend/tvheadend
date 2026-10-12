@@ -2011,6 +2011,42 @@ describe('IdnodeGrid', () => {
       expect(exposed.isInEditMode).toBe(false)
     })
 
+    it('a failed Save stays in edit mode with the pending edit on screen', async () => {
+      setupBoolStrMeta()
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
+        storeKey: 'edit-key-save-fail',
+      })
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { commitCell: (u: string, f: string, v: unknown) => void }
+        isInEditMode: boolean
+      }
+      exposed.inlineEdit.commitCell('a', 'title', 'Alpha-edited')
+      await wrapper.vm.$nextTick()
+
+      const saveBtn = wrapper.findAll('.idnode-grid__edit-btn')[0]
+      expect(saveBtn.text()).toBe('Save')
+      /* The real save() POSTs, shows the error dialog and
+       * re-throws. Silence the grid's console log of it. */
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+      apiMock.mockRejectedValueOnce(new Error('server bad'))
+      await saveBtn.trigger('click')
+      /* Let the promise chain settle. */
+      await new Promise((r) => setTimeout(r, 0))
+      await wrapper.vm.$nextTick()
+      logged.mockRestore()
+
+      /* Still editing, and the cell shows the edit with its
+       * dirty marker rather than the server value. */
+      expect(exposed.isInEditMode).toBe(true)
+      const span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).toContain('idnode-grid__cell--dirty')
+      expect(span.text()).toBe('Alpha-edited')
+    })
+
     it('toggling out of edit mode preserves dirty state (no destructive UI)', async () => {
       mockStore = makeStore({
         entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],

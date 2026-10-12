@@ -372,16 +372,17 @@ export function useInlineEdit<Row extends BaseRow>(
       dirtyMap.value = new Map()
       baselineMap.value = new Map()
     } catch (e) {
-      /* Surface the failure via the global error dialog and
-       * swallow — the dirty state stays intact so the user can
-       * correct the offending field and retry. Re-throwing
-       * here would force every caller (most of which don't
-       * have a catch today) to handle the rejection, defeating
-       * the point of a singleton error surface. */
+      /* Surface the failure via the global error dialog, then
+       * re-throw so the caller knows the save failed and keeps
+       * its edit context open (IdnodeGrid stays in edit mode).
+       * The dirty state stays intact so the user can correct
+       * the offending field and retry. Callers must not show a
+       * second error — the dialog is the error surface. */
       useErrorDialog().show({
         title: t('Edit save failed'),
         message: apiErrorMessage(e),
       })
+      throw e
     } finally {
       inflight.value = false
     }
