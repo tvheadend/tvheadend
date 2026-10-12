@@ -12,7 +12,6 @@ import {
   Activity,
   Info,
   House,
-  ExternalLink,
   LogIn,
   LogOut,
   PanelLeftClose,
@@ -87,14 +86,9 @@ const toggleTitle = computed(() =>
  * guard. This blueprint just declares display order, label, and icon.
  */
 interface Blueprint {
-  /* Internal SPA route — resolved against the router for its path and
-   * meta.permission. Mutually exclusive with `href`. */
-  routeName?: string
-  /* External, non-SPA destination (the legacy ExtJS UI). Rendered as a
-   * plain anchor: a full-page navigation OUT of the Vue app, not a
-   * router push. No permission gate — the target enforces its own ACL
-   * server-side (`/extjs.html` is ACCESS_WEB_INTERFACE, extjs.c:242). */
-  href?: string
+  /* SPA route — resolved against the router for its path and
+   * meta.permission. */
+  routeName: string
   label: string
   icon: LucideIcon
 }
@@ -131,12 +125,9 @@ const NAV_SECTIONS: NavSection[] = [
 ]
 
 /* Shown below the sections without a header — About is general
- * information, neither everyday-use nor administration (ADR 0016).
- * Classic UI follows it: a full-page jump to the legacy ExtJS
- * interface, available while both UIs ship side by side. */
+ * information, neither everyday-use nor administration (ADR 0016). */
 const NAV_UNGROUPED: Blueprint[] = [
   { routeName: 'about', label: t('About'), icon: Info },
-  { href: serverUrl('extjs.html'), label: t('Classic UI'), icon: ExternalLink },
 ]
 
 /*
@@ -144,10 +135,7 @@ const NAV_UNGROUPED: Blueprint[] = [
  * route path AND its meta.permission in one place.
  */
 interface ResolvedItem {
-  /* Exactly one of `to` (internal route path) or `href` (external
-   * URL) is set, mirroring the Blueprint split. */
-  to?: string
-  href?: string
+  to: string
   label: string
   icon: LucideIcon
   permission?: string
@@ -162,12 +150,7 @@ interface ResolvedSection {
 }
 
 function resolveItem(bp: Blueprint): ResolvedItem {
-  /* External link — no router resolution, no permission gate (the
-   * target page enforces its own access server-side). */
-  if (bp.href) {
-    return { href: bp.href, label: bp.label, icon: bp.icon }
-  }
-  const route = router.resolve({ name: bp.routeName! })
+  const route = router.resolve({ name: bp.routeName })
   return {
     to: route.path,
     label: bp.label,
@@ -407,34 +390,18 @@ async function onLoginClick() {
             class="nav-rail__section-header"
             aria-hidden="true"
           >{{ section.label }}</p>
-          <template v-for="item in section.items" :key="item.to ?? item.href">
-            <!--
-              External destination (Classic UI) — a plain anchor so the
-              browser performs a full-page navigation OUT of the SPA. A
-              RouterLink would try to match `/extjs.html` against the Vue
-              routes and 404 inside the app instead of leaving it.
-            -->
-            <a
-              v-if="item.href"
-              :href="item.href"
-              :title="compact ? item.label : undefined"
-              class="nav-item"
-            >
-              <component :is="item.icon" :size="18" :stroke-width="2" />
-              <span class="nav-item__label">{{ item.label }}</span>
-            </a>
-            <RouterLink
-              v-else
-              :to="item.to!"
-              :title="compact ? item.label : undefined"
-              class="nav-item"
-              active-class="nav-item--active"
-              @click="$emit('navigate')"
-            >
-              <component :is="item.icon" :size="18" :stroke-width="2" />
-              <span class="nav-item__label">{{ item.label }}</span>
-            </RouterLink>
-          </template>
+          <RouterLink
+            v-for="item in section.items"
+            :key="item.to"
+            :to="item.to"
+            :title="compact ? item.label : undefined"
+            class="nav-item"
+            active-class="nav-item--active"
+            @click="$emit('navigate')"
+          >
+            <component :is="item.icon" :size="18" :stroke-width="2" />
+            <span class="nav-item__label">{{ item.label }}</span>
+          </RouterLink>
         </div>
       </nav>
     </div>
