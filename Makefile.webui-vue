@@ -79,9 +79,8 @@ source-hash:
 # ---- libcacheget ----
 # Download the pre-built tarball and unpack into DIST_DIR. Fatal on
 # download failure: if the user picked --enable-vue_cache they need the
-# UI shipped; falling through silently would produce a binary with the
-# old ExtJS UI but no /gui/ route, which is worse than failing the
-# build outright.
+# UI shipped; falling through silently would produce a binary with no
+# web interface, which is worse than failing the build outright.
 #
 # File-cache shortcut: when `VUE_FILE_CACHE` (or, as a fallback for
 # "one cache dir for everything" setups, the shared

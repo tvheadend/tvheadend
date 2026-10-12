@@ -109,17 +109,8 @@ page_root(http_connection_t *hc, const char *remain, void *opaque)
   if(is_client_simple(hc)) {
     http_redirect(hc, "simple.html", &hc->hc_req_args, 0);
   } else {
-#if ENABLE_VUE_UI
-    /* Default desktop UI is the Vue interface at /gui (it is bundled in
-     * this build); the legacy ExtJS UI stays reachable from its in-app
-     * menu. Absolute path so http_redirect applies any tvheadend_webroot. */
+    /* Absolute path so http_redirect applies any tvheadend_webroot. */
     http_redirect(hc, "/gui/", &hc->hc_req_args, 0);
-#else
-    /* No Vue UI in this build (e.g. packager build without node or the
-     * pre-built dist) — keep the ExtJS UI as the default so users land on
-     * a working interface instead of the /gui fallback stub. */
-    http_redirect(hc, "extjs.html", &hc->hc_req_args, 0);
-#endif
   }
   return 0;
 }
