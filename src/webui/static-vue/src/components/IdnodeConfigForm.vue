@@ -50,6 +50,7 @@ import {
 } from '@/components/idnode-fields/validationRules'
 import LevelMenu from '@/components/LevelMenu.vue'
 import { useI18n } from '@/composables/useI18n'
+import { useFieldRules } from '@/composables/useFieldRules'
 import { useHelp } from '@/composables/useHelp'
 import { HelpCircle } from 'lucide-vue-next'
 
@@ -339,6 +340,9 @@ const currentClass = ref<string | null>(null)
  * via `submitAttempted`. Mirrors IdnodeEditor.vue:251-484. */
 const touched = ref<Set<string>>(new Set())
 const submitAttempted = ref(false)
+
+/* Live per-class field dependencies — see fieldRules.ts. */
+const fieldRules = useFieldRules(currentClass, currentValues)
 
 async function load() {
   /* In uuid mode, an unset uuid (null / undefined / '') means
@@ -634,7 +638,8 @@ const mandatorySet = computed(
  * `currentValues.value` — toggling a trigger field re-evaluates
  * the disabled predicate and re-renders dependent fields with
  * the synthesised state. */
-function effectiveProp(p: IdnodeProp): IdnodeProp {
+function effectiveProp(raw: IdnodeProp): IdnodeProp {
+  const p = fieldRules.overlay(raw)
   const isMandatory = mandatorySet.value.has(p.id)
   const isDisabled =
     !!props.disabledFor &&
@@ -668,10 +673,14 @@ const errors = computed<Map<string, string>>(() => {
   const map = new Map<string, string>()
   /* Per-field type-driven first. Skip server-rdonly + UI-hidden
    * props — the user can't fix them anyway. */
-  for (const p of fieldProps.value) {
+  for (const raw of fieldProps.value) {
+    const p = fieldRules.overlay(raw)
     if (p.rdonly || p.noui || p.phidden) continue
     const e = validateField(p, currentValues.value[p.id])
     if (e) map.set(p.id, e)
+  }
+  for (const [id, msg] of fieldRules.ruleErrors()) {
+    if (!map.has(id)) map.set(id, msg)
   }
   /* Class-level rules (required, cross-field, minLength) — only
    * fill IDs that don't already carry a per-field error. */

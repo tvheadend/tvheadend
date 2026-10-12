@@ -72,6 +72,7 @@ import { useErrorDialog } from '@/composables/useErrorDialog'
 import { apiErrorMessage } from '@/utils/apiErrorMessage'
 import { buildMultiEditPayload } from '@/api/multiEditIdnode'
 import { useI18n } from '@/composables/useI18n'
+import { useFieldRules } from '@/composables/useFieldRules'
 
 const { t } = useI18n()
 
@@ -420,6 +421,14 @@ const touched = ref<Set<string>>(new Set())
  * per click. Resets per drawer open. */
 const submitAttempted = ref(false)
 
+/* Live per-class field dependencies — see fieldRules.ts. Off in
+ * multi-edit, where the values aren't one entry's. */
+const fieldRules = useFieldRules(
+  currentClass,
+  currentValues,
+  computed(() => !isMultiEdit.value),
+)
+
 /* Multi-edit: per-field apply-checkbox state. Only consulted when
  * `isMultiEdit` is true. Defaults all to false on drawer open;
  * auto-flips to true when the user edits a field's value
@@ -667,11 +676,15 @@ function shouldValidate(id: string): boolean {
 const errors = computed<Map<string, string>>(() => {
   const map = new Map<string, string>()
   /* Per-field type-driven first */
-  for (const p of fieldProps.value) {
+  for (const raw of fieldProps.value) {
+    const p = fieldRules.overlay(raw)
     if (p.rdonly || p.noui || p.phidden) continue
     if (!shouldValidate(p.id)) continue
     const e = validateField(p, currentValues.value[p.id])
     if (e) map.set(p.id, e)
+  }
+  for (const [id, msg] of fieldRules.ruleErrors()) {
+    if (shouldValidate(id) && !map.has(id)) map.set(id, msg)
   }
   /* Class-level rules (required, cross-field, minLength) — only
    * fill IDs that don't already carry a per-field error AND only
@@ -1788,7 +1801,7 @@ onBeforeUnmount(() => {
                   <component
                     :is="rendererFor(p)!"
                     v-if="rendererFor(p)"
-                    :prop="p"
+                    :prop="fieldRules.overlay(p)"
                     :model-value="valueFor(p, currentValues[p.id])"
                     :inline="inlineEnumMultiSet.has(p.id)"
                     @update:model-value="onFieldChange(p.id, $event)"
