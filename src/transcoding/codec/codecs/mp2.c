@@ -38,8 +38,7 @@ tvh_codec_profile_mp2_open(TVHCodecProfile *self, AVDictionary **opts)
 static htsmsg_t *
 codec_profile_mp2_class_bit_rate_list(void *obj, const char *lang)
 {
-    // This is a place holder.
-    // The real list is set in src/webui/static/app/codec.js
+    // This is a place holder: the valid bitrates depend on the sample rate.
     return htsmsg_create_list();
 }
 

@@ -168,8 +168,7 @@ const tvdbLogo = computed(() => serverUrl(`static/img/tvdb${logoSuffix.value}.pn
         {{ t('icons.') }}
       </p>
       <!-- The help pages embed FamFamFam Silk icons (static/icons
-           links into vendor/famfamsilk). The classic UI credits its
-           own stack on its about.html page. -->
+           links into vendor/famfamsilk). -->
       <p>
         {{ t('Help page icons from') }}
         <a

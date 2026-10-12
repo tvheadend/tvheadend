@@ -31,13 +31,11 @@ import CommandPaletteTrigger from './CommandPaletteTrigger.vue'
 const { t } = useI18n()
 
 /*
- * Cross-UI logo reference. Bound as an expression (not a literal
+ * Server-side logo reference. Bound as an expression (not a literal
  * `src`) so Vite's Vue plugin doesn't try to bundle the asset —
- * the URL is served at runtime by tvheadend's existing /static
- * handler from the ExtJS bundle (`src/webui/static/img/logo.png`,
- * registered in `webui_init()` in `src/webui/webui.c`). Once the
- * ExtJS UI retires, copy the asset into `static-vue/src/assets/`
- * and replace this with a Vite-imported reference.
+ * the URL is served at runtime by tvheadend's /static handler
+ * (`src/webui/static/img/logo.png`, registered in `webui_init()` in
+ * `src/webui/webui.c`).
  */
 const logoUrl = serverUrl('static/img/logo.png')
 
@@ -337,9 +335,8 @@ async function onLoginClick() {
       wordmark hides and the logo centres in the 56 px column. Same
       48 px height as the removed TopBar so the rail's nav items
       start at the same y-coordinate as before. Logo path mirrors
-      the cross-UI reference from TopBar (served by the existing
-      `/static/...` handler from the ExtJS bundle; copy into
-      `static-vue/src/assets/` once ExtJS retires).
+      the server-side reference from TopBar (served by the
+      `/static/...` handler).
     -->
     <div class="nav-rail__brand">
       <img :src="logoUrl" alt="" class="nav-rail__brand-logo" />

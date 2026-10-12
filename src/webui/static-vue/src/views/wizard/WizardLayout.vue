@@ -52,10 +52,9 @@ const route = useRoute()
 const routeKey = computed(() => route.fullPath ?? '')
 
 /*
- * Cross-UI logo reference. Bound as an expression (not a literal
+ * Server-side logo reference. Bound as an expression (not a literal
  * `src`) so Vite's Vue plugin doesn't try to bundle the asset —
- * the URL is served at runtime by tvheadend's existing /static
- * handler from the ExtJS bundle.
+ * the URL is served at runtime by tvheadend's /static handler.
  */
 const logoUrl = serverUrl('static/img/logo.png')
 </script>
