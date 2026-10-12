@@ -114,13 +114,94 @@ function videoDecode(values: Values): FieldOverrides {
   return out
 }
 
+/* MP2 bitrates depend on the sample rate: the MPEG-1 rates (and
+ * auto) take the high table, the MPEG-2 LSF rates the low one. Mirrors
+ * codec_profile_mp2_class_bit_rate_list in codecs/mp2.c, which can
+ * only see the saved sample rate. */
+const MP2_HI_FREQS = [0, 44100, 48000, 32000]
+const MP2_HI_RATES = [32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384]
+const MP2_LO_RATES = [8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160]
+
+function mp2(values: Values): FieldOverrides {
+  if (!has(values, 'bit_rate')) return {}
+  const rates = MP2_HI_FREQS.includes(num(values.sample_rate)) ? MP2_HI_RATES : MP2_LO_RATES
+  const options: EnumOption[] = [
+    { key: 0, val: 'auto' },
+    ...rates.map((r) => ({ key: r, val: String(r) })),
+  ]
+  const out: FieldOverride = { enum: options }
+  if (!rates.includes(num(values.bit_rate))) out.value = 0
+  return { bit_rate: out }
+}
+
+/* Channel count of an AV_CH_LAYOUT_* mask. */
+function channelCount(mask: number): number {
+  let n = Math.trunc(mask)
+  let count = 0
+  while (n > 0) {
+    count += n % 2
+    n = Math.floor(n / 2)
+  }
+  return count
+}
+
+function aac(values: Values): FieldOverrides {
+  const out: FieldOverrides = {}
+  if (has(values, 'qscale')) out.qscale = { intmin: 0, intmax: 2, intstep: 0.1 }
+  if (!has(values, 'bit_rate')) return out
+  if (num(values.qscale) > 0) {
+    out.bit_rate = { rdonly: true, value: 0 }
+    return out
+  }
+  /* The native encoder caps at 6 bits per sample per channel. */
+  const rate = num(values.sample_rate) || 48000
+  const channels = channelCount(num(values.channel_layout)) || 2
+  out.bit_rate = { intmax: (6 * rate * channels) / 1000 }
+  return out
+}
+
+/* VPX_DL_REALTIME allows a wider speed range than good / best. */
+const VPX_DL_REALTIME = 1
+
+function libvpx(values: Values): FieldOverrides {
+  if (!has(values, 'deadline', 'cpu-used')) return {}
+  return { 'cpu-used': { intmax: num(values.deadline) === VPX_DL_REALTIME ? 15 : 5 } }
+}
+
+/* FF_PROFILE_AAC_* → the highest VBR mode libfdk-aac accepts; the
+ * low-delay profiles (LD, ELD) have no VBR. */
+const FDK_MAX_VBR: Record<number, number> = { [-99]: 5, 1: 5, 4: 3, 28: 3 }
+const FDK_PROFILE_ELD = 38
+
+function libfdkAac(values: Values): FieldOverrides {
+  const out: FieldOverrides = {}
+  const profile = num(values.profile)
+  if (has(values, 'vbr', 'bit_rate')) {
+    const maxVbr = FDK_MAX_VBR[profile]
+    if (maxVbr === undefined) {
+      out.vbr = { rdonly: true, value: 0 }
+    } else {
+      out.vbr = { intmax: maxVbr }
+      if (num(values.vbr) > 0) out.bit_rate = { rdonly: true, value: 0 }
+    }
+  }
+  if (profile !== FDK_PROFILE_ELD) {
+    if (has(values, 'eld_sbr')) out.eld_sbr = { rdonly: true, value: false }
+    if (has(values, 'signaling')) out.signaling = { rdonly: true, value: -1 }
+  }
+  return out
+}
+
 const CODEC_RULES: Record<string, FieldRule> = {
   codec_profile_mpeg2video: cbrVsVbr('qscale'),
+  codec_profile_mp2: mp2,
+  codec_profile_aac: aac,
   codec_profile_libx264: cbrVsVbr('crf'),
   codec_profile_libx265: cbrVsVbr('crf'),
-  codec_profile_libvpx: cbrVsVbr('crf'),
+  codec_profile_libvpx: (v) => merge(cbrVsVbr('crf')(v), libvpx(v)),
   codec_profile_libtheora: cbrVsVbr('qscale'),
   codec_profile_libvorbis: cbrVsVbr('qscale'),
+  codec_profile_libfdk_aac: libfdkAac,
 }
 
 function codecRules(classKey: string, values: Values): FieldOverrides {

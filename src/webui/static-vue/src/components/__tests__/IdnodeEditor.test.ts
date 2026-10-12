@@ -905,3 +905,23 @@ describe('IdnodeEditor', () => {
     })
   })
 })
+
+describe('IdnodeEditor — field rules', () => {
+  it('applies the class field rules in create mode', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+    apiMock.mockResolvedValueOnce({
+      class: 'codec_profile_aac',
+      props: [
+        { id: 'qscale', type: 'dbl', caption: 'Quality', default: 1 },
+        { id: 'bit_rate', type: 'dbl', caption: 'Bitrate', default: 128 },
+      ],
+    })
+    const wrapper = mountEditor({ uuid: null, createBase: 'codec_profile' })
+    await flushPromises()
+    const [qscale, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(qscale.attributes('step')).toBe('0.1')
+    expect(bitRate.attributes('disabled')).toBeDefined()
+    expect((bitRate.element as HTMLInputElement).value).toBe('0')
+  })
+})

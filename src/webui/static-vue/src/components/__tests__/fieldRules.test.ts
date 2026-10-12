@@ -73,6 +73,114 @@ describe('CBR vs VBR', () => {
   })
 })
 
+describe('mp2', () => {
+  const cls = 'codec_profile_mp2'
+  const keys = (o: ReturnType<typeof resolveFieldOverrides>) => o.bit_rate?.enum?.map((e) => e.key)
+
+  it('offers the high bitrates for auto and the MPEG-1 sample rates', () => {
+    for (const sample_rate of [0, 32000, 44100, 48000]) {
+      const o = resolveFieldOverrides(cls, { bit_rate: 384, sample_rate })
+      expect(keys(o)).toContain(384)
+      expect(keys(o)?.[0]).toBe(0)
+      expect(o.bit_rate?.value).toBeUndefined()
+    }
+  })
+
+  it('offers the low bitrates for the MPEG-2 LSF sample rates', () => {
+    const o = resolveFieldOverrides(cls, { bit_rate: 8, sample_rate: 22050 })
+    expect(keys(o)).toContain(8)
+    expect(keys(o)).not.toContain(384)
+  })
+
+  it('resets a bitrate the new sample rate cannot use to auto', () => {
+    const o = resolveFieldOverrides(cls, { bit_rate: 384, sample_rate: 24000 })
+    expect(o.bit_rate?.value).toBe(0)
+  })
+})
+
+describe('aac', () => {
+  const cls = 'codec_profile_aac'
+
+  it('sets the qscale range and step', () => {
+    const o = resolveFieldOverrides(cls, { qscale: 0, bit_rate: 0 })
+    expect(o.qscale).toEqual({ intmin: 0, intmax: 2, intstep: 0.1 })
+  })
+
+  it('locks bit_rate in VBR mode', () => {
+    const o = resolveFieldOverrides(cls, { qscale: 1.5, bit_rate: 128 })
+    expect(o.bit_rate).toEqual({ rdonly: true, value: 0 })
+  })
+
+  it('caps bit_rate by sample rate and channel count', () => {
+    /* auto → 48 kHz stereo */
+    expect(resolveFieldOverrides(cls, { qscale: 0, bit_rate: 0 }).bit_rate?.intmax).toBe(576)
+    /* 44.1 kHz, 5.1 (AV_CH_LAYOUT_5POINT1_BACK = 63) */
+    const o = resolveFieldOverrides(cls, {
+      qscale: 0,
+      bit_rate: 0,
+      sample_rate: 44100,
+      channel_layout: 63,
+    })
+    expect(o.bit_rate?.intmax).toBeCloseTo(1587.6)
+    /* 7.1 (AV_CH_LAYOUT_7POINT1 = 1599) */
+    expect(
+      resolveFieldOverrides(cls, { qscale: 0, bit_rate: 0, channel_layout: 1599 }).bit_rate?.intmax
+    ).toBe(2304)
+  })
+})
+
+describe('libvpx', () => {
+  const cls = 'codec_profile_libvpx'
+
+  it('allows cpu-used up to 15 in realtime and 5 otherwise', () => {
+    expect(resolveFieldOverrides(cls, { deadline: 1, 'cpu-used': 8 })['cpu-used']?.intmax).toBe(15)
+    expect(resolveFieldOverrides(cls, { deadline: 0, 'cpu-used': 8 })['cpu-used']?.intmax).toBe(5)
+  })
+
+  it('combines the speed cap with the CBR vs VBR rule', () => {
+    const o = resolveFieldOverrides(cls, { deadline: 0, 'cpu-used': 1, crf: 10, bit_rate: 1 })
+    expect(o.bit_rate?.rdonly).toBe(true)
+    expect(o['cpu-used']?.intmax).toBe(5)
+  })
+})
+
+describe('libfdk_aac', () => {
+  const cls = 'codec_profile_libfdk_aac'
+  const base = { bit_rate: 128, vbr: 0, eld_sbr: true, signaling: 1 }
+
+  it.each([
+    [-99, 5],
+    [1, 5],
+    [4, 3],
+    [28, 3],
+  ])('profile %i allows vbr up to %i', (profile, max) => {
+    expect(resolveFieldOverrides(cls, { ...base, profile }).vbr).toEqual({ intmax: max })
+  })
+
+  it('disables vbr for the low-delay profiles', () => {
+    for (const profile of [22, 38]) {
+      expect(resolveFieldOverrides(cls, { ...base, profile, vbr: 3 }).vbr).toEqual({
+        rdonly: true,
+        value: 0,
+      })
+    }
+  })
+
+  it('locks bit_rate in VBR mode', () => {
+    const o = resolveFieldOverrides(cls, { ...base, profile: 1, vbr: 2 })
+    expect(o.bit_rate).toEqual({ rdonly: true, value: 0 })
+  })
+
+  it('only allows eld_sbr and signaling with the ELD profile', () => {
+    const lc = resolveFieldOverrides(cls, { ...base, profile: 1 })
+    expect(lc.eld_sbr).toEqual({ rdonly: true, value: false })
+    expect(lc.signaling).toEqual({ rdonly: true, value: -1 })
+    const eld = resolveFieldOverrides(cls, { ...base, profile: 38 })
+    expect(eld.eld_sbr).toBeUndefined()
+    expect(eld.signaling).toBeUndefined()
+  })
+})
+
 describe('overlayProp', () => {
   const prop = { id: 'bit_rate', type: 'dbl', intmin: 0, intmax: 10, intstep: 1 }
 
