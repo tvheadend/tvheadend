@@ -438,7 +438,7 @@ const emit = defineEmits<{
    * `cell-edit-cancel`   — user pressed Escape. */
   cellEditInit: [event: { data: Row; field: string; index: number }]
   cellEditComplete: [event: { data: Row; field: string; index: number }]
-  cellEditCancel: [event: { data: Row; field: string; index: number }]
+  cellEditCancel: [event: { originalEvent?: Event; data: Row; field: string; index: number }]
 
   /* Group-by control — emitted when the user clicks the ✕ in
    * the "grouped by X ✕" suffix of the summary line. Wrappers

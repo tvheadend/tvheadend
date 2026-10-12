@@ -109,6 +109,21 @@ describe('useInlineEdit — dirty tracking', () => {
     expect(e.dirtyRowCount.value).toBe(0)
     expect(e.isCellDirty('a', 'comment')).toBe(false)
   })
+
+  it('revertCell discards one cell and keeps the others dirty', async () => {
+    const { useInlineEdit } = await import('../useInlineEdit')
+    const entries = ref(rows('a', 'b'))
+    const e = useInlineEdit<Row>({ entries })
+    e.commitCell('a', 'comment', 'x')
+    e.commitCell('a', 'pri', 7)
+    e.commitCell('b', 'pri', 3)
+    e.revertCell('a', 'comment')
+    expect(e.isCellDirty('a', 'comment')).toBe(false)
+    expect(e.cellValue('a', 'comment', 'orig')).toBe('orig')
+    expect(e.isCellDirty('a', 'pri')).toBe(true)
+    e.revertCell('b', 'pri')
+    expect(e.dirtyRowCount.value).toBe(1)
+  })
 })
 
 describe('useInlineEdit — smart dirty (toggle back to original clears dirty)', () => {
