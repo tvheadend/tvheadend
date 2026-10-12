@@ -16,12 +16,6 @@
  * gate pattern from ADR 0008 (Configuration → DVB Inputs uses the
  * same client-side filter + `beforeEnter` route guard belt-and-
  * suspenders).
- *
- * Of the three L3 entries, only Base renders real content today.
- * Image cache and SAT>IP Server use SubviewPlaceholder while their
- * idnode forms are wired in subsequent commits — same staged
- * pattern DVR followed (Upcoming first, the rest as placeholders,
- * then filled in over time).
  */
 import { computed } from 'vue'
 import PageTabs from '@/components/PageTabs.vue'
