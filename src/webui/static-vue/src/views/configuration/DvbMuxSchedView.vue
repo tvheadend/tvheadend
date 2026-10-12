@@ -79,9 +79,10 @@ const cols: ColumnDef[] = [
     /* `mux` resolves to the parent mux's display name via the
      * deferred-enum descriptor `mpegts_mux_sched_class_mux_list`
      * (`mpegts_mux_sched.c:87-103`) which serves
-     * `idnode/load?class=mpegts_mux&enum=1`. EnumNameCell + the
-     * shared `fetchDeferredEnum` cache resolve the UUID to the
-     * mux's title string. */
+     * `idnode/load?class=mpegts_mux&enum=1` with the
+     * `mpegts_mux` event. EnumNameCell + the shared
+     * `fetchDeferredEnum` cache resolve the UUID to the mux's
+     * title string. */
     field: 'mux',
     sortable: true,
     filterType: 'string',
@@ -92,6 +93,7 @@ const cols: ColumnDef[] = [
     enumSource: {
       type: 'api',
       uri: 'idnode/load',
+      event: 'mpegts_mux',
       params: { class: 'mpegts_mux', enum: 1 },
     },
     editable: true,

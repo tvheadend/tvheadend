@@ -42,10 +42,12 @@ const LANGUAGE_ENUM = {
  * `service/list` with `params: { enum: 1 }`. With `enum=1`, the
  * `api_idnode_load_by_class0` handler (`src/api/api_idnode.c:197-199`)
  * emits `{ entries: [{ key: <uuid>, val: <title> }] }` — the
- * deferred-enum shape `fetchDeferredEnum` expects. */
+ * deferred-enum shape `fetchDeferredEnum` expects. The server's
+ * descriptor also carries the `service` event. */
 const SERVICE_ENUM = {
   type: 'api' as const,
   uri: 'service/list',
+  event: 'service',
   params: { enum: 1 },
 }
 
