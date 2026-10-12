@@ -192,6 +192,60 @@ function libfdkAac(values: Values): FieldOverrides {
   return out
 }
 
+/* VAAPI (codecs/libs/vaapi.c). The `ui` / `uilp` fields carry the
+ * vainfo capabilities of the normal and low-power encoder:
+ * bit 0 available, bits 1-3 max B-frames, bits 4-7 max quality. */
+const VAAPI_PLATFORM_INTEL = 1
+
+const VAAPI_RC_LOCKS: Record<number, string[]> = {
+  1: ['bit_rate', 'max_bit_rate', 'buff_factor', 'bit_rate_scale_factor'], // CQP
+  2: ['max_bit_rate', 'qp'], // CBR
+  3: ['qp'], // VBR
+  4: ['bit_rate', 'max_bit_rate', 'buff_factor', 'bit_rate_scale_factor'], // ICQ
+  6: ['buff_factor', 'qp'], // AVBR
+}
+
+function vaapiIntel(values: Values): FieldOverrides {
+  const out: FieldOverrides = {}
+  for (const id of VAAPI_RC_LOCKS[num(values.rc_mode)] ?? []) {
+    if (has(values, id)) out[id] = { rdonly: true }
+  }
+  if (!has(values, 'ui', 'uilp')) return out
+  const ui = num(values.ui)
+  const uilp = num(values.uilp)
+  let lowPower = !!values.low_power
+  if (has(values, 'low_power') && !(ui & 0x1 && uilp & 0x1)) {
+    /* Only one encoder (or none) — the choice isn't the user's. */
+    out.low_power = { rdonly: true }
+    if (uilp & 0x1) lowPower = true
+    if (ui & 0x1) lowPower = false
+    if (ui & 0x1 || uilp & 0x1) out.low_power.value = lowPower
+  }
+  const caps = lowPower ? uilp : ui
+  const maxB = (caps & 0xe) >> 1
+  if (has(values, 'desired_b_depth')) {
+    out.desired_b_depth = maxB ? { intmax: maxB } : { rdonly: true }
+  }
+  if (has(values, 'b_reference') && !maxB) out.b_reference = { rdonly: true }
+  const maxQuality = (caps & 0xf0) >> 4
+  if (has(values, 'quality')) {
+    out.quality = maxQuality > 1 ? { intmax: maxQuality } : { rdonly: true, value: -1 }
+  }
+  return out
+}
+
+function vaapi(values: Values): FieldOverrides {
+  const out: FieldOverrides = {}
+  if (has(values, 'hwaccel') && !values.hwaccel) {
+    for (const id of ['hw_denoise', 'hw_sharpness']) {
+      if (has(values, id)) out[id] = { rdonly: true }
+    }
+  }
+  /* Unconstrained and AMD allow any combination. */
+  if (num(values.platform) === VAAPI_PLATFORM_INTEL) merge(out, vaapiIntel(values))
+  return out
+}
+
 const CODEC_RULES: Record<string, FieldRule> = {
   codec_profile_mpeg2video: cbrVsVbr('qscale'),
   codec_profile_mp2: mp2,
@@ -202,6 +256,10 @@ const CODEC_RULES: Record<string, FieldRule> = {
   codec_profile_libtheora: cbrVsVbr('qscale'),
   codec_profile_libvorbis: cbrVsVbr('qscale'),
   codec_profile_libfdk_aac: libfdkAac,
+  codec_profile_vaapi_h264: vaapi,
+  codec_profile_vaapi_hevc: vaapi,
+  codec_profile_vaapi_vp8: vaapi,
+  codec_profile_vaapi_vp9: vaapi,
 }
 
 function codecRules(classKey: string, values: Values): FieldOverrides {
