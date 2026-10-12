@@ -2338,6 +2338,31 @@ describe('IdnodeGrid', () => {
       expect(span.text()).toBe('Important')
     })
 
+    it('drops a failed enum prefetch when entering edit mode', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          {
+            id: 'channel',
+            type: 'str',
+            enum: { type: 'api', uri: 'channel/list', event: 'channel' },
+          } as unknown as MetaProp,
+        ],
+      }
+      /* The server is unreachable when the user presses Edit. The
+       * editor fetches the list again when it opens, so the grid
+       * drops the error rather than leaving it unhandled. */
+      apiMock.mockRejectedValueOnce(new Error('offline'))
+      await mountInEditMode({
+        columns: [
+          { field: 'channel', label: 'Channel', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, channel: 'ch-1' }],
+        storeKey: 'edit-cell-enum-prefetch-fails',
+      })
+      await new Promise((r) => setTimeout(r, 0))
+      expect(apiMock).toHaveBeenLastCalledWith('channel/list', {})
+    })
+
     it('editable td gets data-editable attr in edit mode; read-only td does not', async () => {
       idnodeClassStub.meta = {
         props: [
