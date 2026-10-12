@@ -47,11 +47,12 @@ import { t } from '@/composables/useI18n'
  * resolve the UUID → channel name via `EnumNameCell`. Mirrors what
  * the editor dropdown does via `IdnodeFieldEnum` / `deferredEnum`.
  *
- * `all: 1, sort: 'name'` matches the same params the class metadata
- * advertises at `api/idnode/class?name=dvrtimerec`. */
+ * `all: 1, sort: 'name'` and the `channel` event match what the class
+ * metadata advertises at `api/idnode/class?name=dvrtimerec`. */
 const CHANNEL_ENUM = {
   type: 'api' as const,
   uri: 'channel/list',
+  event: 'channel',
   params: { all: 1, sort: 'name' },
 }
 
@@ -68,6 +69,7 @@ const CHANNEL_ENUM = {
 const DVR_CONFIG_ENUM = {
   type: 'api' as const,
   uri: 'idnode/load',
+  event: 'dvrconfig',
   params: { enum: 1, class: 'dvrconfig' },
 }
 
@@ -78,6 +80,7 @@ const DVR_CONFIG_ENUM = {
 const CHANNEL_TAG_ENUM = {
   type: 'api' as const,
   uri: 'channeltag/list',
+  event: 'channeltag',
   params: { all: 1 },
 }
 

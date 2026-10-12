@@ -126,7 +126,7 @@ const cols: ColumnDef[] = [
     filterType: 'string',
     width: 220,
     cellComponent: EnumNameCell,
-    enumSource: { type: 'api', uri: 'channel/list', params: { all: 1 } },
+    enumSource: { type: 'api', uri: 'channel/list', event: 'channel', params: { all: 1 } },
     editable: true,
     targetUuidField: 'channels',
     targetAccessKey: 'admin',
