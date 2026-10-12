@@ -2763,9 +2763,6 @@ webui_init(int xspf)
 
   webui_xspf = xspf;
 
-  if (tvheadend_webui_debug)
-    tvhinfo(LS_WEBUI, "Running web interface in debug mode");
-
   s = tvheadend_webroot;
   tvheadend_webroot = NULL;
   http_path_add("", NULL, page_no_webroot, ACCESS_WEB_INTERFACE);
