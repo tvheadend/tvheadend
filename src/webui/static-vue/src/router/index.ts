@@ -16,10 +16,6 @@ import { readLastView } from '@/composables/epgPositionStorage'
 import { readLastSubview, writeLastSubview } from './lastSubview'
 
 /*
- * Routes use ExtJS-identical English labels in `meta.title` so the
- * eventual i18n hookup reuses translations already present in
- * intl/js/*.po. See brief §9.1.
- *
  * meta.permission is the single source of truth for "who can see this
  * route". Both the router beforeEach guard (defense-in-depth UX redirect)
  * and NavRail's filter logic read from it. Server-side ACL is the actual

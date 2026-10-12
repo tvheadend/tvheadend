@@ -24,10 +24,6 @@
  * also drives the EPG Timeline view-options dropdown — same look,
  * same close-on-outside-click, same reset affordance — and is the
  * place to extend if a third settings popover lands.
- *
- * Strings ("View level", "Basic", "Advanced", "Expert", "Columns")
- * match `intl/js/tvheadend.js.pot` verbatim for translation reuse
- * when the Vue i18n surface is wired.
  */
 import { computed, ref } from 'vue'
 import { useIsPhone } from '@/composables/useIsPhone'

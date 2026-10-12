@@ -49,10 +49,6 @@
  * checkbox on phone), then clicks the toolbar Abort button which sends
  * a single API call with all selected UUIDs as a JSON-encoded array.
  *
- * Button label, tooltip, and confirmation copy match ExtJS verbatim
- * so all three strings already exist in `intl/js/tvheadend.js.pot` —
- * no re-translation work needed once the Vue i18n surface is wired.
- *
  * Comet pushes a `dvrentry` notification once the server processes
  * the abort; the grid store auto-refetches.
  *

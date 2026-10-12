@@ -6,10 +6,7 @@
 /*
  * StatusLayout — L2 nav scaffold for the admin Status section.
  * Mirrors DvrLayout (per brief §6.5) — page-header tabs above a
- * <router-view> for the active child. Tab labels are the verbatim
- * strings the existing ExtJS UI uses (src/webui/static/app/status.js)
- * so eventual i18n hookup reuses translations already in
- * intl/js/tvheadend.js.pot.
+ * <router-view> for the active child.
  *
  * The whole Status section is admin-only (every backing endpoint is
  * ACCESS_ADMIN — api/api_status.c:248-253). Permission gating lives

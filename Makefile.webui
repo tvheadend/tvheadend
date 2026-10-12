@@ -36,7 +36,6 @@ RUN_JS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rjsmin-1.0.10/rjsmin.py
 RUN_CSS = PYTHONIOENCODING=utf-8 $(PYTHON) vendor/rcssmin-1.0.5/rcssmin.py
 GZIPCMD += -n
 XGETTEXT2 ?= $(XGETTEXT) --language=JavaScript --from-code=utf-8  --add-comments=/ -k_ -kN_ -s
-MSGMERGE ?= msgmerge
 POJS_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/pojs.py
 VUE_XGETTEXT_PY = PYTHONIOENCODING=utf-8 $(PYTHON) support/vue_xgettext.py
 
@@ -190,8 +189,6 @@ CSS_TV_SRC     = $(foreach f,$(CSS_TV),$(WEBDIR)/$(f))
 #
 # Internationalization
 #
-PO-FILES = $(foreach f,$(LANGUAGES),intl/js/tvheadend.js.$(f).po)
-JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh.$(f).js.gz)
 VUE-JSI-FILES = $(foreach f,$(LANGUAGES),src/webui/static/intl/tvh-vue.$(f).js.gz)
 
 # The Vue UI has its own template, extracted from its sources
@@ -226,15 +223,6 @@ define GO_CSS
 	@rm $@.tmp2
 	@mv $@.tmp $@
 	@stat $(STAT_ARG) $@
-endef
-
-define merge-po
-	@if ! test -r "$(1)"; then \
-	  sed -e 's/Content-Type: text\/plain; charset=CHARSET/Content-Type: text\/plain; charset=utf-8/' < "$(2)" > "$(1).new"; \
-	else \
-	  $(MSGMERGE) -o $(1).new $(1) $(2); \
-	fi
-	@mv $(1).new $(1)
 endef
 
 define go-po
@@ -296,8 +284,7 @@ $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz: $(CSS_TV_SRC)
 compile-std: $(WEBDIR)/$(ROOTPATH)/tvh.js.gz $(WEBDIR)/$(ROOTPATH)/tvh.blue.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh.gray.css.gz $(WEBDIR)/$(ROOTPATH)/tvh.access.css.gz \
              $(WEBDIR)/$(ROOTPATH)/tvh-tv.js.gz $(WEBDIR)/$(ROOTPATH)/tvh-tv.css.gz \
-             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(JSI-FILES) \
-             $(VUE-JSI-FILES)
+             $(WEBDIR)/extjs-std.c $(WEBDIR)/extjs-tv-std.c $(VUE-JSI-FILES)
 	@echo "WEBUI std finished"
 
 .PHONY: compile-debug
@@ -307,29 +294,12 @@ compile-debug: $(WEBDIR)/extjs-debug.c $(WEBDIR)/extjs-tv-debug.c
 # Internationalization
 .PHONY: intl
 intl:
-	@printf "Building intl/js/tvheadend.js.pot\n"
-	@$(XGETTEXT2) -o intl/js/tvheadend.js.pot.new $(filter-out $(WEBDIR)/$(MARKED),$(JAVASCRIPT_SRC))
-	@sed -e 's/^"Language: /"Language: en/' < intl/js/tvheadend.js.pot.new > intl/js/tvheadend.js.pot
 	@printf "Building intl/vue/tvheadend.vue.pot\n"
 	@rm -rf $(VUE_I18N_TMP)
 	@$(VUE_XGETTEXT_PY) --out=$(VUE_I18N_TMP) $(VUE_I18N_SRC)
 	@$(XGETTEXT2) -D $(VUE_I18N_TMP) -o intl/vue/tvheadend.vue.pot.new $(VUE_I18N_SRC)
 	@sed -e 's/^"Language: /"Language: en/' < intl/vue/tvheadend.vue.pot.new > intl/vue/tvheadend.vue.pot
 	@rm -rf $(VUE_I18N_TMP)
-
-intl/js/tvheadend.js.pot:
-
-#intl/js/tvheadend.js.en_US.po: intl/js/tvheadend.js.pot
-#	$(call merge-po,$@,$<)
-
-#intl/js/tvheadend.js.en_GB.po: intl/js/tvheadend.js.pot
-#	$(call merge-po,$@,$<)
-
-#intl/js/tvheadend.js.de.po: intl/js/tvheadend.js.pot
-#	$(call merge-po,$@,$<)
-
-src/webui/static/intl/tvh.%.js.gz: intl/js/tvheadend.js.%.po
-	$(call go-po,$@,$<)
 
 src/webui/static/intl/tvh-vue.%.js.gz: intl/vue/tvheadend.vue.%.po
 	$(call go-po,$@,$<)
