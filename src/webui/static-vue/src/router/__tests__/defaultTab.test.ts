@@ -4,7 +4,7 @@
 /*
  * Tests for resolveDefaultTabRoute — the pure mapping from the
  * server's `config.default_tab` numeric to a Vue route name.
- * Pins each enum value to the route a Classic user would expect.
+ * Pins each enum value to the route matching that tab.
  *
  * Enum source: `src/config.h:105-125`.
  * Vue routes verified in `src/router/index.ts` declarations.

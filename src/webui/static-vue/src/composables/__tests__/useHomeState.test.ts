@@ -169,8 +169,8 @@ describe('useHomeState — stale-data recovery', () => {
  * Non-admin path — the three count probes hit admin-gated grid
  * endpoints, which return 401 + WWW-Authenticate to anonymous
  * users and make the browser pop its native Digest auth dialog
- * unprompted (the ExtJS UI deliberately doesn't trigger any auth
- * before the user clicks Login; the Vue dashboard must match).
+ * unprompted. Nothing may trigger auth before the user clicks
+ * Login.
  */
 describe('useHomeState — non-admin user', () => {
   beforeEach(() => {

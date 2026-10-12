@@ -48,10 +48,9 @@ interface TvhLocaleGlobals {
  * present in the loaded `tvh_locale` dict; otherwise returns
  * the English literal unchanged.
  *
- * Optional `{0}`, `{1}`, … positional substitution mirrors
- * ExtJS's `String.format` convention so a sentence with a
- * dynamic part (a column name, a count, etc.) can be
- * extracted as ONE msgid for translators — `t('Move {0}
+ * Optional `{0}`, `{1}`, … positional substitution lets a
+ * sentence with a dynamic part (a column name, a count, etc.)
+ * be extracted as ONE msgid for translators — `t('Move {0}
  * up', name)` keeps the whole sentence translatable rather
  * than concatenating split fragments. Substitution runs AFTER
  * the catalog lookup so translators control word order:

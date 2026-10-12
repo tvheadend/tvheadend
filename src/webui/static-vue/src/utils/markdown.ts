@@ -147,9 +147,9 @@ export function extractFirstHeading(html: string, fallback: string): string {
  * Rewrite root-relative `static/…` attribute values to absolute
  * webroot-aware `/static/…`. The compiled-in markdown (wizard step
  * descriptions + `/markdown/firstconfig` help page) uses paths
- * like `static/img/doc/firstconfig/wizard.png` that work
- * verbatim under ExtJS's `/` root but resolve against the
- * current route under Vue (`/gui/wizard/login` →
+ * like `static/img/doc/firstconfig/wizard.png` that only work
+ * verbatim from the `/` root; under Vue they resolve against the
+ * current route (`/gui/wizard/login` →
  * `/gui/wizard/static/...` → 404). Anchoring them at the
  * webroot-aware server root lets the existing /static handler
  * serve the asset.

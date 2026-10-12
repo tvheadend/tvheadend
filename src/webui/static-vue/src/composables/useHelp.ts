@@ -66,9 +66,9 @@ const loading = ref(false)
 const error = ref<string | null>(null)
 
 /* Table-of-contents drawer state. `tocHtml` is the rendered
- * `/markdown/toc` index — fetched once and cached for the session,
- * mirroring Classic's `tvheadend.docs_toc`. `tocOpen` is the
- * drawer's visibility; it starts closed and only HelpDialog ever
+ * `/markdown/toc` index — fetched once and cached for the
+ * session. `tocOpen` is the drawer's visibility; it starts
+ * closed and only HelpDialog ever
  * surfaces the toggle (never the wizard dock). */
 const tocOpen = ref(false)
 const tocHtml = ref<string | null>(null)

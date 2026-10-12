@@ -9,16 +9,15 @@
  * Architectural note: PrimeVue's `<DataTable editMode="cell">`
  * tracks its own internal `editingMeta`, but it CLEARS that
  * structure on every sort / filter / pagination change
- * (`primevue/datatable/DataTable.vue:524, 595, 693`). Classic
- * ExtJS's `EditorGridPanel`, by contrast, keeps dirty values
- * across sort changes. Mirroring Classic — and giving us batch
- * Save / Undo semantics for free — means we keep our own dirty
- * store ABOVE PrimeVue's edit state. We listen for
+ * (`primevue/datatable/DataTable.vue:524, 595, 693`). Dirty
+ * values must survive sort changes, and batch Save / Undo needs
+ * them in one place, so we keep our own dirty store ABOVE
+ * PrimeVue's edit state. We listen for
  * `cell-edit-complete` purely as a signal to copy the new value
  * into our `dirtyMap`; cell rendering reads back from our map,
  * so display values survive any PrimeVue-internal re-render.
  *
- * Save shape mirrors Classic exactly:
+ * Save shape:
  *   POST idnode/save  node=[{uuid, field1:v1}, {uuid, field2:v2}, …]
  *   - per-row partial objects, only changed fields
  *   - server's `api_idnode_save` (`api_idnode.c:410-429`,

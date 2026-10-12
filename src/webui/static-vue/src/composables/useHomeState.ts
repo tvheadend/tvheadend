@@ -106,9 +106,7 @@ export function useHomeState(): UseHomeStateReturn {
      * `src/api/api_mpegts.c:417`; the channel/EPG grids are the
      * same shape). Firing them as anonymous returns 401 +
      * WWW-Authenticate, which makes the browser pop a Digest
-     * dialog before the user has done anything. ExtJS doesn't
-     * have this issue because it makes no admin calls until the
-     * Login menu item is clicked.
+     * dialog before the user has done anything.
      *
      * The probes only feed the install-state classification
      * (fresh / channels-missing / epg-missing / healthy), which

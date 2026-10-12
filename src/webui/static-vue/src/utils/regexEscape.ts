@@ -10,9 +10,6 @@
  * taken from a known event, such as "News (Late)", must be escaped
  * before it goes out, or the parentheses turn into a group and the
  * event no longer matches itself.
- *
- * Same character class as Classic's `tvheadend.regexEscape`
- * (`static/app/tvheadend.js`), which escapes a clicked EPG title.
  */
 export function regexEscape(s: string): string {
   return s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')

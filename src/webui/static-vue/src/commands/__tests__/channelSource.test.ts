@@ -116,9 +116,8 @@ describe('channelSource', () => {
     await ensureChannelsLoaded(deps)
     const cmd = getChannelCommands().value[0]
     cmd.secondaryAction!.handler()
-    /* URL pattern matches Classic's `tvheadend.playLink` — the
-     * ticket route is what tvheadend uses so the resulting m3u
-     * doesn't need separate auth. */
+    /* The ticket route lets the resulting m3u play without
+     * separate auth. */
     expect(openSpy).toHaveBeenCalledWith(
       '/play/ticket/stream/channel/ch-a?title=BBC%20One',
       '_blank',

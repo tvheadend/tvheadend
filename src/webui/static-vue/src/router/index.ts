@@ -23,11 +23,8 @@ import { readLastSubview, writeLastSubview } from './lastSubview'
  */
 
 /*
- * `config.default_tab` → Vue route-name mapping. Mirrors Classic's
- * tabMapping at `src/webui/static/app/tvheadend.js:1095-1275`
- * (the various if-blocks that activate top-level tabs based on
- * `tvheadend.default_tab`). Enum values are defined in
- * `src/config.h:105-125`.
+ * `config.default_tab` → Vue route-name mapping. Enum values are
+ * defined in `src/config.h:105-125`.
  *
  * The numeric keys are sparse (1, 10-15, 20-27, 30-33, 40); we
  * use a Record<number, string> rather than an array to keep the
@@ -163,7 +160,8 @@ function genericWizardStep(name: 'login' | 'network' | 'muxes' | 'mapping'): Rou
 
 /*
  * Per-route UX redirect guards. Server-side ACL is the security
- * boundary — these only mirror what ExtJS hides client-side.
+ * boundary — these only keep the UI from showing what the user's
+ * level or the build's capabilities rule out.
  *
  * Each runs after the global beforeEach permission guard, which has
  * already awaited `access.loaded` for any route with a
@@ -174,10 +172,8 @@ function genericWizardStep(name: 'login' | 'network' | 'muxes' | 'mapping'): Rou
 /* DVR Removed: gated on `uilevel === 'expert'`. DvrLayout already
  * filters the L2 tab strip so non-experts don't see the link, but
  * the route itself was reachable via direct URL or bookmark — `dvr`
- * permission was the only check. This guard closes that gap; the
- * conceptual gate mirrors ExtJS dvr.js:988 + 1207-1213, just made
- * explicit in routing terms (ExtJS itself has only the tab-bar
- * hide). Mid-session level demotion (admin lowers user via Comet)
+ * permission was the only check. This guard closes that gap.
+ * Mid-session level demotion (admin lowers user via Comet)
  * is not handled — same scope as the existing tab-bar filter, not
  * a security boundary. */
 const dvrRemovedGuard: RouteGuard = () => {
@@ -186,9 +182,8 @@ const dvrRemovedGuard: RouteGuard = () => {
   return { name: 'dvr-upcoming' }
 }
 
-/* Config / Debugging: requires `uilevel >= advanced` (ExtJS
- * dvr.js:1180 uses both 'advanced' and 'expert'). Treats the level
- * as a monotonic enum: basic < advanced < expert. */
+/* Config / Debugging: requires `uilevel >= advanced`. Treats the
+ * level as a monotonic enum: basic < advanced < expert. */
 const configDebuggingGuard: RouteGuard = () => {
   const access = useAccessStore()
   if (access.uilevel === 'advanced' || access.uilevel === 'expert') return true
@@ -196,9 +191,7 @@ const configDebuggingGuard: RouteGuard = () => {
 }
 
 /* Config / Debugging / Memory Information: gated on
- * `uilevel === 'expert'`. Mirrors Classic's
- * `uilevel: 'expert'` on the memoryinfo grid
- * (`static/app/tvhlog.js:384`). The L3 tab strip in
+ * `uilevel === 'expert'`. The L3 tab strip in
  * ConfigDebuggingLayout already hides the tab from non-experts;
  * this guard catches direct-URL access. Falls back to the
  * always-visible Configuration tab. Same shape as
@@ -210,8 +203,7 @@ const configDebuggingMemoryInfoGuard: RouteGuard = () => {
 }
 
 /* Config / DVB Inputs / Mux Schedulers: gated on `uilevel ===
- * 'expert'`. Mirrors ExtJS `mpegts.js:429` (the legacy grid sets
- * `uilevel: 'expert'`). DvbInputsLayout already filters the L3
+ * 'expert'`. DvbInputsLayout already filters the L3
  * tab strip so non-experts don't see the link, but the route
  * itself was reachable via direct URL or bookmark — `admin`
  * permission was the only check. This guard closes that gap.
@@ -223,8 +215,8 @@ const dvbMuxSchedGuard: RouteGuard = () => {
 }
 
 /* Config / General → SAT>IP Server: gated on the `satip_server`
- * capability (matches static/app/config.js:127-128). The L3 sidebar
- * also hides the tab; this guard catches direct-URL access. */
+ * capability. The L3 sidebar also hides the tab; this guard
+ * catches direct-URL access. */
 const configSatipServerGuard: RouteGuard = () => {
   const capabilities = useCapabilitiesStore()
   if (capabilities.has('satip_server')) return true
@@ -232,10 +224,10 @@ const configSatipServerGuard: RouteGuard = () => {
 }
 
 /* DVB Inputs → TV Adapters tab: gated on the `tvadapters` capability
- * (linuxdvb / SAT>IP-client / HDHomerun-client built in). ExtJS gates
- * ONLY this tab on the capability (tvheadend.js:1154) — Networks /
- * Muxes / Services are input-type-agnostic (IPTV uses them too) and
- * stay visible, so the DVB Inputs section itself is not gated.
+ * (linuxdvb / SAT>IP-client / HDHomerun-client built in). Only this
+ * tab is gated on the capability — Networks / Muxes / Services are
+ * input-type-agnostic (IPTV uses them too) and stay visible, so the
+ * DVB Inputs section itself is not gated.
  * DvbInputsLayout hides the tab; this guard catches direct-URL access
  * by sending it to the first always-present tab. */
 const dvbAdaptersGuard: RouteGuard = () => {
@@ -245,8 +237,7 @@ const dvbAdaptersGuard: RouteGuard = () => {
 }
 
 /* Config / Channel / EPG / Rating Labels: gated on `uilevel ===
- * 'expert'`. Mirrors ExtJS `ratinglabels.js:25` (the legacy
- * panel sets `uilevel: 'expert'`). The L3 tab strip in
+ * 'expert'`. The L3 tab strip in
  * ConfigChannelEpgLayout already hides the link from
  * non-experts; this guard catches direct-URL access. Same
  * shape as `dvbMuxSchedGuard`. */
@@ -258,8 +249,6 @@ const configRatingLabelsGuard: RouteGuard = () => {
 
 /* Config / Stream / ES filter sub-tabs (Video / Audio / Teletext
  * / Subtitle / CA / Other): gated on `uilevel === 'expert'`.
- * Mirrors ExtJS `esfilter.js:7` where the entire ES Filters tab
- * panel is wrapped in `tvheadend.uilevel_match('expert', …)`.
  * The L3 tab strip in ConfigStreamLayout already hides the
  * tabs from non-experts; this guard catches direct-URL access.
  * Falls back to the always-visible Stream Profiles tab. Same
@@ -271,10 +260,7 @@ const configStreamFiltersGuard: RouteGuard = () => {
 }
 
 /* Config / Stream / Codec Profiles: gated on the `libav`
- * capability — transcoding compiled in (`--enable-libav`).
- * Mirrors legacy ExtJS `static/app/codec.js:552` where the Codec
- * Profiles tab is only mounted when
- * `tvheadend.capabilities.indexOf('libav') !== -1`. The L3 tab
+ * capability — transcoding compiled in (`--enable-libav`). The L3 tab
  * strip in ConfigStreamLayout also hides the tab; this guard
  * catches direct-URL access. Falls back to the always-visible
  * Stream Profiles tab. Same shape as `configSatipServerGuard`. */
@@ -285,9 +271,7 @@ const codecProfilesGuard: RouteGuard = () => {
 }
 
 /* Config / Recording / Timeshift: gated on the `timeshift`
- * capability (matches `static/app/tvheadend.js:1170` where the
- * Timeshift tab is only mounted when `tvheadend.capabilities.
- * indexOf('timeshift') !== -1`). The L3 tab strip in
+ * capability. The L3 tab strip in
  * ConfigRecordingLayout also hides the tab; this guard catches
  * direct-URL access. Falls back to the always-visible DVR
  * Profiles tab. Same shape as `configSatipServerGuard`. */
@@ -297,10 +281,8 @@ const configRecordingTimeshiftGuard: RouteGuard = () => {
   return { name: 'config-recording-dvr-profiles' }
 }
 
-/* Config / CAs: gated on the `caclient` capability. Mirrors
- * legacy ExtJS `tvheadend.js:1176` where the CA L2 entry is
- * only mounted when `tvheadend.capabilities.indexOf('caclient')
- * !== -1`. The capability is emitted server-side
+/* Config / CAs: gated on the `caclient` capability, which is
+ * emitted server-side
  * (`src/main.c:1533-1545`) when any of ENABLE_CWC / CAPMT /
  * CCCAM / CONSTCW / LINUXDVB_CA was set at build time. The L2
  * sidebar in ConfigurationLayout already hides the tab when
@@ -430,8 +412,7 @@ const routes: RouteRecordRaw[] = [
      * router-view per ADR 0008). Same shape as /dvr — the parent
      * has no own route name; named children handle navigation.
      * Capability / uilevel gates on individual L2/L3 entries
-     * mirror ExtJS exactly (per ADR 0008's Q1 decision); they're
-     * applied via per-route `beforeEnter` guards. The parent
+     * are applied via per-route `beforeEnter` guards. The parent
      * route's `meta.permission = 'admin'` is the actual access
      * gate — the capability/uilevel filters are UI-affordance
      * gates only.
@@ -455,13 +436,12 @@ const routes: RouteRecordRaw[] = [
       { path: '', name: 'configuration', redirect: () => ({ name: readLastSubview('configuration') ?? 'config-general' }) },
       {
         /*
-         * General is a layout — its three sub-tabs (Base / Image
-         * cache / SAT>IP Server) mirror ExtJS' tvheadend.js:1084-1086
-         * wiring. Same nested shape as DVB Inputs / DVR. SAT>IP
-         * Server's L3 entry is gated on the `satip_server`
-         * capability (matches static/app/config.js:127-128); the
-         * client-side filter in ConfigGeneralLayout hides the tab,
-         * the beforeEnter on the leaf redirects direct-URL access.
+         * General is a layout — three sub-tabs (Base / Image
+         * cache / SAT>IP Server). Same nested shape as DVB Inputs /
+         * DVR. SAT>IP Server's L3 entry is gated on the
+         * `satip_server` capability; the client-side filter in
+         * ConfigGeneralLayout hides the tab, the beforeEnter on the
+         * leaf redirects direct-URL access.
          * Base is the empty-path redirect target so
          * /configuration/general lands on Base via the existing L2
          * sidebar entry.
@@ -480,11 +460,8 @@ const routes: RouteRecordRaw[] = [
       {
         /*
          * Users — three sub-tabs (Access Entries / Passwords / IP
-         * Blocking) per ExtJS' tvheadend.js:1090-1102 wiring (the
-         * three `tvheadend.acleditor` / `passwdeditor` /
-         * `ipblockeditor` constructors in `static/app/acleditor.js`).
-         * Same layout shape as General / DVB Inputs. Empty-path
-         * lands on Access Entries.
+         * Blocking). Same layout shape as General / DVB Inputs.
+         * Empty-path lands on Access Entries.
          */
         path: 'users',
         component: () => import('@/views/configuration/ConfigUsersLayout.vue'),
@@ -517,15 +494,13 @@ const routes: RouteRecordRaw[] = [
       },
       {
         /*
-         * Channel / EPG — seven sub-tabs in the Classic order
-         * per `static/app/tvheadend.js:1126-1142`. Same nested
-         * shape as General / Users / DVB Inputs. Three of the
-         * seven are placeholders for the EPG Grabber sub-pages
-         * — implementations come in subsequent slices. Rating
-         * Labels' L3 entry is gated on `uilevel: 'expert'`
-         * (matches `ratinglabels.js:25`); the layout filters
-         * the tab and `configRatingLabelsGuard` redirects
-         * direct-URL access.
+         * Channel / EPG — seven sub-tabs. Same nested shape as
+         * General / Users / DVB Inputs. Three of the seven are
+         * placeholders for the EPG Grabber sub-pages —
+         * implementations come in subsequent slices. Rating
+         * Labels' L3 entry is gated on `uilevel: 'expert'`; the
+         * layout filters the tab and `configRatingLabelsGuard`
+         * redirects direct-URL access.
          */
         path: 'channel-epg',
         component: () => import('@/views/configuration/ConfigChannelEpgLayout.vue'),
@@ -544,11 +519,9 @@ const routes: RouteRecordRaw[] = [
       },
       {
         /*
-         * Stream is a layout — sub-tabs mirror ExtJS Classic at
-         * `static/app/tvheadend.js:1156` (Stream Profiles always
-         * visible) + `static/app/esfilter.js:5-18` (the six
-         * ES-filter tabs wrapped in a single `uilevel === 'expert'`
-         * gate). Same nested shape as Channel / EPG. The six
+         * Stream is a layout — Stream Profiles always visible, the
+         * six ES-filter tabs behind a single `uilevel === 'expert'`
+         * gate. Same nested shape as Channel / EPG. The six
          * filter children are placeholders for now; real grids
          * land in subsequent slices. Each filter child is gated
          * by `configStreamFiltersGuard` for direct-URL access;
@@ -572,14 +545,11 @@ const routes: RouteRecordRaw[] = [
       },
       {
         /*
-         * Recording is a layout — sub-tabs mirror ExtJS Classic at
-         * `static/app/tvheadend.js:1161-1173` (DVR Profiles always
-         * visible, Timeshift gated on the `timeshift` capability).
-         * Same nested shape as Stream / Channel-EPG. Timeshift's
-         * L3 entry is gated on the `timeshift` capability
-         * (matches `tvheadend.js:1170`); the layout filters the
-         * tab strip and `configRecordingTimeshiftGuard` redirects
-         * direct-URL access.
+         * Recording is a layout — DVR Profiles always visible,
+         * Timeshift gated on the `timeshift` capability. Same
+         * nested shape as Stream / Channel-EPG. The layout filters
+         * the tab strip and `configRecordingTimeshiftGuard`
+         * redirects direct-URL access.
          */
         path: 'recording',
         component: () => import('@/views/configuration/ConfigRecordingLayout.vue'),
@@ -595,11 +565,10 @@ const routes: RouteRecordRaw[] = [
       leaf('cas', 'config-cas', () => import('@/views/configuration/ConfigCasView.vue'), 'CAs', 'admin', configCaClientsGuard),
       {
         /*
-         * Debugging is a layout — sub-tabs mirror ExtJS Classic
-         * at `static/app/tvheadend.js:1179-1193` (Configuration
-         * always visible when L2 is, Memory Information gated
-         * on `uilevel === 'expert'` per `tvhlog.js:384`). Same
-         * nested shape as Stream / Recording. The L2 entry
+         * Debugging is a layout — Configuration always visible
+         * when L2 is, Memory Information gated on
+         * `uilevel === 'expert'`. Same nested shape as Stream /
+         * Recording. The L2 entry
          * itself is already gated to advanced+expert via
          * `configDebuggingGuard`; the Memory Information
          * sub-tab gets an additional expert-level guard via
@@ -777,8 +746,7 @@ const router = createRouter({
  * on each mount as `IdnodeConfigForm` fires the step's load.
  * Direct-URL paste of a different step also self-heals — the
  * pasted route mounts, fires its load, server advances cursor,
- * comet syncs. Matches ExtJS semantics (which doesn't have
- * URL-per-step at all — the wizard there is a modal dialog).
+ * comet syncs.
  *
  * Awaits `access.loaded` with a 5 s timeout, same shape as the
  * permission guard below — direct-URL navigation to a gated or
@@ -803,9 +771,8 @@ const router = createRouter({
  *   - Any internal nav targeting `name: 'home'` (none today, but
  *     a future Home link would also route through here).
  *
- * Mirrors Classic's behaviour at `static/app/tvheadend.js:1095-
- * 1275` where the default_tab activation runs on every full page
- * load. Internal navigations to specific routes (NavRail clicks
+ * The default_tab activation runs on every full page load.
+ * Internal navigations to specific routes (NavRail clicks
  * etc.) don't hit the root URL and so don't trigger this guard
  * — they go straight to their target.
  *

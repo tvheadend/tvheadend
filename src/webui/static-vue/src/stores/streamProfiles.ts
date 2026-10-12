@@ -33,7 +33,7 @@
  * profiles are browser-decodable. So the player now offers ALL
  * profiles and lets the <video> element attempt playback directly;
  * `VideoPlayerDialog` surfaces a clear error if the chosen profile
- * cannot be decoded. This matches the Classic UI's behaviour.
+ * cannot be decoded.
  *
  * The decode-probing logic itself is preserved intact in
  * `utils/streamFormats.ts`, ready to be rewired once that endpoint
@@ -41,8 +41,8 @@
  *
  * `ensure()` fetches once per session (same lazy idiom as the DVR
  * stores); a `'profile'` Comet notification then re-fetches so a
- * profile added / changed / removed anywhere — including the legacy
- * ExtJS UI — stays reflected without a page reload. On failure the
+ * profile added / changed / removed anywhere — including by another
+ * client — stays reflected without a page reload. On failure the
  * profile list reads empty.
  */
 
@@ -152,7 +152,7 @@ export const useStreamProfilesStore = defineStore('streamProfiles', () => {
   }
 
   /* Keep the list live. A stream profile created / edited / deleted
-   * anywhere — the v2 config page OR the legacy ExtJS UI — fires a
+   * anywhere — the config page OR another client — fires a
    * `'profile'` Comet notification; re-fetch so the in-browser
    * player's profile dropdown reflects it without a page reload, and
    * across viewer stop / restart. Only acts after the first
