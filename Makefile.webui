@@ -94,7 +94,7 @@ CSS_ACCESS2+= static/app/ext-access.css
 # extjs extensions
 #
 
-MARKED      = $(ROOTPATH)/app/marked.js
+MARKED      = $(ROOTPATH)/marked.js
 
 JAVASCRIPT += $(ROOTPATH)/app/i18n.js
 JAVASCRIPT += $(ROOTPATH)/app/extensions.js

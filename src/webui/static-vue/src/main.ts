@@ -120,13 +120,11 @@ async function bootstrap() {
    *     of untranslated content. Failure is non-fatal (script tag onerror
    *     just rejects; `t()` falls back to the English literal silently).
    *
-   *   - shared `marked` library (same script the ExtJS UI ships). The
-   *     wizard step descriptions in `docs/wizard/*.md` are Markdown;
-   *     the server emits them as a raw `description` field on each
-   *     wizard idnode (`src/wizard.c:wizard_description_*`) and the
-   *     ExtJS wizard runs them through `marked(text)` at
-   *     `static/app/wizard.js:105`. We do the same on the Vue side so
-   *     the rendering is byte-identical. Failure is non-fatal —
+   *   - `marked` library (`static/marked.js`). The wizard step
+   *     descriptions in `docs/wizard/*.md` are Markdown; the server
+   *     emits them as a raw `description` field on each wizard idnode
+   *     (`src/wizard.c:wizard_description_*`) and the wizard runs
+   *     them through `marked(text)`. Failure is non-fatal —
    *     `renderMarkdown()` falls back to escaped-text so untranslated
    *     `**` artifacts never reach the user.
    *
