@@ -5,8 +5,7 @@
 <script setup lang="ts">
 /*
  * ConfigDebuggingLayout — L3 navigation scaffold inside
- * Configuration → Debugging. Hosts the two sub-tabs in
- * Classic-UI order per `static/app/tvheadend.js:1179-1193`:
+ * Configuration → Debugging. Hosts the two sub-tabs:
  *
  *   1. Configuration      — always visible when the L2 entry is
  *   2. Memory Information — gated to `uilevel === 'expert'`
@@ -15,9 +14,7 @@
  * PageTabs row above a router-view. The Memory Information
  * entry is filtered client-side here so non-experts don't see
  * the tab; the matching `configDebuggingMemoryInfoGuard` route
- * guard catches direct-URL access. Mirrors `tvhlog.js:384`
- * where Classic gates the memoryinfo grid with
- * `uilevel: 'expert'`.
+ * guard catches direct-URL access.
  *
  * The L2 entry itself is gated to `uilevel >= advanced` via
  * `configDebuggingGuard` at the parent route (existing). So a
@@ -35,8 +32,8 @@ interface L3Tab {
   to: string
   label: string
   /* Hidden unless the access level reaches this one (monotonic — see
-   * levelMatches). Only 'expert' is in use today (matches Classic's
-   * `uilevel: 'expert'` on the memoryinfo grid). */
+   * levelMatches). Only 'expert' is in use today, on the Memory
+   * Information tab. */
   requiredLevel?: UiLevel
 }
 

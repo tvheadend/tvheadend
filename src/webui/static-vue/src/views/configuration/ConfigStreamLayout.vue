@@ -5,8 +5,7 @@
 <script setup lang="ts">
 /*
  * ConfigStreamLayout — L3 navigation scaffold inside Configuration
- * → Stream. Hosts the seven sub-tabs in Classic-UI order per
- * `static/app/tvheadend.js:1156` + `static/app/esfilter.js:5-18`:
+ * → Stream. Hosts the sub-tabs in this order:
  *
  *   1. Stream Profiles    — always visible to admins
  *   2. Codec Profiles     — `libav` capability (transcoding)
@@ -21,11 +20,9 @@
  * router-view. The six esfilter entries are filtered client-side
  * here so non-expert users don't see the tabs; the matching
  * `configStreamFiltersGuard` route guard catches direct-URL
- * access. Mirrors `esfilter.js:7` where the ENTIRE esfilter
- * TabPanel is wrapped in `tvheadend.uilevel_match('expert', …)`
- * — we apply that gate to each individual tab since v2 flattens
- * the legacy two-level (Stream → ES Filters → per-class) tab
- * hierarchy into one strip.
+ * access. The Expert gate applies to each stream filter tab
+ * individually because they share one flat strip with the
+ * profile tabs.
  */
 import { computed } from 'vue'
 import PageTabs from '@/components/PageTabs.vue'
@@ -39,9 +36,8 @@ interface L3Tab {
   to: string
   label: string
   /* Hidden unless the access level reaches this one (monotonic — see
-   * levelMatches). Only 'expert' is in use today (matches the legacy
-   * ExtJS `uilevel_match('expert', ...)` wrap on the entire ES
-   * Filters tab panel). */
+   * levelMatches). Only 'expert' is in use today, on the stream
+   * filter tabs. */
   requiredLevel?: UiLevel
   /* Hidden unless the server reports this capability — the Codec
    * Profiles tab needs `libav` (transcoding compiled in). */

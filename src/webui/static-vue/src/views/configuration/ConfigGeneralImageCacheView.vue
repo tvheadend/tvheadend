@@ -9,10 +9,8 @@
  * Editable form for the imagecache idnode (ENABLED, SSL ignore,
  * expire / re-fetch / re-try periods). Every field is gated
  * `PO_EXPERT` server-side. Pins level=expert via
- * `<IdnodeConfigForm>`'s `lockLevel` prop and hides the LevelMenu
- * chooser — matches legacy ExtJS literally
- * (`static/app/config.js:111` sets `uilevel: 'expert'` which
- * suppresses ExtJS's level button at `idnode.js:2953`).
+ * `<IdnodeConfigForm>`'s `lockLevel` prop, which also hides the
+ * LevelMenu chooser.
  *
  * Two custom toolbar actions beyond Save / Undo:
  *   - Clean image cache: destructive, requires confirmation.

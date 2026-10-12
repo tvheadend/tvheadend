@@ -2,8 +2,7 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /* Pure helper for the Configuration → Debugging → Configuration
- * conditional-disable predicate. Mirrors the legacy ExtJS
- * onchange handler at `static/app/tvhlog.js:3-13`:
+ * conditional-disable predicate:
  *
  *   - syslog disabled when enable_syslog is false.
  *
@@ -12,10 +11,10 @@
  * when the gating flag is off. The disabled state warns the
  * user that their input would have no effect.
  *
- * Classic also gated `tracesubs` disabled-when-`!trace`. The Vue
- * port renders `tracesubs` via a custom subsystem table (not the
- * form's auto-renderer), so the predicate doesn't fire for it
- * regardless — and the table cells stay editable on purpose so
+ * `tracesubs` is not disabled when `!trace`: it renders via a
+ * custom subsystem table (not the form's auto-renderer), so the
+ * predicate doesn't fire for it — and the table cells stay
+ * editable on purpose so
  * users can curate trace subsystems before flipping the umbrella
  * `trace` flag.
  *

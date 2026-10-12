@@ -6,14 +6,13 @@
 /*
  * ConfigGeneralLayout — L3 navigation scaffold inside Configuration →
  * General. Hosts the three sub-tabs (Base / Image cache / SAT>IP
- * Server) per ExtJS' tvheadend.js:1084-1086 wiring.
+ * Server).
  *
  * Same shape as DvbInputsLayout: PageTabs row above a router-view.
- * One capability gate applies — `satip_server` filters the SAT>IP
- * Server entry exactly the way ExtJS does in
- * static/app/config.js:127-128 (`if (tvheadend.capabilities.indexOf
- * ('satip_server') === -1) return;`). Implementation mirrors the L2
- * gate pattern from ADR 0008 (Configuration → DVB Inputs uses the
+ * One capability gate applies — the SAT>IP Server entry only shows
+ * when the server reports the `satip_server` capability.
+ * Implementation follows the L2 gate pattern from ADR 0008
+ * (Configuration → DVB Inputs uses the
  * same client-side filter + `beforeEnter` route guard belt-and-
  * suspenders).
  */

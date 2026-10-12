@@ -3,7 +3,7 @@
 
 /*
  * TvAdaptersView — the on/off marker from each node's read-only
- * `active` param (classic tvadapters.js), its text alternative, and
+ * `active` param, its text alternative, and
  * the two reloads that keep it current: the `hardware` notification
  * and a save in the editor drawer, including a reload that fails.
  */
