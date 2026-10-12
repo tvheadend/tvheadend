@@ -235,13 +235,15 @@ const cols: ColumnDef[] = [
      * only consulted for sort / filter, not grid serialisation.
      * EnumNameCell auto-detects the array shape and joins
      * resolved names from the deferred fetch. Multi-select →
-     * isInlineEditable strips at runtime. */
+     * isInlineEditable strips at runtime. The `channel` event
+     * (as in `channel_class_get_list`) refetches the names when
+     * Map services creates a channel. */
     field: 'channel',
     sortable: true,
     filterType: 'string',
     width: 220,
     cellComponent: EnumNameCell,
-    enumSource: { type: 'api', uri: 'channel/list', params: { all: 1 } },
+    enumSource: { type: 'api', uri: 'channel/list', event: 'channel', params: { all: 1 } },
     editable: true,
     /* Drill-down: 1 mapped channel → chevron opens that
      * channel's admin (the common case for mapped services);

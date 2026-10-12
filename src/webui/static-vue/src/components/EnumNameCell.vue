@@ -13,12 +13,15 @@
  *
  * Both shapes consume the same column descriptor
  * (`enumSource: …` — either a deferred-fetch descriptor
- * `{ type: 'api', uri, params? }` for dynamic / large option
- * lists, or an inline `Option[]` for small fixed enums like a
- * tri-state). Deferred sources flow through `fetchDeferredEnum`'s
- * shared cache so the option list is fetched once per session
- * no matter how many rows / columns reference the same source;
- * inline sources skip the fetch entirely.
+ * `{ type: 'api', uri, event?, params? }` for dynamic / large
+ * option lists, or an inline `Option[]` for small fixed enums like
+ * a tri-state). Deferred sources flow through `fetchDeferredEnum`'s
+ * shared cache so the option list is fetched once no matter how
+ * many rows / columns reference the same source. A deferred
+ * source with an `event` is fetched again after each batch of
+ * Comet notifications of that class, in one request for all the
+ * cells showing it (`subscribeDeferredEnum`). Inline sources skip
+ * the fetch entirely.
  *
  * Rendering policy (scalar):
  *   - empty / null / '': '—'
@@ -37,13 +40,15 @@
  *   - resolved + every key missing: collapse to a single '—' so
  *     the cell isn't a forest of dashes
  */
-import { computed, inject, onMounted, ref, type Ref } from 'vue'
+import { computed, inject, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 import { ChevronRight } from 'lucide-vue-next'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow } from '@/types/grid'
 import {
   fetchDeferredEnum,
+  getResolvedDeferredEnum,
   isInlineEnum,
+  subscribeDeferredEnum,
   type Option,
 } from './idnode-fields/deferredEnum'
 import { resolveChannelListDescriptor } from '@/utils/channelListDescriptor'
@@ -71,6 +76,7 @@ const gridActivelyEditing = inject<Ref<boolean> | undefined>(
 )
 
 const options = ref<Option[] | null>(null)
+let unsubscribe: (() => void) | undefined
 
 onMounted(() => {
   /* Merge user's chname_num / chname_src prefs into channel/list
@@ -86,17 +92,32 @@ onMounted(() => {
     options.value = src
     return
   }
+  /* Start from the last list fetched for this source. An evented
+   * list that changed while no cell showed it is fetched again,
+   * and the cell should not flash raw keys meanwhile. */
+  options.value = getResolvedDeferredEnum(src)
   fetchDeferredEnum(src)
     .then((res) => {
       options.value = res
     })
     .catch(() => {
-      /* Leave options empty; the rendered fallback (raw value /
-       * em-dash) is already a sensible degradation. The fetch
-       * error is surfaced once via deferredEnum's own catch. */
-      options.value = []
+      /* Keep the last list if there is one, else leave options
+       * empty. The rendered fallback (raw value / em-dash) is
+       * already a sensible degradation. The fetch error is
+       * surfaced once via deferredEnum's own catch. */
+      options.value ??= []
     })
+  /* Every cell of the column shares one subscription to the
+   * source's `event` class. The list refetched after a
+   * notification lands here, so a key the cell could not name,
+   * like a channel that Map services has just created, gets its
+   * name without a page reload. */
+  unsubscribe = subscribeDeferredEnum(src, (res) => {
+    options.value = res
+  })
 })
+
+onBeforeUnmount(() => unsubscribe?.())
 
 /* Read the sibling-field snapshot for orphan handling. Empty
  * string when the column doesn't declare `fallbackField` OR the

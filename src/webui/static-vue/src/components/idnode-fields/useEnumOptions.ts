@@ -15,20 +15,16 @@
  *   2. Deferred ref: `{ type: 'api', uri, event?, params? }`.
  *      Resolved on mount via the shared `fetchDeferredEnum` cache;
  *      the same cache is consulted by every consumer of the same
- *      descriptor so each option list is fetched once per session.
+ *      descriptor so they all share one fetch of the option list.
  *
  * Live freshness via Comet: when a deferred descriptor carries an
  * `event` hint (e.g. `service` for `src/service_mapper.c:566`),
- * we subscribe to that Comet class on mount. Each notification
- * invalidates the descriptor's cache entry and refetches; the
+ * we join the descriptor's shared subscription on mount
+ * (`subscribeDeferredEnum`). Each batch of notifications refetches
+ * the list once, for all the fields and grid cells showing it. The
  * fetched array replaces `fetchedOptions.value`, which propagates
  * to every renderer reading off `options`. Mirrors Classic ExtJS
  * `static/app/idnode.js:48-52`.
- *
- * Burst behaviour: server-side mux scans emit one Comet message
- * per newly-discovered service, often dozens-to-hundreds in
- * quick succession. Debounce the refetch trigger by 250 ms so a
- * burst collapses into one network round-trip rather than N.
  *
  * Returns the resolved options as a computed (synchronous when
  * inline, async-populated when deferred — empty until the fetch
@@ -44,22 +40,17 @@ import {
   type ComputedRef,
 } from 'vue'
 import type { IdnodeProp } from '@/types/idnode'
-import { cometClient } from '@/api/comet'
-import { createDebounce } from '@/utils/debounce'
 import {
   fetchDeferredEnum,
   getResolvedDeferredEnum,
-  invalidateDeferredEnum,
   isDeferredEnum,
-  type DeferredEnum,
+  subscribeDeferredEnum,
   type Option,
 } from './deferredEnum'
 
 export interface UseEnumOptionsResult {
   options: ComputedRef<Option[]>
 }
-
-const REFETCH_DEBOUNCE_MS = 250
 
 export function useEnumOptions(getProp: () => IdnodeProp): UseEnumOptionsResult {
   const fetchedOptions = ref<Option[] | null>(null)
@@ -98,22 +89,9 @@ export function useEnumOptions(getProp: () => IdnodeProp): UseEnumOptionsResult 
     return []
   })
 
-  /* Holds the Comet unsubscribe handle so onBeforeUnmount can
-   * tear it down cleanly alongside the debounce. */
+  /* Holds the unsubscribe handle of the shared subscription so
+   * onBeforeUnmount can tear it down cleanly. */
   let unsubscribe: (() => void) | null = null
-
-  const scheduleRefetch = createDebounce((d: DeferredEnum) => {
-    invalidateDeferredEnum(d)
-    fetchDeferredEnum(d)
-      .then((opts) => {
-        fetchedOptions.value = opts
-      })
-      .catch(() => {
-        /* Failed refetch leaves the previous options in place;
-         * a follow-up Comet notification or a fresh mount will
-         * trigger another attempt. */
-      })
-  }, REFETCH_DEBOUNCE_MS)
 
   /* Synchronous warm-cache check runs before the async path
    * so the FIRST render already has resolved options when
@@ -135,17 +113,20 @@ export function useEnumOptions(getProp: () => IdnodeProp): UseEnumOptionsResult 
   onMounted(async () => {
     const e = getProp().enum as unknown
     if (!isDeferredEnum(e)) return
-    if (fetchedOptions.value === null) {
+    /* Subscribe before awaiting, so a field that unmounts while
+     * the fetch is in flight still releases its subscription. */
+    unsubscribe = subscribeDeferredEnum(e, (opts) => {
+      fetchedOptions.value = opts
+    })
+    /* Usually a cache hit that returns the list the fast path
+     * already showed. An evented list that changed while nothing
+     * showed it is fetched again and replaces the one from the
+     * fast path. */
+    try {
       fetchedOptions.value = await fetchDeferredEnum(e)
-    } else {
-      /* Already populated from the synchronous fast path —
-       * still fire the fetch (cache hit, returns existing
-       * promise) so the Comet event-subscription wiring
-       * below has a settled descriptor to attach to. */
-      void fetchDeferredEnum(e)
-    }
-    if (e.event) {
-      unsubscribe = cometClient.on(e.event, () => scheduleRefetch(e))
+    } catch {
+      /* Keep the previous options, as EnumNameCell does. The next
+       * notification or mount fetches the list again. */
     }
   })
 
@@ -154,7 +135,6 @@ export function useEnumOptions(getProp: () => IdnodeProp): UseEnumOptionsResult 
       unsubscribe()
       unsubscribe = null
     }
-    scheduleRefetch.cancel()
   })
 
   return { options }

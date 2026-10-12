@@ -1911,7 +1911,9 @@ function toggleEditMode() {
  * cells whose props lack a deferred descriptor (inline
  * arrays, no enum, multi-select) are skipped. The fetch
  * cache de-dupes across columns sharing a URI, so each
- * descriptor incurs at most one round-trip per session. */
+ * descriptor incurs at most one round-trip until its list
+ * changes. A failed prefetch is dropped, and the editor
+ * fetches the list again when it opens. */
 watch(isInEditMode, (entering) => {
   if (entering) {
     /* Comet auto-refresh stays live during edit mode. The
@@ -1930,7 +1932,7 @@ function prefetchEditableEnums(): void {
     if (!col.editable) continue
     const prop = propFor(col)
     if (prop && isDeferredEnum(prop.enum)) {
-      void fetchDeferredEnum(prop.enum)
+      fetchDeferredEnum(prop.enum).catch(() => {})
     }
     /* Also prefetch the column's enumSource (e.g.
      * CHANNEL_ENUM on autorec's `channel` field) — even
@@ -1942,7 +1944,7 @@ function prefetchEditableEnums(): void {
      * cache can't share (e.g. same URI, different
      * params). */
     if (col.enumSource && isDeferredEnum(col.enumSource)) {
-      void fetchDeferredEnum(col.enumSource)
+      fetchDeferredEnum(col.enumSource).catch(() => {})
     }
   }
 }
