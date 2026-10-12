@@ -1345,3 +1345,44 @@ describe('IdnodeConfigForm — access refetch on save', () => {
     expect(endpoints).not.toContain('access/whoami')
   })
 })
+
+describe('IdnodeConfigForm — field rules', () => {
+  async function mountCodec(params: ReadonlyArray<Record<string, unknown>>) {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+    apiMock.mockResolvedValueOnce({ entries: [{ class: 'codec_profile_libx264', params }] })
+    const wrapper = mount(IdnodeConfigForm, {
+      props: { uuid: 'u1' },
+      global: { stubs: { Select: SELECT_STUB } },
+    })
+    await flushPromises()
+    return wrapper
+  }
+
+  const PARAMS = [
+    { id: 'crf', type: 'int', caption: 'CRF', value: 23 },
+    { id: 'bit_rate', type: 'dbl', caption: 'Bitrate', value: 2000 },
+  ]
+
+  it('locks and zeroes bit_rate while a quality is set, and saves the pinned value', async () => {
+    const wrapper = await mountCodec(PARAMS)
+    const [, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(bitRate.attributes('disabled')).toBeDefined()
+
+    apiMock.mockResolvedValueOnce({})
+    apiMock.mockResolvedValueOnce({ entries: [{ class: 'codec_profile_libx264', params: PARAMS }] })
+    await wrapper.find('.idnode-config-form__btn--save').trigger('click')
+    await flushPromises()
+    const save = apiMock.mock.calls.find((c) => c[0] === 'idnode/save')
+    expect(JSON.parse((save![1] as { node: string }).node)).toMatchObject({ crf: 23, bit_rate: 0 })
+  })
+
+  it('unlocks bit_rate when the quality goes back to zero', async () => {
+    const wrapper = await mountCodec(PARAMS)
+    const [crf] = wrapper.findAll('input[type="number"]')
+    await crf.setValue('0')
+    await flushPromises()
+    const [, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(bitRate.attributes('disabled')).toBeUndefined()
+  })
+})
