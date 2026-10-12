@@ -12,13 +12,12 @@
  *     Timeline / Magazine surface the same state via the DVR
  *     overlay bars; this cell is the Table view's equivalent.
  *   - DVR grids (Upcoming / Finished / Failed / Removed): the
- *     leading `sched_status` column. Classic puts the same icon
- *     first on every DVR entry grid (`dvr.js` dvrRowActions,
- *     `iconIndex: 'sched_status'`).
+ *     leading `sched_status` column, first on every DVR entry
+ *     grid.
  *
  * Both fields carry the `dvr_entry_schedstatus` token (see
- * `utils/dvrState.ts`). Every token Classic draws an icon for
- * renders here too, including the completed ones; unknown values
+ * `utils/dvrState.ts`). Every token with an icon renders here,
+ * including the completed ones; unknown values
  * and events with no DVR entry show nothing.
  *
  * Label (tooltip and aria-label), first match wins:

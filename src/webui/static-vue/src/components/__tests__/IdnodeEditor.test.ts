@@ -373,8 +373,8 @@ describe('IdnodeEditor', () => {
       })
       const wrapper = mountEditor({ uuid: null, createBase: 'dvr/entry' })
       await flushPromises()
-      /* All three fields appear — matches ExtJS, which only skips
-       * `noui` for create mode. PO_NOSAVE fields like `disp_title`
+      /* All three fields appear — create mode only skips
+       * `noui`. PO_NOSAVE fields like `disp_title`
        * accept writes via their prop's `set` callback even though
        * they aren't persisted directly; skipping them broke entry
        * creation (no title). Rdonly fields go to the collapsed
@@ -784,7 +784,7 @@ describe('IdnodeEditor', () => {
         ],
         [
           { number: 4, name: 'Filename/Tagging' },
-          /* Sub-group with parent=4 and an empty name — Classic
+          /* Sub-group with parent=4 and an empty name —
            * dvr_config.c declares the secondary filename block this
            * way; should merge into the Filename/Tagging fieldset. */
           { number: 5, name: '', parent: 4 },

@@ -99,8 +99,7 @@ const optionKeys = computed(() => new Set(options.value.map((o) => String(o.key)
  *      non-mandatory props. The reference-by-UUID fields on this
  *      codebase (channel, tag, dvr_config, profile, per-user
  *      language, etc.) are all optional and need a "no value"
- *      affordance. Mirrors ExtJS's combobox `forceSelection: false`
- *      + clear-X icon. Suppressed for numeric enums (PT_INT and
+ *      affordance. Suppressed for numeric enums (PT_INT and
  *      friends — typically full-coverage tri-states like
  *      mux.enabled, where "no value" would be meaningless) and for
  *      `prop.mandatory: true` (config singletons that always carry

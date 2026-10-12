@@ -14,8 +14,7 @@
  *   text     — input string. Empty / undefined → renders nothing.
  *   enabled  — when false, the text renders raw (codes visible).
  *              Caller wires this to `access.data.label_formatting`
- *              so the server-side feature flag controls the parser
- *              the same way the legacy ExtJS UI does.
+ *              so the server-side feature flag controls the parser.
  *
  * Output is wrapped in a single `<span>` so the surrounding parent's
  * `white-space: pre-wrap` and font-size constraints still apply.

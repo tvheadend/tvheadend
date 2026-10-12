@@ -15,9 +15,7 @@
  *   2. Deferred reference — `{ type: 'api', uri, event?, params? }`.
  *      For dynamic option sets (channel pickers, network pickers, etc.)
  *      the server tells the client *where* to fetch options, not the
- *      options themselves. ExtJS handles this via
- *      `tvheadend.idnode_enum_store` (static/app/idnode.js:263); we
- *      mirror it here. The fetched response shape is
+ *      options themselves. The fetched response shape is
  *      `{ entries: [{ key, val }, …] }` — same convention used by
  *      api/idnode/load and api/channel/list (api_channel.c:71-72).
  *

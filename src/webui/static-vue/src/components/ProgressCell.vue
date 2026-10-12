@@ -27,8 +27,7 @@
  * single 30 s timer at the view level rather than one per cell.
  *
  * Renders nothing for past or future events — the bar/pie only
- * appears for the currently-airing program on each row, matching
- * legacy ExtJS Table view (`static/app/epg.js:759-780`).
+ * appears for the currently-airing program on each row.
  */
 import { computed, inject, type Ref } from 'vue'
 import type { ProgressDisplay } from '@/views/epg/epgViewOptions'

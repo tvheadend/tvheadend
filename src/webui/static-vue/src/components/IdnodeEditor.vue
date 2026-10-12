@@ -12,10 +12,9 @@
  *   - list:  optional CSV of field IDs. When set, passed to
  *            api/idnode/load so the SERVER trims the property list
  *            to just those fields (idnode_serialize0 + idclass_serialize0
- *            both honor `?list=...`). This mirrors what ExtJS does:
- *            see e.g. `tvheadend.dvr_upcoming` in dvr.js where the
- *            edit dialog passes a curated property list. Without it
- *            the editor renders every property the class declares —
+ *            both honor `?list=...`), so each caller can pass a
+ *            curated property list. Without it the editor renders
+ *            every property the class declares —
  *            including read-only computed mirrors (channelname,
  *            disp_*, watched, status, …) which clutter the form.
  *
@@ -27,9 +26,8 @@
  *      create class response) those drive the section split,
  *      mirroring the singleton-config form's behaviour. Classes
  *      without groups fall back to the level-based split — Basic /
- *      Advanced / Expert / Read-only Info — same as the old UI
- *      (idnode.js:887-1059); Read-only Info renders collapsed by
- *      default.
+ *      Advanced / Expert / Read-only Info; Read-only Info renders
+ *      collapsed by default.
  *   3. For each visible field, dispatch to the per-type component
  *      (string / number / bool / time / enum). Field types not yet
  *      handled (langstr, perm, hexa, intsplit) render a placeholder
@@ -38,9 +36,9 @@
  *   4. Track dirty state per-field; on save, post only the fields
  *      whose current value differs from initial.
  *
- * Concurrent-edit handling: matches the legacy ExtJS UI's
- * "last-save-wins" behaviour. The server has no version/ETag/mtime
- * field on idnodes, so neither client can detect a conflict.
+ * Concurrent-edit handling: last save wins. The server has no
+ * version/ETag/mtime field on idnodes, so neither client can
+ * detect a conflict.
  *
  * Class-defined named groups (e.g. profile, caclient, cclient, wizard
  * steps — `idclass_t.ic_groups` in C) are honoured: when the server
@@ -88,7 +86,6 @@ const props = defineProps<{
    * `api/dvr/entry/class`, save POST to `api/dvr/entry/create`.
    * The convention is consistent across every idnode class
    * (verified for dvr, channel, network, passwd, access, …).
-   * Mirrors ExtJS's `conf.url` shape in `tvheadend.idnode_create`.
    */
   createBase?: string | null
   /* Effective view level inherited from the calling grid. */
@@ -99,10 +96,9 @@ const props = defineProps<{
    * Optional comma-separated allowlist of property IDs. When set,
    * forwarded to api/idnode/load — the server returns only those
    * properties (in both the `params` value list and the `meta.props`
-   * static metadata). Mirrors the ExtJS pattern where each editor
-   * caller curates its own field list (e.g. dvr.js' `elist`).
-   * Server-driven editor-field-list metadata would replace this
-   * hardcoded per-caller list — see ExtJS-pattern parity above.
+   * static metadata), so each editor caller curates its own field
+   * list. Server-driven editor-field-list metadata would replace
+   * this hardcoded per-caller list.
    */
   list?: string
   /*
@@ -167,10 +163,9 @@ const props = defineProps<{
    * Create-mode initial values, overlaid on top of the class
    * defaults after `loadCreate` resolves. Used by "Clone-as-Add"
    * flows that open the create form pre-filled with the source
-   * row's values (the v2 codec-profile Clone mirrors ExtJS's
-   * `idnode_create(conf.add, true, currentValues)` shape at
-   * `static/app/idnode.js:2378-2388`). Has no effect in edit
-   * mode — load resolves the per-instance values from the server.
+   * row's values (e.g. the codec-profile Clone). Has no effect in
+   * edit mode — load resolves the per-instance values from the
+   * server.
    */
   preselect?: Readonly<Record<string, unknown>> | null
   /*
@@ -339,8 +334,7 @@ const visible = computed({
  * api_idnode.c:324-326), and each entry's property data is under
  * `params` (idnode_serialize0 in idnode.c:1554), with `meta.props`
  * carrying the static class metadata when the request includes
- * `meta=1`. ExtJS handles either shape via `item.props || item.params`
- * — we match that.
+ * `meta=1`. Either shape (`props` or `params`) is accepted.
  */
 interface LoadEntry {
   uuid?: string
@@ -455,11 +449,8 @@ const hasApplyChecks = computed(() =>
  *                              whichever base was chosen
  * The class caption (`ic_caption` at idnode.c:1547) is
  * intentionally NOT used here — it's a nav-tree path string
- * (e.g. "Channels / EPG - Channels") authored for the Classic
- * left-nav tree, and appending it to "Edit " produces nonsense.
- * Classic UI uses a separately-hardcoded per-grid `titleS`
- * label for the same reason (`static/app/chconf.js`'s
- * `tvheadend.channel_class`). Existing callers passing
+ * (e.g. "Channels / EPG - Channels"), and appending it to
+ * "Edit " produces nonsense. Existing callers passing
  * explicit `title` props (DVR editor → "Edit Recording") still
  * win over the instance-text fallback so their phrasing is
  * preserved. */
@@ -756,15 +747,14 @@ function onFieldChange(id: string, value: unknown) {
   touched.value.add(id)
   /* Auto-check the apply-checkbox in multi-edit mode — typing
    * into a field implies "apply this". User can still uncheck
-   * explicitly if they want to revert that field. Goes beyond
-   * Classic (which is manual-only) per the design decision. */
+   * explicitly if they want to revert that field. */
   if (isMultiEdit.value) applyChecked.value[id] = true
 }
 
 /*
  * Level-bucket fallback (only consumed when the class declares no
  * `ic_groups`). Buckets each property into one of four synthetic
- * sections matching the ExtJS editor (idnode.js:887-1059):
+ * sections:
  *
  *   - basic     (df): default, visible at all levels
  *   - advanced  (af): only at level >= advanced
@@ -875,13 +865,11 @@ function levelLabel(l: UiLevel): string {
  * both start from this list, so the filter rules stay in one
  * place.
  *
- * No mode-specific skipping. ExtJS only skips fields that are
- * `noui` (always) or `rdonly` AND in bulk-edit mode (the
- * `conf.uuids && p.rdonly` continue at idnode.js:900-901). For
- * single-edit and create, rdonly fields render in their natural
- * destination section (Read-only Info bucket in the level-
- * bucket fallback; their declared group in the group-based
- * path); they're informational. PO_NOSAVE fields (e.g.
+ * Fields are skipped only when `noui` (always) or `rdonly` AND
+ * in bulk-edit mode. For single-edit and create, rdonly fields
+ * render in their natural destination section (Read-only Info
+ * bucket in the level-bucket fallback; their declared group in
+ * the group-based path); they're informational. PO_NOSAVE fields (e.g.
  * `disp_title`/`disp_extratext` on dvrentry) DO accept writes
  * via the prop's `set` callback even though they aren't
  * persisted directly — skipping them broke creation because the
@@ -1001,8 +989,7 @@ const BUCKETS: readonly BucketDef[] = [
  *     merged into the parent in `fieldsByGroup`.
  *   - Level-bucketed: when no groups declared. Synthesizes Basic /
  *     Advanced / Expert / Read-only Info from the level + rdonly
- *     flags on each prop — matches the pre-groups behaviour and
- *     what the ExtJS editor does (idnode.js:887-1059).
+ *     flags on each prop.
  */
 interface Section {
   key: string
@@ -1131,8 +1118,7 @@ async function loadRow(uuid: string) {
 /*
  * Create-mode load — fetches the class metadata + per-field defaults
  * via the per-class endpoint `<base>/class` (e.g. `dvr/entry/class`).
- * Mirrors what ExtJS does in `tvheadend.idnode_create.dodirect`
- * (idnode.js:1456-1481). Response shape is `{ caption, class, props: […] }`
+ * Response shape is `{ caption, class, props: […] }`
  * with each prop's `default` (or `value` for fields whose type has
  * a useful default) populated. Field order matches the `list` query
  * if supplied — same behavior as edit mode.
@@ -1303,8 +1289,7 @@ watch(
       /* Multi-edit: load the FIRST uuid as a template. Form
        * state reflects row 0's values; the user picks fields
        * to apply to all selected rows via the per-field
-       * apply-checkbox in the template. Matches Classic at
-       * `static/app/idnode.js:1324-1361`. */
+       * apply-checkbox in the template. */
       loadRow(uuids[0])
     } else if (createBase) {
       loadCreate()
@@ -1360,9 +1345,7 @@ async function save({ keepOpen = false }: { keepOpen?: boolean } = {}) {
   if (!dirty.value) {
     /* No changes — Save just closes; Apply is disabled in this
      * state (button is gated on `dirty.value`), so `keepOpen` here
-     * implies a programmatic call we treat as a no-op. Match
-     * ExtJS behavior on Save (its Save also skips the server
-     * round-trip when the form isn't dirty). */
+     * implies a programmatic call we treat as a no-op. */
     if (!keepOpen) emit('close')
     return
   }
@@ -1420,9 +1403,9 @@ async function save({ keepOpen = false }: { keepOpen?: boolean } = {}) {
 
 /*
  * Create-mode save — POSTs the full filled-in field set to
- * `<createBase>/create` as `conf=<JSON>`. ExtJS does the same
- * (idnode.js:1500-1517). Empty / null fields are omitted; the
- * server falls back to its own defaults when a key is absent.
+ * `<createBase>/create` as `conf=<JSON>`. Empty / null fields
+ * are omitted; the server falls back to its own defaults when a
+ * key is absent.
  *
  * Unlike edit-mode save, "no changes" still submits — the user
  * may have chosen to accept all defaults, and we must create the
@@ -1495,7 +1478,7 @@ async function saveCreate({ keepOpen = false }: { keepOpen?: boolean } = {}) {
  * field set (only ticked checkboxes' values) to every selected
  * uuid. Server iterates internally; partial-success (e.g. one
  * row perm-denied) returns 0 — Vue surfaces a generic success
- * either way (matches Classic).
+ * either way.
  *
  * Apply variant (`keepOpen=true`) reloads the template from row
  * 0 after the save lands and resets every apply-checkbox so the
@@ -1694,7 +1677,7 @@ onBeforeUnmount(() => {
         </p>
         <form class="idnode-editor__form" @submit.prevent="save()">
         <!--
-          Grouped fieldsets, mirroring the ExtJS editor (idnode.js).
+          Grouped fieldsets.
           Native <details>/<summary> for collapsibility — accessible
           (keyboard + screen-reader) without any custom toggle code.
           Read-only Info opens collapsed; the others open by default.
@@ -2162,8 +2145,8 @@ onBeforeUnmount(() => {
 
 /*
  * Multi-edit row layout — leftmost 24 px column for the apply-
- * checkbox, the rest of the row for the renderer. Mirrors
- * Classic's `[checkbox] [label] [input]` shape (the label lives
+ * checkbox, the rest of the row for the renderer, giving a
+ * `[checkbox] [label] [input]` shape (the label lives
  * inside the renderer, so the visible chrome is the checkbox
  * sitting just left of the label). Error / counter messages
  * span both columns so they don't get squeezed by the narrow

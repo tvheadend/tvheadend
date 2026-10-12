@@ -46,8 +46,8 @@ const access = useAccessStore()
  * (recordings via `dvr/entry/grid_finished`, autorecs via
  * `dvr/autorec/grid`, settings via `config/load`), all of which
  * return 401 and trip the browser's native Digest dialog the
- * instant the palette opens. ExtJS-equivalent behaviour: don't
- * offer the entry-point until the user has chosen to sign in.
+ * instant the palette opens. So don't offer the entry-point
+ * until the user has chosen to sign in.
  * The same predicate hides the Home `discover-palette` /
  * `discover-palette-touch` discoverability tiles so we don't
  * point at a missing button. */

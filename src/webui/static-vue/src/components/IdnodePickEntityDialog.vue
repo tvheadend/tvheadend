@@ -9,7 +9,7 @@
  * create flow.
  *
  * Sibling to IdnodePickClassDialog. The two cover the two distinct
- * ways the legacy ExtJS UI surfaces "pick something before create":
+ * ways to "pick something before create":
  *
  *   - IdnodePickClassDialog → user picks a CLASS
  *     (Networks: pick DVB-T / IPTV / etc. → server creates the

@@ -6,9 +6,7 @@
  * but the C source enforces (or strongly hints at) inside per-class
  * `set` callbacks and create handlers.
  *
- * Mirrors what ExtJS scatters across `setValidator` calls and inline
- * `if (!form.value)` checks in static/app/{dvr,channel,...}.js. The
- * server is the final authority — every rule here either replicates
+ * The server is the final authority — every rule here either replicates
  * a server check (so the user sees the error before round-tripping)
  * or codifies a UX expectation that the server permits but is
  * obviously wrong (e.g. start ≥ stop on a DVR entry).
@@ -225,9 +223,9 @@ function dvrautorecCrossField(values: Record<string, unknown>): Map<string, stri
  *     min/max range pairs are silently ignored when start_window
  *     parity breaks, but the user almost certainly wants the values
  *     consistent. Surface it.
- *   - ExtJS setValidator checks in static/app/dvr.js for soft-required
- *     `name` on autorec/timerec (the entry is technically saveable
- *     without one, but unidentifiable in the grid afterwards).
+ *   - soft-required `name` on autorec/timerec (the entry is
+ *     technically saveable without one, but unidentifiable in the
+ *     grid afterwards).
  *
  * Other v2-editable classes intentionally have NO entry in
  * CLASS_RULES — server tolerates every field empty, no

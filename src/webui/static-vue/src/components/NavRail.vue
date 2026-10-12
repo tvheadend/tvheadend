@@ -72,11 +72,10 @@ const toggleTitle = computed(() =>
 )
 
 /*
- * Top-level nav items, grouped into sections. Order mirrors the
- * existing ExtJS rootTabPanel order (src/webui/static/app/tvheadend.js);
- * the section split — everyday TV use vs system administration — is
- * the Vue UI's own (see ADR 0016). Item labels reuse the exact English
- * strings ExtJS uses, so existing translations cover them (brief §6.1,
+ * Top-level nav items, grouped into sections. Order follows the
+ * long-standing top-level tab order; the section split — everyday TV
+ * use vs system administration — is the Vue UI's own (see ADR 0016).
+ * Item labels keep their long-standing English strings (brief §6.1,
  * §9.1); the two section headers are new strings.
  *
  * Permission requirement lives on the route's meta.permission (see
@@ -190,8 +189,8 @@ const railGroups = computed<ResolvedSection[]>(() => {
 })
 
 /*
- * Loading state strategy (matches the existing ExtJS UI's behaviour):
- * don't render the rail until access has loaded. The first accessUpdate
+ * Loading state strategy: don't render the rail until access has
+ * loaded. The first accessUpdate
  * via Comet typically arrives in <500ms after page load; a 5-second
  * timeout falls through to optimistic rendering for the rare case where
  * Comet is slow (e.g. WebSocket blocked, long-poll fallback's first
@@ -262,9 +261,9 @@ const isPhone = useIsPhone()
  *   - `/logout` (`src/webui/webui.c:177-218`) is a top-level
  *     navigation: it renders an HTML page with a 401-returning
  *     link that clears the browser's cached HTTP basic/digest
- *     credentials. (Classic's IE-only
+ *     credentials. There is no IE-only
  *     `document.execCommand("ClearAuthenticationCache")` branch
- *     is skipped — the brief doesn't target legacy IE.)
+ *     — the brief doesn't target legacy IE.
  *   - `/login` (`src/webui/webui.c:164-175`) is fetched as a
  *     background request, NOT navigated to. The fetch trips a
  *     401 + `WWW-Authenticate`, which makes the browser pop its
@@ -274,10 +273,9 @@ const isPhone = useIsPhone()
  *     reload the current `/gui` page so the Comet connection
  *     reconnects with the cached Authorization header and the
  *     access store re-hydrates with the real username. This
- *     keeps the user on `/gui`; a top-level navigation to
- *     `/login` would land them on whatever UI the server has
- *     configured at `/` (extjs / classic), and ExtJS would also
- *     auto-launch its setup wizard on a fresh install. The
+ *     keeps the user on their current `/gui` route; a top-level
+ *     navigation to `/login` would follow the redirect to `/`
+ *     and land them back on the UI's start page. The
  *     fetch path also recovers from "stuck anonymous" — when a
  *     prior admin-gated request already triggered a prompt and
  *     the browser cached credentials but the access store still
