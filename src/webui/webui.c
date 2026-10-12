@@ -2700,56 +2700,6 @@ static int http_file_test(const char *path)
   return -1;
 }
 
-/*
- * The legacy interface ships ExtJS widget themes under these names,
- * and "blue" is the one every Vue theme without an ExtJS counterpart
- * falls back to. It is deliberately not the Vue default (that is
- * "auto", see theme_get_ui_list()): this names a stylesheet on
- * disk, not a theme a user can pick.
- */
-#define WEBUI_THEME_EXTJS_FALLBACK "blue"
-
-/*
- * Serve a per-theme stylesheet as a CSS import, falling back to the
- * ExtJS fallback theme when the active one has no legacy variant.
- *
- * The Vue interface's own themes ("auto", "light", "dark") ship no
- * xtheme-<name>.css / ext-<name>.css of their own, because those are
- * full ExtJS widget themes rather than a token palette. Without this
- * fallback the legacy interface would answer its own theme.css
- * request with 400 and render entirely unstyled for anyone who
- * picked such a theme.
- *
- * `prefix`/`suffix` bracket the theme name: the source tree is probed
- * for src/webui/<prefix><name><suffix> and, when that exists, the
- * matching /<prefix><name><suffix> URL is imported.
- */
-static int
-http_theme_css(http_connection_t *hc, const char *prefix,
-               const char *suffix, const char *theme)
-{
-  const char *names[2] = { theme, WEBUI_THEME_EXTJS_FALLBACK };
-  char rel[128];
-  char buf[256];
-  int i;
-
-  for (i = 0; i < 2; i++) {
-    if (names[i] == NULL || names[i][0] == '\0')
-      continue;
-    /* Don't probe the same file twice when the theme IS the default. */
-    if (i && names[0] && !strcmp(names[0], names[1]))
-      break;
-    snprintf(rel, sizeof(rel), "%s%s%s", prefix, names[i], suffix);
-    snprintf(buf, sizeof(buf), "src/webui/%s", rel);
-    if (http_file_test(buf))
-      continue;
-    snprintf(buf, sizeof(buf), "/%s", rel);
-    http_css_import(hc, buf);
-    return 0;
-  }
-  return HTTP_STATUS_BAD_REQUEST;
-}
-
 /**
  * Redirect to the translation catalog of a web UI in the user's
  * language, or send an empty catalog when there is none
@@ -2783,7 +2733,6 @@ http_redir_locale(http_connection_t *hc, const char *name)
 static int
 http_redir(http_connection_t *hc, const char *remain, void *opaque)
 {
-  const char *theme;
   char *components[3];
   int nc;
 
@@ -2794,22 +2743,8 @@ http_redir(http_connection_t *hc, const char *remain, void *opaque)
     return HTTP_STATUS_BAD_REQUEST;
 
   if (nc == 1) {
-    if (!strcmp(components[0], "locale.js"))
-      return http_redir_locale(hc, "tvh");
     if (!strcmp(components[0], "locale-vue.js"))
       return http_redir_locale(hc, "tvh-vue");
-    if (!strcmp(components[0], "theme.css")) {
-      theme = access_get_theme(hc->hc_access);
-      return http_theme_css(hc, "static/tvh.", ".css.gz", theme);
-    }
-    if (!strcmp(components[0], "theme.debug.css")) {
-      theme = access_get_theme(hc->hc_access);
-      return http_theme_css(hc, "static/extjs/resources/css/xtheme-", ".css", theme);
-    }
-    if (!strcmp(components[0], "theme.app.debug.css")) {
-      theme = access_get_theme(hc->hc_access);
-      return http_theme_css(hc, "static/app/ext-", ".css", theme);
-    }
   }
 
   return HTTP_STATUS_BAD_REQUEST;
@@ -2892,7 +2827,6 @@ webui_init(int xspf)
   webui_static_content("/static",        "src/webui/static");
 
   simpleui_start();
-  extjs_start();
   comet_init();
   webui_api_init();
   vue_init();

@@ -358,7 +358,6 @@ SRCS-2 += \
 SRCS-2 += \
 	src/webui/webui.c \
 	src/webui/comet.c \
-	src/webui/extjs.c \
 	src/webui/vue.c \
 	src/webui/simpleui.c \
 	src/webui/statedump.c \
@@ -762,9 +761,6 @@ FORCE:
 ifeq ($(filter clean distclean, $(MAKECMDGOALS)),)
 -include $(DEPS)
 endif
-
-# Some hardcoded deps
-src/webui/extjs.c: make_webui
 
 # Include OS specific targets
 include ${ROOTDIR}/support/${OSENV}.mk
