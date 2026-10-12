@@ -7,8 +7,7 @@
  *     + description extracted + rendered.
  *   - Finish click calls wizard/cancel THEN POSTs channels/save
  *     (triggers C-side channels_changed → default-admin-entry
- *     removal, src/wizard.c), then routes to /gui/ (epg). Classic
- *     sends the cancel first too (static/app/wizard.js presave).
+ *     removal, src/wizard.c), then routes to /gui/ (epg).
  *   - Cancel and Save POSTs run sequentially, in that order, and
  *     the save still runs when the cancel fails.
  *   - Finish navigates even when one of the POSTs throws (user

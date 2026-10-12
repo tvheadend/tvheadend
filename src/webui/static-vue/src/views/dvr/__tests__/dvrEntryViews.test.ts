@@ -5,10 +5,9 @@
  * Finished / Failed / Removed — the column sets the three
  * dvr_entry list views hand to the grid.
  *
- * Pins the leading recording-state icon on all three (Classic
- * dvrRowActions, dvr.js:352-373) and the per-row Play icon right
- * after it on Finished (dvr.js:812-823), while Removed has none
- * (the file is gone).
+ * Pins the leading recording-state icon on all three and the
+ * per-row Play icon right after it on Finished, while Removed has
+ * none (the file is gone).
  */
 import { describe, expect, it, vi } from 'vitest'
 import type { Component } from 'vue'

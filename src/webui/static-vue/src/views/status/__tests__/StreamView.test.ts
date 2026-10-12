@@ -43,7 +43,7 @@ describe('StreamView — PID list', () => {
     expect(pids?.format?.([256, 0, 17], {})).toBe('0, 17, 256')
   })
 
-  it('reuses the Classic "all" msgid for a full-mux subscription', () => {
+  it('translates "all" for a full-mux subscription', () => {
     ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { all: 'vše' }
     const pids = gridColumns().find((c) => c.field === 'pids')
     expect(pids?.format?.([0, 65535], {})).toBe('vše')

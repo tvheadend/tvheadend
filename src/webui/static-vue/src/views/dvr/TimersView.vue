@@ -15,17 +15,16 @@
  * create endpoint `dvr/timerec`.
  *
  * Toolbar is the framework default — Add / Edit / Delete with no
- * custom buttons. Mirrors ExtJS dvr.js:1163-1175 which has no
- * custom `tbar:` or `selected:` callback.
+ * custom buttons.
  *
- * Edit list is admin-aware and matches dvr.js:1131-1135 verbatim.
+ * Edit list is admin-aware.
  *
  * Note on `title`: this is an strftime(3) template for the recorded
  * filename (e.g. "Time-%F_%R" → "Time-2026-04-29_20:00"), not a
  * regex like Autorec's title field. Same field name, different
  * semantic.
  *
- * Default sort: name ASC (dvr.js:1177-1179).
+ * Default sort: name ASC.
  */
 import { computed } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
@@ -40,13 +39,13 @@ import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
 
-/* Column set from dvr.js:1176. Smaller than Autorec's — no EPG
- * matching fields, no season/year ranges, no content filters.
+/* Column set. Smaller than Autorec's — no EPG matching fields, no
+ * season/year ranges, no content filters.
  *
  * Every column gets `editable: true`; the framework's
  * `isInlineEditable` filters out unsupported types (multi-
- * select weekdays, etc.). Mirrors Classic's EditorGridPanel
- * which lets every non-rdonly cell edit by default. */
+ * select weekdays, etc.), so every non-rdonly cell of a
+ * supported type is editable. */
 const cols: ColumnDef[] = [
   /* Basic */
   { field: 'enabled', ...TIMEREC_FIELDS.enabled, editable: true },
@@ -75,7 +74,7 @@ const cols: ColumnDef[] = [
 const idnodeClass = useIdnodeClassStore()
 const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrtimerec')))
 
-/* Edit-list segments — match dvr.js:1131-1135 verbatim. */
+/* Edit-list segments. */
 const EDITOR_LIST_BASE = 'name,title,channel,start,stop,weekdays,directory,config_name,comment'
 
 /* Edit list — admin-aware via shared helper. */
@@ -87,8 +86,7 @@ const editList = adminAwareEditList({
 })
 
 /* Editor + delete + Add/Edit/Delete toolbar wiring — see
- * useDvrRulesView.ts. createList = base only (matches ExtJS
- * `add: { params: { list: list } }` at dvr.js:1163-1168). */
+ * useDvrRulesView.ts. createList = base only. */
 const {
   editingUuid,
   editingUuids,

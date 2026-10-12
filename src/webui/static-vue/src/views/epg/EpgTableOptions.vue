@@ -459,7 +459,7 @@ function resetToDefaults() {
     groupField: null,
     groupOrder: props.defaults.groupOrder,
     /* Time window reverts to the configured default ('all' —
-     * matches Classic EPG's unfiltered first-time experience). */
+     * the unfiltered first-time experience). */
     timeWindow: props.defaults.timeWindow,
     /* GLOBAL axes all clear to "no filter" on reset. */
     genre: props.defaults.genre,

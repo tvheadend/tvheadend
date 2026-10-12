@@ -15,13 +15,12 @@
  * `service/mapper/status` on mount so a refresh mid-job lands
  * on the current view (Comet only delivers post-connect events).
  *
- * The configure-and-trigger form does NOT live here. It opens
- * as a modal dialog (`ServiceMapperDialog`) from the Channels
- * and DVB Services grid pages, mirroring Classic's UX where
- * mapping is started from the same grids that produced the
- * services in the first place. Splitting status (this page)
- * from action (the dialog) keeps the Status section's role
- * pure read-only monitoring.
+ * The configure-and-trigger form does NOT live here. It opens as a
+ * modal dialog (`ServiceMapperDialog`) from the Channels and DVB
+ * Services grid pages, so mapping is started from the same grids
+ * that produced the services in the first place. Splitting status
+ * (this page) from action (the dialog) keeps the Status section's
+ * role pure read-only monitoring.
  */
 import { computed, onMounted } from 'vue'
 import { HelpCircle } from 'lucide-vue-next'

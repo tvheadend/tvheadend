@@ -9,23 +9,16 @@
  * delegates the actual view body to the active child route via
  * <router-view>.
  *
- * Tab labels follow the ExtJS sub-tabs (`titleP` in
- * src/webui/static/app/dvr.js), some of them shortened. The ones that
- * match an ExtJS string verbatim (Failed, Autorecs, Timers) got their
- * Classic UI translations when intl/vue was seeded from intl/js.
- *
- * **Per-tab uilevel gate.** ExtJS hides the Removed Recordings sub-
- * tab from non-expert users via `uilevel: 'expert'` on its grid
- * config (dvr.js:988); the tab-panel index shuffle at dvr.js:1207-
- * 1213 confirms this is L2-nav-level visibility, not a per-grid
- * filter. We mirror by adding `requiredLevel` to a tab and filtering
- * the displayed list against the access store's current `uilevel`.
+ * **Per-tab uilevel gate.** The Removed Recordings sub-tab is
+ * hidden from non-expert users. This is L2-nav-level visibility,
+ * not a per-grid filter: a tab carries `requiredLevel` and the
+ * displayed list is filtered against the access store's current
+ * `uilevel`.
  *
  * The level read here is the user's server-pushed `aa_uilevel` (via
  * Comet), NOT the per-grid override that GridSettingsMenu writes.
  * The L2 nav is shown OUTSIDE any specific grid, so per-grid
- * overrides don't apply at this scope. Mirrors ExtJS dvr.js:1207
- * which checks `tvheadend.uilevel`, not `tvheadend.uiviewlevel`.
+ * overrides don't apply at this scope.
  *
  * Direct URL navigation to a level-gated route (e.g. typing
  * /gui/dvr/removed at basic level) is not blocked here — only L2

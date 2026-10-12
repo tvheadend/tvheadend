@@ -23,8 +23,7 @@
  * shape at < 768 px. Header collapses.
  *
  * i18n: every user-facing chrome string in this component goes
- * through `t()`. Strings reuse the ExtJS wizard's literals where
- * possible (translations free); novel strings are marked with
+ * through `t()`; novel strings are marked with
  * `/* i18n: new string *\/`.
  */
 import { computed } from 'vue'

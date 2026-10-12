@@ -5,7 +5,7 @@
  * ConfigurationLayout — verifies the L2 sidebar's tab list filters
  * by capability and uilevel per ADR 0008.
  *
- * Specifically the UI-affordance gates ExtJS uses:
+ * Specifically the UI-affordance gates:
  *   - the DVB Inputs L2 entry is unconditional; `tvadapters` gates
  *     only the TV Adapters L3 tab (tested in DvbInputsLayout)
  *   - `caclient` / `timeshift` capabilities gate L3 entries (tested
@@ -94,8 +94,7 @@ describe('ConfigurationLayout — L2 capability and uilevel gates', () => {
   /* === DVB Inputs L2 is unconditional ===
    * The tvadapters gate moved down to the TV Adapters L3 tab (see
    * DvbInputsLayout) — Networks / Muxes / Services are input-type-
-   * agnostic (IPTV uses them) and must stay reachable, matching ExtJS
-   * tvheadend.js:1154 which gates only the TV adapters tab. */
+   * agnostic (IPTV uses them) and must stay reachable. */
   describe('DVB Inputs L2 (always present)', () => {
     it('shows DVB Inputs even when tvadapters capability is absent', () => {
       const tabs = getTabs(mountWith({ capabilities: [] }))
@@ -114,7 +113,7 @@ describe('ConfigurationLayout — L2 capability and uilevel gates', () => {
    * (emitted when any of CWC / CAPMT / CCCAM / CONSTCW / LINUXDVB_CA
    * is built in). Its level gate flips with `caclient_advanced` —
    * present when `config.caclient_ui == true` (src/main.c:1538):
-   *   caclient only         → Expert-only (Classic default)
+   *   caclient only         → Expert-only (default)
    *   caclient + caclient_advanced → Advanced-or-Expert
    */
   describe('CAs uilevel gate', () => {
