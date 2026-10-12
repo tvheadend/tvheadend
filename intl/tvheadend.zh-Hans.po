@@ -10,16 +10,16 @@
 # Wurenji Wu, 2025
 # chen chen <qwec01@163.com>, 2025
 # herosam gong <herosam.gong@gmail.com>, 2026
-# jiezhao li, 2026
+# gitciu8080, 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-07 02:13+0000\n"
+"POT-Creation-Date: 2026-09-28 02:21+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: jiezhao li, 2026\n"
+"Last-Translator: gitciu8080, 2026\n"
 "Language-Team: Chinese Simplified (https://app.transifex.com/tvheadend/teams/43381/zh-Hans/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -32,7 +32,10 @@ msgid ""
 "\n"
 "For more information please visit the Tvheadend website:\n"
 "https://tvheadend.org\n"
-msgstr "更多信息请访问 Tvheadend 网站：https://tvheadend.org"
+msgstr ""
+"\n"
+"更多信息请访问 Tvheadend 网站：\n"
+"https://tvheadend.org\n"
 
 #: src/input/mpegts/mpegts_network.c:349
 msgid "# Mapped channels"
@@ -84,10 +87,10 @@ msgstr "0.35"
 msgid "1"
 msgstr "1"
 
-#: src/dvr/dvr_db.c:3751 src/dvr/dvr_db.c:3775 src/dvr/dvr_config.c:749
+#: src/dvr/dvr_db.c:3786 src/dvr/dvr_db.c:3810 src/dvr/dvr_config.c:749
 #: src/dvr/dvr_config.c:794 src/dvr/dvr_config.c:813
 msgid "1 day"
-msgstr "1天"
+msgstr "1 天"
 
 #: src/dvr/dvr_config.c:789
 msgid "1 hour"
@@ -97,20 +100,20 @@ msgstr "1 小时"
 msgid "1 minute"
 msgstr "1 分钟"
 
-#: src/dvr/dvr_db.c:3757 src/dvr/dvr_db.c:3781 src/dvr/dvr_config.c:755
+#: src/dvr/dvr_db.c:3792 src/dvr/dvr_db.c:3816 src/dvr/dvr_config.c:755
 #: src/dvr/dvr_config.c:801 src/dvr/dvr_config.c:819
 msgid "1 month"
-msgstr "1月"
+msgstr "1 个月"
 
-#: src/dvr/dvr_db.c:3754 src/dvr/dvr_db.c:3778 src/dvr/dvr_config.c:752
+#: src/dvr/dvr_db.c:3789 src/dvr/dvr_db.c:3813 src/dvr/dvr_config.c:752
 #: src/dvr/dvr_config.c:798 src/dvr/dvr_config.c:816
 msgid "1 week"
-msgstr "1"
+msgstr "1 周"
 
-#: src/dvr/dvr_db.c:3761 src/dvr/dvr_db.c:3785 src/dvr/dvr_config.c:759
+#: src/dvr/dvr_db.c:3796 src/dvr/dvr_db.c:3820 src/dvr/dvr_config.c:759
 #: src/dvr/dvr_config.c:823
 msgid "1 year"
-msgstr "1年"
+msgstr "1 年"
 
 #: src/transcoding/codec/profile_audio_class.c:300
 msgid "1. Language"
@@ -134,7 +137,7 @@ msgstr "12"
 
 #: src/dvr/dvr_config.c:793
 msgid "12 hours"
-msgstr "12小时"
+msgstr "12 小时"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:83
 msgid "13"
@@ -166,22 +169,22 @@ msgstr "2 天"
 
 #: src/dvr/dvr_config.c:790
 msgid "2 hours"
-msgstr "2小时"
+msgstr "2 小时"
 
-#: src/dvr/dvr_db.c:3758 src/dvr/dvr_db.c:3782 src/dvr/dvr_config.c:756
+#: src/dvr/dvr_db.c:3793 src/dvr/dvr_db.c:3817 src/dvr/dvr_config.c:756
 #: src/dvr/dvr_config.c:802 src/dvr/dvr_config.c:820
 msgid "2 months"
-msgstr "2月"
+msgstr "2 个月"
 
-#: src/dvr/dvr_db.c:3755 src/dvr/dvr_db.c:3779 src/dvr/dvr_config.c:753
+#: src/dvr/dvr_db.c:3790 src/dvr/dvr_db.c:3814 src/dvr/dvr_config.c:753
 #: src/dvr/dvr_config.c:799 src/dvr/dvr_config.c:817
 msgid "2 weeks"
-msgstr "2週"
+msgstr "2 周"
 
-#: src/dvr/dvr_db.c:3762 src/dvr/dvr_db.c:3786 src/dvr/dvr_config.c:760
+#: src/dvr/dvr_db.c:3797 src/dvr/dvr_db.c:3821 src/dvr/dvr_config.c:760
 #: src/dvr/dvr_config.c:824
 msgid "2 years"
-msgstr "2年"
+msgstr "2 年"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:796
 msgid "2-Port switch (universal LNB)"
@@ -231,25 +234,25 @@ msgstr "2632 字节"
 msgid "3"
 msgstr "3"
 
-#: src/dvr/dvr_db.c:3752 src/dvr/dvr_db.c:3776 src/dvr/dvr_config.c:750
+#: src/dvr/dvr_db.c:3787 src/dvr/dvr_db.c:3811 src/dvr/dvr_config.c:750
 #: src/dvr/dvr_config.c:796 src/dvr/dvr_config.c:814
 msgid "3 days"
-msgstr "3日"
+msgstr "3 天"
 
-#: src/dvr/dvr_db.c:3759 src/dvr/dvr_db.c:3783 src/dvr/dvr_config.c:757
+#: src/dvr/dvr_db.c:3794 src/dvr/dvr_db.c:3818 src/dvr/dvr_config.c:757
 #: src/dvr/dvr_config.c:803 src/dvr/dvr_config.c:821
 msgid "3 months"
-msgstr "3月"
+msgstr "3 个月"
 
-#: src/dvr/dvr_db.c:3756 src/dvr/dvr_db.c:3780 src/dvr/dvr_config.c:754
+#: src/dvr/dvr_db.c:3791 src/dvr/dvr_db.c:3815 src/dvr/dvr_config.c:754
 #: src/dvr/dvr_config.c:800 src/dvr/dvr_config.c:818
 msgid "3 weeks"
-msgstr "3週"
+msgstr "3 周"
 
-#: src/dvr/dvr_db.c:3763 src/dvr/dvr_db.c:3787 src/dvr/dvr_config.c:761
+#: src/dvr/dvr_db.c:3798 src/dvr/dvr_db.c:3822 src/dvr/dvr_config.c:761
 #: src/dvr/dvr_config.c:825
 msgid "3 years"
-msgstr "3年"
+msgstr "3 年"
 
 #: src/transcoding/codec/profile_audio_class.c:320
 msgid "3. Language"
@@ -279,10 +282,10 @@ msgstr "4端口切换开关（通用高频头）"
 msgid "5"
 msgstr "5"
 
-#: src/dvr/dvr_db.c:3753 src/dvr/dvr_db.c:3777 src/dvr/dvr_config.c:751
+#: src/dvr/dvr_db.c:3788 src/dvr/dvr_db.c:3812 src/dvr/dvr_config.c:751
 #: src/dvr/dvr_config.c:797 src/dvr/dvr_config.c:815
 msgid "5 days"
-msgstr "5日"
+msgstr "5 天"
 
 #: src/satip/server.c:631
 msgid "5264 bytes"
@@ -292,10 +295,10 @@ msgstr "5264 字节"
 msgid "6"
 msgstr "6"
 
-#: src/dvr/dvr_db.c:3760 src/dvr/dvr_db.c:3784 src/dvr/dvr_config.c:758
+#: src/dvr/dvr_db.c:3795 src/dvr/dvr_db.c:3819 src/dvr/dvr_config.c:758
 #: src/dvr/dvr_config.c:822
 msgid "6 months"
-msgstr "6月"
+msgstr "6 个月"
 
 #: src/satip/server.c:635
 msgid "65424 bytes"
@@ -326,15 +329,15 @@ msgstr "9"
 msgid "A"
 msgstr "A"
 
-#: src/dvr/dvr_autorec.c:1228
+#: src/dvr/dvr_autorec.c:1232
 msgid "A channel tag (e.g. a group of channels) to which this rule applies."
 msgstr "此规则适用的频道标签（即一组频道）。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:667
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:683
 msgid "A delay before CAPMT after CAPMT query command (ms)."
 msgstr "CAPMT 查询命令后，CAPMT 前的延迟（毫秒）。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:658
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:674
 msgid "A delay between CAPMT commands (in ms)."
 msgstr "CAPMT 命令之间的延迟（毫秒）。"
 
@@ -551,7 +554,7 @@ msgstr "操作"
 #: src/input/mpegts/satip/satip.c:260
 #: src/input/mpegts/satip/satip_satconf.c:347
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:199
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:608
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:624
 msgid "Active"
 msgstr "活动"
 
@@ -663,7 +666,7 @@ msgstr "创建网络后，对其进行扫描以发现服务。"
 msgid "Age"
 msgstr "年龄"
 
-#: src/dvr/dvr_db.c:5054
+#: src/dvr/dvr_db.c:5089
 msgid "Age Rating"
 msgstr "年龄分级"
 
@@ -696,31 +699,31 @@ msgstr "所有可能导致文件名问题的字符都将替换为下划线。详
 msgid "All lower-case"
 msgstr "全部小写"
 
-#: src/dvr/dvr_autorec.c:1036 src/dvr/dvr_config.c:854
+#: src/dvr/dvr_autorec.c:1040 src/dvr/dvr_config.c:854
 msgid "All: Record if EPG/XMLTV indicates it is a unique programme"
 msgstr "全部：当 EPG/XMLTV 指示为唯一节目时录制"
 
-#: src/dvr/dvr_autorec.c:1042 src/dvr/dvr_config.c:860
+#: src/dvr/dvr_autorec.c:1046 src/dvr/dvr_config.c:860
 msgid "All: Record if different description"
 msgstr "全部：描述不同时录制"
 
-#: src/dvr/dvr_autorec.c:1038 src/dvr/dvr_config.c:856
+#: src/dvr/dvr_autorec.c:1042 src/dvr/dvr_config.c:856
 msgid "All: Record if different episode number"
 msgstr "全部：剧集编号不同时录制"
 
-#: src/dvr/dvr_autorec.c:1040 src/dvr/dvr_config.c:858
+#: src/dvr/dvr_autorec.c:1044 src/dvr/dvr_config.c:858
 msgid "All: Record if different subtitle"
 msgstr "全部：副标题不同时录制"
 
-#: src/dvr/dvr_autorec.c:1048 src/dvr/dvr_config.c:866
+#: src/dvr/dvr_autorec.c:1052 src/dvr/dvr_config.c:866
 msgid "All: Record once per day"
 msgstr "全部：每天录制一次"
 
-#: src/dvr/dvr_autorec.c:1044 src/dvr/dvr_config.c:862
+#: src/dvr/dvr_autorec.c:1048 src/dvr/dvr_config.c:862
 msgid "All: Record once per month"
 msgstr "全部：每月录制一次"
 
-#: src/dvr/dvr_autorec.c:1046 src/dvr/dvr_config.c:864
+#: src/dvr/dvr_autorec.c:1050 src/dvr/dvr_config.c:864
 msgid "All: Record once per week"
 msgstr "全部：每周录制一次"
 
@@ -736,7 +739,7 @@ msgstr "达到\"最大 PID 数量\"限制时允许全部 PID（不进行过滤�
 msgid "Allow control for scaling Up&Down, Up or Down"
 msgstr "允许控制缩放方向：上下、仅上或仅下"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:624
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:640
 msgid "Allow high bitrate mode (CI+ CAMs only)."
 msgstr "允许高码率模式（仅限 CI+ CAM 模块）。"
 
@@ -831,7 +834,7 @@ msgstr ""
 "始终使用旧版 ioctl 读取 linuxdvb 状态（信号强度、SNR、错误计数器）。某些驱动尚不成熟，无法通过新版 v5 linuxdvb API "
 "提供正确的值。"
 
-#: src/dvr/dvr_autorec.c:1272 src/dvr/dvr_autorec.c:1285
+#: src/dvr/dvr_autorec.c:1276 src/dvr/dvr_autorec.c:1289
 msgid ""
 "An event which starts between this \"start after\" and \"start before\" will"
 " be matched (including boundary values)."
@@ -849,10 +852,10 @@ msgstr "匿名化"
 msgid "Anonymize HTSP access"
 msgstr "匿名化 HTSP 访问"
 
-#: src/profile.c:1926 src/dvr/dvr_autorec.c:769 src/dvr/dvr_autorec.c:804
-#: src/dvr/dvr_autorec.c:818 src/dvr/dvr_autorec.c:825
-#: src/dvr/dvr_autorec.c:1003 src/dvr/dvr_autorec.c:1072
-#: src/dvr/dvr_autorec.c:1275 src/dvr/dvr_autorec.c:1288
+#: src/profile.c:1926 src/dvr/dvr_autorec.c:773 src/dvr/dvr_autorec.c:808
+#: src/dvr/dvr_autorec.c:822 src/dvr/dvr_autorec.c:829
+#: src/dvr/dvr_autorec.c:1007 src/dvr/dvr_autorec.c:1076
+#: src/dvr/dvr_autorec.c:1279 src/dvr/dvr_autorec.c:1292
 #: src/dvr/dvr_timerec.c:407
 msgid "Any"
 msgstr "任意"
@@ -949,8 +952,8 @@ msgstr "认证类型"
 msgid "Authority"
 msgstr "监管部门"
 
-#: src/access.c:1512 src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
-#: src/descrambler/capmt.c:2706
+#: src/access.c:1510 src/satip/server.c:618 src/input/mpegts/satip/satip.c:237
+#: src/descrambler/capmt.c:2753
 msgid "Auto"
 msgstr "自动"
 
@@ -962,11 +965,11 @@ msgstr "关闭自动检测"
 msgid "Auto check enabled"
 msgstr "开启自动检测"
 
-#: src/dvr/dvr_db.c:4874
+#: src/dvr/dvr_db.c:4909
 msgid "Auto record"
 msgstr "自动录制"
 
-#: src/dvr/dvr_db.c:4883
+#: src/dvr/dvr_db.c:4918
 msgid "Auto record caption"
 msgstr "自动录制标题"
 
@@ -975,7 +978,7 @@ msgstr "自动录制标题"
 msgid "Auto recording%s%s"
 msgstr "自动录制 %s%s"
 
-#: src/dvr/dvr_db.c:4891
+#: src/dvr/dvr_db.c:4926
 msgid "Auto time record"
 msgstr "自动定时录制"
 
@@ -989,13 +992,13 @@ msgstr "自动映射到频道"
 
 #: src/input/mpegts/mpegts_network.c:243
 msgid "Auto-map EPG source on new channels"
-msgstr ""
+msgstr "为新频道自动映射 EPG 来源"
 
 #: src/service.c:180
 msgid "Automatic checking"
 msgstr "自动检测"
 
-#: src/dvr/dvr_db.c:4884
+#: src/dvr/dvr_db.c:4919
 msgid "Automatic recording caption."
 msgstr "自动录制标题。"
 
@@ -1039,7 +1042,7 @@ msgstr "自动映射由频道组定义的频道。"
 msgid "Automatically name from network"
 msgstr "从网络自动命名"
 
-#: src/dvr/dvr_db.c:4875
+#: src/dvr/dvr_db.c:4910
 msgid "Automatically record."
 msgstr "自动录制。"
 
@@ -1183,7 +1186,7 @@ msgstr "明文与摘要"
 
 #: src/tvhlog.c:140
 msgid "Bouquet"
-msgstr "Bouquet"
+msgstr "频道组"
 
 #: src/channels.c:577
 msgid "Bouquet (auto)"
@@ -1193,15 +1196,15 @@ msgstr "频道组（自动）"
 msgid "Bouquet source."
 msgstr "频道组来源。"
 
-#: src/dvr/dvr_db.c:4943
+#: src/dvr/dvr_db.c:4978
 msgid "Broadcast"
 msgstr "广播"
 
-#: src/dvr/dvr_autorec.c:1239
+#: src/dvr/dvr_autorec.c:1243
 msgid "Broadcast type"
 msgstr "广播类型"
 
-#: src/dvr/dvr_db.c:4944
+#: src/dvr/dvr_db.c:4979
 msgid "Broadcast."
 msgstr "广播。"
 
@@ -1229,7 +1232,7 @@ msgstr ""
 "默认情况下，linuxdvb 的状态读取周期为 1000 毫秒（一秒）。可接受的范围是 250 毫秒到 8000 毫秒。请注意，对于某些硬件或驱动（如 "
 "USB），状态操作会占用过多时间和 CPU。在这种情况下，应增大默认值。对于快速硬件，可以减小此值以根据信号状态更快速地做出重新调谐算法的决策。"
 
-#: src/descrambler/capmt.c:2707
+#: src/descrambler/capmt.c:2754
 msgid "Byte index tag order"
 msgstr "字节索引标签顺序"
 
@@ -1271,11 +1274,11 @@ msgstr "CAID 选择"
 msgid "CAM can decode multiple channels"
 msgstr "CAM 可解密多个频道"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:692
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:708
 msgid "CAM slot number."
 msgstr "CAM 插槽序号。"
 
-#: src/descrambler/capmt.c:2719
+#: src/descrambler/capmt.c:2766
 msgid "CAPMT (Linux Network DVBAPI)"
 msgstr "CAPMT（Linux Network DVBAPI）"
 
@@ -1283,11 +1286,11 @@ msgstr "CAPMT（Linux Network DVBAPI）"
 msgid "CAPMT CA Client"
 msgstr "CAPMT CA 客户端"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:657
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:673
 msgid "CAPMT interval (ms)"
 msgstr "CAPMT 间隔（毫秒）"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:666
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:682
 msgid "CAPMT query interval (ms)"
 msgstr "CAPMT 查询间隔（毫秒）"
 
@@ -1355,7 +1358,7 @@ msgstr "CSA（解扰）"
 msgid "CSA CBC Constant Code Word"
 msgstr "CSA CBC 固定码字"
 
-#: src/descrambler/capmt.c:2751
+#: src/descrambler/capmt.c:2798
 msgid "CW Mode"
 msgstr "CW 模式"
 
@@ -1383,7 +1386,7 @@ msgstr "缓存方案"
 msgid "Callsign"
 msgstr "呼号"
 
-#: src/descrambler/capmt.c:2735
+#: src/descrambler/capmt.c:2782
 msgid "Camd.socket filename / IP Address (TCP mode)"
 msgstr "Camd.socket 文件名 / IP 地址（TCP 模式）"
 
@@ -1399,11 +1402,11 @@ msgstr "动画"
 msgid "Categories: "
 msgstr "分类："
 
-#: src/dvr/dvr_db.c:5019
+#: src/dvr/dvr_db.c:5054
 msgid "Category"
 msgstr "分类"
 
-#: src/dvr/dvr_autorec.c:1115
+#: src/dvr/dvr_autorec.c:1119
 msgid "Category "
 msgstr "分类"
 
@@ -1415,8 +1418,8 @@ msgstr "分类代码 XPath"
 msgid "Change parameters"
 msgstr "变更参数"
 
-#: src/tvhlog.c:137 src/service.c:193 src/dvr/dvr_db.c:4584
-#: src/dvr/dvr_autorec.c:1214 src/dvr/dvr_timerec.c:572
+#: src/tvhlog.c:137 src/service.c:193 src/dvr/dvr_db.c:4619
+#: src/dvr/dvr_autorec.c:1218 src/dvr/dvr_timerec.c:572
 #: src/input/mpegts/mpegts_mux_dvb.c:684
 msgid "Channel"
 msgstr "频道"
@@ -1426,11 +1429,11 @@ msgstr "频道"
 msgid "Channel does not exist"
 msgstr "频道不存在"
 
-#: src/dvr/dvr_db.c:4595
+#: src/dvr/dvr_db.c:4630
 msgid "Channel icon"
 msgstr "频道图标"
 
-#: src/dvr/dvr_db.c:4596
+#: src/dvr/dvr_db.c:4631
 msgid "Channel icon URL."
 msgstr "频道图标 URL。"
 
@@ -1458,7 +1461,7 @@ msgstr "声道布局"
 msgid "Channel mapping options"
 msgstr "频道映射选项"
 
-#: src/dvr/dvr_db.c:4603
+#: src/dvr/dvr_db.c:4638
 msgid "Channel name"
 msgstr "频道名称"
 
@@ -1498,7 +1501,7 @@ msgstr "频道号（启发式）"
 msgid "Channel numbers from"
 msgstr "频道号来自"
 
-#: src/dvr/dvr_autorec.c:1227
+#: src/dvr/dvr_autorec.c:1231
 msgid "Channel tag"
 msgstr "频道标签"
 
@@ -1711,8 +1714,8 @@ msgstr "用于通过外部命令移动卫星天线的命令。"
 #: src/access.c:2009 src/access.c:2355 src/access.c:2494 src/channels.c:1843
 #: src/esfilter.c:703 src/esfilter.c:799 src/esfilter.c:895 src/esfilter.c:990
 #: src/esfilter.c:1098 src/esfilter.c:1181 src/profile.c:344
-#: src/bouquet.c:1338 src/epggrab/channel.c:908 src/dvr/dvr_db.c:5011
-#: src/dvr/dvr_autorec.c:1487 src/dvr/dvr_timerec.c:679
+#: src/bouquet.c:1338 src/epggrab/channel.c:908 src/dvr/dvr_db.c:5046
+#: src/dvr/dvr_autorec.c:1491 src/dvr/dvr_timerec.c:679
 #: src/dvr/dvr_config.c:1170 src/descrambler/caclient.c:319
 msgid "Comment"
 msgstr "注释"
@@ -1892,11 +1895,11 @@ msgstr "内容字符集"
 msgid "Content reference identifier authority."
 msgstr "内容参考标识符权威机构。"
 
-#: src/dvr/dvr_db.c:4926 src/dvr/dvr_autorec.c:1249
+#: src/dvr/dvr_db.c:4961 src/dvr/dvr_autorec.c:1253
 msgid "Content type"
 msgstr "内容类型"
 
-#: src/dvr/dvr_db.c:4927
+#: src/dvr/dvr_db.c:4962
 msgid "Content type."
 msgstr "内容类型。"
 
@@ -1908,11 +1911,11 @@ msgstr "比赛"
 msgid "Continue if descrambling fails"
 msgstr "解扰失败时继续"
 
-#: src/dvr/dvr_autorec.c:1308
+#: src/dvr/dvr_autorec.c:1312
 msgid "Continue recording for x minutes after scheduled stop time"
 msgstr "在计划停止时间后继续录制 x 分钟"
 
-#: src/channels.c:535 src/dvr/dvr_db.c:4558 src/dvr/dvr_config.c:1071
+#: src/channels.c:535 src/dvr/dvr_db.c:4593 src/dvr/dvr_config.c:1071
 msgid "Continue recording for x minutes after scheduled stop time."
 msgstr "在计划停止时间后继续录制 x 分钟。"
 
@@ -1934,7 +1937,7 @@ msgstr "厨艺"
 msgid "Copy"
 msgstr "复制"
 
-#: src/dvr/dvr_db.c:4935
+#: src/dvr/dvr_db.c:4970
 msgid "Copyright year"
 msgstr "版权年份"
 
@@ -2059,15 +2062,15 @@ msgstr "创建基于类型的标签"
 msgid "Created"
 msgstr "创建于"
 
-#: src/dvr/dvr_db.c:4782 src/dvr/dvr_autorec.c:1477 src/dvr/dvr_timerec.c:669
+#: src/dvr/dvr_db.c:4817 src/dvr/dvr_autorec.c:1481 src/dvr/dvr_timerec.c:669
 msgid "Creator"
 msgstr "创建者"
 
-#: src/dvr/dvr_db.c:5028
+#: src/dvr/dvr_db.c:5063
 msgid "Credits"
 msgstr "制作人员"
 
-#: src/dvr/dvr_db.c:5029
+#: src/dvr/dvr_db.c:5064
 msgid "Credits such as cast members"
 msgstr "制作人员，如剧组成员等"
 
@@ -2077,13 +2080,13 @@ msgstr "制作人员："
 
 #: src/tvhlog.c:105 src/input/mpegts/mpegts_mux_sched.c:154
 msgid "Cron"
-msgstr "Cron"
+msgstr "计划任务"
 
 #: src/epggrab.c:456
 msgid "Cron multi-line"
 msgstr "多行计划任务"
 
-#: src/descrambler/capmt.c:2752
+#: src/descrambler/capmt.c:2799
 msgid "CryptoWord mode."
 msgstr "CryptoWord 模式。"
 
@@ -2183,7 +2186,7 @@ msgstr "DVB CAM 客户端"
 msgid "DVB CSA (descrambling) Tables"
 msgstr "DVB CSA（解扰）表"
 
-#: src/dvr/dvr_db.c:4834
+#: src/dvr/dvr_db.c:4869
 msgid "DVB EPG ID"
 msgstr "DVB EPG ID"
 
@@ -2281,9 +2284,9 @@ msgstr "DVB-T2"
 
 #: src/access.c:1427
 msgid "DVR"
-msgstr "DVR"
+msgstr "录像"
 
-#: src/dvr/dvr_autorec.c:1132
+#: src/dvr/dvr_autorec.c:1136
 msgid "DVR - Auto-recording (Autorecs)"
 msgstr "录像 - 自动录制（自动录制规则）"
 
@@ -2299,8 +2302,8 @@ msgstr "录像 - 定时录制（定时器）"
 msgid "DVR Inotify"
 msgstr "录像 Inotify"
 
-#: src/dvr/dvr_db.c:3750 src/dvr/dvr_db.c:3774 src/dvr/dvr_db.c:4761
-#: src/dvr/dvr_autorec.c:1450 src/dvr/dvr_timerec.c:650
+#: src/dvr/dvr_db.c:3785 src/dvr/dvr_db.c:3809 src/dvr/dvr_db.c:4796
+#: src/dvr/dvr_autorec.c:1454 src/dvr/dvr_timerec.c:650
 msgid "DVR configuration"
 msgstr "录像配置"
 
@@ -2316,11 +2319,11 @@ msgstr "录像配置"
 msgid "DVR entry not found"
 msgstr "未找到录像条目"
 
-#: src/dvr/dvr_db.c:4733 src/dvr/dvr_autorec.c:1422 src/dvr/dvr_timerec.c:640
+#: src/dvr/dvr_db.c:4768 src/dvr/dvr_autorec.c:1426 src/dvr/dvr_timerec.c:640
 msgid "DVR file retention period"
 msgstr "录像文件保留期"
 
-#: src/dvr/dvr_db.c:4723 src/dvr/dvr_autorec.c:1412 src/dvr/dvr_timerec.c:630
+#: src/dvr/dvr_db.c:4758 src/dvr/dvr_autorec.c:1416 src/dvr/dvr_timerec.c:630
 msgid "DVR log retention"
 msgstr "录像日志保留"
 
@@ -2388,15 +2391,15 @@ msgstr "录像-即将/当前"
 msgid "Dance"
 msgstr "舞蹈"
 
-#: src/access.c:1511
+#: src/access.c:1512
 msgid "Dark"
-msgstr ""
+msgstr "深色"
 
 #: src/dvr/dvr_config.c:1102
 msgid "Data error threshold for failed recordings (0=off)"
 msgstr "失败录像的数据错误阈值（0=关闭）"
 
-#: src/dvr/dvr_db.c:4825
+#: src/dvr/dvr_db.c:4860
 msgid "Data errors"
 msgstr "数据错误"
 
@@ -2428,11 +2431,11 @@ msgstr "EPG 数据上次更新日期（空中抓取器不设置）。"
 msgid "Days of Week"
 msgstr "星期"
 
-#: src/dvr/dvr_autorec.c:1319
+#: src/dvr/dvr_autorec.c:1323
 msgid "Days of the week to which the rule should apply."
 msgstr "规则应适用的星期几。"
 
-#: src/dvr/dvr_autorec.c:1318
+#: src/dvr/dvr_autorec.c:1322
 msgid "Days of week"
 msgstr "星期"
 
@@ -2471,7 +2474,7 @@ msgid "Debugging"
 msgstr "调试"
 
 #: src/access.c:1487 src/access.c:1499 src/config.c:2099 src/profile.c:334
-#: src/dvr/dvr_db.c:3736 src/transcoding/codec/profile_video_class.c:59
+#: src/dvr/dvr_db.c:3771 src/transcoding/codec/profile_video_class.c:59
 msgid "Default"
 msgstr "默认"
 
@@ -2497,7 +2500,7 @@ msgstr "默认语言"
 msgid "Default language."
 msgstr "默认语言。"
 
-#: src/http.c:709
+#: src/http.c:715
 msgid "Default login"
 msgstr "默认登录"
 
@@ -2580,7 +2583,7 @@ msgstr "解扰器缓冲（TS 包数量）"
 msgid "Descrambling timeout (ms)"
 msgstr "解扰超时（毫秒）"
 
-#: src/dvr/dvr_db.c:4684 src/dvr/dvr_db.c:4692
+#: src/dvr/dvr_db.c:4719 src/dvr/dvr_db.c:4727
 #: src/transcoding/codec/profile_class.c:266
 msgid "Description"
 msgstr "描述"
@@ -2598,7 +2601,7 @@ msgid "Device model"
 msgstr "设备型号"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:159
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:683
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:699
 msgid "Device path"
 msgstr "设备路径"
 
@@ -2633,11 +2636,11 @@ msgstr "摘要/Digest 访问身份验证是一种安全权衡。它旨在取代�
 msgid "Digest hash type"
 msgstr "Digest 哈希类型"
 
-#: src/tvhlog.c:151 src/dvr/dvr_db.c:4484
+#: src/tvhlog.c:151 src/dvr/dvr_db.c:4519
 msgid "Digital Video Recorder"
 msgstr "录像机"
 
-#: src/dvr/dvr_db.c:4801 src/dvr/dvr_autorec.c:1159 src/dvr/dvr_timerec.c:561
+#: src/dvr/dvr_db.c:4836 src/dvr/dvr_autorec.c:1163 src/dvr/dvr_timerec.c:561
 msgid "Directory"
 msgstr "目录"
 
@@ -2652,7 +2655,7 @@ msgstr "目录覆盖。覆盖录像配置中指定的子目录规则，将此条
 msgid "Directory permissions (octal, e.g. 0775)"
 msgstr "目录权限（八进制，例：0775）"
 
-#: src/dvr/dvr_db.c:4802
+#: src/dvr/dvr_db.c:4837
 msgid "Directory used by the entry."
 msgstr "此条目使用的目录。"
 
@@ -2786,19 +2789,19 @@ msgstr "不在文件名中包括标题"
 msgid "Don't keep"
 msgstr "不保持"
 
-#: src/dvr/dvr_db.c:4850
+#: src/dvr/dvr_db.c:4885
 msgid "Don't re-record"
 msgstr "不重新录制"
 
-#: src/dvr/dvr_db.c:4851
+#: src/dvr/dvr_db.c:4886
 msgid "Don't re-record if recording fails."
 msgstr "不要在录制失败时重新录制。"
 
-#: src/dvr/dvr_db.c:4843
+#: src/dvr/dvr_db.c:4878
 msgid "Don't re-schedule if recording fails."
 msgstr "不要在录制失败时重新计划。"
 
-#: src/dvr/dvr_db.c:4842
+#: src/dvr/dvr_db.c:4877
 msgid "Don't reschedule"
 msgstr "不重新计划"
 
@@ -2818,7 +2821,7 @@ msgstr "戏剧"
 msgid "Drop \"fe=\" parameter"
 msgstr "丢弃 \"fe=\" 属性"
 
-#: src/dvr/dvr_autorec.c:1399 src/dvr/dvr_config.c:1492
+#: src/dvr/dvr_autorec.c:1403 src/dvr/dvr_config.c:1492
 msgid "Duplicate handling"
 msgstr "复制操作"
 
@@ -3146,7 +3149,7 @@ msgstr "启用/禁用该条目的 EPG 数据。"
 msgid "Enable/disable LNA."
 msgstr "启用/禁用低噪放。"
 
-#: src/dvr/dvr_autorec.c:1145
+#: src/dvr/dvr_autorec.c:1149
 msgid "Enable/disable auto-rec rule."
 msgstr "启用/禁用自动录制规则。"
 
@@ -3221,11 +3224,11 @@ msgstr "启用/禁用频道包。"
 msgid "Enable/disable the channel."
 msgstr "启用/禁用频道。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:616
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:632
 msgid "Enable/disable the device."
 msgstr "启用/禁用设备。"
 
-#: src/access.c:2301 src/access.c:2478 src/dvr/dvr_db.c:4497
+#: src/access.c:2301 src/access.c:2478 src/dvr/dvr_db.c:4532
 #: src/dvr/dvr_timerec.c:537 src/input/mpegts/mpegts_mux_sched.c:139
 msgid "Enable/disable the entry."
 msgstr "启用/禁用该条目。"
@@ -3250,14 +3253,14 @@ msgstr "启用/禁用调谐器/适配器。"
 #: src/channels.c:421 src/channels.c:1775 src/service.c:172
 #: src/imagecache.c:90 src/esfilter.c:609 src/profile.c:324 src/bouquet.c:1212
 #: src/ratinglabels.c:634 src/epggrab/module.c:171 src/epggrab/channel.c:784
-#: src/dvr/dvr_db.c:4496 src/dvr/dvr_autorec.c:1144 src/dvr/dvr_timerec.c:536
+#: src/dvr/dvr_db.c:4531 src/dvr/dvr_autorec.c:1148 src/dvr/dvr_timerec.c:536
 #: src/dvr/dvr_config.c:966 src/descrambler/caclient.c:302
 #: src/input/mpegts/mpegts_input.c:239 src/input/mpegts/mpegts_network.c:191
 #: src/input/mpegts/mpegts_mux.c:535 src/input/mpegts/mpegts_mux_sched.c:138
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1547
 #: src/input/mpegts/satip/satip_satconf.c:354 src/timeshift.c:194
 #: src/transcoding/codec/profile_class.c:301
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:615
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:631
 msgid "Enabled"
 msgstr "已启用"
 
@@ -3342,7 +3345,7 @@ msgstr "环境"
 msgid "Environment (pipe)"
 msgstr "环境（管道）"
 
-#: src/dvr/dvr_db.c:4119 src/dvr/dvr_db.c:4953
+#: src/dvr/dvr_db.c:4154 src/dvr/dvr_db.c:4988
 msgid "Episode"
 msgstr "剧集"
 
@@ -3351,15 +3354,15 @@ msgstr "剧集"
 msgid "Episode %d"
 msgstr "第 %d 集"
 
-#: src/dvr/dvr_db.c:4613
+#: src/dvr/dvr_db.c:4648
 msgid "Episode image"
 msgstr "剧集图像"
 
-#: src/dvr/dvr_db.c:4614
+#: src/dvr/dvr_db.c:4649
 msgid "Episode image."
 msgstr "剧集图像。"
 
-#: src/dvr/dvr_db.c:4954
+#: src/dvr/dvr_db.c:4989
 msgid "Episode number/ID."
 msgstr "剧集编号/ID。"
 
@@ -3375,15 +3378,15 @@ msgstr "EpisodeLink XPath 回退"
 msgid "Equestrian"
 msgstr "马术"
 
-#: src/dvr/dvr_db.c:4809
+#: src/dvr/dvr_db.c:4844
 msgid "Error code"
 msgstr "错误代码"
 
-#: src/dvr/dvr_db.c:4810
+#: src/dvr/dvr_db.c:4845
 msgid "Error code of entry."
 msgstr "条目的错误代码。"
 
-#: src/dvr/dvr_db.c:4817
+#: src/dvr/dvr_db.c:4852
 msgid "Errors"
 msgstr "错误"
 
@@ -3401,7 +3404,7 @@ msgstr "偶数密钥。"
 msgid "Event does not exist"
 msgstr "事件不存在"
 
-#: src/dvr/dvr_autorec.c:934
+#: src/dvr/dvr_autorec.c:938
 msgid "Every day"
 msgstr "每天"
 
@@ -3433,15 +3436,15 @@ msgstr "过期时间"
 msgid "Exported Tuner(s) Settings"
 msgstr "导出的调谐器设置"
 
-#: src/descrambler/capmt.c:2695
+#: src/descrambler/capmt.c:2742
 msgid "Extended (OE 2.2)"
 msgstr "扩展 (OE 2.2)"
 
-#: src/descrambler/capmt.c:2696
+#: src/descrambler/capmt.c:2743
 msgid "Extended (OE 2.2), mode follows key"
 msgstr "扩展 (OE 2.2)，模式跟随密钥"
 
-#: src/descrambler/capmt.c:2697
+#: src/descrambler/capmt.c:2744
 msgid "Extended DES (OE 2.0)"
 msgstr "扩展 DES (OE 2.0)"
 
@@ -3489,23 +3492,23 @@ msgstr "外部旋转器命令"
 msgid "Extra arguments"
 msgstr "额外参数"
 
-#: src/dvr/dvr_db.c:5020
+#: src/dvr/dvr_db.c:5055
 msgid "Extra categories, typically from xmltv"
 msgstr "额外分类，通常来自 xmltv"
 
-#: src/dvr/dvr_db.c:5038
+#: src/dvr/dvr_db.c:5073
 msgid "Extra keywords, typically from xmltv"
 msgstr "额外关键词，通常来自 xmltv"
 
-#: src/dvr/dvr_autorec.c:1297
+#: src/dvr/dvr_autorec.c:1301
 msgid "Extra start time"
 msgstr "额外开始时间"
 
-#: src/dvr/dvr_autorec.c:1307
+#: src/dvr/dvr_autorec.c:1311
 msgid "Extra stop time"
 msgstr "额外停止时间"
 
-#: src/dvr/dvr_db.c:4700
+#: src/dvr/dvr_db.c:4735
 msgid "Extra text"
 msgstr "额外文本"
 
@@ -3565,11 +3568,11 @@ msgstr "打开图像失败"
 msgid "Failed view"
 msgstr "失败视图"
 
-#: src/dvr/dvr_db.c:4623
+#: src/dvr/dvr_db.c:4658
 msgid "Fanart image"
 msgstr "粉丝艺术图像"
 
-#: src/dvr/dvr_db.c:4624
+#: src/dvr/dvr_db.c:4659
 msgid "Fanart image."
 msgstr "粉丝艺术图像。"
 
@@ -3624,15 +3627,15 @@ msgstr "文件未创建"
 msgid "File permissions (octal, e.g. 0664)"
 msgstr "文件权限（八进制，例如 0664）"
 
-#: src/dvr/dvr_db.c:4858
+#: src/dvr/dvr_db.c:4893
 msgid "File removed"
 msgstr "文件 已移除"
 
-#: src/dvr/dvr_db.c:4970
+#: src/dvr/dvr_db.c:5005
 msgid "File size"
 msgstr "文件大小"
 
-#: src/dvr/dvr_db.c:4793
+#: src/dvr/dvr_db.c:4828
 msgid "Filename"
 msgstr "文件名"
 
@@ -3640,7 +3643,7 @@ msgstr "文件名"
 msgid "Filename (including path)"
 msgstr "文件名（含路径）"
 
-#: src/dvr/dvr_db.c:4794
+#: src/dvr/dvr_db.c:4829
 msgid "Filename used by the entry."
 msgstr "条目使用的文件名。"
 
@@ -3672,7 +3675,7 @@ msgstr "美术"
 msgid "Finished"
 msgstr "已完成"
 
-#: src/dvr/dvr_db.c:5003
+#: src/dvr/dvr_db.c:5038
 msgid "First aired"
 msgstr "首播日期"
 
@@ -3831,7 +3834,7 @@ msgstr "强制确定"
 msgid "Foreign countries"
 msgstr "国外"
 
-#: src/dvr/dvr_db.c:3765 src/dvr/dvr_db.c:3789 src/dvr/dvr_config.c:763
+#: src/dvr/dvr_db.c:3800 src/dvr/dvr_db.c:3824 src/dvr/dvr_config.c:763
 #: src/dvr/dvr_config.c:827
 msgid "Forever"
 msgstr "永久"
@@ -3886,7 +3889,7 @@ msgid "Free-form field, enter whatever you like here."
 msgstr "自由格式字段，在此输入任意内容。"
 
 #: src/access.c:2010 src/access.c:2356 src/access.c:2493 src/channels.c:1844
-#: src/dvr/dvr_db.c:5012 src/dvr/dvr_autorec.c:1488 src/dvr/dvr_timerec.c:680
+#: src/dvr/dvr_db.c:5047 src/dvr/dvr_autorec.c:1492 src/dvr/dvr_timerec.c:680
 msgid "Free-form text field, enter whatever you like here."
 msgstr "自由格式文本字段，在此输入任意内容。"
 
@@ -3923,7 +3926,7 @@ msgstr "频率 (MHz)"
 msgid "Frequency (kHz)"
 msgstr "频率 (kHz)"
 
-#: src/dvr/dvr_autorec.c:916
+#: src/dvr/dvr_autorec.c:920
 msgid "Fri"
 msgstr "周五"
 
@@ -3944,7 +3947,7 @@ msgstr "前端路径"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:289
 msgid "Full DiseqC"
-msgstr "Full DiSEqC"
+msgstr "完整 DiSEqC"
 
 #: src/input/mpegts/satip/satip.c:296
 msgid "Full mux RX mode supported"
@@ -3957,7 +3960,7 @@ msgid ""
 msgstr ""
 "Full 路径 to an 图标 used to depict the 标签. This can be a 电视 网络 logotype, etc."
 
-#: src/dvr/dvr_autorec.c:1196
+#: src/dvr/dvr_autorec.c:1200
 msgid "Full-text"
 msgstr "全文"
 
@@ -4007,11 +4010,11 @@ msgstr "通用"
 msgid "Generic options"
 msgstr "通用选项"
 
-#: src/dvr/dvr_db.c:5046
+#: src/dvr/dvr_db.c:5081
 msgid "Genre"
 msgstr "分类"
 
-#: src/dvr/dvr_db.c:5047
+#: src/dvr/dvr_db.c:5082
 msgid "Genre of program"
 msgstr "Genre of 节目"
 
@@ -4186,11 +4189,11 @@ msgstr ""
 msgid "Hierarchy"
 msgstr "层级"
 
-#: src/profile.c:256 src/dvr/dvr_db.c:3738
+#: src/profile.c:256 src/dvr/dvr_db.c:3773
 msgid "High"
 msgstr "高"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:623
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:639
 msgid "High bitrate mode (CI+ CAMs only)"
 msgstr "High 码率 模式 (CI+ CAMs only)"
 
@@ -4245,7 +4248,7 @@ msgstr "How frequently the upstream provider is checked for 更改."
 msgid "How to handle duplicate recordings."
 msgstr "How to handle duplicate 录像."
 
-#: src/dvr/dvr_autorec.c:1400
+#: src/dvr/dvr_autorec.c:1404
 msgid ""
 "How to handle duplicate recordings. The 'Use DVR Configuration' value (the "
 "default) inherits the settings from the assigned DVR configuration"
@@ -4263,7 +4266,7 @@ msgstr "ID of the 网络."
 
 #: src/input/mpegts/mpegts_mux.c:401
 msgid "IDLE"
-msgstr "IDLE"
+msgstr "空闲"
 
 #: src/input/mpegts/mpegts_mux.c:403
 msgid "IDLE PEND"
@@ -4271,7 +4274,7 @@ msgstr "空闲等待"
 
 #: src/input/mpegts/mpegts_mux.c:413
 msgid "IGNORE"
-msgstr "IGNORE"
+msgstr "忽略"
 
 #: src/input/mpegts/satip/satip.c:415
 #: src/input/mpegts/tvhdhomerun/tvhdhomerun.c:213
@@ -4622,7 +4625,7 @@ msgstr "立即"
 msgid "Immediately abort"
 msgstr "Immediately 中止"
 
-#: src/profile.c:255 src/dvr/dvr_db.c:3737
+#: src/profile.c:255 src/dvr/dvr_db.c:3772
 msgid "Important"
 msgstr "重要"
 
@@ -4711,7 +4714,7 @@ msgid ""
 "Initial value of the channel option \"Automatically map EPG source\" for "
 "channels created from this network. Changing this setting does not affect "
 "existing channels."
-msgstr ""
+msgstr "对于从该网络创建的频道，其频道选项“自动映射 EPG 来源”的初始值。更改此设置不会影响现有频道。"
 
 #: src/input.c:29
 msgid "Input base"
@@ -4844,7 +4847,7 @@ msgstr "保活间隔（秒）"
 msgid "Keys"
 msgstr "密钥"
 
-#: src/dvr/dvr_db.c:5037
+#: src/dvr/dvr_db.c:5072
 msgid "Keyword"
 msgstr "关键词"
 
@@ -4942,11 +4945,11 @@ msgstr "对象达到的最大大小。"
 msgid "Last hit"
 msgstr "最后命中"
 
-#: src/dvr/dvr_db.c:4743
+#: src/dvr/dvr_db.c:4778
 msgid "Last played position"
 msgstr "最后 played position"
 
-#: src/dvr/dvr_db.c:4744
+#: src/dvr/dvr_db.c:4779
 msgid "Last played position when the recording isn't fully watched yet."
 msgstr "最后 played position when the 录像 isn't fully watched yet."
 
@@ -5015,9 +5018,9 @@ msgstr "Layer C: 时间 interleaving"
 msgid "Leisure hobbies"
 msgstr "休闲爱好"
 
-#: src/access.c:1510
+#: src/access.c:1511
 msgid "Light"
-msgstr ""
+msgstr "浅色"
 
 #: src/channels.c:495
 msgid "Limit EPG (days)"
@@ -5057,7 +5060,7 @@ msgstr "Limited/limit 扫描 to this 网络 ID only."
 msgid "Linked input"
 msgstr "链接输入"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:601
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:617
 msgid "Linux DVB CA"
 msgstr "Linux DVB 条件接收"
 
@@ -5089,7 +5092,7 @@ msgstr "列表 of allowed IPv4 or IPv6 hosts or 网络 (comma-separated)."
 msgid "List subsystems"
 msgstr "列表 subsystems"
 
-#: src/descrambler/capmt.c:2743
+#: src/descrambler/capmt.c:2790
 msgid "Listen / Connect port"
 msgstr "监听/连接端口"
 
@@ -5129,31 +5132,31 @@ msgstr "Local 频道 编号"
 msgid "Local discovery IP address"
 msgstr "Local discovery IP 地址"
 
-#: src/dvr/dvr_autorec.c:1056 src/dvr/dvr_config.c:874
+#: src/dvr/dvr_autorec.c:1060 src/dvr/dvr_config.c:874
 msgid "Local: Record if different description"
 msgstr "Local: 录制 if different 描述"
 
-#: src/dvr/dvr_autorec.c:1050 src/dvr/dvr_config.c:868
+#: src/dvr/dvr_autorec.c:1054 src/dvr/dvr_config.c:868
 msgid "Local: Record if different episode number"
 msgstr "Local: 录制 if different 剧集 编号"
 
-#: src/dvr/dvr_autorec.c:1054 src/dvr/dvr_config.c:872
+#: src/dvr/dvr_autorec.c:1058 src/dvr/dvr_config.c:872
 msgid "Local: Record if different subtitle"
 msgstr "Local: 录制 if different 副标题"
 
-#: src/dvr/dvr_autorec.c:1052 src/dvr/dvr_config.c:870
+#: src/dvr/dvr_autorec.c:1056 src/dvr/dvr_config.c:870
 msgid "Local: Record if different title"
 msgstr "Local: 录制 if different 标题"
 
-#: src/dvr/dvr_autorec.c:1062 src/dvr/dvr_config.c:880
+#: src/dvr/dvr_autorec.c:1066 src/dvr/dvr_config.c:880
 msgid "Local: Record once per day"
 msgstr "Local: 录制 once per day"
 
-#: src/dvr/dvr_autorec.c:1058 src/dvr/dvr_config.c:876
+#: src/dvr/dvr_autorec.c:1062 src/dvr/dvr_config.c:876
 msgid "Local: Record once per month"
 msgstr "Local: 录制 once per month"
 
-#: src/dvr/dvr_autorec.c:1060 src/dvr/dvr_config.c:878
+#: src/dvr/dvr_autorec.c:1064 src/dvr/dvr_config.c:878
 msgid "Local: Record once per week"
 msgstr "Local: 录制 once per week"
 
@@ -5194,11 +5197,11 @@ msgstr "登录 username."
 msgid "Login/Logout"
 msgstr "登录/退出"
 
-#: src/webui/comet.c:407
+#: src/webui/comet.c:422
 msgid "Loglevel debug: disabled"
 msgstr "Loglevel 调试: 已禁用"
 
-#: src/webui/comet.c:405
+#: src/webui/comet.c:420
 msgid "Loglevel debug: enabled"
 msgstr "Loglevel 调试: 已启用"
 
@@ -5206,7 +5209,7 @@ msgstr "Loglevel 调试: 已启用"
 msgid "Logout"
 msgstr "退出登录"
 
-#: src/profile.c:258 src/dvr/dvr_db.c:3740
+#: src/profile.c:258 src/dvr/dvr_db.c:3775
 msgid "Low"
 msgstr "低"
 
@@ -5306,7 +5309,7 @@ msgstr "维护可用存储空间（MiB）"
 msgid "Maintain used storage space in MiB (0=disabled)"
 msgstr "Maintain used storage space in MiB (0=已禁用)"
 
-#: src/dvr/dvr_db.c:3788 src/dvr/dvr_config.c:762
+#: src/dvr/dvr_db.c:3823 src/dvr/dvr_config.c:762
 msgid "Maintained space"
 msgstr "维护空间"
 
@@ -5403,11 +5406,11 @@ msgstr "主调谐器"
 
 #: src/profile.c:2312
 msgid "Matroska (mkv)/av-lib"
-msgstr "Matroska (MKV)/av-lib"
+msgstr "Matroska (mkv)/av-lib"
 
 #: src/profile.c:1822 src/profile.c:2307
 msgid "Matroska (mkv)/built-in"
-msgstr "Matroska (MKV)/built-in"
+msgstr "Matroska (mkv)/内置"
 
 #: src/profile.c:1829
 msgid "Matroska Specific Settings"
@@ -5444,7 +5447,7 @@ msgstr "Maximum # 输入 流"
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:144
 #: src/input/mpegts/satip/satip.c:314
 msgid "Maximum PIDs"
-msgstr "Maximum PID"
+msgstr "最大 PID 数量"
 
 #: src/timeshift.c:252
 msgid "Maximum RAM size (MB)"
@@ -5470,11 +5473,11 @@ msgstr ""
 msgid "Maximum bandwidth (Kbps)"
 msgstr "Maximum 带宽 (Kbps)"
 
-#: src/dvr/dvr_autorec.c:1432
+#: src/dvr/dvr_autorec.c:1436
 msgid "Maximum count (0=default)"
 msgstr "Maximum count (0=默认)"
 
-#: src/dvr/dvr_autorec.c:1341
+#: src/dvr/dvr_autorec.c:1345
 msgid "Maximum duration"
 msgstr "最大时长"
 
@@ -5489,17 +5492,17 @@ msgstr "设置发送到 SAT>IP 机顶盒的 PID 命令的最大字符长度。"
 
 #: src/input/mpegts/satip/satip.c:323
 msgid "Maximum length of PIDs"
-msgstr "Maximum length of PID"
+msgstr "PID 的最大长度"
 
 #: src/timeshift.c:222
 msgid "Maximum period (mins)"
 msgstr "最大周期（分钟）"
 
-#: src/dvr/dvr_autorec.c:1441
+#: src/dvr/dvr_autorec.c:1445
 msgid "Maximum schedules limit (0=default)"
 msgstr "Maximum schedules limit (0=默认)"
 
-#: src/dvr/dvr_autorec.c:1378
+#: src/dvr/dvr_autorec.c:1382
 msgid "Maximum season"
 msgstr "最大季数"
 
@@ -5515,7 +5518,7 @@ msgstr "Maximum 时间 to wait (in seconds) for a 流 before a timeout."
 msgid "Maximum timeout (seconds)"
 msgstr "最大超时（秒）"
 
-#: src/dvr/dvr_autorec.c:1361
+#: src/dvr/dvr_autorec.c:1365
 msgid "Maximum year"
 msgstr "最大年份"
 
@@ -5539,7 +5542,7 @@ msgstr "合并同名"
 msgid "Merge services with the same name into one channel."
 msgstr "Merge 服务 with the same 名称 into one 频道."
 
-#: src/dvr/dvr_autorec.c:1204
+#: src/dvr/dvr_autorec.c:1208
 msgid "Merge-text"
 msgstr "合并文本"
 
@@ -5559,7 +5562,7 @@ msgstr "Mime 类型 字符串 (for example '视频/mp2t')."
 msgid "Minimal channel number"
 msgstr "最小频道号"
 
-#: src/dvr/dvr_autorec.c:1330
+#: src/dvr/dvr_autorec.c:1334
 msgid "Minimum duration"
 msgstr "最小时长"
 
@@ -5567,11 +5570,11 @@ msgstr "最小时长"
 msgid "Minimum rotor time (seconds)"
 msgstr "Minimum rotor 时间 (seconds)"
 
-#: src/dvr/dvr_autorec.c:1370
+#: src/dvr/dvr_autorec.c:1374
 msgid "Minimum season"
 msgstr "最小季数"
 
-#: src/dvr/dvr_autorec.c:1352
+#: src/dvr/dvr_autorec.c:1356
 msgid "Minimum year"
 msgstr "最小年份"
 
@@ -5584,7 +5587,7 @@ msgstr "Miscellaneous 设置"
 msgid "Missing In PAT/SDT"
 msgstr "PAT/SDT 中缺失"
 
-#: src/descrambler/capmt.c:2725
+#: src/descrambler/capmt.c:2772
 msgid "Mode"
 msgstr "模式"
 
@@ -5627,7 +5630,7 @@ msgstr "模块 ID"
 msgid "Module ID used to grab EPG data."
 msgstr "Module ID used to grab EPG 数据."
 
-#: src/dvr/dvr_autorec.c:912
+#: src/dvr/dvr_autorec.c:916
 msgid "Mon"
 msgstr "周一"
 
@@ -5737,7 +5740,7 @@ msgstr "NAT 设置"
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:69
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:94
 msgid "NONE"
-msgstr "NONE"
+msgstr "无"
 
 #: src/tvhlog.c:211
 msgid "NVENC"
@@ -5745,7 +5748,7 @@ msgstr "NVENC"
 
 #: src/channels.c:439 src/channels.c:1791 src/bouquet.c:1268
 #: src/memoryinfo.c:46 src/epggrab/module.c:152 src/epggrab/channel.c:697
-#: src/epggrab/channel.c:839 src/dvr/dvr_autorec.c:1152
+#: src/epggrab/channel.c:839 src/dvr/dvr_autorec.c:1156
 #: src/dvr/dvr_timerec.c:544 src/input/mpegts/mpegts_input.c:272
 #: src/input/mpegts/mpegts_mux.c:585
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1553
@@ -5754,11 +5757,11 @@ msgstr "NVENC"
 msgid "Name"
 msgstr "名称"
 
-#: src/dvr/dvr_db.c:4996
+#: src/dvr/dvr_db.c:5031
 msgid "Name (or date) of program the entry is a rerun of."
 msgstr "名称 (or 日期) of 节目 the 条目 is a rerun of."
 
-#: src/dvr/dvr_db.c:4604
+#: src/dvr/dvr_db.c:4639
 msgid "Name of channel the entry recorded from."
 msgstr "名称 of 频道 the 条目 recorded from."
 
@@ -5941,15 +5944,15 @@ msgstr "网络"
 msgid "Never"
 msgstr "从不"
 
-#: src/dvr/dvr_autorec.c:1076
+#: src/dvr/dvr_autorec.c:1080
 msgid "New / premiere"
 msgstr "新/首映"
 
-#: src/dvr/dvr_autorec.c:1074
+#: src/dvr/dvr_autorec.c:1078
 msgid "New / premiere / unknown"
 msgstr "新建 / premiere / unknown"
 
-#: src/http.c:712
+#: src/http.c:718
 msgid "New login"
 msgstr "新建 登录"
 
@@ -6011,7 +6014,7 @@ msgstr "No assigned 适配器"
 msgid "No channel enabled"
 msgstr "No 频道 已启用"
 
-#: src/dvr/dvr_autorec.c:936
+#: src/dvr/dvr_autorec.c:940
 msgid "No days"
 msgstr "无天数"
 
@@ -6027,7 +6030,7 @@ msgstr "No free 适配器"
 msgid "No input detected"
 msgstr "No 输入 detected"
 
-#: src/dvr/dvr_autorec.c:979
+#: src/dvr/dvr_autorec.c:983
 msgid "No rating needed"
 msgstr "无需评分"
 
@@ -6064,7 +6067,7 @@ msgstr "节点子系统"
 msgid "None"
 msgstr "无"
 
-#: src/profile.c:257 src/dvr/dvr_db.c:3739
+#: src/profile.c:257 src/dvr/dvr_db.c:3774
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:233
 msgid "Normal"
 msgstr "正常"
@@ -6097,7 +6100,7 @@ msgstr "未设置"
 msgid "Not set (none or channel configuration)"
 msgstr "未设置 (none or 频道 配置)"
 
-#: src/dvr/dvr_db.c:4464 src/dvr/dvr_autorec.c:811
+#: src/dvr/dvr_db.c:4499 src/dvr/dvr_autorec.c:815
 msgid "Not set (use channel or DVR configuration)"
 msgstr "未设置 (use 频道 or 录像 配置)"
 
@@ -6109,27 +6112,27 @@ msgstr "编号"
 msgid "Number of days to keep recorded files."
 msgstr "编号 of days to 保留 recorded 文件."
 
-#: src/dvr/dvr_db.c:4734
+#: src/dvr/dvr_db.c:4769
 msgid "Number of days to keep the file."
 msgstr "编号 of days to 保留 the 文件."
 
-#: src/dvr/dvr_autorec.c:1423 src/dvr/dvr_timerec.c:641
+#: src/dvr/dvr_autorec.c:1427 src/dvr/dvr_timerec.c:641
 msgid "Number of days to keep the recorded file."
 msgstr "编号 of days to 保留 the recorded 文件."
 
-#: src/dvr/dvr_db.c:4724 src/dvr/dvr_timerec.c:631
+#: src/dvr/dvr_db.c:4759 src/dvr/dvr_timerec.c:631
 msgid "Number of days to retain entry information."
 msgstr "编号 of days to retain 条目 信息."
 
-#: src/dvr/dvr_autorec.c:1413
+#: src/dvr/dvr_autorec.c:1417
 msgid "Number of days to retain information about recording."
 msgstr "编号 of days to retain 信息 about 录像."
 
-#: src/dvr/dvr_db.c:4826
+#: src/dvr/dvr_db.c:4861
 msgid "Number of errors that occurred during recording (Transport errors)."
 msgstr "编号 of errors that occurred during 录像 (传输 errors)."
 
-#: src/dvr/dvr_db.c:4818
+#: src/dvr/dvr_db.c:4853
 msgid "Number of errors that occurred during recording."
 msgstr "编号 of errors that occurred during 录像."
 
@@ -6186,7 +6189,7 @@ msgstr "编号 of seconds to wait for spawn to die."
 msgid "Number of services."
 msgstr "编号 of 服务."
 
-#: src/dvr/dvr_db.c:4753
+#: src/dvr/dvr_db.c:4788
 msgid "Number of times this recording was played."
 msgstr "编号 of times this 录像 was played."
 
@@ -6210,19 +6213,19 @@ msgstr "确定（部分）"
 msgid "OMX"
 msgstr "OMX"
 
-#: src/descrambler/capmt.c:2627
+#: src/descrambler/capmt.c:2674
 msgid "OSCam (rev >= 9095)"
 msgstr "OSCam (版本 >= 9095)"
 
-#: src/descrambler/capmt.c:2621
+#: src/descrambler/capmt.c:2668
 msgid "OSCam TCP (rev >= 9574)"
 msgstr "OSCam TCP (版本 >= 9574)"
 
-#: src/descrambler/capmt.c:2615
+#: src/descrambler/capmt.c:2662
 msgid "OSCam net protocol (rev >= 10389)"
 msgstr "OSCam net 协议 (rev >= 10389)"
 
-#: src/descrambler/capmt.c:2624
+#: src/descrambler/capmt.c:2671
 msgid "OSCam pc-nodmx (rev >= 9756)"
 msgstr "OSCam pc-nodmx (版本 >= 9756)"
 
@@ -6271,7 +6274,7 @@ msgstr "关闭"
 msgid "Offset the mapped channel numbers by x (value here + channel number)."
 msgstr "Offset the mapped 频道 编号 by x (值 here + 频道 编号)."
 
-#: src/descrambler/capmt.c:2630
+#: src/descrambler/capmt.c:2677
 msgid "Older OSCam"
 msgstr "旧版 OSCam"
 
@@ -6280,7 +6283,7 @@ msgstr "旧版 OSCam"
 msgid "On"
 msgstr "开启"
 
-#: src/dvr/dvr_db.c:3764 src/dvr/dvr_config.c:826
+#: src/dvr/dvr_db.c:3799 src/dvr/dvr_config.c:826
 msgid "On file removal"
 msgstr "On 文件 removal"
 
@@ -6310,7 +6313,7 @@ msgstr ""
 "request. 注意, because there is no buffer on the 第一个 request rewinding is not "
 "possible at that point."
 
-#: src/webui/comet.c:403
+#: src/webui/comet.c:418
 msgid "Only admin can watch the realtime log."
 msgstr "Only admin can watch the realtime 日志."
 
@@ -6389,7 +6392,7 @@ msgstr "轨道位置。"
 msgid "Original network ID"
 msgstr "Original 网络 ID"
 
-#: src/descrambler/capmt.c:2726
+#: src/descrambler/capmt.c:2773
 msgid "Oscam mode."
 msgstr "OSCam 模式."
 
@@ -6445,15 +6448,15 @@ msgstr "Override the 配置 using a ':' separated 列表 of key=值 parameters."
 msgid "Override the frontend type."
 msgstr "Override the frontend 类型."
 
-#: src/dvr/dvr_db.c:4772 src/dvr/dvr_autorec.c:1469 src/dvr/dvr_timerec.c:661
+#: src/dvr/dvr_db.c:4807 src/dvr/dvr_autorec.c:1473 src/dvr/dvr_timerec.c:661
 msgid "Owner"
 msgstr "拥有者"
 
-#: src/dvr/dvr_db.c:4773 src/dvr/dvr_timerec.c:662
+#: src/dvr/dvr_db.c:4808 src/dvr/dvr_timerec.c:662
 msgid "Owner of the entry."
 msgstr "Owner of the 条目."
 
-#: src/dvr/dvr_autorec.c:1470
+#: src/dvr/dvr_autorec.c:1474
 msgid "Owner of the rule."
 msgstr "Owner of the 规则."
 
@@ -6472,21 +6475,21 @@ msgstr "PID"
 
 #: src/input/mpegts/satip/satip.c:373
 msgid "PIDs 21 in setup"
-msgstr "PID 21 in setup"
+msgstr "在 SETUP 中使用 PID 21"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:545
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:609
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:181
 #: src/input/mpegts/linuxdvb/linuxdvb_en50494.c:239
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:639
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:655
 msgid "PIN"
 msgstr "PIN"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:648
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:664
 msgid "PIN inquiry match string"
 msgstr "PIN inquiry match 字符串"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:649
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:665
 msgid "PIN inquiry match string."
 msgstr "PIN inquiry match 字符串."
 
@@ -6511,11 +6514,11 @@ msgstr "PLS 代码"
 msgid "PLS mode"
 msgstr "PLS 模式"
 
-#: src/descrambler/capmt.c:2761
+#: src/descrambler/capmt.c:2808
 msgid "PMT Mode"
 msgstr "PMT 模式"
 
-#: src/descrambler/capmt.c:2762
+#: src/descrambler/capmt.c:2809
 msgid "PMT mode."
 msgstr "PMT 模式."
 
@@ -6545,15 +6548,15 @@ msgstr "包积压"
 msgid "Parameters"
 msgstr "参数"
 
-#: src/dvr/dvr_db.c:4908
+#: src/dvr/dvr_db.c:4943
 msgid "Parent entry"
 msgstr "父条目"
 
-#: src/dvr/dvr_db.c:4909
+#: src/dvr/dvr_db.c:4944
 msgid "Parent entry."
 msgstr "父条目。"
 
-#: src/dvr/dvr_db.c:5097
+#: src/dvr/dvr_db.c:5132
 msgid "Parental rating label UUID."
 msgstr "家长控制评分标签 UUID。"
 
@@ -6645,7 +6648,7 @@ msgstr ""
 "to CONF_DIR/时移/buffer."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_adapter.c:160
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:684
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:700
 msgid "Path used by the device."
 msgstr "路径 used by the 设备."
 
@@ -6765,7 +6768,7 @@ msgstr "端口"
 msgid "Port to connect to."
 msgstr "端口 to connect to."
 
-#: src/descrambler/capmt.c:2744
+#: src/descrambler/capmt.c:2791
 msgid "Port to listen on or to connect to."
 msgstr "端口 to listen on or to connect to."
 
@@ -6796,7 +6799,7 @@ msgstr "发送到外部命令的位置"
 msgid "Post-processor command"
 msgstr "后处理器命令"
 
-#: src/channels.c:534 src/dvr/dvr_db.c:4557 src/dvr/dvr_config.c:1070
+#: src/channels.c:534 src/dvr/dvr_db.c:4592 src/dvr/dvr_config.c:1070
 msgid "Post-recording padding"
 msgstr "Post-录像 padding"
 
@@ -6832,7 +6835,7 @@ msgstr "预定义复用器"
 msgid "Pre-processor command"
 msgstr "预处理器命令"
 
-#: src/channels.c:519 src/dvr/dvr_db.c:4529 src/dvr/dvr_config.c:1054
+#: src/channels.c:519 src/dvr/dvr_db.c:4564 src/dvr/dvr_config.c:1054
 msgid "Pre-recording padding"
 msgstr "Pre-录像 padding"
 
@@ -6903,7 +6906,7 @@ msgstr ""
 msgid "Previously recorded"
 msgstr "曾录制过"
 
-#: src/epggrab/module.c:179 src/dvr/dvr_db.c:4709 src/dvr/dvr_autorec.c:1386
+#: src/epggrab/module.c:179 src/dvr/dvr_db.c:4744 src/dvr/dvr_autorec.c:1390
 #: src/dvr/dvr_timerec.c:617 src/dvr/dvr_config.c:1001
 #: src/input/mpegts/mpegts_input.c:248
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:1560
@@ -6924,7 +6927,7 @@ msgstr ""
 "Priority of the 条目, higher-priority 条目 will take precedence and cancel "
 "lower-priority 事件."
 
-#: src/dvr/dvr_db.c:4710 src/dvr/dvr_autorec.c:1387 src/dvr/dvr_timerec.c:618
+#: src/dvr/dvr_db.c:4745 src/dvr/dvr_autorec.c:1391 src/dvr/dvr_timerec.c:618
 msgid ""
 "Priority of the recording. Higher priority entries will take precedence and "
 "cancel lower-priority events. The 'Not Set' value inherits the settings from"
@@ -6937,7 +6940,7 @@ msgstr ""
 msgid "Private"
 msgstr "私有"
 
-#: src/descrambler/capmt.c:2618
+#: src/descrambler/capmt.c:2665
 msgid "Problematic: OSCam new pc-nodmx (rev >= 10389)"
 msgstr "Problematic: OSCam 新建 pc-nodmx (rev >= 10389)"
 
@@ -6975,19 +6978,19 @@ msgstr ""
 "节目 identification (PID) 编号 to compare. Zero means any. This comparison is "
 "processed only when 服务 comparison is 活动 and for the Conditional 访问 过滤."
 
-#: src/dvr/dvr_db.c:4693
+#: src/dvr/dvr_db.c:4728
 msgid "Program synopsis (display only)."
 msgstr "节目 synopsis (显示 only)."
 
-#: src/dvr/dvr_db.c:4685
+#: src/dvr/dvr_db.c:4720
 msgid "Program synopsis."
 msgstr "节目 synopsis."
 
-#: src/dvr/dvr_db.c:4866
+#: src/dvr/dvr_db.c:4901
 msgid "Program unique ID (from grabber)"
 msgstr "节目 unique ID (from 抓取器)"
 
-#: src/dvr/dvr_db.c:4867
+#: src/dvr/dvr_db.c:4902
 msgid "Program unique ID (from grabber), such as MV101010101.0000"
 msgstr "节目 unique ID (from 抓取器), such as MV101010101.0000"
 
@@ -7104,39 +7107,39 @@ msgstr "RTSP 端口 (554 or 9983, 0 = 禁用)"
 msgid "Radio"
 msgstr "广播"
 
-#: src/dvr/dvr_db.c:5115
+#: src/dvr/dvr_db.c:5150
 msgid "Rating Authority"
 msgstr "评分权威机构"
 
-#: src/dvr/dvr_db.c:5116
+#: src/dvr/dvr_db.c:5151
 msgid "Rating Authority."
 msgstr "评分权威机构。"
 
-#: src/dvr/dvr_db.c:5123
+#: src/dvr/dvr_db.c:5158
 msgid "Rating Country"
 msgstr "评分国家"
 
-#: src/dvr/dvr_db.c:5124
+#: src/dvr/dvr_db.c:5159
 msgid "Rating Country."
 msgstr "评分国家。"
 
-#: src/dvr/dvr_db.c:5107
+#: src/dvr/dvr_db.c:5142
 msgid "Rating Icon"
 msgstr "评分图标"
 
-#: src/dvr/dvr_db.c:5108
+#: src/dvr/dvr_db.c:5143
 msgid "Rating Icon URL."
 msgstr "Rating 图标 URL."
 
-#: src/dvr/dvr_db.c:5131
+#: src/dvr/dvr_db.c:5166
 msgid "Rating Label"
 msgstr "评分标签"
 
-#: src/dvr/dvr_db.c:5096
+#: src/dvr/dvr_db.c:5131
 msgid "Rating Label UUID"
 msgstr "评分标签 UUID"
 
-#: src/dvr/dvr_db.c:5132
+#: src/dvr/dvr_db.c:5167
 msgid "Rating Label."
 msgstr "评分标签。"
 
@@ -7189,7 +7192,7 @@ msgstr ""
 msgid "Realm name"
 msgstr "领域名称"
 
-#: src/dvr/dvr_autorec.c:1034 src/dvr/dvr_config.c:852
+#: src/dvr/dvr_autorec.c:1038 src/dvr/dvr_config.c:852
 msgid "Record all"
 msgstr "录制全部"
 
@@ -7201,7 +7204,7 @@ msgstr "录制 on these days only."
 msgid "Recorded file(s) retention period"
 msgstr "Recorded 文件(s) retention period"
 
-#: src/dvr/dvr_db.c:4971
+#: src/dvr/dvr_db.c:5006
 msgid "Recording file size."
 msgstr "录像 文件 size."
 
@@ -7209,7 +7212,7 @@ msgstr "录像 文件 size."
 msgid "Recording info retention period"
 msgstr "录像 信息 retention period"
 
-#: src/dvr/dvr_db.c:4752
+#: src/dvr/dvr_db.c:4787
 msgid "Recording play count"
 msgstr "录像 播放 count"
 
@@ -7264,7 +7267,7 @@ msgstr "Reorder DVB 副标题 packets."
 msgid "Reorder DVBSUB"
 msgstr "重排 DVBSUB"
 
-#: src/dvr/dvr_autorec.c:1078
+#: src/dvr/dvr_autorec.c:1082
 msgid "Repeated"
 msgstr "重复"
 
@@ -7282,11 +7285,11 @@ msgstr "Replace whitespace in 标题 with '-'"
 msgid "Replaces all whitespace in the title with '-'."
 msgstr "Replaces all whitespace in the 标题 with '-'."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:631
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:647
 msgid "Reply to CAM PIN inquiries"
 msgstr "回复 CAM PIN 查询"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:632
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:648
 msgid "Reply to PIN inquiries."
 msgstr "回复 PIN 查询。"
 
@@ -7294,7 +7297,7 @@ msgstr "回复 PIN 查询。"
 msgid "Reports"
 msgstr "报告"
 
-#: src/dvr/dvr_db.c:4995
+#: src/dvr/dvr_db.c:5030
 msgid "Rerun of"
 msgstr "重播自"
 
@@ -7333,13 +7336,13 @@ msgstr "Restart when the 订阅 is overriden (in then timeout 时间 窗口)."
 
 #: src/satip/server.c:956
 msgid "Restrict \"pids=all\""
-msgstr "Restrict \"PID=all\""
+msgstr "限制 \"pids=all\""
 
 #: src/access.c:1931
 msgid "Restrict connections to this type."
 msgstr "Restrict 连接 to this 类型."
 
-#: src/webui/comet.c:323
+#: src/webui/comet.c:338
 msgid "Restricted log mode (no administrator)"
 msgstr "Restricted 日志 模式 (no administrator)"
 
@@ -7615,11 +7618,11 @@ msgstr "SSL 验证 peer"
 
 #: src/tvhlog.c:83
 msgid "START"
-msgstr "START"
+msgstr "开始"
 
 #: src/tvhlog.c:84
 msgid "STOP"
-msgstr "STOP"
+msgstr "停止"
 
 #: src/config.c:2769
 msgid ""
@@ -7641,7 +7644,7 @@ msgstr "采样率"
 msgid "Samples per second."
 msgstr "每秒采样数。"
 
-#: src/dvr/dvr_autorec.c:917
+#: src/dvr/dvr_autorec.c:921
 msgid "Sat"
 msgstr "周六"
 
@@ -7681,35 +7684,35 @@ msgstr "保存 EPG to disk after xmltv import"
 msgid "Save in Description"
 msgstr "保存 in 描述"
 
-#: src/dvr/dvr_db.c:5078
+#: src/dvr/dvr_db.c:5113
 msgid "Saved Rating Authority"
 msgstr "已保存的评分权威机构"
 
-#: src/dvr/dvr_db.c:5086
+#: src/dvr/dvr_db.c:5121
 msgid "Saved Rating Country"
 msgstr "已保存的评分国家"
 
-#: src/dvr/dvr_db.c:5070
+#: src/dvr/dvr_db.c:5105
 msgid "Saved Rating Icon Path"
 msgstr "Saved Rating 图标 路径"
 
-#: src/dvr/dvr_db.c:5062
+#: src/dvr/dvr_db.c:5097
 msgid "Saved Rating Label"
 msgstr "已保存的评分标签"
 
-#: src/dvr/dvr_db.c:5079
+#: src/dvr/dvr_db.c:5114
 msgid "Saved parental rating authority for once recording is complete."
 msgstr "Saved parental rating authority for once 录像 is complete."
 
-#: src/dvr/dvr_db.c:5087
+#: src/dvr/dvr_db.c:5122
 msgid "Saved parental rating country for once recording is complete."
 msgstr "Saved parental rating country for once 录像 is complete."
 
-#: src/dvr/dvr_db.c:5063
+#: src/dvr/dvr_db.c:5098
 msgid "Saved parental rating for once recording is complete."
 msgstr "Saved parental rating for once 录像 is complete."
 
-#: src/dvr/dvr_db.c:5071
+#: src/dvr/dvr_db.c:5106
 msgid "Saved parental rating icon for once recording is complete."
 msgstr "Saved parental rating 图标 for once 录像 is complete."
 
@@ -7749,15 +7752,15 @@ msgstr "扫描"
 msgid "Schedule frequency (in cron format)."
 msgstr "计划 频率 (in cron 格式)."
 
-#: src/dvr/dvr_db.c:4987
+#: src/dvr/dvr_db.c:5022
 msgid "Schedule status"
 msgstr "计划 状态"
 
-#: src/dvr/dvr_db.c:4988
+#: src/dvr/dvr_db.c:5023
 msgid "Schedule status."
 msgstr "计划 状态."
 
-#: src/dvr/dvr_db.c:4576
+#: src/dvr/dvr_db.c:4611
 msgid "Scheduled Duration"
 msgstr "已计划 Duration"
 
@@ -7765,11 +7768,11 @@ msgstr "已计划 Duration"
 msgid "Scheduled for recording"
 msgstr "已计划 for 录像"
 
-#: src/dvr/dvr_db.c:4541
+#: src/dvr/dvr_db.c:4576
 msgid "Scheduled start time"
 msgstr "已计划 开始 时间"
 
-#: src/dvr/dvr_db.c:4568
+#: src/dvr/dvr_db.c:4603
 msgid "Scheduled stop time"
 msgstr "已计划 停止 时间"
 
@@ -7835,7 +7838,7 @@ msgid ""
 msgstr ""
 "Script/节目 to run when a 录像 starts (服务 is subscribed but no filename 可用)."
 
-#: src/dvr/dvr_db.c:4118
+#: src/dvr/dvr_db.c:4153
 msgid "Season"
 msgstr "季"
 
@@ -7967,7 +7970,7 @@ msgstr "选择 the 时间 offset for EIT 事件."
 msgid "Select the transport used for this tuner."
 msgstr "选择 the 传输 used for this 调谐器."
 
-#: src/dvr/dvr_autorec.c:1240
+#: src/dvr/dvr_autorec.c:1244
 msgid "Select type of broadcast."
 msgstr "选择 类型 of 广播."
 
@@ -7992,11 +7995,11 @@ msgstr "选择/已选中 服务 to map."
 msgid "Selection method for CAID."
 msgstr "选择 method for CAID."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:676
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:692
 msgid "Send CAPMT OK query before descrambling."
 msgstr "解扰前发送 CAPMT OK 查询。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:675
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:691
 msgid "Send CAPMT query"
 msgstr "发送 CAPMT 查询"
 
@@ -8032,11 +8035,11 @@ msgstr ""
 msgid "Serial number"
 msgstr "序列号"
 
-#: src/dvr/dvr_autorec.c:1461
+#: src/dvr/dvr_autorec.c:1465
 msgid "Series link"
 msgstr "系列 链接"
 
-#: src/dvr/dvr_autorec.c:1462
+#: src/dvr/dvr_autorec.c:1466
 msgid "Series link ID."
 msgstr "系列 链接 ID."
 
@@ -8348,19 +8351,19 @@ msgstr "Skip startup 扫描"
 msgid "Skip x number of transport packets."
 msgstr "Skip x 编号 of 传输 packets."
 
-#: src/dvr/dvr_db.c:4917
+#: src/dvr/dvr_db.c:4952
 msgid "Slave entry"
 msgstr "从属条目"
 
-#: src/dvr/dvr_db.c:4918
+#: src/dvr/dvr_db.c:4953
 msgid "Slave entry."
 msgstr "从属条目。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:691
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:707
 msgid "Slot number"
 msgstr "插槽编号"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:699
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:715
 msgid "Slot state"
 msgstr "插槽状态"
 
@@ -8386,7 +8389,7 @@ msgstr "社会/政治议题/经济"
 msgid "Social advisory"
 msgstr "社会咨询"
 
-#: src/descrambler/capmt.c:2736
+#: src/descrambler/capmt.c:2783
 msgid "Socket or IP Address (when in TCP mode)."
 msgstr "Socket or IP 地址 (when in TCP 模式)."
 
@@ -8518,7 +8521,7 @@ msgstr "Specify alternative HTTP 端口"
 
 #: src/main.c:930
 msgid "Specify alternative http webroot"
-msgstr "Specify alternative HTTP webroot"
+msgstr "指定备用的 http webroot"
 
 #: src/main.c:927
 msgid "Specify bind address"
@@ -8568,11 +8571,11 @@ msgstr "壁球"
 msgid "Standard"
 msgstr "标准"
 
-#: src/descrambler/capmt.c:2694
+#: src/descrambler/capmt.c:2741
 msgid "Standard / auto"
 msgstr "标准 / 自动"
 
-#: src/dvr/dvr_autorec.c:1259
+#: src/dvr/dvr_autorec.c:1263
 msgid "Star rating"
 msgstr "星级评分"
 
@@ -8580,11 +8583,11 @@ msgstr "星级评分"
 msgid "Start"
 msgstr "开始"
 
-#: src/dvr/dvr_autorec.c:1271
+#: src/dvr/dvr_autorec.c:1275
 msgid "Start after"
 msgstr "之后开始"
 
-#: src/dvr/dvr_autorec.c:1284
+#: src/dvr/dvr_autorec.c:1288
 msgid "Start before"
 msgstr "之前开始"
 
@@ -8601,12 +8604,12 @@ msgstr ""
 "12:54:30 (including a warming-up 时间 of 30 seconds). If this isn't set the "
 "pre-录像 padding if set in the 录像 条目 or 录像 配置方案 will be used."
 
-#: src/dvr/dvr_db.c:4530
+#: src/dvr/dvr_db.c:4565
 msgid ""
 "Start recording earlier than the EPG/timer-defined start time by x minutes."
 msgstr "开始 录像 earlier than the EPG/定时器-defined 开始 时间 by x minutes."
 
-#: src/dvr/dvr_autorec.c:1298
+#: src/dvr/dvr_autorec.c:1302
 msgid "Start recording earlier than the defined start time by x minutes."
 msgstr "开始 录像 earlier than the defined 开始 时间 by x minutes."
 
@@ -8623,7 +8626,7 @@ msgstr ""
 "(including a warm-up 时间 of 30 seconds). If this isn't specified, any pre-录像 "
 "padding as set in the 频道 or 录像 条目 will be used."
 
-#: src/dvr/dvr_db.c:4520
+#: src/dvr/dvr_db.c:4555
 msgid "Start time"
 msgstr "开始 时间"
 
@@ -8646,7 +8649,7 @@ msgstr ""
 "4 调谐器 and you set this to 9983, then 调谐器 0 will talk to 端口 9983, 调谐器 1 will "
 "talk to 端口 9984, 调谐器 2 will talk to 端口 9985, and 调谐器 3 will talk to 端口 9986."
 
-#: src/dvr/dvr_db.c:4978 src/descrambler/caclient.c:327
+#: src/dvr/dvr_db.c:5013 src/descrambler/caclient.c:327
 msgid "Status"
 msgstr "状态"
 
@@ -8674,7 +8677,7 @@ msgstr "状态-订阅"
 msgid "Stop"
 msgstr "停止"
 
-#: src/dvr/dvr_db.c:4549
+#: src/dvr/dvr_db.c:4584
 msgid "Stop time"
 msgstr "停止 时间"
 
@@ -8831,7 +8834,7 @@ msgstr "替代格式化器"
 msgid "Subsystem Output Settings"
 msgstr "Subsystem 输出 设置"
 
-#: src/dvr/dvr_db.c:4650 src/dvr/dvr_db.c:4658 src/epggrab/module/eit.c:1762
+#: src/dvr/dvr_db.c:4685 src/dvr/dvr_db.c:4693 src/epggrab/module/eit.c:1762
 msgid "Subtitle"
 msgstr "字幕"
 
@@ -8843,31 +8846,31 @@ msgstr "副标题 and 摘要"
 msgid "Subtitle codec profile"
 msgstr "副标题 编解码器 配置方案"
 
-#: src/dvr/dvr_db.c:4659
+#: src/dvr/dvr_db.c:4694
 msgid "Subtitle of the program (if any) (display only)."
 msgstr "副标题 of the 节目 (if any) (显示 only)."
 
-#: src/dvr/dvr_db.c:4651
+#: src/dvr/dvr_db.c:4686
 msgid "Subtitle of the program (if any)."
 msgstr "副标题 of the 节目 (if any)."
 
-#: src/dvr/dvr_db.c:4701
+#: src/dvr/dvr_db.c:4736
 msgid "Subtitle, summary or description of the program (if any)."
 msgstr "副标题, 摘要 or 描述 of the 节目 (if any)."
 
-#: src/dvr/dvr_db.c:4667 src/dvr/dvr_db.c:4675 src/epggrab/module/eit.c:1763
+#: src/dvr/dvr_db.c:4702 src/dvr/dvr_db.c:4710 src/epggrab/module/eit.c:1763
 msgid "Summary"
 msgstr "摘要"
 
-#: src/dvr/dvr_db.c:4676
+#: src/dvr/dvr_db.c:4711
 msgid "Summary of the program (if any) (display only)."
 msgstr "摘要 of the 节目 (if any) (显示 only)."
 
-#: src/dvr/dvr_db.c:4668
+#: src/dvr/dvr_db.c:4703
 msgid "Summary of the program (if any)."
 msgstr "摘要 of the 节目 (if any)."
 
-#: src/dvr/dvr_autorec.c:918
+#: src/dvr/dvr_autorec.c:922
 msgid "Sun"
 msgstr "周日"
 
@@ -9077,7 +9080,7 @@ msgstr "Teletext 流 类型 is only 可用 for this 过滤."
 
 #: src/epg.c:1994
 msgid "Tennis"
-msgstr "Tennis"
+msgstr "网球"
 
 #: src/subscriptions.c:1021
 msgid "Testing"
@@ -9103,7 +9106,7 @@ msgstr "The 条件接收 流 类型 is only 可用 for this 过滤."
 msgid "The CAID to compare. Leave blank to apply to all IDs."
 msgstr "The CAID to compare. Leave blank to 应用 to all IDs."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:700
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:716
 msgid "The CAM slot status."
 msgstr "The CAM slot 状态."
 
@@ -9124,15 +9127,15 @@ msgstr "The Conditional 访问 ID used for the 服务."
 msgid "The Content reference identifier (CRID) authority."
 msgstr "The Content 参考 identifier (CRID) authority."
 
-#: src/dvr/dvr_db.c:4762
+#: src/dvr/dvr_db.c:4797
 msgid "The DVR profile to be used/used by the recording."
 msgstr "The 录像 配置方案 to be used/used by the 录像."
 
-#: src/dvr/dvr_autorec.c:1451
+#: src/dvr/dvr_autorec.c:1455
 msgid "The DVR profile to be used/used by this rule."
 msgstr "The 录像 配置方案 to be used/used by this 规则."
 
-#: src/dvr/dvr_db.c:4835
+#: src/dvr/dvr_db.c:4870
 msgid "The EPG ID used by the entry."
 msgstr "The EPG ID used by the 条目."
 
@@ -9164,7 +9167,7 @@ msgstr "The MPEGTS 流 类型 is only 可用 for this 过滤."
 msgid "The OpenTV channel number as set by the provider."
 msgstr "The OpenTV 频道 编号 as set by the provider."
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:640
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:656
 msgid "The PIN to use."
 msgstr "要使用的 PIN。"
 
@@ -9258,7 +9261,7 @@ msgstr ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "xmltv 数据. Root node = 'category'."
 
-#: src/dvr/dvr_db.c:5055
+#: src/dvr/dvr_db.c:5090
 msgid "The age rating of the program."
 msgstr "The age rating of the 节目."
 
@@ -9288,7 +9291,7 @@ msgstr ""
 "The cache scheme to use/used to store 录像. Leave as \"系统\" unless you have a "
 "special use case for one of the others. See 帮助 for 详情."
 
-#: src/dvr/dvr_autorec.c:1116
+#: src/dvr/dvr_autorec.c:1120
 msgid ""
 "The category of the program to look for. The xmltv providers often supply "
 "detailed categories such as Sitcom, Movie, Track/field, etc. This let you "
@@ -9303,7 +9306,7 @@ msgstr ""
 "to limit to programmes that match all categories. If this 选择 列表 is empty "
 "then it means your provider does not supply 节目 categories."
 
-#: src/dvr/dvr_db.c:4585
+#: src/dvr/dvr_db.c:4620
 msgid "The channel name the entry will record from."
 msgstr "The 频道 名称 the 条目 will 录制 from."
 
@@ -9311,7 +9314,7 @@ msgstr "The 频道 名称 the 条目 will 录制 from."
 msgid "The channel on the cable provider's network."
 msgstr "The 频道 on the 有线 provider's 网络."
 
-#: src/dvr/dvr_autorec.c:1215
+#: src/dvr/dvr_autorec.c:1219
 msgid ""
 "The channel on which this rule applies, i.e. the channel you're aiming to "
 "record. You can leave this field blank to apply the rule to all channels."
@@ -9347,7 +9350,7 @@ msgstr ""
 msgid "The code which may be used for HTTP streaming."
 msgstr "可用于 HTTP 流媒体的授权码。"
 
-#: src/dvr/dvr_autorec.c:1250
+#: src/dvr/dvr_autorec.c:1254
 msgid ""
 "The content type (Movie/Drama, Sports, etc.) to be used to filter matching "
 "events/programs."
@@ -9355,11 +9358,11 @@ msgstr ""
 "The content 类型 (Movie/Drama, Sports, etc.) to be used to 过滤 matching "
 "事件/programs."
 
-#: src/dvr/dvr_db.c:4936
+#: src/dvr/dvr_db.c:4971
 msgid "The copyright year of the program."
 msgstr "The copyright year of the 节目."
 
-#: src/dvr/dvr_db.c:4504
+#: src/dvr/dvr_db.c:4539
 msgid "The create time of the entry describing the recording."
 msgstr "The 创建 时间 of the 条目 describing the 录像."
 
@@ -9440,14 +9443,14 @@ msgstr "The 设备 路径 in sysfs filesystem (/sys)."
 msgid "The device's serial number."
 msgstr "The 设备's serial 编号."
 
-#: src/dvr/dvr_autorec.c:1371
+#: src/dvr/dvr_autorec.c:1375
 msgid ""
 "The earliest season for the programme. Programmes must be equal to or later "
 "than this season."
 msgstr ""
 "The earliest 季 for the 节目. Programmes must be equal to or later than this 季."
 
-#: src/dvr/dvr_autorec.c:1353
+#: src/dvr/dvr_autorec.c:1357
 msgid ""
 "The earliest year for the programme. Programmes must be equal to or later "
 "than this year."
@@ -9546,14 +9549,14 @@ msgstr ""
 msgid "The language to which the filter should apply."
 msgstr "The language to which the 过滤 should 应用."
 
-#: src/dvr/dvr_autorec.c:1379
+#: src/dvr/dvr_autorec.c:1383
 msgid ""
 "The latest season for the programme. Programmes must be equal to or earlier "
 "than this season."
 msgstr ""
 "The latest 季 for the 节目. Programmes must be equal to or earlier than this 季."
 
-#: src/dvr/dvr_autorec.c:1362
+#: src/dvr/dvr_autorec.c:1366
 msgid ""
 "The latest year for the programme. Programmes must be equal to or earlier "
 "than this year."
@@ -9642,7 +9645,7 @@ msgstr ""
 msgid "The manufacturer of the SAT>IP server."
 msgstr "The manufacturer of the SAT>IP 服务器."
 
-#: src/dvr/dvr_autorec.c:1342
+#: src/dvr/dvr_autorec.c:1346
 msgid ""
 "The maximal duration of a matching event - in other words, only match "
 "programmes that are no longer than this duration."
@@ -9703,7 +9706,7 @@ msgstr "The maximum 编号 of 条目 that can be matched."
 msgid "The maximum number of input streams allowed on this network."
 msgstr "The maximum 编号 of 输入 流 allowed on this 网络."
 
-#: src/dvr/dvr_autorec.c:1442
+#: src/dvr/dvr_autorec.c:1446
 msgid "The maximum number of recording entries this rule can create."
 msgstr "The maximum 编号 of 录像 条目 this 规则 can 创建."
 
@@ -9715,7 +9718,7 @@ msgstr "The maximum 编号 of 录像 that can be 已计划."
 msgid "The maximum number of services to decrypt per mux."
 msgstr "The maximum 编号 of 服务 to decrypt per 复用器."
 
-#: src/dvr/dvr_autorec.c:1433
+#: src/dvr/dvr_autorec.c:1437
 msgid "The maximum number of times this rule can be triggered."
 msgstr "The maximum 编号 of times this 规则 can be triggered."
 
@@ -9725,7 +9728,7 @@ msgid ""
 "subscription."
 msgstr "The maximum 时间 period that will be buffered for any given (客户端) 订阅."
 
-#: src/dvr/dvr_autorec.c:1331
+#: src/dvr/dvr_autorec.c:1335
 msgid ""
 "The minimal duration of a matching event - in other words, only match "
 "programs that are no shorter than this duration."
@@ -9747,7 +9750,7 @@ msgstr ""
 "between the 上一个 and 下一个 开始 is greater than this 值 then the delay is not "
 "applied."
 
-#: src/dvr/dvr_autorec.c:1260
+#: src/dvr/dvr_autorec.c:1264
 msgid ""
 "The minimum number of stars the broadcast should have - in other words, only"
 " match programs that have at least this rating."
@@ -9784,7 +9787,7 @@ msgstr "The 名称 given to/of the 频道 (这是 how it'll appear in your EPG.)
 msgid "The name of the profile."
 msgstr "The 名称 of the 配置方案."
 
-#: src/dvr/dvr_autorec.c:1153
+#: src/dvr/dvr_autorec.c:1157
 msgid "The name of the the rule."
 msgstr "The 名称 of the the 规则."
 
@@ -9981,11 +9984,11 @@ msgstr ""
 msgid "The realm name for HTTP authorization."
 msgstr "The realm 名称 for HTTP authorization."
 
-#: src/dvr/dvr_db.c:4859
+#: src/dvr/dvr_db.c:4894
 msgid "The recorded file was removed intentionally"
 msgstr "The recorded 文件 was 已移除 intentionally"
 
-#: src/dvr/dvr_db.c:4980
+#: src/dvr/dvr_db.c:5015
 msgid "The recording/entry status."
 msgstr "The 录像/条目 状态."
 
@@ -10014,11 +10017,11 @@ msgstr ""
 "The 扫描 state. 新建 复用器 will automatically be changed to the PEND state. You "
 "can 更改 this to 活动 to queue a 扫描 of this 复用器."
 
-#: src/dvr/dvr_db.c:4542
+#: src/dvr/dvr_db.c:4577
 msgid "The scheduled start time, including any padding."
 msgstr "The 已计划 开始 时间, including any padding."
 
-#: src/dvr/dvr_db.c:4569
+#: src/dvr/dvr_db.c:4604
 msgid "The scheduled stop time, including any padding."
 msgstr "The 已计划 停止 时间, including any padding."
 
@@ -10124,7 +10127,7 @@ msgid ""
 msgstr ""
 "The 信号 级别 reported by the 驱动程序 is multiplied with this 值 and divided by 100."
 
-#: src/dvr/dvr_db.c:4521
+#: src/dvr/dvr_db.c:4556
 msgid "The start time of the recording."
 msgstr "The 开始 时间 of the 录像."
 
@@ -10173,7 +10176,7 @@ msgstr ""
 "The 时间 in days after the cached URL will be 已移除. The 时间 starts when the URL "
 "was lastly requested. Zero means unlimited cache (not recommended)."
 
-#: src/dvr/dvr_db.c:4550
+#: src/dvr/dvr_db.c:4585
 msgid "The time the entry stops/stopped being recorded."
 msgstr "The 时间 the 条目 stops/stopped being recorded."
 
@@ -10182,7 +10185,7 @@ msgid ""
 "The time window to cut the stop time from the overlapped event in seconds."
 msgstr "The 时间 窗口 to cut the 停止 时间 from the overlapped 事件 in seconds."
 
-#: src/dvr/dvr_autorec.c:1173
+#: src/dvr/dvr_autorec.c:1177
 msgid ""
 "The title of the program to look for. Note that this accepts case-"
 "insensitive regular expressions."
@@ -10194,7 +10197,7 @@ msgstr ""
 msgid "The total number of services found."
 msgstr "The total 编号 of 服务 found."
 
-#: src/dvr/dvr_db.c:4577
+#: src/dvr/dvr_db.c:4612
 msgid "The total scheduled duration."
 msgstr "The total 已计划 duration."
 
@@ -10240,7 +10243,7 @@ msgstr ""
 msgid "The user agent string for the build-in HTTP client."
 msgstr "The 用户 agent 字符串 for the build-in HTTP 客户端."
 
-#: src/dvr/dvr_db.c:4783 src/dvr/dvr_autorec.c:1478 src/dvr/dvr_timerec.c:670
+#: src/dvr/dvr_db.c:4818 src/dvr/dvr_autorec.c:1482 src/dvr/dvr_timerec.c:670
 msgid ""
 "The user who created the recording, or the auto-recording source and IP "
 "address if scheduled by a matching rule."
@@ -10296,7 +10299,7 @@ msgstr "线程调试"
 msgid "Thriller"
 msgstr "惊悚"
 
-#: src/dvr/dvr_autorec.c:915
+#: src/dvr/dvr_autorec.c:919
 msgid "Thu"
 msgstr "周四"
 
@@ -10352,7 +10355,7 @@ msgstr "时间丢失"
 msgid "Time profiling"
 msgstr "时间性能分析"
 
-#: src/dvr/dvr_db.c:4900
+#: src/dvr/dvr_db.c:4935
 msgid "Time record caption"
 msgstr "时间 录制 caption"
 
@@ -10361,15 +10364,15 @@ msgstr "时间 录制 caption"
 msgid "Time recording%s%s"
 msgstr "时间 录像%s%s"
 
-#: src/dvr/dvr_db.c:4503
+#: src/dvr/dvr_db.c:4538
 msgid "Time the entry was created"
 msgstr "时间 the 条目 was created"
 
-#: src/dvr/dvr_db.c:4512
+#: src/dvr/dvr_db.c:4547
 msgid "Time the entry was last watched"
 msgstr "时间 the 条目 was 最后 watched"
 
-#: src/dvr/dvr_db.c:4513
+#: src/dvr/dvr_db.c:4548
 msgid "Time the entry was last watched."
 msgstr "时间 the 条目 was 最后 watched."
 
@@ -10385,7 +10388,7 @@ msgstr "时间 to 开始 the 录像/时间 the 录像 started."
 msgid "Time to stop recording/time the recording stopped."
 msgstr "时间 to 停止 录像/时间 the 录像 stopped."
 
-#: src/dvr/dvr_db.c:5004
+#: src/dvr/dvr_db.c:5039
 msgid "Time when the program was first aired"
 msgstr "时间 when the 节目 was 第一个 aired"
 
@@ -10397,11 +10400,11 @@ msgstr "超时（秒）"
 msgid "Timeout (secs)"
 msgstr "超时（秒）"
 
-#: src/dvr/dvr_db.c:4901
+#: src/dvr/dvr_db.c:4936
 msgid "Timer-based automatic record caption."
 msgstr "定时器-based 自动 录制 caption."
 
-#: src/dvr/dvr_db.c:4892
+#: src/dvr/dvr_db.c:4927
 msgid "Timer-based automatic recording."
 msgstr "定时器-based 自动 录像."
 
@@ -10409,19 +10412,19 @@ msgstr "定时器-based 自动 录像."
 msgid "Timeshift"
 msgstr "时移"
 
-#: src/dvr/dvr_db.c:4633 src/dvr/dvr_db.c:4641 src/dvr/dvr_timerec.c:551
+#: src/dvr/dvr_db.c:4668 src/dvr/dvr_db.c:4676 src/dvr/dvr_timerec.c:551
 msgid "Title"
 msgstr "标题"
 
-#: src/dvr/dvr_autorec.c:1172
+#: src/dvr/dvr_autorec.c:1176
 msgid "Title (regexp)"
 msgstr "标题（正则表达式）"
 
-#: src/dvr/dvr_db.c:4642
+#: src/dvr/dvr_db.c:4677
 msgid "Title of the program (display only)."
 msgstr "标题 of the 节目 (显示 only)."
 
-#: src/dvr/dvr_db.c:4634
+#: src/dvr/dvr_db.c:4669
 msgid "Title of the program."
 msgstr "标题 of the 节目."
 
@@ -10565,7 +10568,7 @@ msgstr ""
 "Try to obtain 频道 编号 from the 显示-名称 xml 标签. If the 第一个 word is 编号, it is used"
 " as the 频道 编号."
 
-#: src/dvr/dvr_autorec.c:913
+#: src/dvr/dvr_autorec.c:917
 msgid "Tue"
 msgstr "周二"
 
@@ -10577,7 +10580,7 @@ msgstr "调谐"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:264
 msgid "Tune before DiseqC"
-msgstr "Tune before DiSEqC"
+msgstr "在 DiSEqC 之前调谐"
 
 #: src/transcoding/codec/codecs/libs/libx26x.c:195
 msgid "Tune the encoding params (cf. x264 --fullhelp)."
@@ -10651,7 +10654,7 @@ msgstr "UHD：超高清"
 msgid "UPnP Protocol"
 msgstr "UPnP 协议"
 
-#: src/tvhlog.c:98 src/wizard.c:829 src/dvr/dvr_db.c:4962
+#: src/tvhlog.c:98 src/wizard.c:829 src/dvr/dvr_db.c:4997
 #: src/input/mpegts/iptv/iptv.c:952 src/input/mpegts/iptv/iptv_mux.c:130
 msgid "URL"
 msgstr "URL"
@@ -10668,7 +10671,7 @@ msgstr "M3U 播放列表的 URL。"
 msgid "URL with the SAT>IP server XML location"
 msgstr "URL with the SAT>IP 服务器 XML location"
 
-#: src/dvr/dvr_db.c:4963
+#: src/dvr/dvr_db.c:4998
 msgid "URL."
 msgstr "URL。"
 
@@ -10885,7 +10888,7 @@ msgstr "Unicable II switch (universal 高频头)"
 msgid "Unicable type"
 msgstr "单缆类型"
 
-#: src/profile.c:259 src/dvr/dvr_db.c:3741
+#: src/profile.c:259 src/dvr/dvr_db.c:3776
 msgid "Unimportant"
 msgstr "不重要"
 
@@ -10897,7 +10900,7 @@ msgstr "Unique 事件 ID XPath"
 msgid "Universal LNB only"
 msgstr "Universal 高频头 only"
 
-#: src/descrambler/capmt.c:2708
+#: src/descrambler/capmt.c:2755
 msgid "Universal tag order"
 msgstr "Universal 标签 order"
 
@@ -11010,7 +11013,7 @@ msgstr "使用 A/V 库"
 msgid "Use AC-3 detection."
 msgstr "使用 AC-3 检测。"
 
-#: src/dvr/dvr_autorec.c:1032
+#: src/dvr/dvr_autorec.c:1036
 msgid "Use DVR configuration"
 msgstr "Use 录像 配置"
 
@@ -11419,7 +11422,7 @@ msgstr "Web 界面 theme."
 msgid "Web theme"
 msgstr "Web 主题"
 
-#: src/dvr/dvr_autorec.c:914
+#: src/dvr/dvr_autorec.c:918
 msgid "Wed"
 msgstr "周三"
 
@@ -11439,7 +11442,7 @@ msgstr "西半球（纬度方向）"
 msgid "Western hemisphere (latitude direction)."
 msgstr "西半球（纬度方向）。"
 
-#: src/dvr/dvr_autorec.c:1205
+#: src/dvr/dvr_autorec.c:1209
 msgid ""
 "When 'Merge-Text' is selected, the title pattern is matched against a merged"
 " single string consisting of the title + subtitle + summary + description + "
@@ -11515,7 +11518,7 @@ msgstr ""
 " 频道 instead of on primary 频道. This scheduling requires extra overhead so is "
 "已禁用 by 默认."
 
-#: src/dvr/dvr_autorec.c:1160
+#: src/dvr/dvr_autorec.c:1164
 msgid ""
 "When specified, this setting overrides the subdirectory rules (except the "
 "base directory) defined in the DVR configuration and puts all recordings "
@@ -11533,7 +11536,7 @@ msgstr ""
 "When streaming a 服务 (via HTTP or HTSP) Tvheadend will use the 网络 with the "
 "highest streaming priority set here. See 帮助 for 详情."
 
-#: src/dvr/dvr_autorec.c:1197
+#: src/dvr/dvr_autorec.c:1201
 msgid ""
 "When the fulltext is checked, the title pattern is matched against title, "
 "subtitle, summary and description."
@@ -11597,7 +11600,7 @@ msgstr ""
 msgid "Wizard"
 msgstr "向导"
 
-#: src/descrambler/capmt.c:2633
+#: src/descrambler/capmt.c:2680
 msgid "Wrapper (capmt_ca.so)"
 msgstr "封装 (capmt_ca.so)"
 
@@ -11656,7 +11659,7 @@ msgstr "是"
 
 #: src/transcoding/codec/codecs/aac.c:98
 msgid "aac"
-msgstr "AAC"
+msgstr "aac"
 
 #: src/input/mpegts/satip/satip.c:332
 msgid "addpids/delpids supported"
@@ -11686,7 +11689,7 @@ msgstr "最佳"
 msgid "constrained: Use constrained VBR"
 msgstr "constrained：使用受约束的 VBR"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:563
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:579
 msgid "disabled"
 msgstr "已禁用"
 
@@ -11710,7 +11713,7 @@ msgstr "flac"
 msgid "good"
 msgstr "良好"
 
-#: src/dvr/dvr_db.c:4433
+#: src/dvr/dvr_db.c:4468
 msgid "hrs"
 msgstr "小时"
 
@@ -11759,33 +11762,33 @@ msgstr "退出登录"
 msgid "lowdelay: Restrict to only the lowest delay modes"
 msgstr "lowdelay：仅限最低延迟模式"
 
-#: src/dvr/dvr_db.c:4434
+#: src/dvr/dvr_db.c:4469
 msgid "min"
 msgstr "分钟"
 
-#: src/dvr/dvr_db.c:4435
+#: src/dvr/dvr_db.c:4470
 msgid "mins"
 msgstr "分钟"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:75
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:76
 msgid "module connected"
 msgstr "模块已连接"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:74
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:75
 msgid "module init"
 msgstr "模块初始化"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:73
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:74
 msgid "module present"
 msgstr "模块存在"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:76
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:77
 msgid "module ready"
 msgstr "模块就绪"
 
 #: src/transcoding/codec/codecs/mp2.c:51
 msgid "mp2"
-msgstr "MP2"
+msgstr "mp2"
 
 #: src/transcoding/codec/codecs/mpeg2video.c:44
 msgid "mpeg2video"
@@ -11836,12 +11839,12 @@ msgstr "设置 x265 预设。"
 msgid "set the x265 tune parameter."
 msgstr "设置 x265 调校参数。"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:71
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:72
 msgid "slot disabled"
 msgstr "插槽已禁用"
 
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:72
-#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:563
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:73
+#: src/input/mpegts/linuxdvb/linuxdvb_ca.c:579
 msgid "slot empty"
 msgstr "插槽空"
 
