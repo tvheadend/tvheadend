@@ -30,6 +30,8 @@
  *     editor on `cell-edit-complete`. No server round-trip.
  *   - `revertAll()` — discards every dirty cell. Called from
  *     the toolbar's Undo button.
+ *   - `revertCell(uuid, field)` — discards one dirty cell.
+ *     Called when Escape cancels the cell's edit.
  *   - `save()` — POSTs the diff. On success, clears the dirty
  *     store; the comet listener for the entity class will
  *     refresh the grid. On failure, dirty store is preserved
@@ -109,6 +111,9 @@ export interface UseInlineEditApi<Row extends BaseRow> {
   evaluateSmartClear: (uuid: string, field: string) => void
   /** Discards every dirty cell. */
   revertAll: () => void
+  /** Discards one cell's dirty value and its conflict
+   *  baseline. No-op if the cell isn't dirty. */
+  revertCell: (uuid: string, field: string) => void
   /** Sends the batch save POST. Resolves on success (dirty
    *  store cleared) or rejects on failure (dirty store
    *  preserved). No-op if `hasDirty` is false. */
@@ -230,6 +235,21 @@ export function useInlineEdit<Row extends BaseRow>(
     baselineMap.value = new Map(baselineMap.value)
   }
 
+  /* Drops one cell from the dirty store, together with its
+   * conflict baseline, so the cell shows the server value
+   * again. Without the baseline drop, a later dirty + clear
+   * cycle would keep showing the conflict marker against a
+   * stale baseline. Shared by smart-clear and by Escape in a
+   * cell. */
+  function revertCell(uuid: string, field: string): void {
+    const m = dirtyMap.value.get(uuid)
+    if (!m?.has(field)) return
+    m.delete(field)
+    if (m.size === 0) dirtyMap.value.delete(uuid)
+    dirtyMap.value = new Map(dirtyMap.value)
+    clearBaseline(uuid, field)
+  }
+
   function commitCell(
     uuid: string,
     field: string,
@@ -258,16 +278,7 @@ export function useInlineEdit<Row extends BaseRow>(
       : undefined
 
     if (!options.skipSmartClear && valuesMatch(value, original)) {
-      const m = dirtyMap.value.get(uuid)
-      if (!m?.has(field)) return
-      m.delete(field)
-      if (m.size === 0) dirtyMap.value.delete(uuid)
-      dirtyMap.value = new Map(dirtyMap.value)
-      /* Cell reverted to server value — drop the conflict
-       * baseline too. Without this, a subsequent dirty + clear
-       * cycle would keep showing the conflict marker against
-       * a stale baseline. */
-      clearBaseline(uuid, field)
+      revertCell(uuid, field)
       return
     }
 
@@ -332,10 +343,7 @@ export function useInlineEdit<Row extends BaseRow>(
       ? (row as Record<string, unknown>)[field]
       : undefined
     if (!valuesMatch(m.get(field), original)) return
-    m.delete(field)
-    if (m.size === 0) dirtyMap.value.delete(uuid)
-    dirtyMap.value = new Map(dirtyMap.value)
-    clearBaseline(uuid, field)
+    revertCell(uuid, field)
   }
 
   async function save(): Promise<void> {
@@ -400,6 +408,7 @@ export function useInlineEdit<Row extends BaseRow>(
     commitCell,
     evaluateSmartClear,
     revertAll,
+    revertCell,
     save,
   }
 }

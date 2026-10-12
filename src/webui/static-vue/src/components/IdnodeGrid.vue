@@ -2260,6 +2260,7 @@ function commitCellWithValidation(
   if (!inlineEdit) return
   const uuid = row.uuid as string | undefined
   if (!uuid) return
+  if (escapedCell !== null && escapedCell.uuid === uuid && escapedCell.field === col.field) return
   const prop = propFor(col)
   const next = new Map(cellErrors.value)
   if (prop) {
@@ -2450,16 +2451,30 @@ function onRowReorder(event: {
  * and the sort recomputes — the row snaps to its final spot.
  * scrollToUuid then keeps the row in view at its new home so
  * the user sees where it landed. cell-edit-cancel (Escape)
- * also clears the flag without a snap because useInlineEdit's
- * commit hadn't actually fired by Escape (PrimeVue's editor
- * discards on cancel). */
+ * also clears the flag, and onCellEditCancel puts back the
+ * cell's click-in state, so the row stays where it was.
+ *
+ * `wasDirty`, `dirtyValue` and `error` complete that click-in
+ * snapshot for Escape: whether the cell was dirty, its dirty
+ * value and its validation error. */
 const activelyEditingRowField = ref<{
   uuid: string
   field: string
   pinnedValue: unknown
+  wasDirty: boolean
+  dirtyValue: unknown
+  error: string | undefined
 } | null>(null)
 
+/* The cell whose editor Escape closed, until a cell editor opens
+ * again. An editor can still emit while Vue removes it: Chrome
+ * blurs the focused input on removal, and the channel number
+ * editor commits a trimmed "12." on blur. That value would undo
+ * the Escape, so commitCellWithValidation drops it. */
+let escapedCell: { uuid: string; field: string } | null = null
+
 function onCellEditInit(event: { data: Row; field: string }): void {
+  escapedCell = null
   const uuid = (event.data as { uuid?: string }).uuid
   if (!uuid) return
   /* Snapshot the row's current effective sort value — dirty
@@ -2471,12 +2486,26 @@ function onCellEditInit(event: { data: Row; field: string }): void {
   const pinnedValue = fieldMap?.has(event.field)
     ? fieldMap.get(event.field)
     : (event.data as Record<string, unknown>)[event.field]
-  activelyEditingRowField.value = { uuid, field: event.field, pinnedValue }
+  activelyEditingRowField.value = {
+    uuid,
+    field: event.field,
+    pinnedValue,
+    wasDirty: fieldMap?.has(event.field) ?? false,
+    dirtyValue: fieldMap?.get(event.field),
+    error: cellErrors.value.get(errorKey(uuid, event.field)),
+  }
 }
 
 function onCellEditComplete(event: { data: Row; field: string }): void {
   const uuid = (event.data as { uuid?: string }).uuid
-  activelyEditingRowField.value = null
+  /* Clear the flag only when it belongs to this cell. PrimeVue
+   * completes a cell 1 ms after a mousedown outside it. A click
+   * that lands within that time opens the next cell first, and
+   * the next cell's click-in state must stay for Escape. */
+  const active = activelyEditingRowField.value
+  if (active !== null && active.uuid === uuid && active.field === event.field) {
+    activelyEditingRowField.value = null
+  }
   /* Re-evaluate smart-clear now that the user has actually
    * finished editing. Per-keystroke commits skipped this; the
    * final value might match the server (the user backspaced
@@ -2498,8 +2527,39 @@ function onCellEditComplete(event: { data: Row; field: string }): void {
   }
 }
 
-function onCellEditCancel(): void {
+/* Escape. PrimeVue only closes the editor here — its own
+ * discard works for editors bound to its row copy, but ours
+ * commit every keystroke straight into the dirty store. Put
+ * the cell back as it was at click-in: dirty or not, the same
+ * dirty value (kept dirty even if it matches the server value
+ * now) and the same validation error. Enum pickers (PrimeVue
+ * Select) stop Escape themselves, so it gets here from the
+ * text and number editors only.
+ *
+ * The key stops at the cell. Bubbling on, it would also reach
+ * an enclosing drawer (ChannelManageDrawer), whose unsaved-
+ * changes check would find nothing pending after the restore
+ * and close without asking. A second Escape closes the drawer. */
+function onCellEditCancel(event: { originalEvent?: Event; data: Row; field: string }): void {
+  event.originalEvent?.stopPropagation()
+  const before = activelyEditingRowField.value
   activelyEditingRowField.value = null
+  const uuid = (event.data as { uuid?: string }).uuid
+  if (!inlineEdit || !before) return
+  if (before.uuid !== uuid || before.field !== event.field) return
+  if (before.wasDirty) {
+    inlineEdit.commitCell(before.uuid, before.field, before.dirtyValue, {
+      skipSmartClear: true,
+    })
+  } else {
+    inlineEdit.revertCell(before.uuid, before.field)
+  }
+  const m = new Map(cellErrors.value)
+  const key = errorKey(before.uuid, before.field)
+  if (before.error === undefined) m.delete(key)
+  else m.set(key, before.error)
+  cellErrors.value = m
+  escapedCell = { uuid: before.uuid, field: before.field }
 }
 
 /* Project dirty values for the reorder field onto each row, then
