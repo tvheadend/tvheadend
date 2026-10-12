@@ -741,7 +741,6 @@ clean:
 	rm -rf ${BUILDDIR}/src ${BUILDDIR}/bundle* ${BUILDDIR}/build.o ${BUILDDIR}/timestamp.* \
 	       src/tvh_locale_inc.c
 	find . -name "*~" | xargs rm -f
-	$(MAKE) -f Makefile.webui clean
 
 # Distclean
 .PHONY: distclean
@@ -821,7 +820,7 @@ intl:
 	@printf "Building tvheadend.pot\n"
 	@$(XGETTEXT2) -o intl/tvheadend.pot.new $(I18N-C)
 	@sed -e 's/^"Language: /"Language: en/' < intl/tvheadend.pot.new > intl/tvheadend.pot
-	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" WEBUI=std intl
+	$(MAKE) -f Makefile.webui LANGUAGES="$(LANGUAGES)" intl
 	@printf "Building docs/tvheadend.doc.pot\n"
 	@$(XGETTEXT2) -o intl/docs/tvheadend.doc.pot.new $(I18N-C-DOCS)
 	@sed -e 's/^"Language: /"Language: en/' < intl/docs/tvheadend.doc.pot.new > intl/docs/tvheadend.doc.pot
