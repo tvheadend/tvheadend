@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 44
+#define HTSP_PROTO_VERSION 45
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -973,6 +973,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
   const char *str;
+  int t;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   htsmsg_add_str(out, "idStr", idnode_uuid_as_str(&de->de_id, ubuf));
@@ -1114,9 +1115,19 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     if(!strempty(image))
       htsmsg_add_str(out, "image", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
     /* htsmsg camelcase to be compatible with other names */
-    image = de->de_fanart_image;
-    if(!strempty(image))
-      htsmsg_add_str(out, "fanartImage", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    image = dvr_entry_get_fanart_image(de);
+    /* Keep the JSON fanart_image lookup slot unchanged. */
+    if (strempty(image))
+      image = dvr_entry_get_typed_image(de, EPG_IMAGE_BACKDROP);
+    /* Full updates must clear cached artwork; absence means no change to
+     * clients applying partial updates. Stats-only updates skip this block. */
+    htsmsg_add_str(out, "fanartImage", strempty(image) ? "" :
+                   htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+      image = dvr_entry_get_typed_image(de, t);
+      htsmsg_add_str(out, epg_image_types[t].api, strempty(image) ? "" :
+                     htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    }
     if (de->de_copyright_year)
       htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
@@ -1327,6 +1338,7 @@ htsp_build_event
   const char *str;
   char buf[512];
   const int of = htsp->htsp_granted_access->aa_htsp_output_format;
+  int t;
 
   /* Ignore? */
   if (update && e->updated <= update) return NULL;
@@ -1440,6 +1452,12 @@ htsp_build_event
   if (!strempty(e->image))
     htsmsg_add_str(out, "image", htsp_image(htsp, e->image, buf, sizeof(buf), 34,
                                               (int64_t)e->start));
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+    htsmsg_add_str(out, epg_image_types[t].api,
+                   strempty(e->typed_image[t]) ? "" :
+                   htsp_image(htsp, e->typed_image[t], buf, sizeof(buf), 34,
+                              (int64_t)e->start));
+  }
 
   if (e->channel) {
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
