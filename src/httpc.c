@@ -701,6 +701,14 @@ error:
   return HTTP_CON_SENDING;
 }
 
+/* A body without Content-Length or chunked framing ends with the stream */
+static int
+http_client_eof_completes( http_client_t *hc )
+{
+  return !hc->hc_chunked &&
+         (hc->hc_csize == 0 || hc->hc_csize == (size_t)-1);
+}
+
 static int
 http_client_finish( http_client_t *hc )
 {
@@ -1014,14 +1022,15 @@ retry:
     r = recv(hc->hc_fd, buf, hc->hc_io_size, MSG_DONTWAIT);
   if (r == 0) {
     tvhtrace(LS_HTTPC, "%04X: end of stream", shortid(hc));
-    if (hc->hc_in_data && !hc->hc_keepalive) {
+    if (hc->hc_in_data && !hc->hc_keepalive && http_client_eof_completes(hc)) {
       tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", shortid(hc));
       return http_client_finish(hc);
     }
     return http_client_flush(hc, -EIO);
   }
   if (r < 0) {
-    if (errno == EIO && hc->hc_in_data && !hc->hc_keepalive) {
+    if (errno == EIO && hc->hc_in_data && !hc->hc_keepalive &&
+        http_client_eof_completes(hc)) {
       tvhtrace(LS_HTTPC, "%04X: error reading: %s", shortid(hc), strerror(errno));
       tvhtrace(LS_HTTPC, "%04X: no keep-alive, finishing", shortid(hc));
       return http_client_finish(hc);
@@ -1110,6 +1119,9 @@ header:
       hc->hc_csize = -1;
   }
   p = http_arg_get(&hc->hc_args, "Connection");
+  /* An HTTP/1.0 connection persists only when the response asks for it */
+  if (ver == HTTP_VERSION_1_0 && !(p && http_arg_contains(p, "keep-alive")))
+    hc->hc_keepalive = 0;
   if (p && ver != RTSP_VERSION_1_0) {
     if (http_arg_contains(p, "close") || http_arg_contains(p, "upgrade")) /* Some servers
       send the upgrade header to switch to http2 even though we did not request this.
@@ -1139,8 +1151,13 @@ header:
     http_client_rbuf_cut(hc, hc->hc_hsize);
     goto next_header;
   }
-  if (hc->hc_version == RTSP_VERSION_1_0 &&
-     (hc->hc_csize == -1 || !hc->hc_csize)) {
+  if ((hc->hc_version == RTSP_VERSION_1_0 &&
+       (hc->hc_csize == -1 || !hc->hc_csize)) ||
+      /* No body, whatever Content-Length or Transfer-Encoding say */
+      (hc->hc_version != RTSP_VERSION_1_0 &&
+       (hc->hc_cmd == HTTP_CMD_HEAD ||
+        hc->hc_code == HTTP_STATUS_NO_CONTENT ||
+        hc->hc_code == HTTP_STATUS_NOT_MODIFIED))) {
     hc->hc_csize = -1;
     hc->hc_in_data = 0;
     http_client_rbuf_cut(hc, hc->hc_hsize);
