@@ -784,6 +784,96 @@ xmltv_appendit(lang_str_t **_desc, string_list_t *list,
   }
 }
 
+static char *
+xmltv_image_url(htsmsg_t *image)
+{
+  const char *url = htsmsg_get_str(image, "cdata");
+  const char *end;
+
+  if (strempty(url))
+    return NULL;
+  /* Ignore XML formatting whitespace without modifying the parsed message. */
+  url += strspn(url, " \t\r\n");
+  end = url + strlen(url);
+  while (end > url && strchr(" \t\r\n", end[-1]))
+    end--;
+  return end == url ? NULL : strndup(url, end - url);
+}
+
+static htsmsg_t *
+xmltv_image_attributes(htsmsg_t *image)
+{
+  return image ? htsmsg_get_map(image, "attrib") : NULL;
+}
+
+/* Takes ownership of url whether selected or discarded. */
+static void
+xmltv_select_image(char **selected, int *selected_landscape,
+                   char *url, int landscape)
+{
+  if (!*selected || (!*selected_landscape && landscape)) {
+    free(*selected);
+    *selected = url;
+    *selected_landscape = landscape;
+  } else {
+    free(url);
+  }
+}
+
+/**
+ * Select the first image of each type, preferring landscape for backdrops
+ * and stills. Keep provider order within the preferred orientation.
+ */
+static int _xmltv_parse_images
+  (epggrab_module_t *mod, epg_broadcast_t *ebc, htsmsg_t *tags,
+   epg_changes_t *changes)
+{
+  const epggrab_module_int_t *imod = (const epggrab_module_int_t *)mod;
+  char *selected[EPG_IMAGE_TYPE_COUNT] = { NULL };
+  int selected_landscape[EPG_IMAGE_TYPE_COUNT] = { 0 };
+  char *url;
+  const char *type;
+  const char *orient;
+  int t, wanted = 0, save = 0;
+  htsmsg_t *image;
+  htsmsg_t *attribs;
+  htsmsg_field_t *f;
+
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++)
+    wanted |= imod->xmltv_image_types[t];
+  if (!wanted)
+    return 0;
+
+  HTSMSG_FOREACH(f, tags) {
+    if (strcmp(htsmsg_field_name(f), "image")) continue;
+    image = htsmsg_get_map_by_field(f);
+    attribs = xmltv_image_attributes(image);
+    if (!attribs)
+      continue;
+    type = htsmsg_get_str(attribs, "type");
+    if (!type)
+      continue;
+    for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++)
+      if (!strcmp(type, epg_image_types[t].xmltv))
+        break;
+    if (t == EPG_IMAGE_TYPE_COUNT || !imod->xmltv_image_types[t])
+      continue;
+    url = xmltv_image_url(image);
+    if (!url)
+      continue;
+    orient = htsmsg_get_str(attribs, "orient");
+    xmltv_select_image(&selected[t], &selected_landscape[t], url,
+                       t != EPG_IMAGE_POSTER && orient && !strcmp(orient, "L"));
+  }
+
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+    if (selected[t])
+      save |= epg_broadcast_set_typed_image(ebc, t, selected[t], changes);
+    free(selected[t]);
+  }
+  return save;
+}
+
 /**
  * Parse tags inside of a programme
  */
@@ -1044,6 +1134,8 @@ static int _xmltv_parse_programme_tags
 
   if (icon)
     save |= epg_broadcast_set_image(ebc, icon, &changes);
+
+  save |= _xmltv_parse_images(mod, ebc, tags, &changes);
 
   save |= epg_broadcast_set_first_aired(ebc, first_aired, &changes);
 
@@ -1497,6 +1589,69 @@ xmltv_dn_chnum_list ( void *o, const char *lang )
   return strtab2htsmsg(tab, 1, lang);
 }
 
+static idnode_slist_t xmltv_image_types_slist[] = {
+  {
+    .id   = "poster",
+    .name = N_("Poster"),
+    .off  = offsetof(epggrab_module_int_t, xmltv_image_types[EPG_IMAGE_POSTER]),
+  },
+  {
+    .id   = "backdrop",
+    .name = N_("Backdrop"),
+    .off  = offsetof(epggrab_module_int_t, xmltv_image_types[EPG_IMAGE_BACKDROP]),
+  },
+  {
+    .id   = "still",
+    .name = N_("Still"),
+    .off  = offsetof(epggrab_module_int_t, xmltv_image_types[EPG_IMAGE_STILL]),
+  },
+  {}
+};
+
+static htsmsg_t *
+xmltv_image_types_list ( void *o, const char *lang )
+{
+  return idnode_slist_enum(o, xmltv_image_types_slist, lang);
+}
+
+static const void *
+xmltv_image_types_get ( void *o )
+{
+  return idnode_slist_get(o, xmltv_image_types_slist);
+}
+
+static int
+xmltv_image_types_set ( void *o, const void *p )
+{
+  return idnode_slist_set(o, xmltv_image_types_slist, p);
+}
+
+static char *
+xmltv_image_types_rend ( void *o, const char *lang )
+{
+  return idnode_slist_rend(o, xmltv_image_types_slist, lang);
+}
+
+#define IMAGE_TYPES_NAME N_("Programme image types")
+#define IMAGE_TYPES_DESC \
+  N_("Import the selected XMLTV programme image types in addition to icons. " \
+     "Disabled by default. Each type can add image cache downloads and " \
+     "memory usage. Backdrops and stills prefer landscape images.")
+
+/* Shared by the internal and external grabber classes */
+#define IMAGE_TYPES_PROP {                \
+  .type   = PT_STR,                       \
+  .islist = 1,                            \
+  .id     = "image_types",                \
+  .name   = IMAGE_TYPES_NAME,             \
+  .desc   = IMAGE_TYPES_DESC,             \
+  .get    = xmltv_image_types_get,        \
+  .set    = xmltv_image_types_set,        \
+  .list   = xmltv_image_types_list,       \
+  .rend   = xmltv_image_types_rend,       \
+  .group  = 1                             \
+}
+
 const idclass_t epggrab_mod_int_xmltv_class = {
   .ic_super      = &epggrab_mod_int_class,
   .ic_class      = "epggrab_mod_int_xmltv",
@@ -1547,6 +1702,7 @@ const idclass_t epggrab_mod_int_xmltv_class = {
       .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
       .group  = 1
     },
+    IMAGE_TYPES_PROP,
     {
       .type   = PT_STR,
       .id     = "xpath_category_code",
@@ -1648,6 +1804,7 @@ const idclass_t epggrab_mod_ext_xmltv_class = {
       .off    = offsetof(epggrab_module_int_t, xmltv_use_category_not_genre),
       .group  = 1
     },
+    IMAGE_TYPES_PROP,
     {
       .type   = PT_STR,
       .id     = "xpath_category_code",
