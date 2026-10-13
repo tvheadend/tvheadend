@@ -1888,7 +1888,13 @@ atsc_vct_callback
     /* Extract fields */
     atsc_utf16_to_utf8(ptr, 7, chname, sizeof(chname));
     maj  = (ptr[14] & 0xF) << 6 | ptr[15] >> 2;
-    min  = (ptr[15] & 0x3) << 2 | ptr[16];
+    min  = (ptr[15] & 0x3) << 8 | ptr[16];
+    /* A/65 one-part channel number (major 1008..1023) */
+    if ((maj & 0x3F0) == 0x3F0) {
+      min = (maj & 0xF) << 10 | min;
+      maj = min;
+      min = 0;
+    }
     tsid = extract_tsid(ptr + 22);
     sid  = extract_svcid(ptr + 24);
     type = ptr[27] & 0x3f;
