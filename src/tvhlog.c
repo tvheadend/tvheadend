@@ -210,7 +210,9 @@ tvhlog_subsys_t tvhlog_transcode_subsystems[] = {
     [LST_LIBX26X]       = { "libx26x",       N_("LIB x264_x265") },
     [LST_NVENC]         = { "nvenc",         N_("NVENC") },
     [LST_OMX]           = { "omx",           N_("OMX") },
+    [LST_V4l2M2M]       = { "v4l2",          N_("V4L2-API") },
     [LST_VAAPI]         = { "vaapi",         N_("VA-API") },
+    [LST_QSV]           = { "qsv",           N_("QSV-API") },
     [LST_VAINFO]        = { "vainfo",        N_("VAINFO") },
 };
 
