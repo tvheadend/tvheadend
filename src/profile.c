@@ -1022,6 +1022,8 @@ profile_sharer_destroy(profile_chain_t *prch)
       tvh_mutex_unlock(&prsh->prsh_queue_mutex);
 	  } 
   }
+  prch->prch_sharer = NULL;
+  prch->prch_post_share = NULL;
 }
 
 /*
