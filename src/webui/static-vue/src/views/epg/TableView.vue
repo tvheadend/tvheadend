@@ -138,7 +138,7 @@ import type { FilterDef, GridResponse, GroupableFieldDef } from '@/types/grid'
 import { apiCall } from '@/api/client'
 import { fmtDate, fmtGroupDate } from '@/utils/formatTime'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const ONE_DAY = 24 * 60 * 60
 
@@ -2235,7 +2235,11 @@ function buildAutoRecSummary(input: AutoRecSummaryInput): string {
   const countLine =
     input.matchCount === null
       ? ''
-      : t('Currently this will match (and record) {0} events.', input.matchCount) + ' '
+      : tn(
+          'Currently this will match (and record) {0} event.',
+          'Currently this will match (and record) {0} events.',
+          input.matchCount,
+        ) + ' '
   return (
     t(
       'This will create an automatic rule that continuously scans the EPG for programs to record that match this query:',
@@ -2460,13 +2464,13 @@ async function onCreateAutoRecClick() {
       <template #empty>
         <p class="epg-table-grid__empty">
           <template v-if="queryLoading">
-            Searching the EPG…
+            {{ t('Searching the EPG…') }}
           </template>
           <template v-else-if="state.loading.value">
-            Loading events…
+            {{ t('Loading events…') }}
           </template>
           <template v-else-if="hasActiveFilter">
-            No events match the current filter.
+            {{ t('No events match the current filter.') }}
             <button
               type="button"
               class="epg-table-grid__clear-filters"
@@ -2476,8 +2480,11 @@ async function onCreateAutoRecClick() {
             </button>
           </template>
           <template v-else>
-            No EPG events available. Make sure your network's EPG grabbers are configured and have
-            run at least once.
+            {{
+              t(
+                "No EPG events available. Make sure your network's EPG grabbers are configured and have run at least once."
+              )
+            }}
           </template>
         </p>
       </template>

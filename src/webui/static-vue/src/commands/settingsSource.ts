@@ -5,7 +5,7 @@
  * settingsSource — dynamic command palette source for singleton
  * config fields. Indexes every editable property on the six
  * Configuration → … pages whose body is a single idnode editor
- * (Base, Image cache, SAT>IP Server, Timeshift, Debugging, EPG
+ * (Base, Image Cache, SAT>IP Server, Timeshift, Debugging, EPG
  * Grabber). Per-entity dataset fields (channel name, mux
  * frequency, recording title) are deliberately out of scope —
  * dataset lookup is already covered by the Channels / Recordings /
@@ -29,7 +29,7 @@ import { ref, type Ref } from 'vue'
 import { Sliders } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
-import { t } from '@/composables/useI18n'
+import { N_, currentLang, t } from '@/composables/useI18n'
 import type { IdnodeProp, PropertyGroup } from '@/types/idnode'
 import type { useAccessStore } from '@/stores/access'
 import type { Command } from './commandRegistry'
@@ -48,20 +48,21 @@ interface PageDef {
    * `IdnodeConfigForm` consumes (`meta: 1` requests the metadata
    * alongside current values). */
   loadEndpoint: string
-  /* Human-readable trail shown as the result description, e.g.
-   * "General — Base". English strings here are passed through
-   * `t()` at command-build time — the server caption is also
+  /* Trail of the page, the route titles of the router, shown as
+   * the result description, e.g. "General — Base". The parts are
+   * translated with `t()` at command-build time, so they read as
+   * the sidebar and tabs do. The server caption is also
    * pre-localised but won't capture the breadcrumb path. */
-  pageTitle: string
+  trail: readonly string[]
 }
 
 const PAGES: readonly PageDef[] = [
-  { route: 'config-general-base', loadEndpoint: 'config/load', pageTitle: 'General — Base' },
-  { route: 'config-general-image-cache', loadEndpoint: 'imagecache/config/load', pageTitle: 'General — Image cache' },
-  { route: 'config-general-satip-server', loadEndpoint: 'satips/config/load', pageTitle: 'General — SAT>IP Server' },
-  { route: 'config-recording-timeshift', loadEndpoint: 'timeshift/config/load', pageTitle: 'Recording — Timeshift' },
-  { route: 'config-debugging-config', loadEndpoint: 'tvhlog/config/load', pageTitle: 'Debugging' },
-  { route: 'config-channel-epg-grabber', loadEndpoint: 'epggrab/config/load', pageTitle: 'Channel/EPG — EPG Grabber' },
+  { route: 'config-general-base', loadEndpoint: 'config/load', trail: [N_('General'), N_('Base')] },
+  { route: 'config-general-image-cache', loadEndpoint: 'imagecache/config/load', trail: [N_('General'), N_('Image Cache')] },
+  { route: 'config-general-satip-server', loadEndpoint: 'satips/config/load', trail: [N_('General'), N_('SAT>IP Server')] },
+  { route: 'config-recording-timeshift', loadEndpoint: 'timeshift/config/load', trail: [N_('Recording'), N_('Timeshift')] },
+  { route: 'config-debugging-config', loadEndpoint: 'tvhlog/config/load', trail: [N_('Debugging')] },
+  { route: 'config-channel-epg-grabber', loadEndpoint: 'epggrab/config/load', trail: [N_('Channel / EPG'), N_('EPG Grabber')] },
 ] as const
 
 interface LoadResponse {
@@ -78,6 +79,11 @@ export interface SettingsSourceDeps {
 
 const commands = ref<Command[]>([])
 let lastFetchAt = 0
+/* Language the commands were built in. The setup wizard changes
+ * it without a page reload, so a change fetches them again even
+ * inside the TTL. The server sends the captions in the language
+ * of the request, so they follow too. */
+let lastFetchLang = ''
 let inflight: Promise<void> | null = null
 
 export function getSettingsCommands(): Ref<Command[]> {
@@ -93,7 +99,13 @@ export function getSettingsCommands(): Ref<Command[]> {
 export async function ensureSettingsLoaded(deps: SettingsSourceDeps): Promise<void> {
   if (!deps.access.has('admin')) return
   if (inflight) return inflight
-  if (commands.value.length > 0 && Date.now() - lastFetchAt < CACHE_TTL_MS) return
+  if (
+    commands.value.length > 0 &&
+    Date.now() - lastFetchAt < CACHE_TTL_MS &&
+    lastFetchLang === currentLang()
+  ) {
+    return
+  }
   inflight = doFetch(deps)
   return inflight
 }
@@ -105,6 +117,7 @@ async function doFetch(deps: SettingsSourceDeps): Promise<void> {
       params.filter(searchable).map((prop) => buildSettingCommand(prop, page, groupByNumber, deps)),
     )
     lastFetchAt = Date.now()
+    lastFetchLang = currentLang()
   } finally {
     inflight = null
   }
@@ -153,7 +166,8 @@ function buildSettingCommand(
 ): Command {
   const groupName =
     typeof prop.group === 'number' ? groupByNumber.get(prop.group) ?? null : null
-  const description = groupName ? `${page.pageTitle} · ${groupName}` : page.pageTitle
+  const pageTitle = page.trail.map((part) => t(part)).join(' — ')
+  const description = groupName ? `${pageTitle} · ${groupName}` : pageTitle
   /* Keywords carry the synonym surface for fuse:
    *   - prop.id boosts queries that use the internal field name
    *     ("uilevel", "language_ui") even when the caption is a
@@ -190,5 +204,6 @@ function buildSettingCommand(
 export function __resetSettingsSourceForTests(): void {
   commands.value = []
   lastFetchAt = 0
+  lastFetchLang = ''
   inflight = null
 }

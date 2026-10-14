@@ -73,7 +73,7 @@ import { apiErrorMessage } from '@/utils/apiErrorMessage'
 import { buildMultiEditPayload } from '@/api/multiEditIdnode'
 import { useI18n } from '@/composables/useI18n'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const props = defineProps<{
   /* uuid of the row to edit; null/undefined means closed. */
@@ -464,7 +464,8 @@ const effectiveTitle = computed(() => {
     base = t('Edit')
   }
   if (isMultiEdit.value && props.uuids) {
-    return t('{0} ({1} entries)', base, props.uuids.length)
+    const count = props.uuids.length
+    return tn('{0} ({1} entry)', '{0} ({1} entries)', count, base, count)
   }
   return base
 })
@@ -733,7 +734,7 @@ function lengthHint(prop: IdnodeProp): LengthHint | null {
    * past the "obviously short" threshold; single-line strings stay
    * silent (no clutter on every text input). */
   if (prop.multiline && len > 100) {
-    return { text: `${len.toLocaleString()} chars`, warn: false }
+    return { text: tn('{0} char', '{0} chars', len, len.toLocaleString()), warn: false }
   }
   return null
 }
@@ -1104,7 +1105,7 @@ async function loadRow(uuid: string) {
      * per-field via v-model. */
     currentValues.value = { ...init }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
+    error.value = e instanceof Error ? e.message : t('Failed to load: {0}', String(e))
     fieldProps.value = []
     propertyGroups.value = []
     currentClass.value = null
@@ -1249,7 +1250,7 @@ async function loadCreate() {
     initialValues.value = init
     currentValues.value = { ...init }
   } catch (e) {
-    error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
+    error.value = e instanceof Error ? e.message : t('Failed to load: {0}', String(e))
     fieldProps.value = []
     propertyGroups.value = []
     currentClass.value = null
@@ -1676,8 +1677,8 @@ onBeforeUnmount(() => {
           in single-edit and create.
         -->
         <p v-if="isMultiEdit" class="idnode-editor__multi-banner">
-          Editing {{ uuids?.length ?? 0 }} entries. Tick fields on the
-          left to apply changes to all selected rows.
+          {{ tn('Editing {0} entry.', 'Editing {0} entries.', uuids?.length ?? 0) }}
+          {{ t('Tick fields on the left to apply changes to all selected rows.') }}
         </p>
         <form class="idnode-editor__form" @submit.prevent="save()">
         <!--
@@ -1795,7 +1796,7 @@ onBeforeUnmount(() => {
                   />
                   <p v-else class="idnode-editor__placeholder">
                     <strong>{{ p.caption ?? p.id }}:</strong>
-                    editor support not implemented for this field type
+                    {{ t('editor support not implemented for this field type') }}
                   </p>
                   <!--
                     Error message under the input. Visible when the

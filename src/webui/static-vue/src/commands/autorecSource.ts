@@ -31,7 +31,7 @@ import { ref, type Ref } from 'vue'
 import { Repeat } from 'lucide-vue-next'
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
-import { t } from '@/composables/useI18n'
+import { currentLang, t } from '@/composables/useI18n'
 import type { useAccessStore } from '@/stores/access'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { useEntityEditor } from '@/composables/useEntityEditor'
@@ -73,6 +73,10 @@ export interface AutorecSourceDeps {
 
 const commands = ref<Command[]>([])
 let lastFetchAt = 0
+/* Language the labels were translated into. The setup wizard
+ * changes it without a page reload, so a change fetches the
+ * commands again even inside the TTL. */
+let lastFetchLang = ''
 let inflight: Promise<void> | null = null
 
 export function getAutorecCommands(): Ref<Command[]> {
@@ -82,7 +86,11 @@ export function getAutorecCommands(): Ref<Command[]> {
 export function ensureAutorecsLoaded(deps: AutorecSourceDeps): Promise<void> {
   const now = Date.now()
   if (inflight) return inflight
-  if (commands.value.length > 0 && now - lastFetchAt < CACHE_TTL_MS) {
+  if (
+    commands.value.length > 0 &&
+    now - lastFetchAt < CACHE_TTL_MS &&
+    lastFetchLang === currentLang()
+  ) {
     return Promise.resolve()
   }
   inflight = doFetch(deps)
@@ -99,6 +107,7 @@ async function doFetch(deps: AutorecSourceDeps): Promise<void> {
     })
     commands.value = (resp.entries ?? []).map((e) => buildAutorecCommand(e, deps))
     lastFetchAt = Date.now()
+    lastFetchLang = currentLang()
   } catch {
     /* Silent fail — non-dvr users get an empty list naturally
      * (their access is the actual gate), and a transient
@@ -114,7 +123,7 @@ function buildAutorecCommand(entry: AutorecRow, deps: AutorecSourceDeps): Comman
   /* Label preference: user-given name first (when set), title
    * fallback (the raw matcher), then a generic placeholder so
    * the row is at least visible even for a misconfigured rule. */
-  const label = entry.name?.trim() || entry.title?.trim() || '(Unnamed autorec)'
+  const label = entry.name?.trim() || entry.title?.trim() || t('(Unnamed autorec)')
   /* `enabled` may arrive as boolean or 0/1 over the wire — both
    * coerce truthfully. */
   const isEnabled = !!entry.enabled
@@ -126,7 +135,7 @@ function buildAutorecCommand(entry: AutorecRow, deps: AutorecSourceDeps): Comman
     section: 'Autorecs',
     icon: Repeat,
     keywords: ['autorec', 'series', 'rule', 'auto'],
-    actionLabel: 'Edit',
+    actionLabel: t('Edit'),
     action: () => deps.entityEditor.open(uuid),
   }
   /* The autorec commands themselves are only listed because the
@@ -137,11 +146,11 @@ function buildAutorecCommand(entry: AutorecRow, deps: AutorecSourceDeps): Comman
    * source self-consistent if someone changes the gating later. */
   if (deps.access.has('dvr')) {
     cmd.secondaryAction = {
-      label: isEnabled ? 'Disable' : 'Enable',
+      label: isEnabled ? t('Disable') : t('Enable'),
       handler: () => toggleEnabled(uuid, label, isEnabled, deps.toast),
     }
     cmd.tertiaryAction = {
-      label: 'Delete autorec',
+      label: t('Delete autorec'),
       handler: () => deleteAutorec(uuid, label, deps.toast, deps.confirm),
     }
   }
@@ -227,5 +236,6 @@ async function deleteAutorec(
 export function __resetAutorecSourceForTests(): void {
   commands.value = []
   lastFetchAt = 0
+  lastFetchLang = ''
   inflight = null
 }

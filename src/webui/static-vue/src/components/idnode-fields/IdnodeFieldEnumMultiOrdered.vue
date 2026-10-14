@@ -37,10 +37,12 @@ import { computed, ref } from 'vue'
 import { ChevronDown, ChevronUp, Minus, Plus } from 'lucide-vue-next'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 import { useEnumOptions } from './useEnumOptions'
 import type { Option } from './deferredEnum'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -239,14 +241,14 @@ const canMoveDown = computed(() => {
     </span>
     <div class="ifld__transfer" :aria-disabled="isReadonly">
       <div class="ifld__transfer-pane">
-        <div class="ifld__transfer-legend">Available</div>
+        <div class="ifld__transfer-legend">{{ t('Available') }}</div>
         <input
           v-if="useFilters"
           v-model="availableFilter"
           type="text"
           class="ifld__transfer-filter"
-          :placeholder="`Filter…`"
-          :aria-label="`Filter available ${prop.caption ?? prop.id} options`"
+          :placeholder="t('Filter…')"
+          :aria-label="t('Filter available {0} options', prop.caption ?? prop.id)"
           :disabled="isReadonly"
         />
         <!--
@@ -263,7 +265,7 @@ const canMoveDown = computed(() => {
         <ul
           class="ifld__transfer-list"
           :style="{ height: `${listHeightPx}px` }"
-          :aria-label="`Available ${prop.caption ?? prop.id} options`"
+          :aria-label="t('Available {0} options', prop.caption ?? prop.id)"
         >
           <li
             v-for="o in availableOptions"
@@ -283,7 +285,7 @@ const canMoveDown = computed(() => {
                (allOptions populated, but every option has been
                moved into the Selected pane). -->
           <li v-if="availableOptions.length === 0" class="ifld__transfer-empty">
-            {{ allOptions.length === 0 ? '(no options available)' : '(all selected)' }}
+            {{ allOptions.length === 0 ? t('(no options available)') : t('(all selected)') }}
           </li>
         </ul>
       </div>
@@ -299,20 +301,20 @@ const canMoveDown = computed(() => {
              Reorder buttons keep the up/down chevrons since
              "earlier / later in list" is always vertical. -->
         <button
-          v-tooltip.right="'Add to Selected'"
+          v-tooltip.right="t('Add to Selected')"
           type="button"
           class="ifld__transfer-btn"
-          aria-label="Add to Selected"
+          :aria-label="t('Add to Selected')"
           :disabled="isReadonly || !canMoveRight"
           @click="moveToSelected"
         >
           <Plus :size="16" :stroke-width="2" />
         </button>
         <button
-          v-tooltip.right="'Remove from Selected'"
+          v-tooltip.right="t('Remove from Selected')"
           type="button"
           class="ifld__transfer-btn"
-          aria-label="Remove from Selected"
+          :aria-label="t('Remove from Selected')"
           :disabled="isReadonly || !canMoveLeft"
           @click="moveToAvailable"
         >
@@ -320,10 +322,10 @@ const canMoveDown = computed(() => {
         </button>
         <button
           v-if="!noReorder"
-          v-tooltip.right="'Move Up'"
+          v-tooltip.right="t('Move Up')"
           type="button"
           class="ifld__transfer-btn"
-          aria-label="Move Up"
+          :aria-label="t('Move Up')"
           :disabled="isReadonly || !canMoveUp"
           @click="moveUp"
         >
@@ -331,10 +333,10 @@ const canMoveDown = computed(() => {
         </button>
         <button
           v-if="!noReorder"
-          v-tooltip.right="'Move Down'"
+          v-tooltip.right="t('Move Down')"
           type="button"
           class="ifld__transfer-btn"
-          aria-label="Move Down"
+          :aria-label="t('Move Down')"
           :disabled="isReadonly || !canMoveDown"
           @click="moveDown"
         >
@@ -342,14 +344,14 @@ const canMoveDown = computed(() => {
         </button>
       </div>
       <div class="ifld__transfer-pane">
-        <div class="ifld__transfer-legend">Selected</div>
+        <div class="ifld__transfer-legend">{{ t('Selected') }}</div>
         <input
           v-if="useFilters"
           v-model="selectedFilter"
           type="text"
           class="ifld__transfer-filter"
-          :placeholder="`Filter…`"
-          :aria-label="`Filter selected ${prop.caption ?? prop.id} options`"
+          :placeholder="t('Filter…')"
+          :aria-label="t('Filter selected {0} options', prop.caption ?? prop.id)"
           :disabled="isReadonly"
         />
         <ul
@@ -357,8 +359,8 @@ const canMoveDown = computed(() => {
           :style="{ height: `${listHeightPx}px` }"
           :aria-label="
             noReorder
-              ? `Selected ${prop.caption ?? prop.id} options`
-              : `Selected ${prop.caption ?? prop.id} options, in priority order`
+              ? t('Selected {0} options', prop.caption ?? prop.id)
+              : t('Selected {0} options, in priority order', prop.caption ?? prop.id)
           "
         >
           <li
@@ -374,7 +376,7 @@ const canMoveDown = computed(() => {
             {{ o.val }}
           </li>
           <li v-if="selectedOptions.length === 0" class="ifld__transfer-empty">
-            {{ allOptions.length === 0 ? '(no options available)' : '(none selected)' }}
+            {{ allOptions.length === 0 ? t('(no options available)') : t('(none selected)') }}
           </li>
         </ul>
       </div>

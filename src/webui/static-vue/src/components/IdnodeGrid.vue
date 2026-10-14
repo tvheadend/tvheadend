@@ -61,7 +61,7 @@ import { useI18n } from '@/composables/useI18n'
 import { useIsPhone } from '@/composables/useIsPhone'
 import { useHelp } from '@/composables/useHelp'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 import IdnodeFieldString from './idnode-fields/IdnodeFieldString.vue'
 import IdnodeFieldNumber from './idnode-fields/IdnodeFieldNumber.vue'
 import IdnodeFieldEnum from './idnode-fields/IdnodeFieldEnum.vue'
@@ -1977,14 +1977,16 @@ const confirmDialog = useConfirmDialog()
 async function confirmDiscardIfDirty(): Promise<boolean> {
   if (!inlineEdit || !inlineEdit.hasDirty.value) return true
   const rows = inlineEdit.dirtyRowCount.value
-  /* Singular vs plural is built into the ngettext-style msgid:
-   * '1 row' for rows === 1, '{0} rows' otherwise. Translators get
-   * grammatically correct copy for their language without the
-   * client juggling rules; novel-string fallback for languages
-   * tvheadend doesn't ship is the English form. */
-  const rowsPhrase = rows === 1 ? t('1 row') : t('{0} rows', rows)
+  /* The whole sentence is one plural message, so each language
+   * picks the form of "row" for the count and builds the rest of
+   * the sentence around it. Without a translation it reads in
+   * English, "1 row" or "{0} rows". */
   return await confirmDialog.ask(
-    t('You have unsaved cell edits across {0}. Discard them?', rowsPhrase),
+    tn(
+      'You have unsaved cell edits across {0} row. Discard them?',
+      'You have unsaved cell edits across {0} rows. Discard them?',
+      rows,
+    ),
     {
       header: t('Unsaved changes'),
       acceptLabel: t('Discard'),
@@ -2686,9 +2688,9 @@ defineExpose({
         "
         :title="
           hasValidationErrors
-            ? t('Resolve {0} before saving', cellErrors.size === 1 ? t('1 validation error') : t('{0} validation errors', cellErrors.size))
+            ? tn('Resolve {0} validation error before saving', 'Resolve {0} validation errors before saving', cellErrors.size)
             : inlineEdit.dirtyRowCount.value
-              ? t('Save changes to {0}', inlineEdit.dirtyRowCount.value === 1 ? t('1 row') : t('{0} rows', inlineEdit.dirtyRowCount.value))
+              ? tn('Save changes to {0} row', 'Save changes to {0} rows', inlineEdit.dirtyRowCount.value)
               : t('Save pending changes')
         "
         @click="onSaveEdits"
@@ -2834,9 +2836,9 @@ defineExpose({
           "
           :title="
             hasValidationErrors
-              ? t('Resolve {0} before saving', cellErrors.size === 1 ? t('1 validation error') : t('{0} validation errors', cellErrors.size))
+              ? tn('Resolve {0} validation error before saving', 'Resolve {0} validation errors before saving', cellErrors.size)
               : inlineEdit.dirtyRowCount.value
-                ? t('Save changes to {0} and exit edit mode', inlineEdit.dirtyRowCount.value === 1 ? t('1 row') : t('{0} rows', inlineEdit.dirtyRowCount.value))
+                ? tn('Save changes to {0} row and exit edit mode', 'Save changes to {0} rows and exit edit mode', inlineEdit.dirtyRowCount.value)
                 : t('Save pending changes and exit edit mode')
           "
           @click="onSaveEdits"

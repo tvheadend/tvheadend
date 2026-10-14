@@ -47,7 +47,7 @@ import type {
 import { countActiveGlobalFilters } from './epgTableFilters'
 import type { ColumnDef } from '@/types/column'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const props = defineProps<{
   /* Current state — two-way bound via v-model:options. */
@@ -427,8 +427,8 @@ const filtersSummary = computed(() => {
   }
   const otherGlobal = activeGlobalCount.value -
     (props.options.timeWindow === props.defaults.timeWindow ? 0 : 1)
-  if (otherGlobal > 0) bits.push(t('{0} global', otherGlobal))
-  if (cols > 0) bits.push(t('{0} columns', cols))
+  if (otherGlobal > 0) bits.push(tn('{0} global', '{0} global', otherGlobal))
+  if (cols > 0) bits.push(tn('{0} column', '{0} columns', cols))
   return bits.join(' · ')
 })
 

@@ -9,8 +9,7 @@
  *
  * Each consumer differs in: column set, store-key, endpoint,
  * createBase, the EDITOR_LIST_BASE strings, the editList
- * factory, the entity-noun used in the delete confirm text,
- * and the Add tooltip. All of those land here as call options;
+ * factory, the delete confirm text, and the Add tooltip. All of those land here as call options;
  * the resulting handle exposes the editor state and the
  * `buildActions(selection, clearSelection)` factory the view's
  * `toolbarActions` slot drives.
@@ -21,6 +20,7 @@ import type { ActionDef } from '@/types/action'
 import { useBulkAction } from './useBulkAction'
 import { useEditorMode } from './useEditorMode'
 import { buildAddEditDeleteActions } from '@/views/dvr/dvrToolbarHelpers'
+import { t } from '@/composables/useI18n'
 
 export function useDvrRulesView(opts: {
   /** Create endpoint, e.g. 'dvr/autorec'. Drives the create drawer. */
@@ -29,8 +29,8 @@ export function useDvrRulesView(opts: {
   editList: Ref<string> | ComputedRef<string>
   /** Field-list for the Create drawer (the bare base, no admin-only fields). */
   createList: string
-  /** Plural noun used in the delete-confirm text — "autorec entries", "timer entries". */
-  entityNoun: string
+  /** Delete-confirm question, the whole translated sentence. */
+  confirmText: string
   /** Tooltip on the Add toolbar button. */
   addTooltip: string
 }) {
@@ -42,9 +42,9 @@ export function useDvrRulesView(opts: {
 
   const remove = useBulkAction({
     endpoint: 'idnode/delete',
-    confirmText: `Do you really want to delete the selected ${opts.entityNoun}?`,
+    confirmText: opts.confirmText,
     confirmSeverity: 'danger',
-    failPrefix: 'Failed to delete',
+    failPrefix: t('Failed to delete'),
   })
 
   function buildActions(selection: BaseRow[], clearSelection: () => void): ActionDef[] {

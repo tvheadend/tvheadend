@@ -67,7 +67,7 @@ import PlayCell from '@/components/PlayCell.vue'
 import { useI18n } from '@/composables/useI18n'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 /* Column declaration mirrors the C-side `channel_class`
  * property table order. Drawer-only array fields (epggrab,
@@ -316,7 +316,7 @@ async function onResetIcon(selection: BaseRow[], clearSelection: () => void) {
   const ok = await confirmDialog.ask(
     uuids.length === 1
       ? t('Reset the icon for the selected channel?')
-      : t('Reset icons for {0} channels?', uuids.length),
+      : tn('Reset icons for {0} channel?', 'Reset icons for {0} channels?', uuids.length),
   )
   if (!ok) return
   resetIconInflight.value = true
@@ -329,7 +329,9 @@ async function onResetIcon(selection: BaseRow[], clearSelection: () => void) {
       node: { uuid: uuids, icon: '' },
     })
     toast.success(
-      uuids.length === 1 ? t('Icon reset.') : t('Icons reset for {0} channels.', uuids.length),
+      uuids.length === 1
+        ? t('Icon reset.')
+        : tn('Icons reset for {0} channel.', 'Icons reset for {0} channels.', uuids.length),
     )
     clearSelection()
   } catch (err) {
