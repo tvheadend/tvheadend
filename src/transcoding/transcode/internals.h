@@ -31,6 +31,7 @@
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersrc.h>
 #include <libavfilter/buffersink.h>
+#include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
 
 
@@ -56,12 +57,18 @@ typedef enum {
     OPEN_ENCODER_POST
 } TVHOpenPhase;
 
+// buffersink gained array-type format options in libavfilter 10.6.100 and
+// lost the int-list/string ones in libavfilter 12
+#define TVH_BUFFERSINK_ARRAY_OPTS \
+    (LIBAVFILTER_VERSION_INT >= AV_VERSION_INT(10, 6, 100))
+
 #if LIBAVCODEC_VERSION_MAJOR > 59
 // this is needed to separate av_opt_set-s from _context_filters_apply_sink_options
 typedef enum {
     AV_OPT_SET_UNKNOWN,
     AV_OPT_SET_BIN,
-    AV_OPT_SET_STRING
+    AV_OPT_SET_STRING,
+    AV_OPT_SET_ARRAY
 } av_opt_set_type;
 #endif
 
@@ -185,7 +192,9 @@ void
 tvh_context_close(TVHContext *self, int flush);
 
 /* __VA_ARGS__ = NULL terminated list of sink options
-   sink option = (const char *name, av_opt_set_type opt_set_type, int size, const uint8_t *value) */
+   sink option = (const char *name, av_opt_set_type opt_set_type, int size, const uint8_t *value)
+   AV_OPT_SET_ARRAY takes the element type in place of the size:
+   sink option = (const char *name, AV_OPT_SET_ARRAY, enum AVOptionType type, const void *value) */
 int
 tvh_context_open_filters(TVHContext *self,
                          const char *source_name, const char *source_args,
