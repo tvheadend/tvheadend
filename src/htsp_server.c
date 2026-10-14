@@ -4175,13 +4175,17 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
-  int qlen = hs->hs_q.hmq_payload;
+  int qlen;
   int video = SCT_ISVIDEO(pkt->pkt_type);
   size_t payloadlen;
 
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
+  qlen = hs->hs_q.hmq_payload;
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
   if (pkt->pkt_err)
     hs->hs_data_errors += pkt->pkt_err;
   if(pkt->pkt_payload == NULL) {
+    pkt_ref_dec(pkt);
     return;
   }
 
@@ -4243,8 +4247,6 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     m = htsmsg_create_map();
     htsmsg_add_str(m, "method", "queueStatus");
     htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-    htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
-    htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
     if (hs->hs_data_errors)
       htsmsg_add_u32(m, "errors", hs->hs_data_errors);
 
@@ -4254,6 +4256,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
     tvh_mutex_lock(&htsp->htsp_out_mutex);
 
+    htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
+    htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
     int64_t min_dts = PTS_UNSET;
     int64_t max_dts = PTS_UNSET;
     TAILQ_FOREACH(hm, &hs->hs_q.hmq_q, hm_link) {
