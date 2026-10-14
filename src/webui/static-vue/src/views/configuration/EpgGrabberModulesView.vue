@@ -17,10 +17,6 @@
  *     scrape booleans, EIT adds short_target /
  *     running_immediate).
  *
- * Mirrors the legacy ExtJS `tvheadend.epggrab_mod()` page at
- * `static/app/epggrab.js:73-101` — same fields, same
- * `uilevel: 'advanced'` lock, same toolbar action.
- *
  * Source-of-truth references:
  *   - C base class: `src/epggrab/module.c:133-191`
  *     (`epggrab_mod_class`, ic_perm_def = ACCESS_ADMIN).
@@ -58,14 +54,13 @@ const toast = useToastNotify()
 
 const selected = ref<string | null>(null)
 
-/* Three columns mirroring legacy `epggrab.js:94`'s
- * `fields: ['uuid', 'title', 'status']`. Order chosen for
+/* Three columns from the list endpoint's
+ * `uuid`, `title` and `status` fields. Order chosen for
  * scannability: enabled state first (instant overview), title
  * (the user's mental anchor), uuid hidden by default.
  *
  * `title` is not a prop of the `epggrab_mod` class, so the grid
- * finds no caption for it. The label is Classic's column title
- * (`epggrab.js:90`).
+ * finds no caption for it and the column carries its own label.
  *
  * The server's grid endpoint emits `status` as a strtab string
  * (`'epggrabmodEnabled'` / `'epggrabmodNone'`); the column
@@ -107,10 +102,9 @@ const cols: ColumnDef[] = [
  * if a future view declares one, it stays out of the user's
  * sight. */
 
-/* Toolbar action — mirrors legacy `epggrab.js:98`'s
- * `tbar: [tvheadend.epggrab_rerun_button()]`. Same
- * fire-and-forget POST as on the parent EPG Grabber config
- * page; redundancy is intentional in classic and we mirror it. */
+/* Toolbar action — the same fire-and-forget POST as on the
+ * parent EPG Grabber config page; offering it in both places is
+ * intentional. */
 async function rerunInternal() {
   try {
     await apiCall('epggrab/internal/rerun', { rerun: 1 })

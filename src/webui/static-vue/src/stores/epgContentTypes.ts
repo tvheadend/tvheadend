@@ -11,9 +11,7 @@
  * etc.).
  *
  * `full=1` includes both major-group and minor-detail entries so the
- * Map can resolve any code the server emits. Matches the legacy
- * ExtJS lookup (`tvheadend.contentGroupFullStore` at
- * `static/app/epg.js:113-120`) — same endpoint, same shape.
+ * Map can resolve any code the server emits.
  *
  * Error policy: a fetch failure leaves the map empty; callers fall
  * back to rendering the raw code as `0x<hex>` so the user sees

@@ -29,10 +29,8 @@
  * Buffer policy: ring buffer of `LOG_BUFFER_MAX` lines. When full,
  * oldest lines drop on push; the `bufferFull` flag latches to
  * true so the UI can surface a "Buffer full, oldest dropped"
- * indicator. The bound is non-negotiable — the legacy ExtJS UI
- * appends DOM nodes forever (`tvheadend.js:1301-1307`) and bloats
- * unbounded on long-open sessions; we're explicitly not
- * reproducing that bug.
+ * indicator. The bound is non-negotiable — an unbounded log
+ * bloats without limit on long-open sessions.
  *
  * Debug toggle (`toggleDebug`) hits the server's per-mailbox flag
  * via POST /comet/debug?boxid=<id>. Server flips `cmb_debug` on

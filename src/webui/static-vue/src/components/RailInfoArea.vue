@@ -57,8 +57,8 @@ const infoItems = computed<string[]>(() => {
   if (!access.data) return DEFAULT_INFO_ITEMS
   /* Loaded without the key: the admin cleared the setting. The
    * server stores an empty list as '' and then leaves the key out
-   * (comet_access_info_build in src/webui/comet.c), and Classic shows
-   * nothing either. */
+   * (comet_access_info_build in src/webui/comet.c), so show
+   * nothing. */
   const raw = access.data.info_area
   if (!raw) return []
   const parsed = raw
@@ -116,8 +116,8 @@ const loginTooltip = computed<string>(() => {
  * recordings (`dvr_bused = dvfs->used_size`, src/dvr/dvr_vfsmgr.c),
  * so free + used does not add up to the total. The row shows free
  * of total in the Home health line's wording and units. The
- * tooltip carries all three with Classic's labels, "Used by
- * tvheadend" included (static/app/tvheadend.js setDiskSpace). */
+ * tooltip carries all three, labelling the used figure "Used by
+ * tvheadend". */
 
 function fmtMaybe(v: number | undefined): string {
   return typeof v === 'number' && v >= 0 ? formatBytes(v) : '—'

@@ -8,11 +8,11 @@
  * handed to the grid.
  *
  * Coverage:
- *   - The ID header and the "all" PID list reuse Classic msgids.
+ *   - The ID header and the "all" PID list are translated.
  *   - The Start column delegates to the shared fmtDate (custom
  *     date mask + phone smart-relative form), matching
  *     ConnectionsView's Started column.
- *   - The Id column keeps the ExtJS zero-padded uppercase hex look.
+ *   - The Id column renders as zero-padded uppercase hex.
  *   - Input / Output turn the server's bytes/s into kbit/s, the
  *     same unit the bandwidth chart plots for these rows.
  */
@@ -41,7 +41,7 @@ describe('SubscriptionsView — translations', () => {
     delete (globalThis as { tvh_locale?: unknown }).tvh_locale
   })
 
-  it('reuses the Classic msgids for the ID header and the "all" PID list', () => {
+  it('translates the ID header and the "all" PID list', () => {
     ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { ID: 'Ident', all: 'vše' }
     const cols = gridColumns()
     expect(cols.find((c) => c.field === 'id')?.label).toBe('Ident')

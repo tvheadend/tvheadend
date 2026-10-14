@@ -32,8 +32,6 @@ void webui_done(void);
 
 void simpleui_start(void);
 
-void extjs_start(void);
-
 /* The Vue UI is embedded whenever it was built locally (vue_build) or
  * fetched prebuilt (vue_cache) — both bundle src/webui/static-vue/dist
  * (Makefile BUNDLES-$(CONFIG_VUE_BUILD)/$(CONFIG_VUE_CACHE)). Serving and
@@ -61,10 +59,6 @@ int page_static_file_maxage(http_connection_t *hc, const char *remain,
                             const char *base, int maxage);
 int page_xmltv(http_connection_t *hc, const char *remain, void *opaque);
 int page_markdown(http_connection_t *hc, const char *remain, void *opaque);
-
-#if ENABLE_LINUXDVB
-void extjs_start_dvb(void);
-#endif
 
 void webui_api_init ( void );
 

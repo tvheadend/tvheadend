@@ -80,8 +80,7 @@ describe('IdnodeFieldTime — compact mode', () => {
 describe('IdnodeFieldTime — dvr_show_seconds gate', () => {
   /* Reads `access.dvr_show_seconds` and applies it to datetime
    * fields only. Date-only and duration fields are unaffected
-   * (no seconds to expose). Mirrors Classic
-   * `static/app/idnode.js:789`. */
+   * (no seconds to expose). */
   it('omits step + seconds when the flag is off (the default)', () => {
     const w = mount(IdnodeFieldTime, {
       props: { prop: TIME_PROP, modelValue: EPOCH_WITH_SECONDS },

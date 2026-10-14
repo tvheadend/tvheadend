@@ -11,9 +11,7 @@
  * Used for properties with `prop.list === true` AND
  * `prop.lorder === true` (the C-side `.islist = 1 | PO_LORDER`
  * combination). The model value is an ARRAY of keys whose ORDER
- * carries meaning — first key = highest priority. Mirrors ExtJS'
- * `Ext.ux.ItemSelector` widget at static/app/idnode.js:683-702
- * and tvheadend's existing UX expectations.
+ * carries meaning — first key = highest priority.
  *
  * Only two properties in the entire C source carry PO_LORDER:
  * `info_area` and `language`, both on `config_class`. Both are
@@ -122,11 +120,9 @@ function matchesFilter(option: Option, query: string): boolean {
  * Filtered by `selectedFilter` when the threshold triggers it.
  *
  * Available = options NOT in `modelValue`, sorted by display label.
- * Sorting Available alphabetically matches ExtJS' ItemSelector
- * default (`fromSortField: 'val'` at idnode.js:692) and gives the
- * user a stable browse order regardless of the server's enum
- * declaration order. Filtered by `availableFilter` when the
- * threshold triggers it.
+ * Sorting Available alphabetically gives the user a stable browse
+ * order regardless of the server's enum declaration order.
+ * Filtered by `availableFilter` when the threshold triggers it.
  */
 const selectedOptions = computed<Option[]>(() => {
   const byKey = new Map(allOptions.value.map((o) => [o.key, o]))

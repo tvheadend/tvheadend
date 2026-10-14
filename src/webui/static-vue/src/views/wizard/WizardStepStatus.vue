@@ -6,7 +6,7 @@
 /*
  * WizardStepStatus — the scan-monitor step. The wizard's
  * "scanning" page polls `/api/wizard/status/progress` at 1 Hz
- * (cadence matches `static/app/wizard.js:182`) and renders:
+ * and renders:
  *   - the step's icon + Markdown description (one-shot fetch
  *     from `wizard/status/load`);
  *   - a progress bar driven by the polled `progress` value
@@ -22,9 +22,7 @@
  * completed scan later via the configured services.
  *
  * The Skip button is the only forward path on this step; the
- * scan progress bar never navigates on its own. Matches
- * Classic's `wizard.js:75-93`, which also only updates the
- * bar.
+ * scan progress bar never navigates on its own.
  *
  * Unlike other form-driven steps, this one does NOT use
  * `IdnodeConfigForm` — the C-side props (`muxes`, `services`,
@@ -48,8 +46,7 @@ const wizard = useWizardStore()
 const iconUrl = ref<string>('')
 const descriptionHtml = ref<string>('')
 /* Server-emitted captions for the count rows. Fallbacks are
- * marked novel for the i18n audit since they ship in this Vue
- * source file and aren't in `static/app/*.js`. */
+ * marked novel for the i18n audit. */
 /* i18n: new string */ const muxesLabel = ref<string>('Muxes')
 /* i18n: new string */ const servicesLabel = ref<string>('Services')
 
@@ -146,8 +143,7 @@ async function handleCancel(): Promise<void> {
         <img v-if="iconUrl" :src="iconUrl" alt="" class="wizard-step__icon" />
         <!-- Server-emitted Markdown description rendered through
              `marked` and v-html'd. Safe by trust: source is
-             compiled-in `docs/wizard/*.md`, not user input.
-             Matches ExtJS at `static/app/wizard.js:106`. -->
+             compiled-in `docs/wizard/*.md`, not user input. -->
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-if="descriptionHtml" class="wizard-step__description" v-html="descriptionHtml"></div>
       </header>

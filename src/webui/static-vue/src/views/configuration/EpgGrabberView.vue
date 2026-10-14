@@ -9,8 +9,6 @@
  * Single-instance configuration form for the global `epggrab`
  * idnode class (`src/epggrab.c:340-510` —
  * `idclass_t epggrab_class`, ic_perm_def = ACCESS_ADMIN).
- * Mirrors the legacy ExtJS `tvheadend.epggrab_base()` page at
- * `static/app/epggrab.js:20-50`.
  *
  * The class declares 4 named groups (General Settings,
  * Internal Grabber Settings, OTA Grabber Settings, OTA Genre
@@ -32,9 +30,8 @@
  * Endpoints verified at `src/api/api_epggrab.c:57-102`. Both
  * are POST-only and require ACCESS_ADMIN. Neither is
  * destructive (both schedule background work), so neither
- * carries a confirm dialog — mirrors Classic's fire-and-
- * forget behaviour and the Image Cache "Re-fetch" pattern
- * (`ConfigGeneralImageCacheView.vue:53-62`).
+ * carries a confirm dialog — fire-and-forget, like the Image
+ * Cache "Re-fetch" pattern (`ConfigGeneralImageCacheView.vue:53-62`).
  */
 import IdnodeConfigForm from '@/components/IdnodeConfigForm.vue'
 import { rerunInternalEpg, triggerOtaEpg } from '@/commands/actionHandlers'

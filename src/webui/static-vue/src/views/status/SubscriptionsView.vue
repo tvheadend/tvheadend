@@ -16,9 +16,8 @@
  * BandwidthChartDrawer with the selected subscriptions' in/out
  * series. Drawer tracks selection live.
  *
- * Column choices mirror the ExtJS list (status.js:84-208). The Id
- * column there renders as zero-padded uppercase hex; we keep the
- * same look so admins recognize the IDs in logs.
+ * The Id column renders as zero-padded uppercase hex so admins
+ * recognize the IDs in logs.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
 import BandwidthChartView from '@/components/BandwidthChartView.vue'
@@ -39,8 +38,7 @@ const fmtHexId = (v: unknown) => {
 /* `in` / `out` are bytes per second (ths_bytes_in_avg /
  * ths_bytes_out_avg at subscriptions.c:1094-1095). Convert to kbit/s
  * with the same *8 the bandwidth chart applies to these rows
- * (units="bytes") so the column and the chart agree — ExtJS divides
- * by 125 for the same unit (status.js:75). */
+ * (units="bytes") so the column and the chart agree. */
 const fmtKbps = (v: unknown) =>
   typeof v === 'number' ? Math.round(toBitsPerSecond(v, 'bytes') / 1000).toString() : ''
 
@@ -49,8 +47,7 @@ const fmtPids = (v: unknown) => {
   const sorted = [...(v as number[])].sort((a, b) => a - b)
   if (sorted[sorted.length - 1] === 65535) return t('all')
   /* ", " (comma + space) so long lists have wrap points — see the
-   * matching comment in StreamView.vue for why ExtJS's no-space form
-   * doesn't translate cleanly to our DataTable. */
+   * matching comment in StreamView.vue. */
   return sorted.join(', ')
 }
 

@@ -9,28 +9,24 @@
  * Read-only flat grid of `memoryinfo_class` rows (`src/memoryinfo.c:
  * 35-85`, ACCESS_ADMIN, 5 read-only fields). Each row is one
  * tracked memory pool — caches, queues, slab regions, etc.
- * Useful for admins triaging memory issues. Mirrors the legacy
- * ExtJS page at `static/app/tvhlog.js:376-387` which uses
- * `idnode_grid` with `readonly: true` and `uilevel: 'expert'`.
+ * Useful for admins triaging memory issues.
  *
  * No toolbar actions, no Add / Edit / Delete — every field is
  * `PO_RDONLY | PO_NOSAVE` server-side, so the grid is pure
  * monitoring. selectable=false suppresses the checkbox column
  * + row-highlight (no realistic action a selected row could
- * trigger). Lock-level=expert mirrors Classic's
- * `uilevel: 'expert'` declaration; the L3 tab is also gated
- * to expert at the layout + route-guard level so non-experts
+ * trigger). Lock-level=expert; the L3 tab is also gated to
+ * expert at the layout + route-guard level so non-experts
  * never reach this view.
  *
- * Bytes are shown as raw integers — matches Classic's display
- * (no human-readable suffix). If admins want KB/MB-scaled
+ * Bytes are shown as raw integers (no human-readable suffix).
+ * If admins want KB/MB-scaled
  * output later, lift `formatBytes` from NavRail.vue into a
  * shared util.
  *
- * Default sort: by allocator name ASC. Classic leaves this
- * grid unsorted (server returns rows in TAILQ registration
- * order); we apply alphabetical name-ASC to honour the
- * always-defined-sort policy.
+ * Default sort: by allocator name ASC. The server returns rows
+ * in TAILQ registration order; alphabetical name-ASC honours
+ * the always-defined-sort policy.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import { useI18n } from '@/composables/useI18n'

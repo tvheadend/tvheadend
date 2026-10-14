@@ -10,8 +10,8 @@
  * two-thumb slider plus a paired "Any time" toggle and HH:MM
  * inputs for fine adjustment.
  *
- * Wire shape unchanged from Classic UI. The server (`dvr_autorec.c`)
- * stores each field as int-minutes 0-1439 or -1 ("Any"); the .list
+ * Wire shape: the server (`dvr_autorec.c`) stores each field as
+ * int-minutes 0-1439 or -1 ("Any"); the .list
  * callback (`dvr_autorec.c:788`) emits a 145-entry enum of
  * "Any" + 10-min clock strings. The picker preserves that exact
  * granularity (`step=10`) and the sentinel semantics.
@@ -22,12 +22,11 @@
  * handles the translated "Any" word for any locale without a
  * locale table.
  *
- * Paired-Any (single checkbox flips both fields) is a deliberate
- * narrowing vs. Classic, which lets users save a half-Any state
- * (one field set, the other "Any"). The server matcher
- * (`dvr_autorec.c:279-280`) requires BOTH fields to be valid for
- * the window check to fire — half-Any is a no-op on the wire.
- * Dropping the affordance loses no functional state. Load-time
+ * Paired-Any: a single checkbox flips both fields, so a half-Any
+ * state (one field set, the other "Any") can't be entered. The
+ * server matcher (`dvr_autorec.c:279-280`) requires BOTH fields
+ * to be valid for the window check to fire — half-Any is a no-op
+ * on the wire, so no functional state is lost. Load-time
  * half-Any is normalised to display-only paired-Any; the orphan
  * `-1` stays untouched on save unless the user actually edits the
  * control (IdnodeEditor's diff-save only posts dirty fields).
@@ -194,9 +193,7 @@ function onStartBlur(): void {
   const parsed = parseTime(startText.value)
   if (parsed === null) {
     /* Invalid input — revert the displayed text to the last good
-     * value. No emit. Mirrors Classic's loose validation: the
-     * dropdown was always pickable so invalid free-text input was
-     * impossible. */
+     * value. No emit. */
     startText.value = startMin.value === null ? '' : formatTime(startMin.value)
     return
   }

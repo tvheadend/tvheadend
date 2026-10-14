@@ -250,8 +250,6 @@ void http_output_content_disposition(http_connection_t *hc, const char *content,
 void http_redirect(http_connection_t *hc, const char *location,
                    struct http_arg_list *req_args, int external);
 
-void http_css_import(http_connection_t *hc, const char *location);
-
 void http_extra_destroy(http_connection_t *hc);
 
 int http_extra_flush(http_connection_t *hc);

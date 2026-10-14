@@ -6,9 +6,7 @@
 /*
  * Configuration → DVB Inputs → Networks.
  *
- * Mirrors the legacy ExtJS Networks grid
- * (`src/webui/static/app/mpegts.js:63-91`,
- * `tvheadend.idnode_grid` against `mpegts/network`). Backed by
+ * Grid over `mpegts/network`. Backed by
  * the `mpegts_network` parent class
  * (`src/input/mpegts/mpegts_network.c:178-360`) plus a fan-out of
  * subclasses available via `api/mpegts/network/builders`:
@@ -27,7 +25,7 @@
  * `api/mpegts/network/create` with `class` + `conf` per
  * `api_mpegts.c:108-132`).
  *
- * Force Scan is the one custom toolbar action (matches ExtJS) —
+ * Force Scan is the one custom toolbar action —
  * POSTs uuids to `api/mpegts/network/scan`, server iterates and
  * triggers `mn_scan` per row (`api_mpegts.c:135-167`).
  */
@@ -109,8 +107,8 @@ const cols: ColumnDef[] = [
 
 /* No `list` filter for the editor — the per-subclass `idnode/class`
  * fetch (`IdnodeEditor.loadCreate` in subclass mode) returns the
- * full subclass-specific prop set, which is exactly what ExtJS
- * shows. The editor renders with parent + subclass props
+ * full subclass-specific prop set, which is exactly what the form
+ * needs. The editor renders with parent + subclass props
  * concatenated as the server emits them. */
 const editList = ref('')
 
@@ -142,8 +140,7 @@ const remove = useBulkAction({
 const scan = useBulkAction({
   endpoint: 'mpegts/network/scan',
   /* No confirm — Force Scan is non-destructive (kicks off a scan
-   * pass on each selected network's tuners). Matches ExtJS
-   * (`mpegts.js:30-57`, no AjaxConfirm wrapping the scan call). */
+   * pass on each selected network's tuners). */
   failPrefix: t('Failed to start scan'),
 })
 

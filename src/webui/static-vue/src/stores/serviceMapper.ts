@@ -21,10 +21,8 @@
  *
  * Active-service name resolution: the wire only carries the uuid;
  * we fetch `idnode/load?uuid=<uuid>` ONCE per uuid change and
- * cache the resolved name. Mirrors Classic's approach minus the
- * N+1-fetch (Classic fetches on every Comet tick — `static/app/
- * servicemapper.js:72-85`). For a 100-service job this saves
- * ~99 round-trips while keeping the same UX.
+ * cache the resolved name, rather than on every Comet tick. For
+ * a 100-service job this saves ~99 round-trips.
  *
  * Stop action: POST `service/mapper/stop` empties the queue
  * server-side; the resulting Comet notify (active=null, counters

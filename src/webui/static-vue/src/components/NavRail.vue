@@ -12,7 +12,6 @@ import {
   Activity,
   Info,
   House,
-  ExternalLink,
   LogIn,
   LogOut,
   PanelLeftClose,
@@ -32,13 +31,11 @@ import CommandPaletteTrigger from './CommandPaletteTrigger.vue'
 const { t } = useI18n()
 
 /*
- * Cross-UI logo reference. Bound as an expression (not a literal
+ * Server-side logo reference. Bound as an expression (not a literal
  * `src`) so Vite's Vue plugin doesn't try to bundle the asset —
- * the URL is served at runtime by tvheadend's existing /static
- * handler from the ExtJS bundle (`src/webui/static/img/logo.png`,
- * registered in `webui_init()` in `src/webui/webui.c`). Once the
- * ExtJS UI retires, copy the asset into `static-vue/src/assets/`
- * and replace this with a Vite-imported reference.
+ * the URL is served at runtime by tvheadend's /static handler
+ * (`src/webui/static/img/logo.png`, registered in `webui_init()` in
+ * `src/webui/webui.c`).
  */
 const logoUrl = serverUrl('static/img/logo.png')
 
@@ -75,11 +72,10 @@ const toggleTitle = computed(() =>
 )
 
 /*
- * Top-level nav items, grouped into sections. Order mirrors the
- * existing ExtJS rootTabPanel order (src/webui/static/app/tvheadend.js);
- * the section split — everyday TV use vs system administration — is
- * the Vue UI's own (see ADR 0016). Item labels reuse the exact English
- * strings ExtJS uses, so existing translations cover them (brief §6.1,
+ * Top-level nav items, grouped into sections. Order follows the
+ * long-standing top-level tab order; the section split — everyday TV
+ * use vs system administration — is the Vue UI's own (see ADR 0016).
+ * Item labels keep their long-standing English strings (brief §6.1,
  * §9.1); the two section headers are new strings.
  *
  * Permission requirement lives on the route's meta.permission (see
@@ -87,14 +83,9 @@ const toggleTitle = computed(() =>
  * guard. This blueprint just declares display order, label, and icon.
  */
 interface Blueprint {
-  /* Internal SPA route — resolved against the router for its path and
-   * meta.permission. Mutually exclusive with `href`. */
-  routeName?: string
-  /* External, non-SPA destination (the legacy ExtJS UI). Rendered as a
-   * plain anchor: a full-page navigation OUT of the Vue app, not a
-   * router push. No permission gate — the target enforces its own ACL
-   * server-side (`/extjs.html` is ACCESS_WEB_INTERFACE, extjs.c:242). */
-  href?: string
+  /* SPA route — resolved against the router for its path and
+   * meta.permission. */
+  routeName: string
   label: string
   icon: LucideIcon
 }
@@ -131,12 +122,9 @@ const NAV_SECTIONS: NavSection[] = [
 ]
 
 /* Shown below the sections without a header — About is general
- * information, neither everyday-use nor administration (ADR 0016).
- * Classic UI follows it: a full-page jump to the legacy ExtJS
- * interface, available while both UIs ship side by side. */
+ * information, neither everyday-use nor administration (ADR 0016). */
 const NAV_UNGROUPED: Blueprint[] = [
   { routeName: 'about', label: t('About'), icon: Info },
-  { href: serverUrl('extjs.html'), label: t('Classic UI'), icon: ExternalLink },
 ]
 
 /*
@@ -144,10 +132,7 @@ const NAV_UNGROUPED: Blueprint[] = [
  * route path AND its meta.permission in one place.
  */
 interface ResolvedItem {
-  /* Exactly one of `to` (internal route path) or `href` (external
-   * URL) is set, mirroring the Blueprint split. */
-  to?: string
-  href?: string
+  to: string
   label: string
   icon: LucideIcon
   permission?: string
@@ -162,12 +147,7 @@ interface ResolvedSection {
 }
 
 function resolveItem(bp: Blueprint): ResolvedItem {
-  /* External link — no router resolution, no permission gate (the
-   * target page enforces its own access server-side). */
-  if (bp.href) {
-    return { href: bp.href, label: bp.label, icon: bp.icon }
-  }
-  const route = router.resolve({ name: bp.routeName! })
+  const route = router.resolve({ name: bp.routeName })
   return {
     to: route.path,
     label: bp.label,
@@ -209,8 +189,8 @@ const railGroups = computed<ResolvedSection[]>(() => {
 })
 
 /*
- * Loading state strategy (matches the existing ExtJS UI's behaviour):
- * don't render the rail until access has loaded. The first accessUpdate
+ * Loading state strategy: don't render the rail until access has
+ * loaded. The first accessUpdate
  * via Comet typically arrives in <500ms after page load; a 5-second
  * timeout falls through to optimistic rendering for the rare case where
  * Comet is slow (e.g. WebSocket blocked, long-poll fallback's first
@@ -281,9 +261,9 @@ const isPhone = useIsPhone()
  *   - `/logout` (`src/webui/webui.c:177-218`) is a top-level
  *     navigation: it renders an HTML page with a 401-returning
  *     link that clears the browser's cached HTTP basic/digest
- *     credentials. (Classic's IE-only
+ *     credentials. There is no IE-only
  *     `document.execCommand("ClearAuthenticationCache")` branch
- *     is skipped — the brief doesn't target legacy IE.)
+ *     — the brief doesn't target legacy IE.
  *   - `/login` (`src/webui/webui.c:164-175`) is fetched as a
  *     background request, NOT navigated to. The fetch trips a
  *     401 + `WWW-Authenticate`, which makes the browser pop its
@@ -293,10 +273,9 @@ const isPhone = useIsPhone()
  *     reload the current `/gui` page so the Comet connection
  *     reconnects with the cached Authorization header and the
  *     access store re-hydrates with the real username. This
- *     keeps the user on `/gui`; a top-level navigation to
- *     `/login` would land them on whatever UI the server has
- *     configured at `/` (extjs / classic), and ExtJS would also
- *     auto-launch its setup wizard on a fresh install. The
+ *     keeps the user on their current `/gui` route; a top-level
+ *     navigation to `/login` would follow the redirect to `/`
+ *     and land them back on the UI's start page. The
  *     fetch path also recovers from "stuck anonymous" — when a
  *     prior admin-gated request already triggered a prompt and
  *     the browser cached credentials but the access store still
@@ -354,9 +333,8 @@ async function onLoginClick() {
       wordmark hides and the logo centres in the 56 px column. Same
       48 px height as the removed TopBar so the rail's nav items
       start at the same y-coordinate as before. Logo path mirrors
-      the cross-UI reference from TopBar (served by the existing
-      `/static/...` handler from the ExtJS bundle; copy into
-      `static-vue/src/assets/` once ExtJS retires).
+      the server-side reference from TopBar (served by the
+      `/static/...` handler).
     -->
     <div class="nav-rail__brand">
       <img :src="logoUrl" alt="" class="nav-rail__brand-logo" />
@@ -407,34 +385,18 @@ async function onLoginClick() {
             class="nav-rail__section-header"
             aria-hidden="true"
           >{{ section.label }}</p>
-          <template v-for="item in section.items" :key="item.to ?? item.href">
-            <!--
-              External destination (Classic UI) — a plain anchor so the
-              browser performs a full-page navigation OUT of the SPA. A
-              RouterLink would try to match `/extjs.html` against the Vue
-              routes and 404 inside the app instead of leaving it.
-            -->
-            <a
-              v-if="item.href"
-              :href="item.href"
-              :title="compact ? item.label : undefined"
-              class="nav-item"
-            >
-              <component :is="item.icon" :size="18" :stroke-width="2" />
-              <span class="nav-item__label">{{ item.label }}</span>
-            </a>
-            <RouterLink
-              v-else
-              :to="item.to!"
-              :title="compact ? item.label : undefined"
-              class="nav-item"
-              active-class="nav-item--active"
-              @click="$emit('navigate')"
-            >
-              <component :is="item.icon" :size="18" :stroke-width="2" />
-              <span class="nav-item__label">{{ item.label }}</span>
-            </RouterLink>
-          </template>
+          <RouterLink
+            v-for="item in section.items"
+            :key="item.to"
+            :to="item.to"
+            :title="compact ? item.label : undefined"
+            class="nav-item"
+            active-class="nav-item--active"
+            @click="$emit('navigate')"
+          >
+            <component :is="item.icon" :size="18" :stroke-width="2" />
+            <span class="nav-item__label">{{ item.label }}</span>
+          </RouterLink>
         </div>
       </nav>
     </div>

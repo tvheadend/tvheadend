@@ -175,9 +175,8 @@ describe('ColumnHeaderMenu', () => {
   it('does NOT show a "Clear sort" entry — always-defined-sort policy', async () => {
     /* The menu used to surface a "Clear sort" button when
      * sortDir was set; that's been dropped because every
-     * grid now maintains an always-defined sort (Classic
-     * parity). Confirm it's gone in both sorted and
-     * unsorted states. */
+     * grid now maintains an always-defined sort. Confirm it's
+     * gone in both sorted and unsorted states. */
     const noSort = mountMenu({})
     await openMenu(noSort)
     expect(findPanel()?.textContent ?? '').not.toContain('Clear sort')
@@ -211,8 +210,8 @@ describe('ColumnHeaderMenu', () => {
   })
 
   it('inline ↓ click cycles desc → asc (no unsorted leg)', async () => {
-    /* Classic parity: the inline indicator click cycles
-     * asc → desc → asc, never landing on an unsorted state. */
+    /* The inline indicator click cycles asc → desc → asc,
+     * never landing on an unsorted state. */
     const w = mountMenu({ sortDir: 'desc' })
     await w.find('.column-header-menu__indicator--sort').trigger('click')
     expect(w.emitted('setSort')).toEqual([['username', 'asc']])

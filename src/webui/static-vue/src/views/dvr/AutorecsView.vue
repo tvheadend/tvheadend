@@ -13,16 +13,13 @@
  * `dvr/autorec/grid`; create endpoint `dvr/autorec`.
  *
  * Toolbar is the framework default — Add / Edit / Delete with no
- * custom buttons. ExtJS `dvr.js:1100-1112` doesn't define a `tbar:`
- * or `selected:` callback for autorec, so the framework's standard
- * Add (always), Edit (single-row), Delete (≥1) are the full set.
+ * custom buttons: the framework's standard Add (always), Edit
+ * (single-row), Delete (≥1) are the full set.
  *
- * Edit list is admin-aware and matches dvr.js:1048-1050 modulo
- * dedup: ExtJS includes `dedup` in the list as an alias for `record`
- * (a column-display key, not a real property). We use only `record`
- * since that's the actual idnode field.
+ * Edit list is admin-aware. It uses `record`, the actual idnode
+ * field, rather than the `dedup` column-display alias.
  *
- * Default sort: name ASC (dvr.js:1117-1118).
+ * Default sort: name ASC.
  */
 import { computed } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
@@ -51,17 +48,14 @@ const AUTOREC_FIELD_GROUPS = [
   },
 ] as const
 
-/* Column set from dvr.js:1113-1115. The list there mixes `record`
- * and `dedup` (display alias only) — we ship `record` once.
+/* Column set. `record` appears once (no `dedup` display alias).
  *
  * Every column gets `editable: true`. IdnodeGrid's
  * `isInlineEditable` gate enforces the type-support filter
  * (drops time / multi-select / langstr / multiline / password
  * / unsupported primitives), so liberal opt-in is safe — only
  * columns whose underlying prop type the cell editors support
- * actually surface as editable. Mirrors Classic's
- * EditorGridPanel which lets every non-rdonly cell into edit
- * mode by default. */
+ * actually surface as editable. */
 const cols: ColumnDef[] = [
   /* Basic */
   { field: 'enabled', ...AUTOREC_FIELDS.enabled, editable: true },
@@ -105,11 +99,9 @@ const cols: ColumnDef[] = [
 const idnodeClass = useIdnodeClassStore()
 const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrautorec')))
 
-/* Edit-list segments — match dvr.js:1048-1050 (admin: enabled +
+/* Edit-list segments (admin: enabled +
  * extras + <base> + admin extras + retention/removal/maxcount/
- * maxsched; non-admin: same minus the admin extras). `pri` appears
- * in both <base> and the trailing extras in ExtJS, but the server
- * treats duplicates as one. */
+ * maxsched; non-admin: same minus the admin extras). */
 const EDITOR_LIST_BASE =
   'name,title,fulltext,mergetext,channel,start,start_window,weekdays,' +
   'record,tag,btype,content_type,cat1,cat2,cat3,minduration,maxduration,' +

@@ -104,13 +104,13 @@ Always reference these instructions first and fallback to search or bash command
 ### Build System Understanding
 - Primary build file: `Makefile` (includes Makefile.common)
 - Configure system: `configure` script (uses support/configure.inc)
-- Web UI build: `Makefile.webui` (builds compressed JS/CSS)
+- Web UI build: `src/webui/static-vue` (Vue/Vite, driven from `Makefile`); `Makefile.webui` builds its translation catalogs
 - Documentation build: Converts markdown docs to C code during build
 - Build output directory: `build.linux/` (contains tvheadend binary and build artifacts)
 
 ### Key Source Directories
 - `src/` - Main C source code
-- `src/webui/` - Web interface source (ExtJS based)
+- `src/webui/` - Web interface server code; the Vue UI lives in `src/webui/static-vue/`
 - `src/api/` - REST API implementation  
 - `src/input/` - TV input source implementations
 - `src/epggrab/` - Electronic Program Guide grabbing

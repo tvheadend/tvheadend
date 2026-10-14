@@ -5,9 +5,8 @@ import { describe, expect, it } from 'vitest'
 import { tvhlogDisable } from '../tvhlogDisable'
 
 /* Unit tests for the Debug Configuration disabled-when-other-
- * field predicate. Mirrors the legacy ExtJS onchange semantics
- * at `static/app/tvhlog.js:3-13`. Pure helper — no Vue, no
- * DOM. Same shape as timeshiftDisable.test.ts. */
+ * field predicate. Pure helper — no Vue, no DOM. Same shape
+ * as timeshiftDisable.test.ts. */
 
 describe('tvhlogDisable', () => {
   it('returns false for any unrelated field id', () => {

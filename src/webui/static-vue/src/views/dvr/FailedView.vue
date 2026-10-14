@@ -7,30 +7,25 @@
  * DVR Failed view — read-only grid of recordings that errored out
  * (lost signal, scheduling collision, disk full, etc.).
  *
- * Mounts <IdnodeGrid> against `dvr/entry/grid_failed` with the
- * column set from src/webui/static/app/dvr.js:912-914. Per-tab
- * editor list is admin-aware and matches dvr.js:908 verbatim.
+ * Mounts <IdnodeGrid> against `dvr/entry/grid_failed`. The per-tab
+ * editor list is admin-aware.
  *
  * Differs from Finished in three ways worth flagging:
  *   1. Includes the `status` column — failure-reason text emitted by
  *      the recording subsystem (dvr_db.c). Sits at Basic level since
  *      it's the most useful info on a Failed entry.
- *   2. Default sort `start_real DESC` — newest failures first; matches
- *      ExtJS dvr.js:927-929. Failed entries pile up over time and the
+ *   2. Default sort `start_real DESC` — newest failures first.
+ *      Failed entries pile up over time and the
  *      most recent failure is what the user typically came to triage.
  *   3. Re-record and Move-to-finished are gated on selection count
- *      ONLY (not filesize > 0). Only Download is file-gated. Mirrors
- *      dvr.js:892-898 exactly. See failedActions.ts.
+ *      ONLY (not filesize > 0). Only Download is file-gated. See
+ *      failedActions.ts.
  *
- * Toolbar order (per dvr.js:945): Download, Re-record, Move-to-finished.
- * We add Edit at the start (drawer edit; framework-provided in ExtJS,
- * explicit here to match the pattern Finished uses) and Delete second
- * (matches `del: true` in ExtJS — ExtJS Failed allows deletion via the
- * framework's del button). Final Vue order: Edit, Delete, Re-record,
- * Move to finished, Download.
+ * Toolbar order: Edit, Delete, Re-record, Move to finished,
+ * Download.
  *
- * Per-row Play icon (lcol in ExtJS dvr.js:932-944) is part of the
- * broader per-row inline-action work; not mounted here yet.
+ * A per-row Play icon is part of the broader per-row inline-action
+ * work; not mounted here yet.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -50,9 +45,8 @@ const { t } = useI18n()
 
 const access = useAccessStore()
 
-/* Edit list — admin-aware, matches dvr.js:908 verbatim. Smaller than
- * Finished's because most fields are computed/read-only on a failed
- * recording. */
+/* Edit list — admin-aware. Smaller than Finished's because most
+ * fields are computed/read-only on a failed recording. */
 const editList = computed(() =>
   access.data?.admin ? 'playcount,retention,removal,owner,comment' : 'retention,removal,comment',
 )
@@ -62,8 +56,8 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
   urlSync: true,
 })
 
-/* Column set from dvr.js:912-914 — adds `status` to the entry-list
- * baseline; includes filesize / playcount / filename like Finished.
+/* Column set — adds `status` to the entry-list baseline; includes
+ * filesize / playcount / filename like Finished.
  *
  * `phoneFields: ['status']` promotes the failure-reason text to
  * the phone-card. Its phoneOrder of 99 in DVR_FIELDS parks it as
@@ -81,14 +75,12 @@ const cols = dvrEntryColumns(kodiFmt, {
 /* Bulk-action handles — see useBulkAction.ts for the shared
  * apiCall + confirm + try/catch + inflight boilerplate.
  *
- * Delete carries the verbatim two-line ExtJS string from dvr.js:910-911
- * (Failed's del button has a longer message than the standard idnode
- * delete because it explicitly notes the file will be removed —
- * `\n\n` here renders as the equivalent of ExtJS' HTML <br/><br/>).
+ * Delete carries a two-line message, longer than the standard
+ * idnode delete because it explicitly notes the file will be removed
+ * (`\n\n` separates the two lines).
  *
  * Re-record and Move-to-finished are non-destructive → no confirm
- * dialog (matches ExtJS' buttonFcn-without-q pattern at dvr.js:872-
- * 874, 887-889). */
+ * dialog. */
 const remove = useBulkAction({
   endpoint: 'idnode/delete',
   confirmText: t(

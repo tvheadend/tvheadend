@@ -5,9 +5,8 @@ import type { BaseRow } from '@/types/grid'
 
 /* Pure helpers for any idnode-grid view that wires Move Up /
  * Move Down buttons against `idnode/moveup` / `idnode/movedown`.
- * Shared by Configuration → Users → Access Entries
- * (`acleditor.js`) and the six Configuration → Stream ES-filter
- * grids (`esfilter.js`). The host view wires fetch +
+ * Shared by Configuration → Users → Access Entries and the six
+ * Configuration → Stream ES-filter grids. The host view wires fetch +
  * scroll-into-view around these — these helpers do nothing IO. */
 
 export type MoveDirection = 'up' | 'down'
@@ -20,8 +19,7 @@ export type MoveDirection = 'up' | 'down'
  * adjacent rows in their natural order produces a swap-then-
  * unswap cascade — the second move undoes the first. Sorting
  * the list so each processed row finds a non-selected sibling
- * fixes that. ExtJS has the bug; this client-side sort avoids
- * it. */
+ * fixes that. */
 export function sortUuidsForMove(
   selection: BaseRow[],
   entries: BaseRow[],

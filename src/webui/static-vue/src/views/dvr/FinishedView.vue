@@ -6,12 +6,11 @@
 /*
  * DVR Finished view — read-only grid of completed recordings.
  *
- * Mounts <IdnodeGrid> against `dvr/entry/grid_finished` with the
- * column set from src/webui/static/app/dvr.js:792-794. Per-tab
- * editor list is admin-aware and matches dvr.js:787 verbatim.
+ * Mounts <IdnodeGrid> against `dvr/entry/grid_finished`. The
+ * per-tab editor list is admin-aware.
  *
  * No Add (recordings are already done); no Abort (recording is
- * complete). Toolbar mirrors `tvheadend.dvr_finished` in dvr.js:
+ * complete). Toolbar:
  *   - Edit (single-row, drawer-edit via the limited edit list)
  *   - Remove (≥1, file>0, api/dvr/entry/remove — different
  *     endpoint than api/idnode/delete; deletes file AND db entry)
@@ -20,11 +19,11 @@
  *     no confirmation, it's a non-destructive flag toggle)
  *   - Move to failed (≥1, file>0, api/dvr/entry/move/failed)
  *
- * "filesize > 0" gating mirrors dvr.js:761 — checks the FIRST row
- * only, not all rows. See predicates.ts and finishedActions.ts.
+ * "filesize > 0" gating checks the FIRST row only, not all
+ * rows. See predicates.ts and finishedActions.ts.
  *
- * The per-row Play icon (lcol in the legacy UI) follows the leading
- * state icon from `dvrEntryColumns`.
+ * The per-row Play icon follows the leading state icon from
+ * `dvrEntryColumns`.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -46,9 +45,9 @@ const { t } = useI18n()
 
 const access = useAccessStore()
 
-/* Edit list — admin-aware, matches dvr.js:787 verbatim. Smaller than
- * Upcoming's edit list because most fields are computed/read-only on
- * a finished recording (file path, real start/stop, status). */
+/* Edit list — admin-aware. Smaller than Upcoming's edit list
+ * because most fields are computed/read-only on a finished
+ * recording (file path, real start/stop, status). */
 const editList = computed(() =>
   access.data?.admin
     ? 'disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment'
@@ -64,7 +63,7 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
 })
 
 /* dvrEntryColumns leads with the recording state icon. Play goes
- * right after it, Classic's lcol order. */
+ * right after it. */
 const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
   filesize: true,
   playcount: true,
@@ -72,10 +71,10 @@ const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
   phoneFields: ['filesize', 'duration'],
 })
 
-/* Column set from dvr.js:792-794 — the entry-list baseline plus
- * the per-row state and Play icons and filesize / playcount /
- * filename. No `status` column on Finished
- * (a successfully finished recording has no failure-reason text).
+/* Column set — the entry-list baseline plus the per-row state and
+ * Play icons and filesize / playcount / filename. No `status`
+ * column on Finished (a successfully finished recording has no
+ * failure-reason text).
  *
  * `phoneFields` upgrades `filesize` and `duration` to phone-card
  * visible — for the user browsing past recordings on phone, size
@@ -85,10 +84,8 @@ const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
  * recorded-on. */
 const cols: ColumnDef[] = [
   stateCol,
-  /* Per-row Play icon. Synthetic column — matches Classic's
-   * Play column on DVR Finished (`dvr.js`). Disabled
-   * for rows with no on-disk file (rerecord / cleanup case),
-   * mirroring the toolbar Play's prior filesize gate.
+  /* Per-row Play icon. Synthetic column, disabled for rows with
+   * no on-disk file (rerecord / cleanup case).
    * `hideHeaderLabel` keeps the header icon-only while the
    * column picker / screen reader / hover tooltip see "Play". */
   {
@@ -110,11 +107,8 @@ const cols: ColumnDef[] = [
 ]
 
 /* Bulk-action handles — see useBulkAction.ts for the shared
- * apiCall + confirm + try/catch + inflight boilerplate. Confirmation
- * copy + failure-prefix strings verbatim from dvr.js so existing
- * translations apply once vue-i18n lands. Re-record and Move are
- * non-destructive → no confirm dialog (matches ExtJS' buttonFcn-
- * without-q pattern at dvr.js:688, 703). */
+ * apiCall + confirm + try/catch + inflight boilerplate. Re-record
+ * and Move are non-destructive → no confirm dialog. */
 const remove = useBulkAction({
   endpoint: 'dvr/entry/remove',
   confirmText: t('Do you really want to remove the selected recordings from storage?'),
@@ -139,8 +133,8 @@ const moveToFailed = useBulkAction({
  * so the browser doesn't resolve it relative to the SPA's current
  * location.
  *
- * ExtJS uses `window.location = url` (navigates away); we open in a
- * new tab to keep the SPA state intact. */
+ * Opens in a new tab rather than navigating away, to keep the SPA
+ * state intact. */
 function downloadSelection(selected: BaseRow[]) {
   if (selected.length === 0) return
   const uuid = selected[0].uuid

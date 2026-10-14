@@ -32,10 +32,9 @@ import { serverUrl } from '@/utils/base'
  * `URLAUTH_TICKET` mints a short-lived random ticket per stream URL
  * via `access_ticket_create()`, storing a snapshot of the user's
  * access rights server-side. External players can then fetch the
- * stream URL without cookies. Classic's `playLink` helper uses the
- * ticket variant for every Play link; we do the same — it is the
- * only mode that works reliably across the "browser opens m3u → OS
- * hands to external player" handoff.
+ * stream URL without cookies. Every Play link uses the ticket
+ * variant — it is the only mode that works reliably across the
+ * "browser opens m3u → OS hands to external player" handoff.
  */
 
 /* Opens the given resource path in the user's external media player

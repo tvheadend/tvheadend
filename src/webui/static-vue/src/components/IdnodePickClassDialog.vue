@@ -7,11 +7,9 @@
  * IdnodePickClassDialog — modal that asks "which class?" before
  * opening an IdnodeEditor for a class with multiple subclasses.
  *
- * Mirrors the legacy ExtJS pattern where idnode_grid's `add.select`
- * surfaces a builders dropdown before the create dialog opens
- * (`static/app/mpegts.js:67-83` for Networks; the same shape will
- * apply to Muxes + any other class with a `<base>/builders`
- * endpoint).
+ * Surfaces a builders dropdown before the create dialog opens,
+ * for Networks, Muxes and any other class with a
+ * `<base>/builders` endpoint.
  *
  * Lifecycle:
  *   - parent passes `:visible` true → component fetches the
@@ -55,9 +53,8 @@ interface BuilderEntry {
  * disambiguate beyond the bare class caption — e.g. `codec/list`
  * returns caption `"libvpx"` (class caption) AND title
  * `"libvpx: libvpx VP8"` so the picker can distinguish libvpx
- * VP8 from libvpx-vp9 (which legacy ExtJS does by reading
- * `title` directly). Preferring title here matches that
- * behaviour without per-endpoint code. */
+ * VP8 from libvpx-vp9. Preferring title here handles that
+ * without per-endpoint code. */
 function entryKey(e: BuilderEntry): string {
   return e.class ?? e.name ?? ''
 }

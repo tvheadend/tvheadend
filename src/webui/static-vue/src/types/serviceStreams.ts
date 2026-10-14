@@ -82,9 +82,9 @@ export interface ServiceStream {
  * (`src/input/mpegts/dvb_psi_hbbtv.c`): a map from the AIT
  * section number to the list of applications found in it. Each
  * application carries its names per language, the URL (HTTP
- * transport base plus simple location) and its visibility. The
- * Classic UI walks section, then application, then title
- * (`mpegts.js:226-250`). */
+ * transport base plus simple location) and its visibility.
+ * ServiceStreamsDialog renders one row per section, application
+ * and title. */
 export interface HbbTvTitle {
   name?: string
   /* 3-letter ISO 639-2 language code. */

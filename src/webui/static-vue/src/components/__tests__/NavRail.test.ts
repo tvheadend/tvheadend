@@ -145,25 +145,6 @@ describe('NavRail — section grouping', () => {
       expect(group.text()).not.toContain('About')
     }
   })
-
-  it('renders Classic UI as a plain external anchor to /extjs.html, not a router link', async () => {
-    accessStub.has.mockImplementation(() => true)
-    const wrapper = await mountRail()
-
-    const classic = wrapper
-      .findAll('a.nav-item')
-      .find((a) => a.text().includes('Classic UI'))
-    expect(classic).toBeTruthy()
-    /* Full-page navigation out of the SPA — the href is the bare
-     * extjs path, not a router-resolved in-app route. */
-    expect(classic!.attributes('href')).toBe('/extjs.html')
-    /* A RouterLink in this router would carry no active-class binding
-     * for an unmatched path, but more importantly it must sit OUTSIDE
-     * any labelled section group (trailing ungrouped block). */
-    for (const group of wrapper.findAll('[role="group"]')) {
-      expect(group.text()).not.toContain('Classic UI')
-    }
-  })
 })
 
 /*

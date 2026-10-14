@@ -27,7 +27,7 @@ vi.mock('@/composables/useToastNotify', () => stubs.toastNotify)
 stubs.resetEachTest()
 
 describe('EpgGrabberModulesView columns', () => {
-  it('labels the module name column like Classic instead of showing "title"', () => {
+  it('labels the module name column instead of showing "title"', () => {
     mount(EpgGrabberModulesView)
     expect(stubs.gridColumn('title')?.label).toBe('EPG Grabber Name')
   })

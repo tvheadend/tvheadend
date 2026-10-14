@@ -9,8 +9,8 @@
  * The data here is genuinely tree-shaped: physical DVB adapters are
  * tvh_hardware_t instances, each adapter has a set of frontends and
  * (optionally) CA slots as children — modelled in C as the idclass
- * `ic_get_childs` callback (linuxdvb_adapter.c:89-106). The ExtJS UI
- * surfaces this via `api/hardware/tree`, which we consume here.
+ * `ic_get_childs` callback (linuxdvb_adapter.c:89-106), which the
+ * server exposes via `api/hardware/tree`.
  *
  * Loading is lazy per node: the initial fetch returns the top-level
  * adapter list; expanding an adapter triggers a follow-up fetch with
@@ -22,7 +22,7 @@
  * idnode class varies (linuxdvb_adapter / linuxdvb_frontend / etc.);
  * IdnodeEditor's `list` prop is omitted so the server returns all
  * fields for that class. Tighter per-class lists could be hardcoded
- * later (matching dvr.js's elist pattern), but for the PoC the full
+ * later, but for the PoC the full
  * field set is genuinely useful — admins inspecting hardware want to
  * see signal levels, modulation params, error counts, etc.
  *
@@ -33,7 +33,7 @@
  *
  * Nodes whose class has the read-only `active` property (adapters,
  * frontends, CA slots, satconf entries) get a green / red dot next
- * to the label, as in the classic tree (tvadapters.js). The value is
+ * to the label. The value is
  * read on each fetch, so the tree reloads after a save in the editor
  * drawer as well as on the `hardware` notification.
  */
@@ -50,8 +50,8 @@ import { readStoredJson, writeStoredJson } from '@/utils/storage'
 
 const { t } = useI18n()
 
-/* The hardware/tree endpoint returns this shape (extracted from
- * api_input.c + ExtJS's idnode_tree consumption). Each node has a
+/* The hardware/tree endpoint returns this shape (see
+ * api_input.c). Each node has a
  * uuid (the idnode UUID), a text label, an optional `children` array
  * (omitted when not yet fetched), and idnode metadata we mostly
  * ignore here — only `uuid`, the human label, the structural
@@ -185,8 +185,7 @@ watch(expandedKeys, persistExpansion)
  * (or removed) after mount stays invisible until the view is
  * re-navigated. The server pushes a `hardware` notification on every
  * adapter add/remove — dual-port adapters emit two in quick
- * succession — so we subscribe to that class and rebuild the tree,
- * matching the Classic UI (tvadapters.js subscribes `comet: 'hardware'`).
+ * succession — so we subscribe to that class and rebuild the tree.
  * The editor's `saved` event runs the same refresh, so a frontend
  * enabled or disabled in the drawer updates its dot and its adapter's.
  *
@@ -474,7 +473,7 @@ onBeforeUnmount(() => {
 }
 
 /* Leading on/off dot: green for an active node, red for an inactive
- * one, as in the classic tree. The inactive label is also muted so the
+ * one. The inactive label is also muted so the
  * state does not rest on the dot colour alone. */
 .adapters__node {
   display: inline-flex;

@@ -4,13 +4,12 @@
 -->
 <script setup lang="ts">
 /*
- * LiveTvButton — a toolbar launcher that opens the in-browser player
- * with no channel preselected. Gives every EPG view a way to start
- * playback that does NOT depend on an EPG event existing (parity with
- * the classic UI's "Watch TV" button), so channels with no programme
- * data are still reachable (issue #2183). It's the primary play path
- * in the Table view, which has no per-channel row to click, and a
- * universal fallback in Timeline / Magazine.
+ * LiveTvButton — a toolbar launcher that opens the in-browser
+ * player with no channel preselected. Gives every EPG view a way to
+ * start playback that does NOT depend on an EPG event existing, so
+ * channels with no programme data are still reachable. It's the
+ * primary play path in the Table view, which has no per-channel row
+ * to click, and a universal fallback in Timeline / Magazine.
  *
  * Channel selection lives inside VideoPlayerDialog (its Channel
  * dropdown), so this button is just the launcher — no channel fetch,

@@ -31,7 +31,7 @@ describe('ConnectionsView — columns', () => {
     )
   })
 
-  it('reuses the Classic TCP and UDP msgids in the client data ports', () => {
+  it('translates the TCP and UDP labels in the client data ports', () => {
     ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { TCP: 'tcp-x', UDP: 'udp-x' }
     const ports = gridColumns().find((c) => c.field === 'peer_extra_ports')
     expect(ports?.format?.({ tcp: [5000], udp: [6000] }, {})).toBe('tcp-x: 5000; udp-x: 6000')

@@ -17,9 +17,6 @@
  *     (Matroska's `webm` / `dvbsub_reorder`, MPEG-TS Pass'
  *     SI-rewrite booleans, Transcode's codec selectors, …).
  *
- * Mirrors the legacy ExtJS `tvheadend.profile_tab()` page at
- * `static/app/profile.js:51` — same `idnode_form_grid` shape.
- *
  * Source-of-truth references:
  *   - C base class: `src/profile.c:284-456`
  *     (`profile_class`, ic_perm_def = ACCESS_ADMIN).

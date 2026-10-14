@@ -25,10 +25,7 @@
  * the user is told partial config persists on cancel so they
  * have one chance to back out.
  *
- * i18n: every label goes through `t()`. "Previous", "Cancel",
- * "Save & Next", "Finish" — all reused verbatim from the
- * ExtJS wizard (`src/webui/static/app/wizard.js`), so
- * translations are immediately available.
+ * i18n: every label goes through `t()`.
  */
 import { computed } from 'vue'
 import Button from 'primevue/button'
@@ -50,15 +47,13 @@ interface Props {
    * flight). */
   saving?: boolean
   /* Markdown page name passed to `useHelp().toggle()` for the
-   * Help button. ExtJS wizard uses `firstconfig` for every step
-   * (`wizard.js:165`); we match. Set to null to hide the Help
-   * button.
+   * Help button; the wizard uses `firstconfig` for every step.
+   * Set to null to hide the Help button.
    *
    * Clicking Help toggles the `WizardHelpDock` panel (docked
    * beside the step on desktop, full-screen modal on phone)
    * with the rendered markdown plus breadcrumb-based navigation
-   * between cross-linked help pages. Mirrors the
-   * `tvheadend.mdhelp` shape from Classic. */
+   * between cross-linked help pages. */
   helpPage?: string | null
   /* When true, the primary Save / Save & Next / Finish button
    * is not rendered. Used by the status step where there's
@@ -103,7 +98,6 @@ const { ask } = useConfirmDialog()
 const help = useHelp()
 
 const saveLabel = computed(() =>
-  /* Reused from ExtJS wizard.js line 160 — translations free. */
   props.isFinal ? t('Finish') : t('Save & Next'),
 )
 
@@ -127,11 +121,8 @@ function handleHelp(): void {
 }
 
 async function handleCancel(): Promise<void> {
-  /* i18n: new string — cancel-confirmation prose. ExtJS wizard
-   * doesn't have a cancel button (the wizard runs in a closable
-   * dialog whose close-X just hides the modal without server
-   * cleanup), so this prompt is novel. Falls back to English
-   * until it is translated in intl/vue. */
+  /* i18n: cancel-confirmation prose. Falls back to English until
+   * it is translated in intl/vue. */
   const ok = await ask(
     t(
       'Cancelling will exit the setup wizard, but any settings you have already saved on previous steps will remain. Continue?',
@@ -176,9 +167,9 @@ async function handleCancel(): Promise<void> {
         @click="emit('previous')"
       />
       <!-- i18n: "Skip" and "Next" are both novel strings.
-           ExtJS wizard has no Skip button — we add one for the
-           long-running scan step (status) so the user isn't
-           stuck waiting through the polling interval; the
+           Skip is offered on the long-running scan step (status)
+           so the user isn't stuck waiting through the polling
+           interval; the
            status step flips the label to "Next" at 100 % so the
            button reads as a continuation. Both go through t(skipLabel),
            which make intl cannot extract yet, so they stay English. -->

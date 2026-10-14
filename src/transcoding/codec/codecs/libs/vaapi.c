@@ -313,8 +313,6 @@ tvh_codec_profile_vaapi_open(tvh_codec_profile_vaapi_t *self,
     return 0;
 }
 
-// NOTE:
-// the names below are used in codec.js (/src/webui/static/app/codec.js)
 static const codec_profile_class_t codec_profile_vaapi_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_video_class,
@@ -788,8 +786,6 @@ tvh_codec_profile_vaapi_h264_open(tvh_codec_profile_vaapi_t *self,
     return 0;
 }
 
-// NOTE:
-// the names below are used in codec.js (/src/webui/static/app/codec.js)
 static const codec_profile_class_t codec_profile_vaapi_h264_class = {
     {
         .ic_super      = (idclass_t *)&codec_profile_vaapi_class,

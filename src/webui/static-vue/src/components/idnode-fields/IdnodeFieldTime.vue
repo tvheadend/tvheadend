@@ -11,8 +11,7 @@
  *   - default              datetime-local input (date + time, no TZ)
  *   - prop.duration        duration in seconds, rendered as a
  *                          minutes-input for human-friendly editing
- *                          (matches what users do in the existing
- *                          ExtJS dvr_extra start/stop_extra fields)
+ *                          (e.g. the DVR start/stop_extra fields)
  *   - prop.date            date only (no time component)
  *
  * datetime-local handles its own native picker on every modern
@@ -54,10 +53,9 @@ const isReadonly = computed(() => props.prop.rdonly === true)
 const isDuration = props.prop.duration === true
 const isDateOnly = props.prop.date === true && !isDuration
 
-/* Seconds-precision preference. Mirrors Classic's
- * `tvheadend.dvr_show_seconds` (idnode.js:789): when truthy, the
- * picker exposes seconds; otherwise minute precision. Applies to
- * the datetime branch only — date-only and duration fields don't
+/* Seconds-precision preference: when truthy, the picker exposes
+ * seconds; otherwise minute precision. Applies to the datetime
+ * branch only — date-only and duration fields don't
  * have seconds to expose. Reactive so a fresh accessUpdate flips
  * the field without remount. */
 const showSeconds = computed(
@@ -67,8 +65,7 @@ const showSeconds = computed(
 /*
  * datetime-local needs a string in "YYYY-MM-DDTHH:mm" format and
  * has no timezone. We convert from epoch seconds via local-time
- * Date methods so the user sees their local clock — same convention
- * as ExtJS's TwinDateTimeField uses.
+ * Date methods so the user sees their local clock.
  */
 function epochToLocalInput(s: number, dateOnly: boolean): string {
   const d = new Date(s * 1000)

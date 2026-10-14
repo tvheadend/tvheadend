@@ -22,8 +22,7 @@
  *
  * Route guard `configSatipServerGuard` (registered in
  * `router/index.ts`) hides this page on builds where
- * `capabilities.has('satip_server')` is false — same gate the
- * legacy ExtJS UI uses (config.js:127-128).
+ * `capabilities.has('satip_server')` is false.
  */
 import IdnodeConfigForm from '@/components/IdnodeConfigForm.vue'
 import { discoverSatipServers } from '@/commands/actionHandlers'

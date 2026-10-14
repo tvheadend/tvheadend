@@ -10,8 +10,7 @@
  * was once recorded; the file itself is gone.
  *
  * Tab visibility is gated to expert users only — handled by
- * DvrLayout's `requiredLevel: 'expert'` on this tab. Mirrors ExtJS
- * dvr.js:988 and the panel-shuffle at dvr.js:1207-1213.
+ * DvrLayout's `requiredLevel: 'expert'` on this tab.
  *
  * Mounts <IdnodeGrid> against `dvr/entry/grid_removed`. Toolbar is
  * minimal — three actions, all count-only gating:
@@ -25,17 +24,15 @@
  * count-only.
  *
  * Edit list is the tightest of any DVR sub-tab — admin gets the six
- * mostly-comment fields from dvr.js:989; non-admin gets just
- * `retention,comment`. Most properties are read-only on a removed
- * entry.
+ * mostly-comment fields; non-admin gets just `retention,comment`.
+ * Most properties are read-only on a removed entry.
  *
- * Default sort `start_real DESC` matches dvr.js:1003 — most recent
- * removal at the top, since the user typically came to triage why a
- * specific recording was lost.
+ * Default sort `start_real DESC` — most recent removal at the top,
+ * since the user typically came to triage why a specific recording
+ * was lost.
  *
- * Per-row Play icon is absent in ExtJS too (dvr.js:1008 has only the
- * details `actions` plugin in `lcol`, no Play renderer); file is
- * gone so playback wouldn't work.
+ * No per-row Play icon: the file is gone so playback wouldn't
+ * work.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -53,7 +50,7 @@ const { t } = useI18n()
 
 const access = useAccessStore()
 
-/* Edit list — admin-aware, matches dvr.js:989 verbatim. */
+/* Edit list — admin-aware. */
 const editList = computed(() =>
   access.data?.admin
     ? 'retention,owner,disp_title,disp_extratext,episode_disp,comment'
@@ -67,10 +64,10 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
   editList,
 })
 
-/* Column set from dvr.js:991-993. Smallest of the four DVR sub-tabs:
- * no filesize (file gone), no playcount (can't play), no filename
- * (not relevant). Includes `status` (failure-reason text — visible
- * if the entry failed and was later removed). */
+/* Column set. Smallest of the four DVR sub-tabs: no filesize (file
+ * gone), no playcount (can't play), no filename (not relevant).
+ * Includes `status` (failure-reason text — visible if the entry
+ * failed and was later removed). */
 const cols = dvrEntryColumns(kodiFmt, { status: true })
 
 /* Bulk-action handles — see useBulkAction.ts. Standard idnode delete

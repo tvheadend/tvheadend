@@ -24,8 +24,7 @@
  *   7. authority     (PT_STR, XMLTV system= match)
  *   8. icon          (PT_STR, icon filename)
  *
- * Page is gated to `uilevel: 'expert'` per Classic
- * (`ratinglabels.js:25`). The L3 tab is hidden from non-expert
+ * Page is gated to `uilevel: 'expert'`. The L3 tab is hidden from non-expert
  * users in `ConfigChannelEpgLayout.vue`; direct URL navigation
  * is handled by `configRatingLabelsGuard` in the router. All
  * fields inside the page are basic — the gate is on access to

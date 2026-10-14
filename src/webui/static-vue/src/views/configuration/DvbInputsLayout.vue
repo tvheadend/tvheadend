@@ -6,21 +6,20 @@
 /*
  * DvbInputsLayout — L3 navigation scaffold inside Configuration → DVB
  * Inputs. Hosts the L3 tabs (TV Adapters / Networks / Muxes /
- * Services / Mux Schedulers) per ExtJS dvr / mpegts wiring.
+ * Services / Mux Schedulers).
  *
  * Same shape as DvrLayout — PageTabs row above a router-view.
  *
- * **Per-tab capability gate.** ExtJS gates only the TV adapters tab
+ * **Per-tab capability gate.** Only the TV adapters tab is gated,
  * on the `tvadapters` capability (linuxdvb / SAT>IP-client /
- * HDHomerun-client built in) — tvheadend.js:1154. Networks / Muxes /
- * Services are input-type-agnostic (IPTV uses them too) and stay
- * visible regardless. We mirror that: the TV adapters tab carries
- * `requiredCapability`, the rest do not. `dvbAdaptersGuard` in
+ * HDHomerun-client built in). Networks / Muxes / Services are
+ * input-type-agnostic (IPTV uses them too) and stay visible
+ * regardless: the TV adapters tab carries `requiredCapability`,
+ * the rest do not. `dvbAdaptersGuard` in
  * `router/index.ts` handles direct-URL navigation without it.
  *
- * **Per-tab uilevel gate.** ExtJS gates the Mux Schedulers grid to
- * `uilevel: 'expert'` (mpegts.js:429). We mirror by adding
- * `requiredLevel` to that tab and filtering against the access
+ * **Per-tab uilevel gate.** The Mux Schedulers grid is Expert-only:
+ * that tab carries `requiredLevel`, filtered against the access
  * store's current `uilevel`. The route guard (`dvbMuxSchedGuard` in
  * `router/index.ts`) handles direct-URL navigation for non-experts.
  */

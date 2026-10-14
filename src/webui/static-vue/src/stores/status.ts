@@ -36,12 +36,11 @@
  *      belt-and-suspenders — but it also makes selection survive a
  *      refresh without our `watch(store.entries)` filter ever firing.
  *
- * The ExtJS UI goes one step further with per-tab in-place patching
- * driven by the notification fields directly (no API call at all —
- * the notification carries the changed fields). That eliminates the
- * network round-trip, which matters for installations with hundreds
- * of HTSP clients but is overkill for typical home tvheadend; the
- * full-refetch path here is simpler.
+ * Patching rows in place from the notification fields directly
+ * (no API call at all — the notification carries the changed
+ * fields) would eliminate the network round-trip, which matters for
+ * installations with hundreds of HTSP clients but is overkill for
+ * typical home tvheadend; the full-refetch path here is simpler.
  *
  * The factory returns a Pinia setup-store. Cached at module scope by
  * `endpoint` so the second mount of the same view gets the same store

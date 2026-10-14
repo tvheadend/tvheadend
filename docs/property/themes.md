@@ -14,8 +14,4 @@ host setting changes; no reload is needed. Because it is the default,
 only a user who wants to ignore the host setting has to pick a theme
 at all.
 
-**Dark** and **Auto** style the Vue web interface only. The legacy
-ExtJS interface has no dark stylesheet of its own and falls back to its
-light one when either theme is selected.
-
 This setting can be overridden on a per-user basis, see [Access Entries](class/access).

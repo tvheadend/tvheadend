@@ -29,9 +29,9 @@ describe('firstRowHasFile', () => {
     ).toBe(false)
   })
 
-  /* Mirrors ExtJS dvr.js:761 — the predicate inspects ONLY r[0] even
-   * when the selection has more rows. Multi-selection with the first
-   * row having no file disables the buttons even if later rows do. */
+  /* The predicate inspects ONLY r[0] even when the selection has
+   * more rows. Multi-selection with the first row having no file
+   * disables the buttons even if later rows do. */
   it('uses ONLY the first row, ignoring later rows', () => {
     const sel = [
       { uuid: 'a', filesize: 0 },

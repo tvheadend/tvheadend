@@ -22,9 +22,9 @@
  *     otherwise (mirrors the precision of the existing grid columns
  *     that show `kb/s` as integers).
  *
- * "kb/s" not "Kbps" — matches Classic's column captions exactly
- * (`status.js:483` "Bandwidth (kb/s)") so the unit reads the same
- * on the chart axes as on the grid.
+ * "kb/s" not "Kbps" — matches the grid column captions
+ * ("Bandwidth (kb/s)") so the unit reads the same on the chart
+ * axes as on the grid.
  */
 
 export type BitrateUnits = 'bits' | 'bytes'

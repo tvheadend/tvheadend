@@ -34,10 +34,9 @@
  * swapped on the event's `dvrState`), Autorec or Record series, View
  * DVR entry, then Other showings. Order matters because ActionMenu
  * overflows from the end of the array, so the first entries are the
- * ones that stay visible in a narrow drawer. It follows the legacy
- * ExtJS dialog at `static/app/epg.js:362-447` and DVR Upcoming's
- * toolbar at `UpcomingView.vue:505-518`, both of which put the
- * related / alternative showings after the recording actions.
+ * ones that stay visible in a narrow drawer. Like DVR Upcoming's
+ * toolbar, it puts the related / alternative showings after the
+ * recording actions.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDvrEditor } from '@/composables/useDvrEditor'
@@ -185,9 +184,7 @@ export interface EpgEventDetail {
    * `actor` / `guest` / `presenter` / `director` / `writer`,
    * plus broadcaster-specific extras like `host` / `producer` /
    * `composer`. The drawer's Credits group categorises into
-   * Starring / Director / Writer / Crew via `epgCredits.ts`,
-   * matching the legacy ExtJS layout
-   * (`tvheadend.js:339-377` `getDisplayCredits`). */
+   * Starring / Director / Writer / Crew via `epgCredits.ts`. */
   credits?: Record<string, string>
   /* Series-link URI (CRID-equivalent identifier emitted when the
    * broadcaster tags this episode as part of a series). Drives
@@ -218,8 +215,7 @@ const dvrEditor = useDvrEditor()
  * "use the server's default DVR config" — the server resolves
  * that in `dvr_config_find_by_list` (`src/dvr/dvr_config.c:103-132`).
  * Reset to '' on every event change so the dropdown doesn't carry
- * a previous selection across drawer opens (matches the legacy
- * ExtJS popup, which builds a fresh combo per dialog). */
+ * a previous selection across drawer opens. */
 const selectedConfigUuid = ref<string>('')
 
 /* Keep the selection on a listed profile: the first entry (the
@@ -248,8 +244,7 @@ const relatedMode = ref<EpgRelatedMode>('related')
  * "scheduled", `dvr_db.c:704`), so it's read from the DVR entry's
  * read-only `duplicate` property ("Rerun of", `dvr_db.c`) via a
  * targeted `idnode/load` when the drawer opens on a scheduled entry.
- * Drives the "Will be skipped" note — the Vue counterpart of the
- * classic DVR details dialog's red rerun warning (`dvr.js:71`). */
+ * Drives the "Will be skipped" rerun warning. */
 const duplicateOf = ref<number | null>(null)
 
 async function loadDuplicateOf(dvrUuid: string): Promise<void> {
@@ -328,7 +323,6 @@ const playProfileChannel = ref<string | null>(null)
 
 /* ---- Record / Stop / Delete actions ----
  *
- * Mirrors ExtJS' EPG detail dialog at `static/app/epg.js:327-435`.
  * One of three buttons is rendered depending on `event.dvrState`:
  *
  *   - Record         ← no DVR entry. POST `dvr/entry/create_by_event`.
@@ -337,13 +331,12 @@ const playProfileChannel = ref<string | null>(null)
  *   - Delete recording ← dvrState starts with 'scheduled'. POST
  *                      `idnode/delete`. Confirms before firing.
  *
- * Confirmation strings copied verbatim from the legacy UI for
- * translation reuse when vue-i18n lands. Confirmations use the
- * themed PrimeVue `<ConfirmDialog>` (`useConfirmDialog`); errors
- * surface via PrimeVue Toast (`useToastNotify`).
+ * Confirmations use the themed PrimeVue `<ConfirmDialog>`
+ * (`useConfirmDialog`); errors surface via PrimeVue Toast
+ * (`useToastNotify`).
  *
- * After every action the drawer closes — matches ExtJS exactly. The
- * server's `idnode_notify_changed` for `dvrentry` fires; TimelineView
+ * After every action the drawer closes. The server's
+ * `idnode_notify_changed` for `dvrentry` fires; TimelineView
  * subscribes to that class and refetches events, so the underlying
  * grid reflects the new state on the next render.
  *
@@ -416,15 +409,12 @@ function deleteRecording() {
   )
 }
 
-/* Per-event AutoRec creation. Mirrors Classic's `recordSeries`
- * in `static/app/epg.js:546-548` — single handler regardless of
- * the button's "Record series" / "Autorec" label, POSTs to
- * `api/dvr/autorec/create_by_series` with the event id +
- * selected DVR profile. Server-side the rule is keyed on the
- * event's serieslink when available, falls back to title. The
- * drawer closes on success; toast confirms (departure from
- * Classic which is silent — matches our app's existing
- * Record / Stop / Delete feedback convention). */
+/* Per-event AutoRec creation — single handler regardless of the
+ * button's "Record series" / "Autorec" label, POSTs to
+ * `api/dvr/autorec/create_by_series` with the event id + selected
+ * DVR profile. Server-side the rule is keyed on the event's
+ * serieslink when available, falls back to title. The drawer closes
+ * on success; a toast confirms, as for Record / Stop / Delete. */
 async function recordSeries() {
   if (!props.event) return
   inflight.value = true
@@ -652,8 +642,7 @@ function buildDvrActions(ev: EpgEventDetail): ActionDef[] {
     })
   } else {
     /* Record carries the DVR-profile picker as a leading control so
-     * the configure-then-act pairing stays visually unambiguous —
-     * matches the legacy ExtJS popup's profile-then-button layout.
+     * the configure-then-act pairing stays visually unambiguous.
      * The picker rides on the action itself so ActionMenu's
      * width-aware overflow keeps the picker glued to the button:
      * if Record overflows into the `…` menu, the picker goes with
@@ -693,8 +682,7 @@ function buildDvrActions(ev: EpgEventDetail): ActionDef[] {
    * episodes server-side via the serieslink. Without it, label
    * says "Autorec" and the server falls back to a title-based
    * rule. Same handler / same endpoint either way; the label
-   * flip is purely user-facing semantics. Mirrors Classic at
-   * `static/app/epg.js:430-435`. */
+   * flip is purely user-facing semantics. */
   out.push({
     id: 'autorec',
     label: ev.serieslinkUri ? t('Record series') : t('Autorec'),
@@ -785,9 +773,9 @@ const classification = computed<RatingDisplay>(() => {
   return classifyRating(ev)
 })
 
-/* Cast / crew categorised into Starring / Director / Writer /
- * Crew per the legacy ExtJS layout. Null when no credits — the
- * Credits drawer group hides entirely in that case. */
+/* Cast / crew categorised into Starring / Director / Writer / Crew.
+ * Null when no credits — the Credits drawer group hides entirely in
+ * that case. */
 const credits = computed<CreditsDisplay | null>(() =>
   categoriseCredits(props.event?.credits)
 )
@@ -922,9 +910,7 @@ const flags = computed(() => {
       />
       <!--
         Dedup-skip warning — this entry is scheduled but the
-        duplicate-detection will skip it as a rerun. Mirrors the
-        classic details dialog's red note; msgids reused from it so
-        existing translations apply.
+        duplicate-detection will skip it as a rerun.
       -->
       <p v-if="duplicateOf !== null" class="epg-event-drawer__skip-note">
         {{ t('Will be skipped') }}
@@ -1075,8 +1061,7 @@ const flags = computed(() => {
 
       <!--
         Credits — XMLTV cast / crew. Categorised into Starring /
-        Director / Writer / Crew via `epgCredits.ts`, matching
-        the legacy ExtJS layout (`tvheadend.js:339-377`). The
+        Director / Writer / Crew via `epgCredits.ts`. The
         whole group hides when there are no credits or every
         category is empty.
       -->

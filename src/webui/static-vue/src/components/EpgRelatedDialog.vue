@@ -7,10 +7,8 @@
  * EpgRelatedDialog — modal listing EPG events the server
  * considers related / alternative to a given broadcast event-id.
  *
- * Port of Classic's `epgAlternativeShowingsDialog`
- * (`static/app/epgevent.js:9-159`) used by the DVR Upcoming
- * "Related broadcasts" + "Alternative showings" toolbar
- * actions. Driven by:
+ * Used by the DVR Upcoming "Related broadcasts" +
+ * "Alternative showings" toolbar actions. Driven by:
  *
  *   - `eventId` prop — PT_U32 broadcast id read from the DVR
  *     row's `broadcast` field (`src/dvr/dvr_db.c:4940-4948`).
@@ -22,8 +20,7 @@
  *   GET /api/epg/events/related?eventId=<u32>
  *   GET /api/epg/events/alternative?eventId=<u32>
  *
- * Six visible columns matching Classic literally
- * (`epgevent.js:90-138`): Title / Extra text / Episode /
+ * Six visible columns: Title / Extra text / Episode /
  * Start / End / Channel. Reuses the EPG TableView's `extraText`
  * fallback helper (`subtitle ?? summary ?? description`) and
  * the shared `fmtDate` time formatter — same surface admins
@@ -34,9 +31,8 @@
  * existing EpgEventDrawer for Record / Stop / Delete actions.
  * The dialog stays mounted underneath the drawer.
  *
- * Single-row gate lives on the caller. The dialog never spawns
- * itself for multi-row DVR selections — Classic does (loops
- * and opens N dialogs at once), v2 deliberately doesn't.
+ * Single-row gate lives on the caller: the dialog never opens
+ * for multi-row DVR selections.
  */
 import { computed, watch } from 'vue'
 import Dialog from 'primevue/dialog'
@@ -117,8 +113,6 @@ watch(
   { immediate: true },
 )
 
-/* Column cell formatters mirror Classic's
- * `tvheadend.renderCustomDate` / `tvheadend.renderExtraText`. */
 function renderExtra(row: EpgEventDetail): string {
   return extraText(row) ?? ''
 }

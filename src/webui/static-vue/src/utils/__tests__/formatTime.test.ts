@@ -88,11 +88,10 @@ describe('fmtDate — non-positive / non-number sentinels', () => {
   })
 })
 
-/* Classic's `niceDate` (static/app/tvheadend.js:800-808) default
- * shape: short weekday + locale numeric date + 24-hour clock with
- * seconds, irrespective of browser locale's habitual 12h/24h
- * convention. `fmtDate` mirrors that exactly when no `date_mask` is
- * set; tests compose the expected shape from the same Intl.DateTime
+/* `fmtDate`'s default shape when no `date_mask` is set: short
+ * weekday + locale numeric date + 24-hour clock with seconds,
+ * irrespective of browser locale's habitual 12h/24h convention.
+ * Tests compose the expected shape from the same Intl.DateTime
  * options the implementation uses, so locale variance (en-GB vs
  * de-DE vs en-US) doesn't break the assertion. */
 const NICE_DATE_OPTS: Intl.DateTimeFormatOptions = {
@@ -106,7 +105,7 @@ const NICE_DATE_OPTS: Intl.DateTimeFormatOptions = {
   hour12: false,
 }
 
-describe('fmtDate — desktop viewport (Classic niceDate shape)', () => {
+describe('fmtDate — desktop viewport (default date shape)', () => {
   beforeEach(() => setViewport(DESKTOP))
 
   it('formats a positive epoch as weekday + numeric date + 24h time', () => {
@@ -203,7 +202,7 @@ describe('fmtDate — desktop with admin-tuned date_mask', () => {
     expect(fmtDate(epoch)).toBe('2026-05-12')
   })
 
-  it('falls back to Classic niceDate shape when mask is empty string', () => {
+  it('falls back to the default date shape when mask is empty string', () => {
     setMask('')
     const epoch = 1714780800
     expect(fmtDate(epoch)).toBe(
@@ -211,7 +210,7 @@ describe('fmtDate — desktop with admin-tuned date_mask', () => {
     )
   })
 
-  it('falls back to Classic niceDate shape when mask is missing entirely', () => {
+  it('falls back to the default date shape when mask is missing entirely', () => {
     /* access.data set but no date_mask field. */
     const access = useAccessStore()
     access.data = { admin: true, dvr: true }
@@ -238,9 +237,8 @@ describe('fmtDate — desktop with admin-tuned date_mask', () => {
   })
 })
 
-/* fmtDateOnly — date-only sibling of fmtDate. Mirrors Classic's
- * `niceDateYearMonth` (static/app/tvheadend.js:815-…) in shape: the
- * caller wants a date with NO time component. Used by the EPG event
+/* fmtDateOnly — date-only sibling of fmtDate, for callers that
+ * want a date with NO time component. Used by the EPG event
  * drawer's First Aired row, where XMLTV stores the broadcast date
  * with 00:00:00 baked in. */
 const DATE_ONLY_OPTS: Intl.DateTimeFormatOptions = {

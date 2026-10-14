@@ -162,9 +162,8 @@ const fmtSize = (v: unknown) => {
  * day numbers (1=Mon … 7=Sun, ISO 8601). All seven → "Every day";
  * empty/missing → empty string. The day names go through t(), so
  * they come from the Vue UI catalog at /redir/locale-vue.js like
- * every other string. ExtJS uses
- * `tvheadend.weekdaysRenderer(st)` against the enum store; we
- * hard-code the English names here as the msgids. */
+ * every other string. The English names are hard-coded here as
+ * the msgids. */
 const fmtWeekdays = (v: unknown) => {
   if (!Array.isArray(v) || v.length === 0) return ''
   if (v.length === 7) return t('Every day')
@@ -303,18 +302,16 @@ export const DVR_FIELDS = {
   stop_real: { sortable: true, format: fmtDate, minVisible: 'desktop', width: 170 },
   duration: { sortable: true, format: fmtDuration, minVisible: 'desktop', phoneOrder: 4, width: 100 },
 
-  /* Recording state icon (DvrStateCell), the leading column of
-   * the four dvr_entry list views, like Classic's per-row
-   * `sched_status` icon (`dvr.js` dvrRowActions). The value is a
-   * raw token (`dvr_db.c:704-735`), so the cell draws an icon
-   * named by the row's localized `status` text. The server flags
-   * the property PO_HIDDEN, which the grid would honour, hence
-   * `hiddenByDefault: false`; the column picker can still hide it.
-   * Icon-only header: the picker and the header tooltip use the
-   * server caption. Not sortable or filterable on raw tokens.
-   * Desktop-only, like the EPG Table's state column: an icon-only
-   * phone-card field would pair with the promoted `status` text
-   * on Failed and halve it. */
+  /* Recording state icon (DvrStateCell), the leading column of the
+   * four dvr_entry list views. The value is a raw token
+   * (`dvr_db.c:704-735`), so the cell draws an icon named by the
+   * row's localized `status` text. The server flags the property
+   * PO_HIDDEN, which the grid would honour, hence `hiddenByDefault:
+   * false`; the column picker can still hide it. Icon-only header:
+   * the picker and the header tooltip use the server caption. Not
+   * sortable or filterable on raw tokens. Desktop-only, like the
+   * EPG Table's state column: an icon-only phone-card field would
+   * pair with the promoted `status` text on Failed and halve it. */
   sched_status: {
     hideHeaderLabel: true,
     sortable: false,
@@ -448,10 +445,9 @@ export const DVR_GROUPABLE_FIELDS: GroupableFieldDef[] = [
  * channel, weekdays, time window, content type, season/year ranges,
  * star rating, etc. The C source is `src/dvr/dvr_autorec.c`. Note the
  * `record` vs `dedup` quirk: the C-side property is `record` (duplicate
- * handling enum, .list = dvr_autorec_entry_class_dedup_list); ExtJS
- * uses `dedup` as a column display key. We use `record` everywhere —
- * the API field name is what matters, the display key was an ExtJS
- * convention only.
+ * handling enum, .list = dvr_autorec_entry_class_dedup_list), and
+ * `record` is used everywhere here — the API field name is what
+ * matters.
  *
  * `start` and `start_window` are PT_STR holding "HH:MM" or "Any"
  * (NOT epoch seconds — they're time-of-day with a custom enum list).
@@ -568,15 +564,12 @@ export const AUTOREC_FIELDS = {
 
   /* EPG content filters.
    *
-   * Single-select enum over the major-group list. Mirrors
-   * Classic's autorec editor dropdown (`epg.js:1098-1106`) +
-   * the EPG filter — both stores fetch
-   * `epg/content_type/list` without `full=1`, so the server
-   * returns just the ~11 major-group entries
-   * (Movies/Drama, News, Show, Sports, ...). No subtype
-   * refinements: rules can't be created narrowed to a
-   * subtype, so filtering to one would never match anything.
-   * Flat list short enough that grouping / type-to-filter
+   * Single-select enum over the major-group list. Fetches
+   * `epg/content_type/list` without `full=1`, so the server returns
+   * just the ~11 major-group entries (Movies/Drama, News, Show,
+   * Sports, ...). No subtype refinements: rules can't be created
+   * narrowed to a subtype, so filtering to one would never match
+   * anything. Flat list short enough that grouping / type-to-filter
    * would be visual noise. */
   content_type: {
     sortable: true,
