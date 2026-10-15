@@ -47,7 +47,7 @@ char tvh_binshasum[20];
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #include "tvheadend.h"
 
@@ -274,7 +274,7 @@ trap_init(const char *ver)
   struct sigaction sa, old;
   char path[256];
 
-  SHA_CTX binsum;
+  EVP_MD_CTX *binsum;
   int fd;
 
   r = readlink("/proc/self/exe", self, sizeof(self) - 1);
@@ -289,12 +289,14 @@ trap_init(const char *ver)
     if(!fstat(fd, &st)) {
       char *m = malloc(st.st_size);
       if(m != NULL) {
-	if(read(fd, m, st.st_size) == st.st_size) {
-	  SHA1_Init(&binsum);
-	  SHA1_Update(&binsum, (void *)m, st.st_size);
-	  SHA1_Final(digest, &binsum);
-	}
-	free(m);
+        if(read(fd, m, st.st_size) == st.st_size) {
+          binsum = EVP_MD_CTX_new();
+          EVP_DigestInit_ex(binsum, EVP_sha1(), NULL);
+          EVP_DigestUpdate(binsum, (void *)m, st.st_size);
+          EVP_DigestFinal_ex(binsum, digest, NULL);
+          EVP_MD_CTX_free(binsum);
+        }
+        free(m);
       }
     }
     close(fd);

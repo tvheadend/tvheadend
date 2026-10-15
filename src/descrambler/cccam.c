@@ -18,7 +18,7 @@
  */
 
 #include <ctype.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #include "tvheadend.h"
 #include "tcp.h"
 #include "cclient.h"
@@ -603,14 +603,16 @@ cccam_send_oscam_extended(cccam_t *cccam)
 static void
 sha1_make_login_key(cccam_t *cccam, uint8_t *buf)
 {
-  SHA_CTX sha1;
-  uint8_t hash[SHA_DIGEST_LENGTH];
+  EVP_MD_CTX *sha1;
+  uint8_t hash[EVP_MAX_MD_SIZE];
 
   cccam_crypt_xor(buf);
 
-  SHA1_Init(&sha1);
-  SHA1_Update(&sha1, buf, 16);
-  SHA1_Final(hash, &sha1);
+  sha1 = EVP_MD_CTX_new();
+  EVP_DigestInit_ex(sha1, EVP_sha1(), NULL);
+  EVP_DigestUpdate(sha1, buf, 16);
+  EVP_DigestFinal_ex(sha1, hash, NULL);
+  EVP_MD_CTX_free(sha1);
 
   tvhdebug(cccam->cc_subsys, "%s: sha1 hash", cccam->cc_name);
   tvhlog_hexdump(cccam->cc_subsys, hash, sizeof(hash));

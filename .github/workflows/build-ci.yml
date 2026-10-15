@@ -84,7 +84,7 @@ jobs:
        # aarch64 is not emulated here: it builds natively on arm64
        # runners in build-deb-native below.
        arch: [ armv7 ]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
+       distro: [ stretch, buster, bullseye, bookworm, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
        include:
          - arch: armv6
            distro: stretch
@@ -139,7 +139,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             case "${{ matrix.distro }}" in
-              jessie|stretch|buster)
+              stretch|buster)
                 sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
                 sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
                 sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
@@ -153,7 +153,7 @@ jobs:
                 ;;
             esac
             case "${{ matrix.distro }}" in
-              ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
+              ubuntu*|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
                 DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
@@ -191,7 +191,7 @@ jobs:
     strategy:
       matrix:
         runner: ["ubuntu-latest"]
-        container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["ubuntu:resolute", "ubuntu-resolute"], ["i386/debian:stretch", "i386-debian-stretch"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
+        container: [["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["ubuntu:resolute", "ubuntu-resolute"], ["i386/debian:stretch", "i386-debian-stretch"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
         # aarch64 legs on GitHub's arm64 runners, replacing the QEMU-emulated
         # aarch64 builds formerly in build-crosscompile:
         # uraimo/run-on-arch-action cannot run on arm64 hosts (its QEMU
@@ -211,8 +211,6 @@ jobs:
             container: ["arm64v8/debian:bullseye", "arm64-debian-bullseye", "bullseye aarch64"]
           - runner: ubuntu-24.04-arm
             container: ["arm64v8/debian:bookworm", "arm64-debian-bookworm", "bookworm aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial", "ubuntu16.04 aarch64"]
           - runner: ubuntu-24.04-arm
             container: ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic", "ubuntu18.04 aarch64"]
           - runner: ubuntu-24.04-arm

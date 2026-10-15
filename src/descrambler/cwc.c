@@ -19,6 +19,7 @@
 
 #include <ctype.h>
 #include <openssl/des.h>
+#include <openssl/evp.h>
 
 #include "tvheadend.h"
 #include "cclient.h"
@@ -812,12 +813,6 @@ caclient_t *cwc_create(void)
 }
 
 /*
- *
- */
-
-#include <openssl/md5.h>
-
-/*
  * "THE BEER-WARE LICENSE" (Revision 42):
  * <phk@login.dknet.dk> wrote this file.  As long as you retain this notice you
  * can do whatever you want with this stuff. If we meet some day, and you think
@@ -849,8 +844,11 @@ crypt_md5(const char *pw, const char *salt)
     const char *sp,*ep;
     unsigned char   final[16];
     int sl,pl,i,j;
-    MD5_CTX ctx,ctx1;
+    EVP_MD_CTX *ctx, *ctx1;
     unsigned long l;
+
+    ctx = EVP_MD_CTX_new();
+    ctx1 = EVP_MD_CTX_new();
 
     /* Refine the Salt first */
     sp = salt;
@@ -866,25 +864,25 @@ crypt_md5(const char *pw, const char *salt)
     /* get the length of the true salt */
     sl = ep - sp;
 
-    MD5_Init(&ctx);
+    EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
 
     /* The password first, since that is what is most unknown */
-    MD5_Update(&ctx,(unsigned char *)pw,strlen(pw));
+    EVP_DigestUpdate(ctx,(unsigned char *)pw,strlen(pw));
 
     /* Then our magic string */
-    MD5_Update(&ctx,(unsigned char *)magic,strlen(magic));
+    EVP_DigestUpdate(ctx,(unsigned char *)magic,strlen(magic));
 
     /* Then the raw salt */
-    MD5_Update(&ctx,(unsigned char *)sp,sl);
+    EVP_DigestUpdate(ctx,(unsigned char *)sp,sl);
 
     /* Then just as many characters of the MD5_(pw,salt,pw) */
-    MD5_Init(&ctx1);
-    MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
-    MD5_Update(&ctx1,(unsigned char *)sp,sl);
-    MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
-    MD5_Final(final,&ctx1);
+    EVP_DigestInit_ex(ctx1, EVP_md5(), NULL);
+    EVP_DigestUpdate(ctx1,(unsigned char *)pw,strlen(pw));
+    EVP_DigestUpdate(ctx1,(unsigned char *)sp,sl);
+    EVP_DigestUpdate(ctx1,(unsigned char *)pw,strlen(pw));
+    EVP_DigestFinal_ex(ctx1, final, NULL);
     for(pl = strlen(pw); pl > 0; pl -= 16)
-        MD5_Update(&ctx,(unsigned char *)final,pl>16 ? 16 : pl);
+        EVP_DigestUpdate(ctx,(unsigned char *)final,pl>16 ? 16 : pl);
 
     /* Don't leave anything around in vm they could use. */
     memset(final,0,sizeof final);
@@ -892,9 +890,9 @@ crypt_md5(const char *pw, const char *salt)
     /* Then something really weird... */
     for (j=0,i = strlen(pw); i ; i >>= 1)
         if(i&1)
-            MD5_Update(&ctx, (unsigned char *)final+j, 1);
+            EVP_DigestUpdate(ctx, (unsigned char *)final+j, 1);
         else
-            MD5_Update(&ctx, (unsigned char *)pw+j, 1);
+            EVP_DigestUpdate(ctx, (unsigned char *)pw+j, 1);
 
     /* Now make the output string */
     char *passwd = malloc(120);
@@ -903,7 +901,8 @@ crypt_md5(const char *pw, const char *salt)
     strncat(passwd,sp,sl);
     strcat(passwd,"$");
 
-    MD5_Final(final,&ctx);
+    EVP_DigestFinal_ex(ctx, final,NULL);
+    EVP_MD_CTX_free(ctx);
 
     /*
      * and now, just to make sure things don't run too fast
@@ -911,24 +910,25 @@ crypt_md5(const char *pw, const char *salt)
      * need 30 seconds to build a 1000 entry dictionary...
      */
     for(i=0;i<1000;i++) {
-        MD5_Init(&ctx1);
+        EVP_DigestInit_ex(ctx1, EVP_md5(), NULL);
         if(i & 1)
-            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+            EVP_DigestUpdate(ctx1,(unsigned char *)pw,strlen(pw));
         else
-            MD5_Update(&ctx1,(unsigned char *)final,16);
+            EVP_DigestUpdate(ctx1,(unsigned char *)final,16);
 
         if(i % 3)
-            MD5_Update(&ctx1,(unsigned char *)sp,sl);
+            EVP_DigestUpdate(ctx1,(unsigned char *)sp,sl);
 
         if(i % 7)
-            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
+            EVP_DigestUpdate(ctx1,(unsigned char *)pw,strlen(pw));
 
         if(i & 1)
-            MD5_Update(&ctx1,(unsigned char *)final,16);
+            EVP_DigestUpdate(ctx1,(unsigned char *)final,16);
         else
-            MD5_Update(&ctx1,(unsigned char *)pw,strlen(pw));
-        MD5_Final(final,&ctx1);
+            EVP_DigestUpdate(ctx1,(unsigned char *)pw,strlen(pw));
+        EVP_DigestFinal_ex(ctx1, final, NULL);
     }
+    EVP_MD_CTX_free(ctx1);
 
     p = passwd + strlen(passwd);
 
