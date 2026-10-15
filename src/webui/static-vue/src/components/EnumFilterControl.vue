@@ -87,7 +87,7 @@ const { t } = useI18n()
 
 /* Resolved option list. Inline lists hydrate synchronously
  * before first render; deferred lists land after the
- * fetchDeferredEnum promise resolves (cached per-session by
+ * fetchDeferredEnum promise resolves (shared and cached by
  * the helper). Until then, render an empty list — the
  * dropdown still opens and shows the "(any)" entry.
  *

@@ -173,8 +173,10 @@ export interface ColumnDef {
   /*
    * Optional enum descriptor for cells that hold a key from an enum.
    * Either:
-   *   - a deferred reference (`{ type: 'api', uri, params? }`) that
-   *     `fetchDeferredEnum` resolves once per session, or
+   *   - a deferred reference (`{ type: 'api', uri, event?, params? }`)
+   *     that `fetchDeferredEnum` resolves once, and again after each
+   *     batch of Comet notifications of the `event` class while a
+   *     cell shows it, or
    *   - an inline static `Option[]` list for small fixed enums.
    * Drives label resolution (rendered label in place of the raw
    * key) for cell renderers that need a key→label mapping.

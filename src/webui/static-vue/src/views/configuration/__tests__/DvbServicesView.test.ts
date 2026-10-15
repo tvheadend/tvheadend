@@ -42,6 +42,14 @@ describe('DvbServicesView columns', () => {
     const keys = (col?.enumSource as Array<{ key: number }>).map((o) => o.key)
     expect(keys).toEqual([0, 1, 2, 3, 4, 5])
   })
+
+  it('gives the Channel column the channel event so its names refresh', () => {
+    mount(DvbServicesView)
+    expect(stubs.gridColumn('channel')?.enumSource).toMatchObject({
+      uri: 'channel/list',
+      event: 'channel',
+    })
+  })
 })
 
 describe('DvbServicesView Map services action', () => {

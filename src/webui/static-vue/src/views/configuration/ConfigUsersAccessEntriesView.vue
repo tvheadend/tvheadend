@@ -81,18 +81,21 @@ const LANGUAGE_ENUM = {
 const PROFILE_ENUM = {
   type: 'api' as const,
   uri: 'profile/list',
+  event: 'profile',
   params: { all: 1 },
 }
 
 const DVR_CONFIG_ENUM = {
   type: 'api' as const,
   uri: 'idnode/load',
+  event: 'dvrconfig',
   params: { enum: 1, class: 'dvrconfig' },
 }
 
 const CHANNEL_TAG_ENUM = {
   type: 'api' as const,
   uri: 'channeltag/list',
+  event: 'channeltag',
   params: { all: 1 },
 }
 

@@ -2011,6 +2011,42 @@ describe('IdnodeGrid', () => {
       expect(exposed.isInEditMode).toBe(false)
     })
 
+    it('a failed Save stays in edit mode with the pending edit on screen', async () => {
+      setupBoolStrMeta()
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
+        storeKey: 'edit-key-save-fail',
+      })
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { commitCell: (u: string, f: string, v: unknown) => void }
+        isInEditMode: boolean
+      }
+      exposed.inlineEdit.commitCell('a', 'title', 'Alpha-edited')
+      await wrapper.vm.$nextTick()
+
+      const saveBtn = wrapper.findAll('.idnode-grid__edit-btn')[0]
+      expect(saveBtn.text()).toBe('Save')
+      /* The real save() POSTs, shows the error dialog and
+       * re-throws. Silence the grid's console log of it. */
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+      apiMock.mockRejectedValueOnce(new Error('server bad'))
+      await saveBtn.trigger('click')
+      /* Let the promise chain settle. */
+      await new Promise((r) => setTimeout(r, 0))
+      await wrapper.vm.$nextTick()
+      logged.mockRestore()
+
+      /* Still editing, and the cell shows the edit with its
+       * dirty marker rather than the server value. */
+      expect(exposed.isInEditMode).toBe(true)
+      const span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).toContain('idnode-grid__cell--dirty')
+      expect(span.text()).toBe('Alpha-edited')
+    })
+
     it('toggling out of edit mode preserves dirty state (no destructive UI)', async () => {
       mockStore = makeStore({
         entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
@@ -2338,6 +2374,31 @@ describe('IdnodeGrid', () => {
       expect(span.text()).toBe('Important')
     })
 
+    it('drops a failed enum prefetch when entering edit mode', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          {
+            id: 'channel',
+            type: 'str',
+            enum: { type: 'api', uri: 'channel/list', event: 'channel' },
+          } as unknown as MetaProp,
+        ],
+      }
+      /* The server is unreachable when the user presses Edit. The
+       * editor fetches the list again when it opens, so the grid
+       * drops the error rather than leaving it unhandled. */
+      apiMock.mockRejectedValueOnce(new Error('offline'))
+      await mountInEditMode({
+        columns: [
+          { field: 'channel', label: 'Channel', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, channel: 'ch-1' }],
+        storeKey: 'edit-cell-enum-prefetch-fails',
+      })
+      await new Promise((r) => setTimeout(r, 0))
+      expect(apiMock).toHaveBeenLastCalledWith('channel/list', {})
+    })
+
     it('editable td gets data-editable attr in edit mode; read-only td does not', async () => {
       idnodeClassStub.meta = {
         props: [
@@ -2525,6 +2586,213 @@ describe('IdnodeGrid', () => {
       /* Multi-select needs richer UI than a single <select>;
        * cell stays read-only — no editable cell slot fires. */
       expect(wrapper.find('.idnode-grid__cell-str').exists()).toBe(false)
+    })
+  })
+
+  describe('editMode: cell — keys that close a cell editor', () => {
+    /* Click the cell so PrimeVue mounts its editor, then type
+     * into it. The editor commits every keystroke to the dirty
+     * store. Returns the editor's input for the closing key. */
+    async function typeInCell(wrapper: ReturnType<typeof mount>, field: string, value: string) {
+      await wrapper.find(`tbody td[data-field="${field}"]`).trigger('click')
+      const input = wrapper.find(`tbody td[data-field="${field}"] :is(input, textarea)`)
+      await input.setValue(value)
+      return input
+    }
+
+    /* Chrome blurs a focused input while it is removed, and
+     * happy-dom does not. Blur the editor as its cell drops it. */
+    function blurOnRemoval(input: ReturnType<ReturnType<typeof mount>['find']>) {
+      const td = input.element.parentNode as Node
+      const removeChild = td.removeChild.bind(td)
+      return vi.spyOn(td, 'removeChild').mockImplementation((child) => {
+        if (child === input.element) child.dispatchEvent(new FocusEvent('blur'))
+        return removeChild(child)
+      })
+    }
+
+    /* A grid with one channel number column (`intsplit`). */
+    function mountNumberGrid(number: number | string, storeKey: string) {
+      idnodeClassStub.meta = {
+        props: [{ id: 'number', type: 's64', intsplit: true } as unknown as MetaProp],
+      }
+      return mountInEditMode({
+        columns: [{ field: 'number', label: 'Number', editable: true, minVisible: 'phone' }],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, number }],
+        storeKey,
+      })
+    }
+
+    it('Escape drops the value typed into a clean cell and stops there, Enter keeps it', async () => {
+      setupBoolStrMeta()
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
+        storeKey: 'edit-cell-escape-clean',
+      })
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { isCellDirty: (u: string, f: string) => boolean }
+      }
+      /* Keys that bubble out of the grid, as a drawer around it
+       * would see them. */
+      const bubbled: string[] = []
+      wrapper.element.addEventListener('keydown', (e: Event) => {
+        bubbled.push((e as KeyboardEvent).key)
+      })
+
+      let input = await typeInCell(wrapper, 'title', 'Alpha typed')
+      expect(exposed.inlineEdit.isCellDirty('a', 'title')).toBe(true)
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+      expect(exposed.inlineEdit.isCellDirty('a', 'title')).toBe(false)
+      let span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).not.toContain('idnode-grid__cell--dirty')
+      expect(span.text()).toBe('Alpha')
+
+      input = await typeInCell(wrapper, 'title', 'Alpha typed')
+      await input.trigger('keydown', { key: 'Enter', code: 'Enter' })
+      span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).toContain('idnode-grid__cell--dirty')
+      expect(span.text()).toBe('Alpha typed')
+      /* Escape ended at the cell, so it cannot close a drawer as
+       * well. Enter went on as before. */
+      expect(bubbled).toEqual(['Enter'])
+    })
+
+    it('Escape puts back the value and the error the cell had before', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          {
+            id: 'priority',
+            type: 'int',
+            intmin: 0,
+            intmax: 100,
+          } as unknown as MetaProp,
+        ],
+      }
+      const wrapper = await mountInEditMode({
+        columns: [{ field: 'priority', label: 'Priority', editable: true, minVisible: 'phone' }],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, priority: 50 }],
+        storeKey: 'edit-cell-escape-dirty',
+      })
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { cellValue: (u: string, f: string, fb: unknown) => unknown }
+        cellErrors: Map<string, string>
+        hasValidationErrors: boolean
+      }
+      /* A clean cell: the typed value goes, and its error too. */
+      let input = await typeInCell(wrapper, 'priority', '200')
+      expect(exposed.cellErrors.has('a|priority')).toBe(true)
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+      expect(exposed.inlineEdit.cellValue('a', 'priority', 50)).toBe(50)
+      expect(exposed.cellErrors.has('a|priority')).toBe(false)
+      expect(exposed.hasValidationErrors).toBe(false)
+
+      /* An earlier edit left 200, above the maximum. */
+      input = await typeInCell(wrapper, 'priority', '200')
+      await input.trigger('keydown', { key: 'Enter', code: 'Enter' })
+      const error = exposed.cellErrors.get('a|priority')
+      expect(error).toBeDefined()
+
+      input = await typeInCell(wrapper, 'priority', '75')
+      expect(exposed.inlineEdit.cellValue('a', 'priority', 50)).toBe(75)
+      expect(exposed.cellErrors.has('a|priority')).toBe(false)
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+
+      expect(exposed.inlineEdit.cellValue('a', 'priority', 50)).toBe(200)
+      expect(exposed.cellErrors.get('a|priority')).toBe(error)
+      const span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).toContain('idnode-grid__cell--dirty')
+      expect(span.classes()).toContain('idnode-grid__cell--invalid')
+      expect(span.text()).toBe('200')
+    })
+
+    it('Escape undoes a cell that opened before the previous one closed', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' } as unknown as MetaProp,
+          { id: 'comment', type: 'str' } as unknown as MetaProp,
+        ],
+      }
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+          { field: 'comment', label: 'Comment', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, comment: 'c0' }],
+        storeKey: 'edit-cell-escape-late-close',
+      })
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { isCellDirty: (u: string, f: string) => boolean }
+      }
+      await typeInCell(wrapper, 'title', 'Alpha typed')
+      /* PrimeVue closes the title cell 1 ms after a mousedown
+       * outside it. The click into the comment cell comes first. */
+      document.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))
+      const input = await typeInCell(wrapper, 'comment', 'c1')
+      await new Promise((r) => setTimeout(r, 5))
+      expect(wrapper.find('tbody td[data-field="title"] input').exists()).toBe(false)
+
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+      expect(exposed.inlineEdit.isCellDirty('a', 'comment')).toBe(false)
+      expect(exposed.inlineEdit.isCellDirty('a', 'title')).toBe(true)
+    })
+
+    it('Escape keeps an earlier edit pending when the server now has the same value', async () => {
+      const wrapper = await mountNumberGrid(5, 'edit-cell-escape-server-caught-up')
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: {
+          commitCell: (u: string, f: string, v: unknown) => void
+          isCellDirty: (u: string, f: string) => boolean
+        }
+      }
+      exposed.inlineEdit.commitCell('a', 'number', '7')
+      /* Another client sets the same number meanwhile. */
+      mockStore.entries[0].number = 7
+      const input = await typeInCell(wrapper, 'number', '12')
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+
+      expect(exposed.inlineEdit.isCellDirty('a', 'number')).toBe(true)
+    })
+
+    it('Escape also undoes a channel number typed with a trailing dot', async () => {
+      const wrapper = await mountNumberGrid(5, 'edit-cell-escape-intsplit')
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { isCellDirty: (u: string, f: string) => boolean }
+      }
+      /* "12." on the way to "12.5". The editor has committed "12",
+       * keeps the dot to itself and trims it when it loses focus,
+       * which in Chrome happens while Escape removes it. */
+      const input = await typeInCell(wrapper, 'number', '12')
+      await input.setValue('12.')
+      const removal = blurOnRemoval(input)
+      await input.trigger('keydown', { key: 'Escape', code: 'Escape' })
+
+      expect(removal).toHaveBeenCalledWith(input.element)
+      expect(exposed.inlineEdit.isCellDirty('a', 'number')).toBe(false)
+      expect(wrapper.find('.idnode-grid__cell-str').text()).toBe('5')
+    })
+
+    it.each([
+      ['Enter', '5.', '5'],
+      ['Tab', '5.', '5'],
+      ['Enter', '12.', '12'],
+    ])('%s after "%s" keeps %s in a channel number cell', async (key, typed, kept) => {
+      const wrapper = await mountNumberGrid('5.1', `edit-cell-intsplit-${key}-${kept}`)
+      const exposed = wrapper.vm as unknown as {
+        inlineEdit: { cellValue: (u: string, f: string, fb: unknown) => unknown }
+      }
+      /* "5." is what Backspace leaves of 5.1. The editor trims the
+       * dot when the key closes it. */
+      const input = await typeInCell(wrapper, 'number', typed)
+      blurOnRemoval(input)
+      await input.trigger('keydown', { key, code: key })
+
+      expect(exposed.inlineEdit.cellValue('a', 'number', '5.1')).toBe(kept)
+      const span = wrapper.find('.idnode-grid__cell-str')
+      expect(span.classes()).toContain('idnode-grid__cell--dirty')
+      expect(span.text()).toBe(kept)
     })
   })
 

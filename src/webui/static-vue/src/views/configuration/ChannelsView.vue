@@ -148,9 +148,8 @@ const cols: ColumnDef[] = [
      * of service UUIDs (`channel_class_services_get` →
      * `idnode_list_get2`); `EnumNameCell` joins resolved names
      * with ', '. Source matches the C-side `.list` callback
-     * (`channels.c:179-190`) so the deferred-enum cache key is
-     * shared with the side drawer's enum picker — single
-     * round-trip per session for both surfaces. No opts gating
+     * (`channels.c:179-190`), `service` event included, so the
+     * names refresh when services change. No opts gating
      * server-side (`channels.c:552-562`), so visible at every
      * uilevel. */
     field: 'services',
@@ -161,6 +160,7 @@ const cols: ColumnDef[] = [
     enumSource: {
       type: 'api',
       uri: 'service/list',
+      event: 'service',
       params: { enum: 1 },
     },
     /* Drill-down: 1 mapped service → chevron opens that service's
@@ -196,6 +196,7 @@ const cols: ColumnDef[] = [
     enumSource: {
       type: 'api',
       uri: 'channeltag/list',
+      event: 'channeltag',
       params: { all: 1 },
     },
     /* Drill-down: 1 tag → chevron opens that Channel Tag's
@@ -220,6 +221,7 @@ const cols: ColumnDef[] = [
     enumSource: {
       type: 'api',
       uri: 'idnode/load',
+      event: 'bouquet',
       params: { class: 'bouquet', enum: 1 },
     },
     /* Server-side rdonly; isInlineEditable strips at runtime. */
@@ -240,6 +242,7 @@ const cols: ColumnDef[] = [
     enumSource: {
       type: 'api',
       uri: 'idnode/load',
+      event: 'channel',
       params: { class: 'channel', enum: 1 },
     },
     editable: true,

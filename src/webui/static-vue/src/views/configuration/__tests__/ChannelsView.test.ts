@@ -73,3 +73,13 @@ describe('ChannelsView ?openMapper from the command palette', () => {
     expect(captured.mapper.mapAll).toBe(false)
   })
 }, 30_000)
+
+describe('ChannelsView columns', () => {
+  it('gives the columns that show names from a list the event of their list', () => {
+    mount(ChannelsView)
+    expect(stubs.gridColumn('services')?.enumSource).toMatchObject({ event: 'service' })
+    expect(stubs.gridColumn('tags')?.enumSource).toMatchObject({ event: 'channeltag' })
+    expect(stubs.gridColumn('bouquet')?.enumSource).toMatchObject({ event: 'bouquet' })
+    expect(stubs.gridColumn('epg_parent')?.enumSource).toMatchObject({ event: 'channel' })
+  })
+}, 30_000)

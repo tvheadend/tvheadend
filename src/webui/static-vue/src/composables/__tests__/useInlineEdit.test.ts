@@ -109,6 +109,21 @@ describe('useInlineEdit — dirty tracking', () => {
     expect(e.dirtyRowCount.value).toBe(0)
     expect(e.isCellDirty('a', 'comment')).toBe(false)
   })
+
+  it('revertCell discards one cell and keeps the others dirty', async () => {
+    const { useInlineEdit } = await import('../useInlineEdit')
+    const entries = ref(rows('a', 'b'))
+    const e = useInlineEdit<Row>({ entries })
+    e.commitCell('a', 'comment', 'x')
+    e.commitCell('a', 'pri', 7)
+    e.commitCell('b', 'pri', 3)
+    e.revertCell('a', 'comment')
+    expect(e.isCellDirty('a', 'comment')).toBe(false)
+    expect(e.cellValue('a', 'comment', 'orig')).toBe('orig')
+    expect(e.isCellDirty('a', 'pri')).toBe(true)
+    e.revertCell('b', 'pri')
+    expect(e.dirtyRowCount.value).toBe(1)
+  })
 })
 
 describe('useInlineEdit — smart dirty (toggle back to original clears dirty)', () => {
@@ -508,16 +523,16 @@ describe('useInlineEdit — save', () => {
   })
 
   it('preserves the dirty store + pops the error dialog when save fails', async () => {
-    /* Save catches the rejection and surfaces it via the global
-     * error dialog (the user signal), then swallows so the
-     * Promise resolves cleanly. Dirty state stays intact so the
-     * user can correct the offending field and retry. */
+    /* Save surfaces the rejection via the global error dialog
+     * (the user signal), then re-throws so the caller keeps its
+     * edit context open. Dirty state stays intact so the user
+     * can correct the offending field and retry. */
     const { useInlineEdit } = await import('../useInlineEdit')
     const entries = ref(rows('a'))
     const e = useInlineEdit<Row>({ entries })
     e.commitCell('a', 'comment', 'x')
     apiMock.mockRejectedValueOnce(new Error('server bad'))
-    await expect(e.save()).resolves.toBeUndefined()
+    await expect(e.save()).rejects.toThrow('server bad')
     expect(errorDialogShow).toHaveBeenCalledOnce()
     expect(errorDialogShow.mock.calls[0][0]).toMatchObject({
       message: 'server bad',
