@@ -7,8 +7,6 @@
 This panel lists all the available Cable (DVB-C/C2/ISDB-C/ATSC-C) frontend 
 parameters.
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons
