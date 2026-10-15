@@ -683,16 +683,17 @@ profile_input(void *opaque, streaming_message_t *sm)
     if (sm->sm_type == SMT_STOP) {
       prch->prch_stop = 1;
       /* elect new master */
-      prsh->prsh_master = NULL;
       LIST_FOREACH(prch2, &prsh->prsh_chains, prch_sharer_link)
         if (!prch2->prch_stop) {
           prsh->prsh_master = prch2;
           break;
         }
-      if (prsh->prsh_master)
+      if (prsh->prsh_master != prch)
         goto direct;
     }
     streaming_target_deliver(prch->prch_share, sm);
+    if (prch->prch_stop)
+      prsh->prsh_master = NULL;
     return;
   }
 
@@ -824,6 +825,10 @@ profile_sharer_input(void *opaque, streaming_message_t *sm)
       run = prch;
       continue;
     } else if (sm->sm_type == SMT_STOP) {
+      if (prch->prch_stop)
+        continue;
+      if (run)
+        profile_sharer_deliver(run, streaming_msg_clone(sm));
       run = prch;
       continue;
     }
