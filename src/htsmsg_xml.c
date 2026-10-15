@@ -917,9 +917,6 @@ htsmsg_xml_parse_xpath(const char *xpath)
   htsmsg_t *m = NULL;    //The whole message
   htsmsg_t *f = NULL;    //Individual fields within the message
 
-  m = htsmsg_create_map();
-  f = htsmsg_create_map();
-
   tvhdebug(LS_XMLTV, "Parsing '%s'", xpath);
 
   int     xpLen = 0;          //Length of the xpath string
@@ -952,6 +949,7 @@ htsmsg_xml_parse_xpath(const char *xpath)
     return NULL;
   }
 
+  m = htsmsg_create_map();
   memset(outStr, 0, sizeof(outStr));
 
   for(inPos = 0; inPos < xpLen; inPos++)  //Loop through the xpath string
