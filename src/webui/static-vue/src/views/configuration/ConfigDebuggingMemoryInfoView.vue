@@ -107,6 +107,7 @@ const cols: ColumnDef[] = [
     :count-label="t('entries')"
     lock-level="expert"
     :selectable="false"
+    help-page="class/memoryinfo"
     class="memoryinfo-grid"
   >
     <template #empty>
