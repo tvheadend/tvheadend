@@ -115,11 +115,30 @@ codec_get_title(const AVCodec *self)
 
 /* TVHCodec ================================================================= */
 
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+static const void *
+tvh_codec_supported_config(const AVCodec *codec, enum AVCodecConfig config)
+{
+    const void *configs = NULL;
+
+    if (avcodec_get_supported_config(NULL, codec, config, 0, &configs, NULL)) {
+        return NULL;
+    }
+    return configs;
+}
+#endif
+
+
 static void
 tvh_codec_video_init(TVHVideoCodec *self, const AVCodec *codec)
 {
     if (!self->pix_fmts) {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+        self->pix_fmts =
+            tvh_codec_supported_config(codec, AV_CODEC_CONFIG_PIX_FORMAT);
+#else
         self->pix_fmts = codec->pix_fmts;
+#endif
     }
 }
 
@@ -131,15 +150,28 @@ tvh_codec_audio_init(TVHAudioCodec *self, const AVCodec *codec)
     };
 
     if (!self->sample_fmts) {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+        self->sample_fmts =
+            tvh_codec_supported_config(codec, AV_CODEC_CONFIG_SAMPLE_FORMAT);
+#else
         self->sample_fmts = codec->sample_fmts;
+#endif
     }
     if (!self->sample_rates) {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+        self->sample_rates =
+            tvh_codec_supported_config(codec, AV_CODEC_CONFIG_SAMPLE_RATE);
+#else
         self->sample_rates = codec->supported_samplerates;
+#endif
         if (!self->sample_rates)
             self->sample_rates = default_sample_rates;
     }
     if (!self->channel_layouts) {
-#if LIBAVCODEC_VERSION_MAJOR > 59
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+        self->channel_layouts =
+            tvh_codec_supported_config(codec, AV_CODEC_CONFIG_CHANNEL_LAYOUT);
+#elif LIBAVCODEC_VERSION_MAJOR > 59
         self->channel_layouts = codec->ch_layouts;
 #else
         self->channel_layouts = codec->channel_layouts;
