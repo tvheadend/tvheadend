@@ -77,6 +77,7 @@ typedef struct dvr_config {
   int dvr_pri;
   int dvr_clone;
   int dvr_complex_scheduling;
+  int dvr_cache_only;          ///< DVR config produces cache warmup only
   uint32_t dvr_rerecord_errors;
   uint32_t dvr_max_data_errors;
   uint32_t dvr_retention_days;
@@ -191,6 +192,20 @@ typedef struct dvr_entry {
   int de_refcnt;   /* Modification is protected under global_lock */
   int de_in_unsubscribe;
 
+  /*
+   * Newly-created manual recording of a programme which has already
+   * finished.  It is satisfied entirely from the channel cache.
+   * Transient: never stored in the DVR database.
+   */
+  int de_cache_retro;
+
+  /*
+   * First subscription starts at the oldest available shared channel
+   * cache, catches live and then follows the ordinary DVR lifecycle.
+   * Transient: never persisted.
+   */
+  int de_cache_full;
+
 
   /**
    * Upon dvr_entry_remove() this fields will be invalidated (and pointers
@@ -216,6 +231,7 @@ typedef struct dvr_entry {
   LIST_ENTRY(dvr_entry) de_config_link;
 
   int de_enabled;
+  int de_cache_only;           ///< Persisted cache-only timer mode
   time_t de_create;             ///< Time entry was created
   time_t de_watched;            ///< Time entry was last watched
   time_t de_start;
@@ -328,6 +344,10 @@ typedef struct dvr_entry {
    * Stream worker chain
    */
   profile_chain_t *de_chain;
+
+#if ENABLE_TIMESHIFT
+  struct streaming_target *de_cache_sink;
+#endif
 
   /**
    * Entry change notification timer
@@ -620,6 +640,9 @@ void dvr_destroy_by_channel(channel_t *ch, int delconf);
 void dvr_stop_recording(dvr_entry_t *de, int stopcode, int saveconf, int clone);
 
 void dvr_stop_recording_deferred(dvr_entry_t *de, int stopcode);
+
+/* Finish a cache-owned recording from outside the DVR thread. */
+void dvr_entry_cache_replay_done(dvr_entry_t *de);
 
 int dvr_rec_subscribe(dvr_entry_t *de);
 
