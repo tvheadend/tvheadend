@@ -6,15 +6,16 @@
 # Translators:
 # Christian Hewitt, 2025
 # Angus MacGyver, 2026
+# Jan S., 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-03 03:13+0000\n"
+"POT-Creation-Date: 2026-09-28 02:21+0000\n"
 "PO-Revision-Date: 2023-12-11 11:01+0000\n"
-"Last-Translator: Angus MacGyver, 2026\n"
+"Last-Translator: Jan S., 2026\n"
 "Language-Team: German (https://app.transifex.com/tvheadend/teams/43381/de/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1404,7 +1405,7 @@ msgstr "November"
 
 #: src/webui/static/app/epg.js:936
 msgid "Now"
-msgstr ""
+msgstr "Jetzt"
 
 #: src/webui/static/app/epg.js:841 src/webui/static/app/epg.js:842
 msgid "Number"
@@ -1636,7 +1637,7 @@ msgstr "Aufnahmedetails"
 
 #: src/webui/static/app/dvr.js:829
 msgid "Recordings"
-msgstr ""
+msgstr "Aufnahmen"
 
 #: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
 msgid "Refresh"
@@ -1779,7 +1780,7 @@ msgstr "Programmierte Stopzeit"
 
 #: src/webui/static/app/epg.js:950
 msgid "Search title…"
-msgstr ""
+msgstr "Suche Titel..."
 
 #: src/webui/static/app/mpegts.js:230
 msgid "Section"
