@@ -4371,7 +4371,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     }
 
     if (ssc->ssc_gh)
-      htsmsg_add_bin_ptr(m, "meta", pktbuf_ptr(ssc->ssc_gh),
+      htsmsg_add_bin(m, "meta", pktbuf_ptr(ssc->ssc_gh),
 		         pktbuf_len(ssc->ssc_gh));
 
     htsmsg_add_msg(streams, NULL, c);
