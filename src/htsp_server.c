@@ -2640,6 +2640,9 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error(htsp, N_("Invalid arguments"));
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if (hs->hs_sid == sid)
+      return htsp_error(htsp, N_("Invalid arguments"));
 
   if(!htsmsg_get_u32(in, "channelId", &chid)) {
     if((ch = channel_find_by_id(chid)) == NULL)
