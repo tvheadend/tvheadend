@@ -1732,62 +1732,70 @@ static int _dvr_duplicate_unique_match(dvr_entry_t *de1, dvr_entry_t *de2, void 
 }
 
 /**
- *
+ * The "Duplicate handling" building blocks, shared between the
+ * recording-start check (_dvr_duplicate_event) and the autorec
+ * preview scan (dvr_autorec_dedup_scan_*).
  */
-static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
+static _dvr_duplicate_fcn_t _dvr_duplicate_fcns[] = {
+  [DVR_AUTOREC_RECORD_UNIQUE]                    = _dvr_duplicate_unique_match,
+  [DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER]  = _dvr_duplicate_epnum,
+  [DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER] = _dvr_duplicate_epnum,
+  [DVR_AUTOREC_LRECORD_DIFFERENT_TITLE]          = _dvr_duplicate_title,
+  [DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE]        = _dvr_duplicate_subtitle,
+  [DVR_AUTOREC_LRECORD_DIFFERENT_SUBTITLE]       = _dvr_duplicate_subtitle,
+  [DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION]     = _dvr_duplicate_desc,
+  [DVR_AUTOREC_LRECORD_DIFFERENT_DESCRIPTION]    = _dvr_duplicate_desc,
+  [DVR_AUTOREC_RECORD_ONCE_PER_MONTH]            = _dvr_duplicate_per_month,
+  [DVR_AUTOREC_LRECORD_ONCE_PER_MONTH]           = _dvr_duplicate_per_month,
+  [DVR_AUTOREC_RECORD_ONCE_PER_WEEK]             = _dvr_duplicate_per_week,
+  [DVR_AUTOREC_LRECORD_ONCE_PER_WEEK]            = _dvr_duplicate_per_week,
+  [DVR_AUTOREC_RECORD_ONCE_PER_DAY]              = _dvr_duplicate_per_day,
+  [DVR_AUTOREC_LRECORD_ONCE_PER_DAY]             = _dvr_duplicate_per_day,
+};
+
+/* Resolve the effective "Duplicate handling" mode (config fallback). */
+static int _dvr_duplicate_record_mode(int record, dvr_config_t *cfg)
 {
-  static _dvr_duplicate_fcn_t fcns[] = {
-    [DVR_AUTOREC_RECORD_UNIQUE]                    = _dvr_duplicate_unique_match,
-    [DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER]  = _dvr_duplicate_epnum,
-    [DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER] = _dvr_duplicate_epnum,
-    [DVR_AUTOREC_LRECORD_DIFFERENT_TITLE]          = _dvr_duplicate_title,
-    [DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE]        = _dvr_duplicate_subtitle,
-    [DVR_AUTOREC_LRECORD_DIFFERENT_SUBTITLE]       = _dvr_duplicate_subtitle,
-    [DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION]     = _dvr_duplicate_desc,
-    [DVR_AUTOREC_LRECORD_DIFFERENT_DESCRIPTION]    = _dvr_duplicate_desc,
-    [DVR_AUTOREC_RECORD_ONCE_PER_MONTH]            = _dvr_duplicate_per_month,
-    [DVR_AUTOREC_LRECORD_ONCE_PER_MONTH]           = _dvr_duplicate_per_month,
-    [DVR_AUTOREC_RECORD_ONCE_PER_WEEK]             = _dvr_duplicate_per_week,
-    [DVR_AUTOREC_LRECORD_ONCE_PER_WEEK]            = _dvr_duplicate_per_week,
-    [DVR_AUTOREC_RECORD_ONCE_PER_DAY]              = _dvr_duplicate_per_day,
-    [DVR_AUTOREC_LRECORD_ONCE_PER_DAY]             = _dvr_duplicate_per_day,
-  };
-  dvr_entry_t *de2;
- _dvr_duplicate_fcn_t match;
-  int record;
-  void *aux;
+  if (record == DVR_AUTOREC_RECORD_DVR_PROFILE)
+    record = cfg ? cfg->dvr_autorec_dedup : DVR_AUTOREC_RECORD_ALL;
+  return record;
+}
 
-  if (!de->de_autorec)
-    return NULL;
+/* The All-episodes modes search the global entry list for a master;
+ * the Local modes only the rule's own spawns. */
+static int _dvr_duplicate_mode_is_global(int record)
+{
+  return record < DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER ||
+         record == DVR_AUTOREC_RECORD_UNIQUE;
+}
 
+/* Per-mode field requirements: can this entry be deduped at all?
+ * 1 = yes, 0 = never under this mode, -1 = unknown mode. */
+static int _dvr_duplicate_candidate_ok(dvr_entry_t *de, int record)
+{
   // title not defined, can't be deduped
   if (lang_str_empty(de->de_title))
-    return NULL;
-
-  if (de->de_autorec->dae_record == DVR_AUTOREC_RECORD_DVR_PROFILE)
-    record = de->de_config->dvr_autorec_dedup;
-  else
-    record = de->de_autorec->dae_record;
+    return 0;
 
   switch (record) {
     case DVR_AUTOREC_RECORD_ALL:
-      return NULL;
+      return 0;
     case DVR_AUTOREC_RECORD_UNIQUE:
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_EPISODE_NUMBER:
     case DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER:
       if (de->de_epnum.e_num == 0 && de->de_epnum.text == NULL)
-        return NULL;
+        return 0;
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_SUBTITLE:
     case DVR_AUTOREC_LRECORD_DIFFERENT_SUBTITLE:
       if (lang_str_empty(de->de_subtitle))
-        return NULL;
+        return 0;
       break;
     case DVR_AUTOREC_RECORD_DIFFERENT_DESCRIPTION:
     case DVR_AUTOREC_LRECORD_DIFFERENT_DESCRIPTION:
       if (lang_str_empty(de->de_desc))
-        return NULL;
+        return 0;
       break;
     case DVR_AUTOREC_RECORD_ONCE_PER_DAY:
     case DVR_AUTOREC_LRECORD_ONCE_PER_DAY:
@@ -1800,43 +1808,82 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
       break;
     case DVR_AUTOREC_LRECORD_DIFFERENT_TITLE:
       break;
-   default:
-      abort();
+    default:
+      return -1;
   }
+  return 1;
+}
 
-  match = fcns[record];
+/* Qualify de2 as an earlier master that can dedup de under `record`. */
+static int _dvr_duplicate_master_ok(dvr_entry_t *de, dvr_entry_t *de2, int record)
+{
+  if (de == de2)
+    return 0;
+
+  // check for valid states
+  if (de2->de_sched_state == DVR_NOSTATE ||
+      de2->de_sched_state == DVR_MISSED_TIME)
+    return 0;
+
+  // only earlier recordings qualify as master
+  if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
+    return 0;
+
+  // only enabled upcoming recordings
+  if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
+    return 0;
+
+  // only successful earlier recordings qualify as master
+  if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
+    return 0;
+
+  // some channels add "New:" to the title of the first showing, so title
+  // match with repeats would fail. When the match function checks CRIDs
+  // (unique episode) or the title itself (different title), ignore any
+  // title mismatch; otherwise if titles are not defined or do not match,
+  // don't dedup
+  if (record != DVR_AUTOREC_RECORD_UNIQUE &&
+      record != DVR_AUTOREC_LRECORD_DIFFERENT_TITLE &&
+      lang_str_compare(de->de_title, de2->de_title))
+    return 0;
+
+  return 1;
+}
+
+/**
+ *
+ */
+static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
+{
+  dvr_entry_t *de2;
+  _dvr_duplicate_fcn_t match;
+  int record, ok;
+  void *aux;
+
+  if (!de->de_autorec)
+    return NULL;
+
+  record = _dvr_duplicate_record_mode(de->de_autorec->dae_record, de->de_config);
+  ok = _dvr_duplicate_candidate_ok(de, record);
+  if (ok < 0) {
+    /* unknown mode (corrupt config): record rather than crash, the
+     * same verdict the preview's scan_create gives it */
+    tvherror(LS_DVR, "unknown duplicate handling mode %d, not deduplicating",
+             record);
+    return NULL;
+  }
+  if (!ok)
+    return NULL;
+
+  match = _dvr_duplicate_fcns[record];
   aux   = NULL;
 
   assert(match);
 
-  if (record < DVR_AUTOREC_LRECORD_DIFFERENT_EPISODE_NUMBER || record == DVR_AUTOREC_RECORD_UNIQUE) {
+  if (_dvr_duplicate_mode_is_global(record)) {
     LIST_FOREACH(de2, &dvrentries, de_global_link) {
-      if (de == de2)
+      if (!_dvr_duplicate_master_ok(de, de2, record))
         continue;
-
-      // check for valid states
-      if (de2->de_sched_state == DVR_NOSTATE ||
-          de2->de_sched_state == DVR_MISSED_TIME)
-        continue;
-
-      // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
-        continue;
-
-      // only enabled upcoming recordings
-      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
-        continue;
-
-      // only successful earlier recordings qualify as master
-      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
-        continue;
-
-      // some channels add "New:" to the title of the first showing, so title match with repeats will fail.
-      // if we are going on to check CRIDs, ignore any title mismatch
-      // otherwise if titles are not defined or do not match, don't dedup
-      if (record != DVR_AUTOREC_RECORD_UNIQUE && lang_str_compare(de->de_title, de2->de_title))
-        continue;
-
       if (match(de, de2, &aux)) {
         free(aux);
         return de2;
@@ -1844,31 +1891,8 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
     }
   } else {
     LIST_FOREACH(de2, &de->de_autorec->dae_spawns, de_autorec_link) {
-      if (de == de2)
+      if (!_dvr_duplicate_master_ok(de, de2, record))
         continue;
-
-      // check for valid states
-      if (de2->de_sched_state == DVR_NOSTATE ||
-          de2->de_sched_state == DVR_MISSED_TIME)
-        continue;
-
-      // only earlier recordings qualify as master
-      if (de2->de_start > de->de_start && de2->de_last_error != SM_CODE_PREVIOUSLY_RECORDED)
-        continue;
-
-      // only enabled upcoming recordings
-      if (de2->de_sched_state == DVR_SCHEDULED && !de2->de_enabled)
-        continue;
-
-      // only successful earlier recordings qualify as master
-      if (dvr_entry_is_finished(de2, DVR_FINISHED_FAILED | DVR_FINISHED_REMOVED_FAILED))
-        continue;
-
-      // if titles are not defined or do not match, don't dedup
-      if (record != DVR_AUTOREC_LRECORD_DIFFERENT_TITLE &&
-          lang_str_compare(de->de_title, de2->de_title))
-        continue;
-
       if (match(de, de2, &aux)) {
         free(aux);
         return de2;
@@ -1877,6 +1901,145 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
   }
   free(aux);
   return NULL;
+}
+
+/*
+ * Preview-side "Duplicate handling" scan: ask, for each candidate
+ * broadcast of an autorec preview, whether recording-start dedup
+ * would skip the entry the rule is about to create. Existing entries
+ * are checked with the exact runtime master filter and match
+ * functions; candidates the preview has already accepted stand in
+ * for the sibling entries a real save would have created, so a new
+ * rule previews its within-run duplicates too. The caller must walk
+ * candidates in start-time order and hold global_lock across the
+ * whole scan: shim entries borrow the broadcasts' strings. A NULL
+ * scan means the mode dedups nothing; every check answers 0.
+ */
+struct dvr_autorec_dedup_scan {
+  int                  das_record;
+  dvr_autorec_entry_t *das_dae;
+  dvr_config_t        *das_cfg;
+  dvr_autorec_entry_t *das_existing;
+  dvr_entry_t         *das_cands;
+  int                  das_count;
+  int                  das_alloc;
+};
+
+static void _dvr_dedup_scan_shim(dvr_entry_t *shim, epg_broadcast_t *e,
+                                 dvr_autorec_entry_t *dae, dvr_config_t *cfg)
+{
+  /* Field sourcing mirrors dvr_entry_create_from_htsmsg: title,
+   * subtitle, description falling back to summary, episode number,
+   * episode link uri. Pointers are borrowed, never freed. */
+  memset(shim, 0, sizeof(*shim));
+  shim->de_title    = e->title;
+  shim->de_subtitle = e->subtitle;
+  shim->de_desc     = e->description ?: e->summary;
+  epg_broadcast_get_epnum(e, &shim->de_epnum);
+  shim->de_uri      = e->episodelink ? e->episodelink->uri : NULL;
+  shim->de_start    = e->start;
+  shim->de_stop     = e->stop;
+  shim->de_channel  = e->channel;
+  shim->de_bcast    = e;
+  shim->de_sched_state = DVR_SCHEDULED;
+  shim->de_enabled  = 1;
+  shim->de_autorec  = dae;
+  shim->de_config   = cfg;
+}
+
+dvr_autorec_dedup_scan_t *
+dvr_autorec_dedup_scan_create(dvr_autorec_entry_t *dae, dvr_config_t *cfg,
+                              dvr_autorec_entry_t *existing)
+{
+  dvr_autorec_dedup_scan_t *das;
+  int record = _dvr_duplicate_record_mode(dae->dae_record, cfg);
+  if (record < 0 || record >= (int)ARRAY_SIZE(_dvr_duplicate_fcns) ||
+      _dvr_duplicate_fcns[record] == NULL)
+    return NULL;
+  das = calloc(1, sizeof(*das));
+  das->das_record   = record;
+  das->das_dae      = dae;
+  das->das_cfg      = cfg;
+  das->das_existing = existing;
+  return das;
+}
+
+int dvr_autorec_dedup_scan_check(dvr_autorec_dedup_scan_t *das,
+                                 epg_broadcast_t *e)
+{
+  dvr_entry_t cand, *de2;
+  _dvr_duplicate_fcn_t match;
+  void *aux = NULL;
+  int i, record, dup = 0;
+
+  if (das == NULL)
+    return 0;
+  record = das->das_record;
+  _dvr_dedup_scan_shim(&cand, e, das->das_dae, das->das_cfg);
+  if (_dvr_duplicate_candidate_ok(&cand, record) != 1)
+    return 0;
+  match = _dvr_duplicate_fcns[record];
+  if (_dvr_duplicate_mode_is_global(record)) {
+    LIST_FOREACH(de2, &dvrentries, de_global_link) {
+      if (!_dvr_duplicate_master_ok(&cand, de2, record))
+        continue;
+      if (match(&cand, de2, &aux)) {
+        dup = 1;
+        break;
+      }
+    }
+  } else if (das->das_existing) {
+    /* Local modes dedup within the rule's own spawns; when the
+     * preview edits a saved rule, its live spawns are the ones a
+     * save would keep. */
+    LIST_FOREACH(de2, &das->das_existing->dae_spawns, de_autorec_link) {
+      if (!_dvr_duplicate_master_ok(&cand, de2, record))
+        continue;
+      if (match(&cand, de2, &aux)) {
+        dup = 1;
+        break;
+      }
+    }
+  }
+  for (i = 0; !dup && i < das->das_count; i++) {
+    de2 = &das->das_cands[i];
+    if (!_dvr_duplicate_master_ok(&cand, de2, record))
+      continue;
+    if (match(&cand, de2, &aux)) {
+      dup = 1;
+      break;
+    }
+  }
+  free(aux);
+  return dup;
+}
+
+void dvr_autorec_dedup_scan_accept(dvr_autorec_dedup_scan_t *das,
+                                   epg_broadcast_t *e)
+{
+  dvr_entry_t *cands;
+  if (das == NULL)
+    return;
+  if (das->das_count == das->das_alloc) {
+    das->das_alloc = das->das_alloc ? das->das_alloc * 2 : 64;
+    cands = realloc(das->das_cands, das->das_alloc * sizeof(*cands));
+    if (cands == NULL) {
+      das->das_alloc = das->das_count;
+      tvherror(LS_DVR, "out of memory, preview dedup drops a candidate");
+      return;
+    }
+    das->das_cands = cands;
+  }
+  _dvr_dedup_scan_shim(&das->das_cands[das->das_count++], e,
+                       das->das_dae, das->das_cfg);
+}
+
+void dvr_autorec_dedup_scan_destroy(dvr_autorec_dedup_scan_t *das)
+{
+  if (das == NULL)
+    return;
+  free(das->das_cands);
+  free(das);
 }
 
 /*** Return non-zero if the broadcast new_bcast is better for recording than the one for old_de. */

@@ -21,6 +21,18 @@ import type { UiLevel } from './access'
  * src/prop.c. Most fields are optional; the server only emits what's
  * relevant for the property's type and configuration.
  */
+/*
+ * Whole-form context passed to IdnodeEditor `fieldGroups` components
+ * whose behaviour spans more fields than their own keys — e.g. a
+ * preview action that posts the full form state to the server.
+ * `uuid` is null in create mode. Purely informational: group
+ * components still write through their `update(id, value)` emit.
+ */
+export interface FieldGroupFormContext {
+  uuid: string | null
+  values: Record<string, unknown>
+}
+
 export interface IdnodeProp {
   /* Field name on the row (matches the column's `field` in ColumnDef). */
   id: string
