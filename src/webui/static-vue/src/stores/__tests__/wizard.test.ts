@@ -4,7 +4,9 @@
 /*
  * Wizard store unit tests. Pins:
  *   - Step ordering helpers (next/prev)
- *   - Lifecycle endpoints (start, cancel POST shape)
+ *   - Lifecycle endpoints (start, cancel POST shape). A
+ *     failed start or cancel rejects and leaves the wizard
+ *     cursor as it was.
  *   - Progress polling (start/stop/clearInterval, 1 Hz cadence)
  *   - currentStep mirrors access.data.wizard
  */
@@ -108,6 +110,34 @@ describe('wizard store — lifecycle endpoints', () => {
     await wizard.cancel()
     expect(apiMock).toHaveBeenCalledTimes(1)
     expect(apiMock.mock.calls[0][0]).toBe('wizard/cancel')
+  })
+
+  it('cancel() rejects and keeps the cursor when the POST fails', async () => {
+    /* The channels step stops its Finish flow on this rejection. */
+    const { wizard } = await importStores()
+    cometHandlers.get('accessUpdate')?.({ admin: true, dvr: true, wizard: 'channels' })
+    expect(wizard.currentStep).toBe('channels')
+    apiMock.mockRejectedValueOnce(new Error('boom'))
+
+    await expect(wizard.cancel()).rejects.toThrow('boom')
+    expect(apiMock).toHaveBeenCalledTimes(1)
+    expect(apiMock.mock.calls[0][0]).toBe('wizard/cancel')
+    expect(wizard.currentStep).toBe('channels')
+  })
+
+  it('start() rejects and keeps the cursor when the POST fails', async () => {
+    /* After a failed save the channels step restarts the wizard.
+     * When that fails too, the cursor must stay empty, as on the
+     * server. */
+    const { wizard } = await importStores()
+    cometHandlers.get('accessUpdate')?.({ admin: true, dvr: true })
+    expect(wizard.currentStep).toBe('')
+    apiMock.mockRejectedValueOnce(new Error('boom'))
+
+    await expect(wizard.start()).rejects.toThrow('boom')
+    expect(apiMock).toHaveBeenCalledTimes(1)
+    expect(apiMock.mock.calls[0][0]).toBe('wizard/start')
+    expect(wizard.currentStep).toBe('')
   })
 })
 
