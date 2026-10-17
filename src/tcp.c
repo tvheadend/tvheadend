@@ -870,6 +870,43 @@ next:
 /**
  *
  */
+static int
+tcp_server_listen(struct addrinfo *ai, const char *bindaddr, int port)
+{
+  const char *addr = bindaddr != NULL ? bindaddr : "*";
+  int fd;
+  int one = 1;
+  int zero = 0;
+
+  fd = tvh_socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+  if(fd == -1) {
+    tvherror(LS_TCP, "socket: %s:%i: %s", addr, port, strerror(errno));
+    return -1;
+  }
+
+  if(ai->ai_family == AF_INET6)
+    setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
+
+  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
+
+  if(bind(fd, ai->ai_addr, ai->ai_addrlen) != 0) {
+    tvherror(LS_TCP, "bind: %s:%i: %s", addr, port, strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  if(listen(fd, 511) != 0) {
+    tvherror(LS_TCP, "listen: %s:%i: %s", addr, port, strerror(errno));
+    close(fd);
+    return -1;
+  }
+
+  return fd;
+}
+
+/**
+ *
+ */
 #if ENABLE_LIBSYSTEMD_DAEMON
 static void *tcp_server_create_new
 #else
@@ -883,8 +920,6 @@ void *tcp_server_create
   struct addrinfo hints, *res, *ressave, *use = NULL;
   struct sockaddr_storage bound;
   char port_buf[6], buf[50];
-  int one = 1;
-  int zero = 0;
 
   snprintf(port_buf, 6, "%d", port);
 
@@ -914,32 +949,28 @@ void *tcp_server_create
     res = res->ai_next;
   }
 
-  fd = tvh_socket(use->ai_family, use->ai_socktype, use->ai_protocol);
+  fd = tcp_server_listen(use, bindaddr, port);
+
+  /* The dual-stack socket on [::] can fail while 0.0.0.0 is still free,
+   * for example when the port is taken on IPv6 only */
+  if(fd == -1 && use->ai_family == AF_INET6) {
+    for(res = ressave; res != NULL; res = res->ai_next)
+      if(res->ai_family == AF_INET) {
+        use = res;
+        fd = tcp_server_listen(use, bindaddr, port);
+        break;
+      }
+  }
+
   if(fd == -1) {
     freeaddrinfo(ressave);
     return NULL;
   }
 
-  if(use->ai_family == AF_INET6)
-    setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &zero, sizeof(int));
-
-  setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int));
-
   assert(use->ai_addrlen <= sizeof(bound));
   memset(&bound, 0, sizeof(bound));
   memcpy(&bound, use->ai_addr, use->ai_addrlen);
-  
-  x = bind(fd, use->ai_addr, use->ai_addrlen);
   freeaddrinfo(ressave);
-
-  if(x != 0)
-  {
-    tvherror(LS_TCP, "bind: %s:%i: %s", bindaddr != NULL ? bindaddr : "*", port, strerror(errno));
-    close(fd);
-    return NULL;
-  }
-
-  listen(fd, 511);
 
   ts = malloc(sizeof(tcp_server_t));
   ts->serverfd = fd;
@@ -1233,7 +1264,7 @@ tcp_server_preinit(int opt_ipv6)
   /* A kernel without IPv6 (ipv6.disable=1) cannot open the dual-stack
    * listening sockets, so stay on IPv4 instead of listening on nothing.
    * This only checks the socket family. Binding is left to the servers,
-   * and tcp_server_create() logs any bind error. */
+   * and tcp_server_create() logs any socket or bind error. */
   fd = tvh_socket(AF_INET6, SOCK_STREAM, 0);
   if (fd < 0) {
     tvhwarn(LS_TCP, "IPv6 is not available (%s), listening on IPv4 only",
