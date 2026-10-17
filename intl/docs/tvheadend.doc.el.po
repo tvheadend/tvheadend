@@ -10229,7 +10229,6 @@ msgstr ""
 " υπηρεσιών») και να αντιστοιχίσετε χειροκίνητα τις υπηρεσίες σε κανάλια.__"
 
 #: src/docs_inc.c:2082
-#, c-format, python-format
 msgid ""
 "__now-first__ is working when the _primary_ (first-seen) cached% is highest "
 "for the nearest days and lowest for the far end of the guide."
@@ -10415,7 +10414,6 @@ msgid "codec"
 msgstr "codec"
 
 #: src/docs_inc.c:2058
-#, c-format
 msgid "compact one-column-per-day cached% matrix (whole guide at a glance)"
 msgstr ""
 "συμπαγής πίνακας ποσοστού (%) αποθηκευμένων εικόνων με μία στήλη ανά ημέρα "
@@ -10909,7 +10907,6 @@ msgid "numname"
 msgstr "numname"
 
 #: src/docs_inc.c:2066
-#, c-format, python-format
 msgid ""
 "one machine-readable row, for logging the trend over time, with the per-day "
 "cached% and first-seen% of"
