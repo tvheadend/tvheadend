@@ -491,6 +491,17 @@ htsp_error(htsp_connection_t *htsp, const char *errstr)
   return r;
 }
 
+static htsmsg_t *
+htsp_dvr_entry_find(htsp_connection_t *htsp, uint32_t id, dvr_entry_t **entry)
+{
+  *entry = dvr_entry_find_by_id(id);
+  if (!*entry)
+    return htsp_error(htsp, N_("DVR schedule does not exist"));
+  if (dvr_entry_verify(*entry, htsp->htsp_granted_access, 1))
+    return htsp_error(htsp, N_("User does not have access"));
+  return NULL;
+}
+
 /**
  * Simple function to respond with an success
  */
@@ -2967,12 +2978,10 @@ htsp_method_file_open(htsp_connection_t *htsp, htsmsg_t *in)
 
   if((s2 = tvh_strbegins(str, "dvr/")) != NULL ||
      (s2 = tvh_strbegins(str, "dvrfile/")) != NULL) {
-    dvr_entry_t *de = dvr_entry_find_by_id(atoi(s2));
-    if(de == NULL)
-      return htsp_error(htsp, N_("DVR schedule does not exist"));
-
-    if (dvr_entry_verify(de, htsp->htsp_granted_access, 1))
-      return htsp_error(htsp, N_("User does not have access"));
+    dvr_entry_t *de;
+    htsmsg_t *error = htsp_dvr_entry_find(htsp, atoi(s2), &de);
+    if (error)
+      return error;
 
     filename = dvr_get_filename(de);
 
