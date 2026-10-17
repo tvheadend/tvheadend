@@ -1,0 +1,4331 @@
+# Greek (el) localization for Tvheadend.
+# Original translation by @Camthalion77 with ChatGPT assistance.
+# Distributed under the Tvheadend project license (GPL-3.0-or-later).
+msgid ""
+msgstr ""
+"Project-Id-Version: Tvheadend VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-03 19:54+0000\n"
+"PO-Revision-Date: 2026-10-15 00:00+0000\n"
+"Last-Translator: Camthalion77 (AI-assisted Greek localization)\n"
+"Language: el\n"
+"Language-Team: Greek\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/webui/static-vue/src/views/AboutView.vue:147
+msgid "(Apache Licence v2.0)"
+msgstr "(Άδεια Apache έκδοση 2.0)"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1702
+#: src/webui/static-vue/src/views/epg/TableView.vue:2265
+#, python-brace-format
+msgid ", grouped by {0}"
+msgstr ", ομαδοποιημένα κατά {0}"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:89
+#, python-brace-format
+msgid ", {0} failed"
+msgstr ", {0} απέτυχαν"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:92
+#, python-brace-format
+msgid ", {0} ignored"
+msgstr ", {0} αγνοήθηκαν"
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:62
+msgid "1 active subscription"
+msgstr "1 ενεργή συνδρομή"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1949
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+msgid "1 row"
+msgstr "1 γραμμή"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+msgid "1 validation error"
+msgstr "1 σφάλμα επικύρωσης"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:834
+msgid "16:9"
+msgstr "16:9"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:493
+msgid "Abort"
+msgstr "Ματαίωση"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:494
+msgid "Abort the selected recording"
+msgstr "Ματαίωση της επιλεγμένης εγγραφής"
+
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:130
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:131
+msgid "Abort this recording"
+msgstr "Ματαίωση αυτής της εγγραφής"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:493
+msgid "Aborting…"
+msgstr "Γίνεται ματαίωση…"
+
+#: src/webui/static-vue/src/components/NavRail.vue:138
+#: src/webui/static-vue/src/views/AboutView.vue:81
+msgid "About"
+msgstr "Πληροφορίες"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersLayout.vue:21
+msgid "Access Entries"
+msgstr "Καταχωρίσεις πρόσβασης"
+
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:130
+msgid "Active"
+msgstr "Ενεργό"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2082
+msgid "Active filter can't be saved (multi-genre rules not supported by server)"
+msgstr ""
+"Δεν είναι δυνατή η αποθήκευση του ενεργού φίλτρου (ο διακομιστής δεν "
+"υποστηρίζει κανόνες με πολλά είδη)"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2074
+msgid "Active filter can't be saved (multi-tag rules not supported by server)"
+msgstr ""
+"Δεν είναι δυνατή η αποθήκευση του ενεργού φίλτρου (ο διακομιστής δεν "
+"υποστηρίζει κανόνες με πολλές ετικέτες)"
+
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:453
+msgid "Adapter / Frontend"
+msgstr "Προσαρμογέας / Δέκτης (Frontend)"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:146
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:190
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:143
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:122
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:137
+msgid "Add"
+msgstr "Προσθήκη"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:381
+msgid "Add Access Entry"
+msgstr "Προσθήκη καταχώρισης πρόσβασης"
+
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:173
+msgid "Add Autorec"
+msgstr "Προσθήκη κανόνα αυτόματης εγγραφής (AutoRec)"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:236
+msgid "Add Bouquet"
+msgstr "Προσθήκη πακέτου καναλιών (Bouquet)"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:552
+msgid "Add Channel"
+msgstr "Προσθήκη καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:175
+msgid "Add Channel Tag"
+msgstr "Προσθήκη ετικέτας καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:198
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:240
+msgid "Add Codec Profile"
+msgstr "Προσθήκη προφίλ κωδικοποιητή (Codec)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:263
+msgid "Add Conditional Access Client"
+msgstr "Προσθήκη πελάτη πρόσβασης υπό όρους (CA)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:145
+msgid "Add IP Blocking Entry"
+msgstr "Προσθήκη κανόνα αποκλεισμού IP"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:293
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:305
+msgid "Add Mux"
+msgstr "Προσθήκη πολυπλέκτη (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:209
+msgid "Add Mux Scheduler"
+msgstr "Προσθήκη προγραμματιστή πολυπλεκτών (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:213
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:225
+msgid "Add Network"
+msgstr "Προσθήκη δικτύου"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:156
+msgid "Add Password"
+msgstr "Προσθήκη κωδικού πρόσβασης"
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:167
+msgid "Add Rating Label"
+msgstr "Προσθήκη ετικέτας καταλληλότητας"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:557
+msgid "Add Recording"
+msgstr "Προσθήκη εγγραφής"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:238
+msgid "Add Stream Profile"
+msgstr "Προσθήκη προφίλ ροής (Stream)"
+
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:134
+msgid "Add Timer"
+msgstr "Προσθήκη χρονοδιακόπτη"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:111
+msgid "Add a new IP blocking entry"
+msgstr "Προσθήκη νέου κανόνα αποκλεισμού IP"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:329
+msgid "Add a new access entry"
+msgstr "Προσθήκη νέας καταχώρισης πρόσβασης"
+
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:140
+msgid "Add a new autorec entry"
+msgstr "Προσθήκη νέου κανόνα αυτόματης εγγραφής (AutoRec)"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:188
+msgid "Add a new bouquet"
+msgstr "Προσθήκη νέου πακέτου καναλιών (Bouquet)"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:392
+msgid "Add a new channel"
+msgstr "Προσθήκη νέου καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:138
+msgid "Add a new channel tag"
+msgstr "Προσθήκη νέας ετικέτας καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:257
+msgid "Add a new mux"
+msgstr "Προσθήκη νέου πολυπλέκτη (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:172
+msgid "Add a new mux scheduler"
+msgstr "Προσθήκη νέου προγραμματιστή πολυπλεκτών (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:171
+msgid "Add a new network"
+msgstr "Προσθήκη νέου δικτύου"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:123
+msgid "Add a new password entry"
+msgstr "Προσθήκη νέας καταχώρισης κωδικού πρόσβασης"
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:131
+msgid "Add a new rating label"
+msgstr "Προσθήκη νέας ετικέτας καταλληλότητας"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:482
+msgid "Add a new recording"
+msgstr "Προσθήκη νέας εγγραφής"
+
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:101
+msgid "Add a new timer entry"
+msgstr "Προσθήκη νέου χρονοδιακόπτη"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:148
+#, python-brace-format
+msgid "Add a new {0} rule"
+msgstr "Προσθήκη νέου κανόνα {0}"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:445
+msgid "Add a tag to every selected channel (preserves existing tags)"
+msgstr ""
+"Προσθήκη ετικέτας σε όλα τα επιλεγμένα κανάλια (διατηρούνται οι υπάρχουσες "
+"ετικέτες)"
+
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:130
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:135
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:118
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:122
+msgid "Add failed"
+msgstr "Η προσθήκη απέτυχε"
+
+#: src/webui/static-vue/src/components/EditableTagChipCell.vue:260
+#: src/webui/static-vue/src/components/EditableTagChipCell.vue:261
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:443
+msgid "Add tag"
+msgstr "Προσθήκη ετικέτας"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:204
+#, python-brace-format
+msgid "Add {0}"
+msgstr "Προσθήκη {0}"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:143
+msgid "Adding…"
+msgstr "Γίνεται προσθήκη…"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:212
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:851
+#: src/webui/static-vue/src/components/LevelMenu.vue:52
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:176
+msgid "Advanced"
+msgstr "Για προχωρημένους"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:518
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:971
+msgid "Advanced Settings"
+msgstr "Σύνθετες ρυθμίσεις"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:399
+msgid "Age"
+msgstr "Ηλικία"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1034
+msgid "Age rating"
+msgstr "Ηλικιακή καταλληλότητα"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:75
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:200
+msgid "Aggregate"
+msgstr "Συγκέντρωση"
+
+#: src/webui/static-vue/src/components/OnlyMultiSelect.vue:142
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:79
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:88
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:147
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:123
+msgid "All"
+msgstr "Όλα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:158
+#: src/webui/static-vue/src/views/status/LogView.vue:342
+msgid "All subsystems"
+msgstr "Όλα τα υποσυστήματα"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:93
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:514
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:621
+msgid "Alternative showings"
+msgstr "Εναλλακτικές μεταδόσεις"
+
+#: src/webui/static-vue/src/components/EnumFilterControl.vue:190
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3175
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:218
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:535
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:561
+#: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:62
+#: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:81
+#: src/webui/static-vue/src/views/epg/TableView.vue:2340
+msgid "Any"
+msgstr "Οποιοδήποτε"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:261
+msgid "App name"
+msgstr "Όνομα εφαρμογής"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:130
+msgid "Append to Description"
+msgstr "Προσθήκη στο τέλος της περιγραφής"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1864
+msgid "Apply"
+msgstr "Εφαρμογή"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:280
+msgid "Apply configuration (run-time only)"
+msgstr "Εφαρμογή ρυθμίσεων (μόνο μέχρι την επανεκκίνηση)"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1780
+#, python-brace-format
+msgid "Apply {0} to all selected entries"
+msgstr "Εφαρμογή {0} σε όλες τις επιλεγμένες καταχωρίσεις"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2098
+msgid "Are you sure?"
+msgstr "Είστε βέβαιοι;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:350
+msgid "As integers (1, 2, 3, …)"
+msgstr "Ως ακέραιοι (1, 2, 3, …)"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:352
+msgid ""
+"Assign 1 to the first row, 2 to the second, and so on — sub-channel suffixes"
+" (.1) are flattened."
+msgstr ""
+"Αρίθμηση 1 στην πρώτη γραμμή, 2 στη δεύτερη κ.ο.κ. — τα υποκανάλια (.1) "
+"μετατρέπονται σε ενιαία αρίθμηση."
+
+#: src/webui/static-vue/src/views/configuration/EsfilterAudioView.vue:17
+msgid "Audio Stream Filter"
+msgstr "Φίλτρο ροής ήχου (Audio Stream)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:65
+msgid "Audio Stream Filters"
+msgstr "Φίλτρα ροών ήχου (Audio Stream)"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:835
+msgid "Audio described"
+msgstr "Με ακουστική περιγραφή"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:115
+msgid "Auto check disabled"
+msgstr "Ο αυτόματος έλεγχος απενεργοποιήθηκε"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:114
+msgid "Auto check enabled"
+msgstr "Ο αυτόματος έλεγχος ενεργοποιήθηκε"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:443
+#: src/webui/static-vue/src/views/epg/TableView.vue:2173
+msgid "AutoRec rule created"
+msgstr "Δημιουργήθηκε κανόνας αυτόματης εγγραφής (AutoRec)"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:700
+msgid "Autorec"
+msgstr "Αυτόματη εγγραφή (AutoRec)"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:57
+msgid "Autorecs"
+msgstr "Κανόνες αυτόματης εγγραφής (AutoRec)"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:98
+#: src/webui/static-vue/src/components/MasterDetailLayout.vue:181
+msgid "Back"
+msgstr "Πίσω"
+
+#: src/webui/static-vue/src/components/MasterDetailLayout.vue:178
+msgid "Back to list"
+msgstr "Επιστροφή στη λίστα"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:95
+msgid "Bandwidth (kb/s)"
+msgstr "Εύρος ζώνης (kb/s)"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:344
+#, python-brace-format
+msgid "Bandwidth · {0} {1}"
+msgstr "Εύρος ζώνης · {0} {1}"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:137
+msgid "Bar"
+msgstr "Ραβδόγραμμα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralLayout.vue:39
+msgid "Base"
+msgstr "Βασικό"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:211
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:850
+#: src/webui/static-vue/src/components/LevelMenu.vue:51
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:175
+msgid "Basic"
+msgstr "Βασικό"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:516
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:970
+msgid "Basic Settings"
+msgstr "Βασικές ρυθμίσεις"
+
+#: src/webui/static-vue/src/components/NumericFilterControls.vue:102
+msgid "Between"
+msgstr "Μεταξύ"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:168
+msgid "Bouquet scan triggered."
+msgstr "Ξεκίνησε η σάρωση του πακέτου καναλιών."
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:45
+msgid "Bouquets"
+msgstr "Πακέτα καναλιών (Bouquets)"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:103
+msgid "Breadcrumb"
+msgstr "Διαδρομή πλοήγησης"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:156
+#, python-brace-format
+msgid "Buffer full at {0} lines — oldest lines dropped."
+msgstr "Η προσωρινή μνήμη γέμισε στις {0} γραμμές — οι παλαιότερες απορρίφθηκαν."
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:136
+msgid "Built-in profiles cannot be deleted"
+msgstr "Τα ενσωματωμένα προφίλ δεν μπορούν να διαγραφούν"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1531
+msgid "Bulk save failed"
+msgstr "Η μαζική αποθήκευση απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterCaView.vue:17
+msgid "CA Stream Filter"
+msgstr "Φίλτρο ροής CA"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:80
+msgid "CA Stream Filters"
+msgstr "Φίλτρα ροών CA"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:81
+msgid "CA client created. Edit settings on the right."
+msgstr "Ο πελάτης CA δημιουργήθηκε. Επεξεργαστείτε τις ρυθμίσεις στα δεξιά."
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:85
+msgid "CAs"
+msgstr "Συστήματα πρόσβασης υπό όρους (CA)"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:208
+#: src/webui/static-vue/src/commands/recordingSource.ts:187
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1840
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1955
+#: src/webui/static-vue/src/components/IdnodePickClassDialog.vue:179
+#: src/webui/static-vue/src/components/IdnodePickEntityDialog.vue:172
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:127
+#: src/webui/static-vue/src/views/epg/TableView.vue:2155
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:153
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:140
+msgid "Cancel setup wizard?"
+msgstr "Ακύρωση οδηγού εγκατάστασης;"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:141
+msgid "Cancel wizard"
+msgstr "Ακύρωση οδηγού"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:137
+msgid ""
+"Cancelling will exit the setup wizard, but any settings you have already "
+"saved on previous steps will remain. Continue?"
+msgstr ""
+"Η ακύρωση θα κλείσει τον οδηγό εγκατάστασης, αλλά οι ρυθμίσεις που έχουν "
+"αποθηκευτεί στα προηγούμενα βήματα θα παραμείνουν. Συνέχεια;"
+
+#: src/webui/static-vue/src/views/AboutView.vue:88
+msgid "Capabilities"
+msgstr "Δυνατότητες"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1050
+msgid "Categories"
+msgstr "Κατηγορίες"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2640
+msgid ""
+"Cell editing isn't supported at phone width. Save your pending changes, or "
+"tap Discard to drop them and exit edit mode."
+msgstr ""
+"Η επεξεργασία κελιών δεν υποστηρίζεται σε πλάτος κινητού. Αποθηκεύστε τις "
+"αλλαγές σας ή επιλέξτε «Απόρριψη» για έξοδο χωρίς αποθήκευση."
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:281
+msgid "Changes will be lost when the application next restarts."
+msgstr "Οι αλλαγές θα χαθούν στην επόμενη επανεκκίνηση της εφαρμογής."
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:232
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:261
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:266
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:370
+#: src/webui/static-vue/src/views/epg/EpgTimeline.vue:586
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:372
+#: src/webui/static-vue/src/views/epg/TableView.vue:271
+#: src/webui/static-vue/src/views/epg/TableView.vue:474
+#: src/webui/static-vue/src/views/epg/TableView.vue:489
+#: src/webui/static-vue/src/views/epg/TableView.vue:1248
+#: src/webui/static-vue/src/views/epg/TableView.vue:2090
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:92
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:85
+msgid "Channel"
+msgstr "Κανάλι"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:80
+msgid "Channel / EPG"
+msgstr "Κανάλια / EPG"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:44
+msgid "Channel Tags"
+msgstr "Ετικέτες καναλιών"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:562
+#: src/webui/static-vue/src/views/epg/TableView.vue:2094
+msgid "Channel tag"
+msgstr "Ετικέτα καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:251
+msgid "Channel tags"
+msgstr "Ετικέτες καναλιών"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:43
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:238
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:133
+msgid "Channels"
+msgstr "Κανάλια"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:580
+msgid "Choose a stream profile, then open in your external media player"
+msgstr "Επιλέξτε προφίλ ροής και ανοίξτε το στον εξωτερικό αναπαραγωγέα"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2382
+msgid "Choose where to look when searching by title"
+msgstr "Επιλέξτε πού θα γίνεται αναζήτηση με βάση τον τίτλο"
+
+#: src/webui/static-vue/src/components/NavRail.vue:139
+msgid "Classic UI"
+msgstr "Κλασικό περιβάλλον"
+
+#: src/webui/static-vue/src/views/AboutView.vue:128
+msgid "Classic UI built with"
+msgstr "Κλασικό περιβάλλον με"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1014
+msgid "Classification"
+msgstr "Ταξινόμηση"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:199
+msgid "Clean"
+msgstr "Εκκαθάριση"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:207
+msgid "Clean failed"
+msgstr "Η εκκαθάριση απέτυχε"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:199
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralImageCacheView.vue:59
+msgid "Clean image cache"
+msgstr "Εκκαθάριση προσωρινής μνήμης εικόνων"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1737
+#: src/webui/static-vue/src/components/SearchInput.vue:78
+#: src/webui/static-vue/src/components/SearchInput.vue:79
+#: src/webui/static-vue/src/views/status/LogView.vue:288
+msgid "Clear"
+msgstr "Απαλοιφή"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:364
+msgid "Clear all filters"
+msgstr "Απαλοιφή όλων των φίλτρων"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:299
+msgid "Clear all selections"
+msgstr "Κατάργηση όλων των επιλογών"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:598
+msgid "Clear duration range"
+msgstr "Απαλοιφή εύρους διάρκειας"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:370
+msgid "Clear filters"
+msgstr "Απαλοιφή φίλτρων"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:186
+msgid "Clear statistics"
+msgstr "Μηδενισμός στατιστικών"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:132
+msgid "Clear statistics for selected input?"
+msgstr "Να μηδενιστούν τα στατιστικά για την επιλεγμένη είσοδο;"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:187
+msgid "Clear statistics for selected inputs"
+msgstr "Μηδενισμός στατιστικών των επιλεγμένων εισόδων"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:401
+msgid "Clear the icon URL for the selected channels"
+msgstr "Απαλοιφή URL εικονιδίου στα επιλεγμένα κανάλια"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:282
+msgid "Clear the visible log (does not affect server)"
+msgstr "Απαλοιφή του ορατού ιστορικού καταγραφής (χωρίς επίδραση στον διακομιστή)"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:578
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:641
+#, python-brace-format
+msgid "Clear {0} filter"
+msgstr "Απαλοιφή φίλτρου {0}"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:186
+msgid "Clearing…"
+msgstr "Γίνεται εκκαθάριση…"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:667
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:731
+msgid "Click the active row to flip cluster direction."
+msgstr "Κάντε κλικ στην ενεργή γραμμή για αντιστροφή της κατεύθυνσης ομάδας."
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:620
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:682
+msgid "Click the active row to flip direction."
+msgstr "Κάντε κλικ στην ενεργή γραμμή για αντιστροφή κατεύθυνσης."
+
+#: src/webui/static-vue/src/views/status/LogView.vue:329
+msgid "Click to match using a regular expression"
+msgstr "Κάντε κλικ για αντιστοίχιση μέσω κανονικής έκφρασης (regex)"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:78
+msgid "Client / User agent"
+msgstr "Πελάτης / User-Agent"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:84
+msgid "Client Address"
+msgstr "Διεύθυνση πελάτη"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:93
+msgid "Client Data Ports"
+msgstr "Θύρες δεδομένων πελάτη"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:151
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:195
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:149
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:127
+msgid "Clone"
+msgstr "Κλωνοποίηση"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:197
+msgid "Clone Codec Profile"
+msgstr "Κλωνοποίηση προφίλ κωδικοποιητή (Codec)"
+
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:48
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:105
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:119
+msgid "Clone failed"
+msgstr "Η κλωνοποίηση απέτυχε"
+
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:45
+#, python-brace-format
+msgid "Cloned as \"{0}\"."
+msgstr "Κλωνοποιήθηκε ως «{0}»."
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:151
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:195
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:149
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:127
+msgid "Cloning…"
+msgstr "Γίνεται κλωνοποίηση…"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:477
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:480
+msgid "Close"
+msgstr "Κλείσιμο"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:140
+msgid "Close help"
+msgstr "Κλείσιμο βοήθειας"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:198
+msgid "Close table of contents"
+msgstr "Κλείσιμο πίνακα περιεχομένων"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:241
+msgid "Codec"
+msgstr "Κωδικοποιητής (Codec)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:55
+msgid "Codec Profiles"
+msgstr "προφίλ κωδικοποιητών"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:140
+msgid "Codec profile saved."
+msgstr "Το προφίλ κωδικοποιητή αποθηκεύτηκε."
+
+#: src/webui/static-vue/src/components/L2Sidebar.vue:206
+#: src/webui/static-vue/src/components/L2Sidebar.vue:214
+#: src/webui/static-vue/src/components/NavRail.vue:74
+msgid "Collapse"
+msgstr "Σύμπτυξη"
+
+#: src/webui/static-vue/src/components/L2Sidebar.vue:207
+msgid "Collapse sidebar"
+msgstr "Σύμπτυξη πλευρικής γραμμής"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:778
+msgid "Colour by elapsed time"
+msgstr "Χρωματισμός ανάλογα με τον χρόνο που πέρασε"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:383
+#, python-brace-format
+msgid "Column actions for {0}"
+msgstr "Ενέργειες στήλης για {0}"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:566
+msgid "Column is hidden — show the column to edit its filter"
+msgstr "Η στήλη είναι κρυφή — εμφανίστε τη για να επεξεργαστείτε το φίλτρο της"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:703
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:794
+msgid "Columns"
+msgstr "Στήλες"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:73
+msgid "Combined"
+msgstr "Συνδυασμένο"
+
+#: src/webui/static-vue/src/components/CommandPalette.vue:528
+msgid "Commands"
+msgstr "Εντολές"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:129
+msgid "Compact"
+msgstr "Συμπαγής προβολή"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:386
+msgid "Config"
+msgstr "Ρυθμίσεις"
+
+#: src/webui/static-vue/src/components/NavRail.vue:127
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingLayout.vue:44
+msgid "Configuration"
+msgstr "Ρύθμιση παραμέτρων"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:354
+msgid "Configuration form misconfigured (no endpoint)"
+msgstr "Εσφαλμένη ρύθμιση φόρμας (λείπει το τελικό σημείο API)"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:731
+msgid "Configuration form misconfigured (no save endpoint)"
+msgstr "Εσφαλμένη ρύθμιση φόρμας (λείπει το τελικό σημείο αποθήκευσης)"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:114
+msgid "Configuration sub-section navigation"
+msgstr "Πλοήγηση υποενοτήτων ρυθμίσεων"
+
+#: src/webui/static-vue/src/views/configuration/CaStatusCell.vue:36
+msgid "Connected"
+msgstr "Συνδεδεμένο"
+
+#: src/webui/static-vue/src/views/StatusLayout.vue:26
+msgid "Connections"
+msgstr "Συνδέσεις"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1042
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:531
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:536
+#: src/webui/static-vue/src/views/epg/TableView.vue:339
+#: src/webui/static-vue/src/views/epg/TableView.vue:2091
+#: src/webui/static-vue/src/views/epg/TableView.vue:2341
+msgid "Content type"
+msgstr "Τύπος περιεχομένου"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:194
+msgid "Contents"
+msgstr "Περιεχόμενα"
+
+#: src/webui/static-vue/src/components/IdnodePickClassDialog.vue:186
+#: src/webui/static-vue/src/components/IdnodePickEntityDialog.vue:179
+msgid "Continue"
+msgstr "Συνέχεια"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:142
+msgid "Continue setup"
+msgstr "Συνέχεια εγκατάστασης"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:122
+msgid "Continuity Errors"
+msgstr "Σφάλματα συνέχειας (Continuity Errors)"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:130
+#, python-brace-format
+msgid "Copied {0} line(s) to clipboard."
+msgstr "Αντιγράφηκαν {0} γραμμές στο πρόχειρο."
+
+#: src/webui/static-vue/src/views/status/LogView.vue:279
+msgid "Copy log"
+msgstr "Αντιγραφή καταγραφής"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:273
+msgid "Copy the visible log to the clipboard"
+msgstr "Αντιγραφή της ορατής καταγραφής στο πρόχειρο"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1070
+msgid "Copyright"
+msgstr "Πνευματικά δικαιώματα"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1471
+msgid "Could not create"
+msgstr "Δεν ήταν δυνατή η δημιουργία"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:219
+msgid "Could not delete autorec"
+msgstr "Δεν ήταν δυνατή η διαγραφή του κανόνα AutoRec"
+
+#: src/webui/static-vue/src/commands/recordingSource.ts:200
+msgid "Could not delete recording"
+msgstr "Δεν ήταν δυνατή η διαγραφή της εγγραφής"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:191
+msgid "Could not disable autorec"
+msgstr "Δεν ήταν δυνατή η απενεργοποίηση του AutoRec"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:192
+msgid "Could not enable autorec"
+msgstr "Δεν ήταν δυνατή η ενεργοποίηση του AutoRec"
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:229
+msgid "Could not load the dashboard."
+msgstr "Δεν ήταν δυνατή η φόρτωση του πίνακα επισκόπησης."
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:102
+msgid "Could not refresh the TV guide"
+msgstr "Δεν ήταν δυνατή η ανανέωση του τηλεοπτικού οδηγού."
+
+#: src/webui/static-vue/src/commands/epgEventSource.ts:213
+msgid "Could not schedule recording"
+msgstr "Δεν ήταν δυνατός ο προγραμματισμός εγγραφής"
+
+#: src/webui/static-vue/src/commands/epgEventSource.ts:239
+msgid "Could not set series recording"
+msgstr "Δεν ήταν δυνατή η ρύθμιση εγγραφής σειράς"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:70
+msgid "Could not start the scan"
+msgstr "Δεν ήταν δυνατή η έναρξη σάρωσης"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:124
+msgid "Could not start the setup wizard"
+msgstr "Δεν ήταν δυνατή η εκκίνηση του οδηγού εγκατάστασης"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralBaseView.vue:53
+msgid "Could not start wizard"
+msgstr "Δεν ήταν δυνατή η εκκίνηση του οδηγού"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:147
+msgid ""
+"Could not toggle debug — the server returned an error. Check your admin "
+"permission."
+msgstr ""
+"Δεν ήταν δυνατή η εναλλαγή αποσφαλμάτωσης — ο διακομιστής επέστρεψε σφάλμα. "
+"Ελέγξτε τα δικαιώματα διαχειριστή."
+
+#: src/webui/static-vue/src/views/status/LogView.vue:133
+msgid "Could not write to clipboard."
+msgstr "Δεν ήταν δυνατή η εγγραφή στο πρόχειρο."
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:80
+msgid "Count of objects"
+msgstr "Πλήθος αντικειμένων"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2154
+msgid "Create"
+msgstr "Δημιουργία"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2443
+#: src/webui/static-vue/src/views/epg/TableView.vue:2451
+msgid "Create AutoRec"
+msgstr "Δημιουργία AutoRec"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:702
+#: src/webui/static-vue/src/views/epg/TableView.vue:2435
+msgid ""
+"Create an automatic recording rule to record all future programs that match "
+"the current query."
+msgstr ""
+"Δημιουργία κανόνα αυτόματης εγγραφής για όλες τις μελλοντικές εκπομπές που "
+"ταιριάζουν με την τρέχουσα αναζήτηση."
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:1977
+#: src/webui/static-vue/src/views/epg/TableView.vue:2170
+msgid "Created from EPG query"
+msgstr "Δημιουργήθηκε από αναζήτηση EPG"
+
+#: src/webui/static-vue/src/views/AboutView.vue:103
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1084
+msgid "Credits"
+msgstr "Συντελεστές"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1099
+msgid "Crew"
+msgstr "Συντελεστές παραγωγής"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2096
+#, python-brace-format
+msgid "Currently this will match (and record) {0} events."
+msgstr "Προς το παρόν αντιστοιχούν (και θα εγγραφούν) {0} εκπομπές."
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:79
+msgid "DVB Inputs"
+msgstr "Είσοδοι DVB"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:466
+msgid "DVR overlay"
+msgstr "Επικάλυψη DVR"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:682
+msgid "DVR profile"
+msgstr "Προφίλ DVR"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:234
+msgid "DVR profiles"
+msgstr "Προφίλ DVR"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:540
+msgid "Dark channel background"
+msgstr "Σκούρο φόντο καναλιών"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:281
+msgid "Dark channels"
+msgstr "Σκούρα κανάλια"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:477
+msgid "Date"
+msgstr "Ημερομηνία"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:328
+msgid "Debug"
+msgstr "Αποσφαλμάτωση"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:92
+msgid "Debugging"
+msgstr "Αποσφαλμάτωση"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:174
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:193
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:111
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:130
+msgid "Default"
+msgstr "Προεπιλογή"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:207
+#: src/webui/static-vue/src/commands/recordingSource.ts:186
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:157
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:201
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:155
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:133
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:480
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:192
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:209
+msgid "Delete"
+msgstr "Διαγραφή"
+
+#: src/webui/static-vue/src/commands/recordingSource.ts:184
+#, python-brace-format
+msgid "Delete \"{0}\"? This cannot be undone."
+msgstr "Να διαγραφεί το «{0}»; Η ενέργεια δεν αναιρείται."
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:206
+msgid "Delete autorec"
+msgstr "Διαγραφή κανόνα AutoRec"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:204
+#, python-brace-format
+msgid ""
+"Delete autorec \"{0}\"? Future recordings from this rule will not be "
+"scheduled."
+msgstr ""
+"Να διαγραφεί ο κανόνας AutoRec «{0}»; Δεν θα προγραμματίζονται πλέον νέες "
+"εγγραφές από αυτόν."
+
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:87
+msgid "Delete failed"
+msgstr "Η διαγραφή απέτυχε"
+
+#: src/webui/static-vue/src/commands/recordingSource.ts:185
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:648
+msgid "Delete recording"
+msgstr "Διαγραφή εγγραφής"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:649
+msgid "Delete scheduled recording of this program"
+msgstr "Ακύρωση της προγραμματισμένης εγγραφής αυτής της εκπομπής"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:193
+msgid "Delete the selected EPG grabber channels"
+msgstr "Διαγραφή επιλεγμένων καναλιών συλλογής EPG"
+
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:151
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:210
+msgid "Delete the selected entries"
+msgstr "Διαγραφή επιλεγμένων καταχωρίσεων"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:481
+msgid "Delete the selected services"
+msgstr "Διαγραφή επιλεγμένων υπηρεσιών"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:215
+#: src/webui/static-vue/src/commands/recordingSource.ts:193
+#, python-brace-format
+msgid "Deleted: {0}"
+msgstr "Διαγράφηκε: {0}"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:157
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:201
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:155
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:133
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:480
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:192
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:209
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:648
+msgid "Deleting…"
+msgstr "Γίνεται διαγραφή…"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:441
+msgid "Density"
+msgstr "Πυκνότητα"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:101
+msgid "Descramble"
+msgstr "Αποκρυπτογράφηση (Descramble)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:366
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:999
+msgid "Description"
+msgstr "Περιγραφή"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1660
+msgid "Deselect all"
+msgstr "Κατάργηση όλων των επιλογών"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1776
+#: src/webui/static-vue/src/components/DataGrid.vue:1930
+msgid "Deselect row"
+msgstr "Αποεπιλογή γραμμής"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:427
+msgid "Detach from bouquet"
+msgstr "Αποσύνδεση από πακέτο καναλιών (Bouquet)"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:427
+msgid "Detaching…"
+msgstr "Γίνεται αποσύνδεση…"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:242
+msgid "Details"
+msgstr "Λεπτομέρειες"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingLayout.vue:38
+msgid "Digital Video Recorder Profiles"
+msgstr "Προφίλ ψηφιακής εγγραφής (DVR)"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1091
+msgid "Director"
+msgstr "Σκηνοθέτης"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:466
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:153
+msgid "Disable"
+msgstr "Απενεργοποίηση"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:270
+msgid "Disable debug"
+msgstr "Απενεργοποίηση αποσφαλμάτωσης"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:261
+msgid "Disable debug-level log streaming for this session"
+msgstr "Διακοπή μετάδοσης καταγραφής αποσφαλμάτωσης για αυτή τη συνεδρία"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:467
+msgid "Disable every selected channel"
+msgstr "Απενεργοποίηση όλων των επιλεγμένων καναλιών"
+
+#: src/webui/static-vue/src/components/BooleanCell.vue:29
+msgid "Disabled"
+msgstr "Απενεργοποιημένο"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:182
+#, python-brace-format
+msgid "Disabled: {0}"
+msgstr "Απενεργοποιήθηκε: {0}"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1559
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1577
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1954
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2676
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2824
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:237
+msgid "Discard"
+msgstr "Απόρριψη"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2671
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2819
+msgid "Discard pending changes"
+msgstr "Απόρριψη εκκρεμών αλλαγών"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2672
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2820
+msgid "Discard pending changes and exit edit mode"
+msgstr "Απόρριψη εκκρεμών αλλαγών και έξοδος από την επεξεργασία"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1557
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1575
+msgid "Discard unsaved changes?"
+msgstr "Να απορριφθούν οι μη αποθηκευμένες αλλαγές;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:234
+msgid "Discard unsaved channel changes?"
+msgstr "Να απορριφθούν οι μη αποθηκευμένες αλλαγές στα κανάλια;"
+
+#: src/webui/static-vue/src/views/configuration/CaStatusCell.vue:39
+msgid "Disconnected"
+msgstr "Αποσυνδεδεμένο"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralSatipServerView.vue:55
+msgid "Discover SAT>IP servers"
+msgstr "Αναζήτηση διακομιστών SAT>IP"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:247
+msgid "Discovery failed"
+msgstr "Η αναζήτηση συσκευών απέτυχε"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:244
+msgid "Discovery triggered."
+msgstr "Ξεκίνησε η αναζήτηση συσκευών."
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:220
+msgid "Dismiss"
+msgstr "Κλείσιμο ειδοποίησης"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:239
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:43
+msgid "Do you really want to abort/unschedule the selection?"
+msgstr ""
+"Θέλετε πράγματι να ματαιώσετε ή να ακυρώσετε τον προγραμματισμό των "
+"επιλεγμένων;"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:173
+msgid "Do you really want to delete the selected EPG grabber channels?"
+msgstr "Θέλετε πράγματι να διαγράψετε τα επιλεγμένα κανάλια συλλογής EPG;"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:145
+msgid "Do you really want to delete the selected bouquets?"
+msgstr "Θέλετε πράγματι να διαγράψετε τα επιλεγμένα πακέτα καναλιών;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:126
+msgid "Do you really want to delete the selected channel tags?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες ετικέτες καναλιών;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:283
+msgid "Do you really want to delete the selected channels?"
+msgstr "Θέλετε πράγματι να διαγράψετε τα επιλεγμένα κανάλια;"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:289
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:99
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:111
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:127
+msgid "Do you really want to delete the selected entries?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες καταχωρίσεις;"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:156
+msgid "Do you really want to delete the selected mux schedulers?"
+msgstr "Θέλετε πράγματι να διαγράψετε τους επιλεγμένους προγραμματιστές πολυπλεκτών;"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:227
+msgid "Do you really want to delete the selected muxes?"
+msgstr "Θέλετε πράγματι να διαγράψετε τους επιλεγμένους πολυπλέκτες (Mux);"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:137
+msgid "Do you really want to delete the selected networks?"
+msgstr "Θέλετε πράγματι να διαγράψετε τα επιλεγμένα δίκτυα;"
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:119
+msgid "Do you really want to delete the selected rating labels?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες ετικέτες καταλληλότητας;"
+
+#: src/webui/static-vue/src/views/dvr/RemovedView.vue:81
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:258
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες εγγραφές;"
+
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:95
+msgid ""
+"Do you really want to delete the selected recordings?\n"
+"\n"
+"The associated file will be removed from storage."
+msgstr ""
+"Θέλετε πράγματι να διαγράψετε τις επιλεγμένες εγγραφές;\n"
+"\n"
+"Θα διαγραφεί και το αντίστοιχο αρχείο από τον αποθηκευτικό χώρο."
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:378
+msgid "Do you really want to delete the selected services?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες υπηρεσίες;"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:92
+msgid "Do you really want to delete this CA client?"
+msgstr "Θέλετε πράγματι να διαγράψετε αυτόν τον πελάτη CA;"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:80
+msgid "Do you really want to delete this DVR profile?"
+msgstr "Θέλετε πράγματι να διαγράψετε αυτό το προφίλ DVR;"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:67
+msgid "Do you really want to delete this codec profile?"
+msgstr "Θέλετε πράγματι να διαγράψετε αυτό το προφίλ κωδικοποιητή;"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:111
+msgid "Do you really want to delete this stream profile?"
+msgstr "Θέλετε πράγματι να διαγράψετε αυτό το προφίλ ροής;"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:245
+msgid "Do you really want to gracefully stop/unschedule the selection?"
+msgstr ""
+"Θέλετε πράγματι να διακόψετε ομαλά ή να ακυρώσετε τον προγραμματισμό των "
+"επιλεγμένων;"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:404
+msgid "Do you really want to gracefully stop/unschedule this recording?"
+msgstr ""
+"Θέλετε πράγματι να διακόψετε ομαλά ή να ακυρώσετε τον προγραμματισμό αυτής "
+"της εγγραφής;"
+
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:116
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:58
+msgid "Do you really want to remove the selected recordings from storage?"
+msgstr ""
+"Θέλετε πράγματι να αφαιρέσετε τις επιλεγμένες εγγραφές από τον αποθηκευτικό "
+"χώρο;"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:414
+msgid "Do you really want to remove this recording?"
+msgstr "Θέλετε πράγματι να αφαιρέσετε αυτή την εγγραφή;"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:252
+msgid ""
+"Do you really want to toggle the previously recorded state for the selected "
+"recordings?"
+msgstr ""
+"Θέλετε πράγματι να εναλλάξετε την κατάσταση «Έχει ήδη εγγραφεί» για τις "
+"επιλεγμένες εγγραφές;"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2029
+#: src/webui/static-vue/src/views/epg/TableView.vue:2064
+msgid "Don't care"
+msgstr "Δεν έχει σημασία"
+
+#: src/webui/static-vue/src/views/AboutView.vue:173
+msgid "Donate via OpenCollective"
+msgstr "Δωρεά μέσω OpenCollective"
+
+#: src/webui/static-vue/src/views/dvr/failedActions.ts:58
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:68
+msgid "Download"
+msgstr "Λήψη"
+
+#: src/webui/static-vue/src/views/dvr/failedActions.ts:59
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:69
+msgid "Download the selected recording"
+msgstr "Λήψη της επιλεγμένης εγγραφής"
+
+#: src/webui/static-vue/src/components/MasterDetailLayout.vue:205
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:495
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:883
+msgid "Drag to resize · double-click to reset"
+msgstr "Σύρετε για αλλαγή μεγέθους · διπλό κλικ για επαναφορά"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:150
+msgid "Drop"
+msgstr "Απόρριψη"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:515
+msgid "Drop every service not seen for at least 7 days"
+msgstr "Κατάργηση κάθε υπηρεσίας που δεν έχει εντοπιστεί τουλάχιστον 7 ημέρες"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:509
+msgid "Drop services not seen in PAT/SDT scans for at least 7 days"
+msgstr ""
+"Κατάργηση υπηρεσιών που δεν εμφανίστηκαν σε σαρώσεις PAT/SDT για τουλάχιστον"
+" 7 ημέρες"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:151
+msgid "Drop the selected connection(s)"
+msgstr "Διακοπή των επιλεγμένων συνδέσεων"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:126
+msgid "Drop the selected connection(s)?"
+msgstr "Να διακοπούν οι επιλεγμένες συνδέσεις;"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:150
+msgid "Dropping…"
+msgstr "Γίνεται διακοπή…"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:976
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:570
+#: src/webui/static-vue/src/views/epg/TableView.vue:369
+#: src/webui/static-vue/src/views/epg/TableView.vue:491
+#: src/webui/static-vue/src/views/epg/TableView.vue:2092
+msgid "Duration"
+msgstr "Διάρκεια"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:47
+msgid "EPG Grabber"
+msgstr "Συλλέκτης EPG (EPG Grabber)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:46
+msgid "EPG Grabber Channels"
+msgstr "Κανάλια συλλέκτη EPG"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:48
+msgid "EPG Grabber Modules"
+msgstr "Αρθρώματα συλλέκτη EPG"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:464
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:460
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:185
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:143
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:202
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:49
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:381
+msgid "Edit Access Entry"
+msgstr "Επεξεργασία καταχώρισης πρόσβασης"
+
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:173
+msgid "Edit Autorec"
+msgstr "Επεξεργασία κανόνα AutoRec"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:236
+msgid "Edit Bouquet"
+msgstr "Επεξεργασία πακέτου καναλιών (Bouquet)"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:552
+msgid "Edit Channel"
+msgstr "Επεξεργασία καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:175
+msgid "Edit Channel Tag"
+msgstr "Επεξεργασία ετικέτας καναλιού"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:231
+msgid "Edit EPG Grabber Channel"
+msgstr "Επεξεργασία καναλιού συλλογής EPG"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:145
+msgid "Edit IP Blocking Entry"
+msgstr "Επεξεργασία κανόνα αποκλεισμού IP"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:305
+msgid "Edit Mux"
+msgstr "Επεξεργασία πολυπλέκτη (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:209
+msgid "Edit Mux Scheduler"
+msgstr "Επεξεργασία προγραμματιστή πολυπλεκτών"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:225
+msgid "Edit Network"
+msgstr "Επεξεργασία δικτύου"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:156
+msgid "Edit Password"
+msgstr "Επεξεργασία κωδικού πρόσβασης"
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:167
+msgid "Edit Rating Label"
+msgstr "Επεξεργασία ετικέτας καταλληλότητας"
+
+#: src/webui/static-vue/src/layouts/AppShell.vue:277
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:164
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:195
+#: src/webui/static-vue/src/views/dvr/RemovedView.vue:130
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:557
+msgid "Edit Recording"
+msgstr "Επεξεργασία εγγραφής"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:556
+msgid "Edit Service"
+msgstr "Επεξεργασία υπηρεσίας"
+
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:134
+msgid "Edit Timer"
+msgstr "Επεξεργασία χρονοδιακόπτη"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2916
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2921
+msgid "Edit cells in this grid"
+msgstr "Επεξεργασία κελιών αυτού του πίνακα"
+
+#: src/webui/static-vue/src/composables/useInlineEdit.ts:382
+msgid "Edit save failed"
+msgstr "Η αποθήκευση επεξεργασίας απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:186
+msgid "Edit the selected EPG grabber channel"
+msgstr "Επεξεργασία επιλεγμένου καναλιού συλλογής EPG"
+
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:144
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:203
+msgid "Edit the selected entries"
+msgstr "Επεξεργασία επιλεγμένων καταχωρίσεων"
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:50
+msgid "Edit the selected entry"
+msgstr "Επεξεργασία επιλεγμένης καταχώρισης"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:461
+msgid "Edit the selected service"
+msgstr "Επεξεργασία επιλεγμένης υπηρεσίας"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:462
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:204
+#, python-brace-format
+msgid "Edit {0}"
+msgstr "Επεξεργασία {0}"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:555
+#, python-brace-format
+msgid "Edit {0} filter"
+msgstr "Επεξεργασία φίλτρου {0}"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:459
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:154
+msgid "Enable"
+msgstr "Ενεργοποίηση"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:270
+msgid "Enable debug"
+msgstr "Ενεργοποίηση αποσφαλμάτωσης"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:460
+msgid "Enable every selected channel"
+msgstr "Ενεργοποίηση όλων των επιλεγμένων καναλιών"
+
+#: src/webui/static-vue/src/components/BooleanCell.vue:24
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:95
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:78
+msgid "Enabled"
+msgstr "Ενεργοποιημένο"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:182
+#, python-brace-format
+msgid "Enabled: {0}"
+msgstr "Ενεργοποιήθηκε: {0}"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:227
+#: src/webui/static-vue/src/views/epg/TableView.vue:360
+msgid "End"
+msgstr "Τέλος"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:972
+msgid "End Time"
+msgstr "Ώρα λήξης"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1089
+msgid "Entry not found"
+msgstr "Η καταχώριση δεν βρέθηκε"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:219
+#: src/webui/static-vue/src/views/epg/TableView.vue:325
+#: src/webui/static-vue/src/views/epg/TableView.vue:1249
+msgid "Episode"
+msgstr "Επεισόδιο"
+
+#: src/webui/static-vue/src/components/ErrorDialog.vue:47
+msgid "Error"
+msgstr "Σφάλμα"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:102
+msgid "Errors"
+msgstr "Σφάλματα"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:900
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:955
+msgid "Event"
+msgstr "Συμβάν"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:137
+msgid "Event slot + padding"
+msgstr "Διάστημα συμβάντος και χρονικά περιθώρια"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:136
+msgid "Event slot only"
+msgstr "Μόνο διάστημα συμβάντος"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:417
+msgid "Event tooltips"
+msgstr "Επεξηγήσεις συμβάντων"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:145
+msgid "Every day"
+msgstr "Κάθε ημέρα"
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:118
+msgid "Everything's running smoothly"
+msgstr "Όλα λειτουργούν ομαλά"
+
+#: src/webui/static-vue/src/components/L2Sidebar.vue:206
+#: src/webui/static-vue/src/components/L2Sidebar.vue:214
+#: src/webui/static-vue/src/components/NavRail.vue:74
+msgid "Expand"
+msgstr "Ανάπτυξη"
+
+#: src/webui/static-vue/src/components/L2Sidebar.vue:207
+msgid "Expand sidebar"
+msgstr "Ανάπτυξη πλευρικής γραμμής"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:213
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:852
+#: src/webui/static-vue/src/components/LevelMenu.vue:53
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:177
+msgid "Expert"
+msgstr "Ειδικός"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:520
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:972
+msgid "Expert Settings"
+msgstr "Ρυθμίσεις ειδικών"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:388
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:391
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:468
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:471
+msgid "Export PNG"
+msgstr "Εξαγωγή PNG"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:212
+msgid "Extra text"
+msgstr "Πρόσθετο κείμενο"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:124
+msgid "FHD TV"
+msgstr "Τηλεόραση FHD"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:55
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:122
+msgid "Failed"
+msgstr "Απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:241
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:45
+msgid "Failed to abort"
+msgstr "Η ματαίωση απέτυχε"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:139
+#, python-brace-format
+msgid "Failed to clear statistics: {0}"
+msgstr "Απέτυχε η εκκαθάριση στατιστικών: {0}"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:439
+#: src/webui/static-vue/src/views/epg/TableView.vue:2176
+msgid "Failed to create AutoRec rule"
+msgstr "Η δημιουργία κανόνα AutoRec απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:147
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:128
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:285
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:291
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:101
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:113
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:158
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:229
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:139
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:380
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:175
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:129
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:121
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:98
+#: src/webui/static-vue/src/views/dvr/RemovedView.vue:83
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:260
+msgid "Failed to delete"
+msgstr "Η διαγραφή απέτυχε"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:415
+msgid "Failed to delete recording"
+msgstr "Η διαγραφή της εγγραφής απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:296
+msgid "Failed to detach"
+msgstr "Η αποσύνδεση απέτυχε"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:136
+#, python-brace-format
+msgid "Failed to drop connection(s): {0}"
+msgstr "Η διακοπή συνδέσεων απέτυχε: {0}"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:360
+msgid "Failed to load configuration"
+msgstr "Η φόρτωση των ρυθμίσεων απέτυχε"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:221
+msgid "Failed to load contents."
+msgstr "Η φόρτωση του περιεχομένου απέτυχε."
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:863
+#, python-brace-format
+msgid "Failed to load events for {0}"
+msgstr "Η φόρτωση συμβάντων για {0} απέτυχε"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:167
+msgid "Failed to load help."
+msgstr "Η φόρτωση της βοήθειας απέτυχε."
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:164
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2765
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:213
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:418
+#: src/webui/static-vue/src/views/epg/MagazineView.vue:211
+#: src/webui/static-vue/src/views/epg/TimelineView.vue:272
+msgid "Failed to load:"
+msgstr "Η φόρτωση απέτυχε:"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:395
+#, python-brace-format
+msgid "Failed to load: {0}"
+msgstr "Η φόρτωση απέτυχε: {0}"
+
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:126
+msgid "Failed to move to failed"
+msgstr "Η μεταφορά στις αποτυχημένες εγγραφές απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:106
+msgid "Failed to move to finished"
+msgstr "Η μεταφορά στις ολοκληρωμένες εγγραφές απέτυχε"
+
+#: src/webui/static-vue/src/composables/useIdnodeMove.ts:51
+#, python-brace-format
+msgid "Failed to move {0}"
+msgstr "Η μετακίνηση του {0} απέτυχε"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:295
+msgid "Failed to play earlier this session"
+msgstr "Η αναπαραγωγή προηγούμενου περιεχομένου σε αυτή τη συνεδρία απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:118
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:60
+msgid "Failed to remove"
+msgstr "Η κατάργηση απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:441
+#, python-brace-format
+msgid "Failed to remove unseen services: {0}"
+msgstr "Η κατάργηση μη εντοπισμένων υπηρεσιών απέτυχε: {0}"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:341
+msgid "Failed to reset icon"
+msgstr "Η επαναφορά εικονιδίου απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:438
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:467
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:392
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:479
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:504
+msgid "Failed to schedule recording"
+msgstr "Ο προγραμματισμός εγγραφής απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:147
+msgid "Failed to start scan"
+msgstr "Η έναρξη σάρωσης απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:247
+msgid "Failed to stop"
+msgstr "Η διακοπή απέτυχε"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:405
+msgid "Failed to stop recording"
+msgstr "Η διακοπή της εγγραφής απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:254
+msgid "Failed to toggle"
+msgstr "Η αλλαγή κατάστασης απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:102
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:122
+#: src/webui/static-vue/src/views/dvr/RemovedView.vue:87
+msgid "Failed to toggle re-record"
+msgstr "Η αλλαγή επανεγγραφής απέτυχε"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:174
+#, python-brace-format
+msgid "Failed to trigger scan: {0}"
+msgstr "Η εκκίνηση της σάρωσης απέτυχε: {0}"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:373
+msgid "Filter is active. Click to edit."
+msgstr "Το φίλτρο είναι ενεργό. Κάντε κλικ για επεξεργασία."
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:313
+msgid "Filter subsystems"
+msgstr "Φιλτράρισμα υποσυστημάτων"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:323
+msgid "Filter visible lines"
+msgstr "Φιλτράρισμα ορατών γραμμών"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:322
+msgid "Filter visible lines…"
+msgstr "Φιλτράρισμα ορατών γραμμών…"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3133
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3134
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3149
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3158
+#: src/webui/static-vue/src/views/epg/TableView.vue:2322
+#: src/webui/static-vue/src/views/epg/TableView.vue:2323
+#, python-brace-format
+msgid "Filter {0}"
+msgstr "Φιλτράρισμα {0}"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1254
+#: src/webui/static-vue/src/components/DataGrid.vue:1260
+#, python-brace-format
+msgid "Filter: = {0}"
+msgstr "Φίλτρο: = {0}"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1241
+#, python-brace-format
+msgid "Filter: contains \"{0}\""
+msgstr "Φίλτρο: περιέχει «{0}»"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1238
+#, python-brace-format
+msgid "Filter: {0}"
+msgstr "Φίλτρο: {0}"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1247
+#, python-brace-format
+msgid "Filter: {0} content type(s)"
+msgstr "Φίλτρο: {0} τύποι περιεχομένου"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1272
+#, python-brace-format
+msgid "Filter: {0} {1}"
+msgstr "Φίλτρο: {0} {1}"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1270
+#, python-brace-format
+msgid "Filter: {0} – {1}"
+msgstr "Φίλτρο: {0} – {1}"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:505
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:504
+msgid "Filters"
+msgstr "Φίλτρα"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:454
+msgid "Filter…"
+msgstr "Φιλτράρισμα…"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:611
+msgid "Find related broadcasts and alternative showings of this programme"
+msgstr "Εύρεση συναφών και εναλλακτικών μεταδόσεων αυτής της εκπομπής"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:107
+msgid "Finish"
+msgstr "Ολοκλήρωση"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:54
+msgid "Finished"
+msgstr "Ολοκληρωμένο"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1066
+msgid "First Aired"
+msgstr "Πρώτη μετάδοση"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:980
+msgid "Flags"
+msgstr "Σημαίες"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:196
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:175
+msgid "Force Scan"
+msgstr "Εξαναγκασμός σάρωσης"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Fri"
+msgstr "Παρ"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:1410
+msgid "Full text"
+msgstr "Πλήρες κείμενο"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:77
+msgid "General"
+msgstr "Γενικά"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:512
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:513
+msgid "Global"
+msgstr "Καθολικό"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:626
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:688
+msgid "Group by"
+msgstr "Ομαδοποίηση κατά"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:439
+msgid "Group by this column"
+msgstr "Ομαδοποίηση κατά αυτή τη στήλη"
+
+#: src/webui/static-vue/src/components/NavRail.vue:119
+msgid "Guide"
+msgstr "Οδηγός προγράμματος"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:833
+msgid "HD"
+msgstr "HD"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:123
+msgid "HD TV"
+msgstr "Τηλεόραση HD"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:251
+msgid "HbbTV"
+msgstr "HbbTV"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:115
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:961
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:964
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2970
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2973
+#: src/webui/static-vue/src/components/StatusGrid.vue:321
+#: src/webui/static-vue/src/components/StatusGrid.vue:324
+#: src/webui/static-vue/src/views/epg/TableView.vue:2475
+#: src/webui/static-vue/src/views/epg/TableView.vue:2478
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:72
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:75
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:161
+#: src/webui/static-vue/src/views/wizard/WizardHelpDock.vue:52
+msgid "Help"
+msgstr "Βοήθεια"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:118
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:135
+msgid "Hidden"
+msgstr "Κρυφό"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:76
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:85
+msgid "Hide"
+msgstr "Απόκρυψη"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:223
+#: src/webui/static-vue/src/views/status/StreamView.vue:231
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:175
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:183
+msgid "Hide bandwidth chart"
+msgstr "Απόκρυψη γραφήματος εύρους ζώνης"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:469
+msgid "Hide column"
+msgstr "Απόκρυψη στήλης"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:113
+msgid "High"
+msgstr "Υψηλό"
+
+#: src/webui/static-vue/src/components/NavRail.vue:111
+#: src/webui/static-vue/src/views/home/HomeView.vue:210
+msgid "Home"
+msgstr "Αρχική"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:67
+msgid "Hostname"
+msgstr "Όνομα κεντρικού υπολογιστή"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersLayout.vue:23
+msgid "IP Blocking Records"
+msgstr "Καταχωρίσεις αποκλεισμού IP"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:127
+msgid "IP blocks"
+msgstr "αποκλεισμοί IP"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:46
+msgid "Icon"
+msgstr "Εικονίδιο"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:331
+msgid "Icon reset."
+msgstr "Το εικονίδιο επαναφέρθηκε."
+
+#: src/webui/static-vue/src/views/AboutView.vue:130
+msgid "Icons from"
+msgstr "Εικονίδια από"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:331
+#, python-brace-format
+msgid "Icons reset for {0} channels."
+msgstr "Επαναφέρθηκαν εικονίδια για {0} κανάλια."
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:66
+msgid "Id"
+msgstr "ID"
+
+#: src/webui/static-vue/src/views/configuration/CaStatusCell.vue:34
+#: src/webui/static-vue/src/views/home/HealthLine.vue:61
+msgid "Idle"
+msgstr "Αδρανές"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:85
+msgid "Idle."
+msgstr "Σε αναμονή."
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:152
+msgid "Ignore"
+msgstr "Παράβλεψη"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:126
+msgid "Ignored"
+msgstr "Αγνοήθηκε"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1117
+msgid "Image"
+msgstr "Εικόνα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralLayout.vue:40
+msgid "Image Cache"
+msgstr "Προσωρινή μνήμη εικόνων"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:204
+msgid "Image cache cleared."
+msgstr "Η προσωρινή μνήμη εικόνων εκκαθαρίστηκε."
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:112
+msgid "Important"
+msgstr "Σημαντικό"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:132
+msgid "In"
+msgstr "Είσοδος"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:192
+msgid "In (solid)"
+msgstr "Είσοδος (συμπαγής γραμμή)"
+
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:130
+msgid "Inactive"
+msgstr "Ανενεργό"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:537
+msgid "Include disabled"
+msgstr "Συμπερίληψη απενεργοποιημένων"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:74
+msgid "Independent"
+msgstr "Ανεξάρτητο"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:230
+msgid "Index"
+msgstr "Ευρετήριο"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:200
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:473
+msgid "Info"
+msgstr "Πληροφορίες"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:71
+msgid "Input"
+msgstr "είσοδος"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:103
+msgid "Input (kb/s)"
+msgstr "Είσοδος (kb/s)"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:152
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:112
+msgid "Internal EPG grabbers scheduled to re-run."
+msgstr "Προγραμματίστηκε νέα εκτέλεση των εσωτερικών συλλεκτών EPG."
+
+#: src/webui/static-vue/src/views/epg/EpgToolbar.vue:55
+msgid "Jump to today and current time"
+msgstr "Μετάβαση στη σημερινή ημερομηνία και ώρα"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1560
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1578
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:238
+msgid "Keep editing"
+msgstr "Συνέχεια επεξεργασίας"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1058
+msgid "Keywords"
+msgstr "Λέξεις-κλειδιά"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:237
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:260
+msgid "Language"
+msgstr "Γλώσσα"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:87
+#, python-brace-format
+msgid "Last run mapped {0} of {1} services"
+msgstr "Η τελευταία εκτέλεση αντιστοίχισε {0} από {1} υπηρεσίες"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:520
+msgid "Layout"
+msgstr "Διάταξη"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:200
+msgid "Legend"
+msgstr "Υπόμνημα"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:129
+#: src/webui/static-vue/src/views/epg/LiveTvButton.vue:31
+#: src/webui/static-vue/src/views/epg/LiveTvButton.vue:32
+#: src/webui/static-vue/src/views/epg/LiveTvButton.vue:35
+msgid "Live TV"
+msgstr "Ζωντανή τηλεόραση"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3198
+msgid "Load more"
+msgstr "Φόρτωση περισσότερων"
+
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:416
+msgid "Loading adapters…"
+msgstr "Φόρτωση προσαρμογέων…"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:972
+msgid "Loading configuration…"
+msgstr "Φόρτωση ρυθμίσεων…"
+
+#: src/webui/static-vue/src/components/IdnodePickEntityDialog.vue:154
+msgid "Loading entries…"
+msgstr "Φόρτωση καταχωρίσεων…"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:164
+msgid "Loading help…"
+msgstr "Φόρτωση βοήθειας…"
+
+#: src/webui/static-vue/src/components/LoadMoreCell.vue:210
+msgid "Loading more events…"
+msgstr "Φόρτωση περισσότερων συμβάντων…"
+
+#: src/webui/static-vue/src/components/IdnodePickClassDialog.vue:161
+msgid "Loading types…"
+msgstr "Φόρτωση τύπων…"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2243
+#, python-brace-format
+msgid "Loading {0}…"
+msgstr "Φόρτωση {0}…"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1745
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:215
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1650
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3198
+#: src/webui/static-vue/src/views/epg/TableView.vue:2244
+#: src/webui/static-vue/src/views/home/HomeView.vue:227
+msgid "Loading…"
+msgstr "Φόρτωση…"
+
+#: src/webui/static-vue/src/views/StatusLayout.vue:28
+msgid "Log"
+msgstr "Καταγραφή"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:123
+msgid "Log is empty — nothing to copy."
+msgstr "Η καταγραφή είναι κενή — δεν υπάρχει κάτι για αντιγραφή."
+
+#: src/webui/static-vue/src/components/NavRail.vue:502
+#: src/webui/static-vue/src/components/NavRail.vue:503
+#: src/webui/static-vue/src/components/NavRail.vue:507
+msgid "Login"
+msgstr "Σύνδεση"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:116
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:233
+msgid "Logo"
+msgstr "Λογότυπο"
+
+#: src/webui/static-vue/src/components/NavRail.vue:490
+#: src/webui/static-vue/src/components/NavRail.vue:491
+#: src/webui/static-vue/src/components/NavRail.vue:495
+msgid "Logout"
+msgstr "αποσύνδεση"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:115
+msgid "Low"
+msgstr "Χαμηλό"
+
+#: src/webui/static-vue/src/views/epg/EpgLayout.vue:27
+msgid "Magazine"
+msgstr "Περιοδικό"
+
+#: src/webui/static-vue/src/components/NavRail.vue:349
+msgid "Main navigation"
+msgstr "Κύρια πλοήγηση"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:503
+msgid "Maintenance"
+msgstr "Συντήρηση"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:504
+msgid "Maintenance operations"
+msgstr "Εργασίες συντήρησης"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:447
+msgid "Map 1 service"
+msgstr "Αντιστοίχιση 1 υπηρεσίας"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:416
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:446
+msgid "Map services"
+msgstr "Αντιστοίχιση υπηρεσιών"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:421
+msgid "Map services…"
+msgstr "Αντιστοίχιση υπηρεσιών…"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:447
+#, python-brace-format
+msgid "Map {0} services"
+msgstr "Αντιστοίχιση {0} υπηρεσιών"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:118
+msgid "Mapped"
+msgstr "Αντιστοιχισμένο"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:101
+msgid "Mapping in progress — currently checking"
+msgstr "Αντιστοίχιση σε εξέλιξη — γίνεται έλεγχος"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:380
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:416
+msgid "Mapping started. Open Status → Service Mapper to monitor progress."
+msgstr ""
+"Ξεκίνησε η αντιστοίχιση. Ανοίξτε Κατάσταση → Αντιστοίχιση υπηρεσιών για "
+"παρακολούθηση προόδου."
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:83
+msgid "Mark the selected recording as failed"
+msgstr "Σήμανση της επιλεγμένης εγγραφής ως αποτυχημένης"
+
+#: src/webui/static-vue/src/views/dvr/failedActions.ts:50
+msgid "Mark the selected recording as finished"
+msgstr "Σήμανση της επιλεγμένης εγγραφής ως ολοκληρωμένης"
+
+#: src/webui/static-vue/src/components/NumericFilterControls.vue:127
+msgid "Max"
+msgstr "μέγιστο"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:588
+msgid "Maximum duration in minutes"
+msgstr "Μέγιστη διάρκεια σε λεπτά"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingLayout.vue:47
+msgid "Memory Information Entries"
+msgstr "Καταχωρίσεις πληροφοριών μνήμης"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:1411
+msgid "Merged text"
+msgstr "συγχωνευμένο κείμενο"
+
+#: src/webui/static-vue/src/components/NumericFilterControls.vue:118
+msgid "Min"
+msgstr "Ελάχιστο"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:577
+msgid "Minimum duration in minutes"
+msgstr "Ελάχιστη διάρκεια σε λεπτά"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:128
+msgid "Minuscule"
+msgstr "Πεζά γράμματα"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:116
+msgid "Missing In PAT/SDT"
+msgstr "Λείπει από PAT/SDT"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:95
+msgid "Mode"
+msgstr "Λειτουργία"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Mon"
+msgstr "Δευ"
+
+#: src/webui/static-vue/src/components/ActionMenu.vue:472
+#: src/webui/static-vue/src/components/ActionMenu.vue:475
+msgid "More actions"
+msgstr "Περισσότερες ενέργειες"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:341
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:161
+msgid "Move down"
+msgstr "Μετακίνηση κάτω"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:214
+msgid "Move selected client down"
+msgstr "Μετακίνηση επιλεγμένου πελάτη κάτω"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:207
+msgid "Move selected client up"
+msgstr "Μετακίνηση επιλεγμένου πελάτη πάνω"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:342
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:162
+msgid "Move selected entries down"
+msgstr "Μετακίνηση επιλεγμένων καταχωρίσεων κάτω"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:334
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:153
+msgid "Move selected entries up"
+msgstr "Μετακίνηση επιλεγμένων καταχωρίσεων πάνω"
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:82
+msgid "Move to failed"
+msgstr "Μεταφορά στις αποτυχημένες"
+
+#: src/webui/static-vue/src/views/dvr/failedActions.ts:49
+msgid "Move to finished"
+msgstr "Μεταφορά στις ολοκληρωμένες"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:333
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:152
+msgid "Move up"
+msgstr "Μετακίνηση πάνω"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:735
+#, python-brace-format
+msgid "Move {0} down"
+msgstr "Μετακίνηση {0} κάτω"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:726
+#, python-brace-format
+msgid "Move {0} up"
+msgstr "Μετακίνηση {0} πάνω"
+
+#: src/webui/static-vue/src/views/dvr/failedActions.ts:49
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:82
+msgid "Moving…"
+msgstr "Γίνεται μετακίνηση…"
+
+#: src/webui/static-vue/src/views/configuration/DvbInputsLayout.vue:52
+msgid "Mux Schedulers"
+msgstr "Προγραμματιστές πολυπλεκτών (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbInputsLayout.vue:50
+msgid "Muxes"
+msgstr "πολυπλέκτες (Mux)"
+
+#: src/webui/static-vue/src/components/EnumNameCell.vue:236
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:103
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:166
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:141
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:49
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:163
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:48
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:117
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:234
+msgid "Name"
+msgstr "Όνομα"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:294
+msgid "Network"
+msgstr "Δίκτυο"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:214
+msgid "Network type"
+msgstr "Τύπος δικτύου"
+
+#: src/webui/static-vue/src/views/configuration/DvbInputsLayout.vue:49
+msgid "Networks"
+msgstr "Δίκτυα"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:614
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:619
+#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+msgid "New only"
+msgstr "Μόνο νέα"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1238
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:950
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3177
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:194
+#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+msgid "No"
+msgstr "Όχι"
+
+#: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:420
+msgid "No DVB adapters detected on this server."
+msgstr "Δεν εντοπίστηκαν προσαρμογείς DVB σε αυτόν τον διακομιστή."
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:219
+msgid ""
+"No EPG grabber channels yet. Run an EPG grabber scan from Configuration → "
+"Channel / EPG → EPG Grabber to populate them."
+msgstr ""
+"Δεν υπάρχουν ακόμη κανάλια συλλέκτη EPG. Εκτελέστε σάρωση από Ρυθμίσεις → "
+"Κανάλια / EPG → Συλλέκτης EPG για να δημιουργηθούν."
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:133
+msgid "No IP blocking entries."
+msgstr "Δεν υπάρχουν καταχωρίσεις αποκλεισμού IP."
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:368
+msgid ""
+"No access entries. Add one to grant a user (or unauthenticated client "
+"matching a network prefix) access to the server."
+msgstr ""
+"Δεν υπάρχουν καταχωρίσεις πρόσβασης. Προσθέστε μία για να επιτρέψετε σε "
+"χρήστη (ή μη πιστοποιημένο πελάτη που ταιριάζει με πρόθεμα δικτύου) την "
+"πρόσβαση στον διακομιστή."
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:98
+msgid "No alternative showings."
+msgstr "Δεν υπάρχουν εναλλακτικές μεταδόσεις."
+
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:160
+msgid "No autorec entries. Click Add to schedule recordings against EPG broadcasts."
+msgstr ""
+"Δεν υπάρχουν κανόνες AutoRec. Πατήστε «Προσθήκη» για να προγραμματίσετε "
+"εγγραφές από τον EPG."
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:222
+msgid ""
+"No bouquets defined. Add one (or import via an external URL) to map a "
+"network's services into channels en masse."
+msgstr ""
+"Δεν έχουν οριστεί πακέτα καναλιών (Bouquets). Προσθέστε ένα (ή εισαγάγετε "
+"μέσω εξωτερικού URL) για να αντιστοιχίσετε μαζικά υπηρεσίες δικτύου σε "
+"κανάλια."
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:161
+msgid ""
+"No channel tags defined. Tags group channels for display ordering and "
+"access-control rules."
+msgstr ""
+"Δεν έχουν οριστεί ετικέτες καναλιών. Οι ετικέτες οργανώνουν τα κανάλια για "
+"τη σειρά εμφάνισης και τους κανόνες πρόσβασης."
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:537
+msgid ""
+"No channels defined. Channels are typically created from a bouquet or "
+"service mapper — adding manually here is rarely needed."
+msgstr ""
+"Δεν έχουν οριστεί κανάλια. Συνήθως δημιουργούνται από ένα πακέτο καναλιών ή "
+"από την αντιστοίχιση υπηρεσιών — σπάνια χρειάζεται χειροκίνητη προσθήκη εδώ."
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:528
+msgid "No channels to reorganise yet — create or map some first."
+msgstr ""
+"Δεν υπάρχουν ακόμη κανάλια για αναδιάταξη — δημιουργήστε ή αντιστοιχίστε "
+"πρώτα κάποια."
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:59
+msgid "No enabled networks to scan."
+msgstr "Δεν υπάρχουν ενεργοποιημένα δίκτυα για σάρωση."
+
+#: src/webui/static-vue/src/components/IdnodePickEntityDialog.vue:156
+msgid "No entries available."
+msgstr "Δεν υπάρχουν διαθέσιμες καταχωρίσεις."
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1749
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2771
+msgid "No entries."
+msgstr "Δεν υπάρχουν καταχωρίσεις."
+
+#: src/webui/static-vue/src/views/dvr/FailedView.vue:138
+msgid "No failed recordings."
+msgstr "Δεν υπάρχουν αποτυχημένες εγγραφές."
+
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:169
+msgid "No finished recordings."
+msgstr "Δεν υπάρχουν ολοκληρωμένες εγγραφές."
+
+#: src/webui/static-vue/src/views/status/LogView.vue:419
+msgid "No lines match the active filter."
+msgstr "Καμία γραμμή δεν ταιριάζει με το ενεργό φίλτρο."
+
+#: src/webui/static-vue/src/components/LoadMoreCell.vue:216
+msgid "No matching events"
+msgstr "Δεν βρέθηκαν συμβάντα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:113
+msgid "No memory pools registered yet."
+msgstr "Δεν έχουν καταχωριστεί ακόμη ομάδες μνήμης."
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:195
+msgid ""
+"No mux schedulers defined. Add one to drive periodic mux tuning via a cron "
+"expression."
+msgstr ""
+"Δεν έχουν οριστεί προγραμματιστές πολυπλεκτών. Προσθέστε έναν για περιοδικό "
+"συντονισμό Mux μέσω έκφρασης cron."
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:282
+msgid ""
+"No muxes defined. Add one against an existing network — or trigger a network"
+" scan from the Networks page to populate them automatically."
+msgstr ""
+"Δεν έχουν οριστεί πολυπλέκτες (Mux). Προσθέστε έναν σε υπάρχον δίκτυο ή "
+"ξεκινήστε σάρωση από τη σελίδα «Δίκτυα» για αυτόματη δημιουργία."
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:203
+msgid ""
+"No networks defined. Add one for each DVB-T / C / S adapter, or for an IPTV "
+"/ SAT>IP / HDHomeRun input."
+msgstr ""
+"Δεν έχουν οριστεί δίκτυα. Προσθέστε ένα για κάθε προσαρμογέα DVB-T / C / S ή"
+" είσοδο IPTV / SAT>IP / HDHomeRun."
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:144
+msgid "No password entries."
+msgstr "Δεν υπάρχουν καταχωρίσεις κωδικών πρόσβασης."
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:153
+msgid ""
+"No rating labels defined. Map an OTA-EPG (country + age) or XMLTV (system + "
+"rating) pair to a display label and icon shown in EPG event details."
+msgstr ""
+"Δεν έχουν οριστεί ετικέτες καταλληλότητας. Αντιστοιχίστε έναν συνδυασμό OTA-"
+"EPG (χώρα και ηλικία) ή XMLTV (σύστημα και αξιολόγηση) σε ετικέτα και "
+"εικονίδιο που θα εμφανίζεται στις λεπτομέρειες του EPG."
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:99
+msgid "No related broadcasts."
+msgstr "Δεν υπάρχουν συναφείς μεταδόσεις."
+
+#: src/webui/static-vue/src/views/dvr/RemovedView.vue:107
+msgid "No removed recordings."
+msgstr "Δεν υπάρχουν αφαιρεμένες εγγραφές."
+
+#: src/webui/static-vue/src/components/CommandPalette.vue:532
+msgid "No results"
+msgstr "Δεν βρέθηκαν αποτελέσματα"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2915
+msgid "No rows to edit"
+msgstr "Δεν υπάρχουν γραμμές για επεξεργασία"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:544
+msgid ""
+"No services discovered yet. Trigger a network scan from the Networks page or"
+" wait for the scheduled scan to populate them."
+msgstr ""
+"Δεν έχουν εντοπιστεί υπηρεσίες. Εκκινήστε σάρωση δικτύου από τη σελίδα "
+"«Δίκτυα» ή περιμένετε την προγραμματισμένη σάρωση."
+
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:112
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:516
+msgid "No stream profiles are available."
+msgstr "Δεν υπάρχουν διαθέσιμα προφίλ ροής."
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:227
+msgid "No streams."
+msgstr "Δεν υπάρχουν ροές."
+
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:121
+msgid "No timer entries. Click Add to schedule a recurring time-based recording."
+msgstr ""
+"Δεν υπάρχουν χρονοδιακόπτες. Πατήστε «Προσθήκη» για περιοδική εγγραφή βάσει "
+"ώρας."
+
+#: src/webui/static-vue/src/components/IdnodePickClassDialog.vue:163
+msgid "No types available."
+msgstr "Δεν υπάρχουν διαθέσιμοι τύποι."
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:137
+msgid "No upcoming events match."
+msgstr "Δεν βρέθηκαν επερχόμενα συμβάντα που να ταιριάζουν."
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:544
+msgid "No upcoming recordings. Schedule one from the EPG or via autorec rules."
+msgstr ""
+"Δεν υπάρχουν προγραμματισμένες εγγραφές. Προγραμματίστε μία από τον EPG ή "
+"μέσω κανόνων AutoRec."
+
+#: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:191
+#, python-brace-format
+msgid "No {0} rules. Add one to filter elementary streams of this type per service."
+msgstr ""
+"Δεν υπάρχουν κανόνες {0}. Προσθέστε έναν για φιλτράρισμα στοιχειωδών ροών "
+"αυτού του τύπου ανά υπηρεσία."
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:300
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:80
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:89
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:120
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:128
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:431
+msgid "None"
+msgstr "Κανένα"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:114
+msgid "Normal"
+msgstr "Κανονικό"
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:286
+msgid "Nothing to show here yet."
+msgstr "Δεν υπάρχει ακόμη κάτι για εμφάνιση."
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:148
+#: src/webui/static-vue/src/views/epg/EpgToolbar.vue:59
+msgid "Now"
+msgstr "Τώρα"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:111
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:47
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:118
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:235
+msgid "Number"
+msgstr "Αριθμός"
+
+#: src/webui/static-vue/src/components/ErrorDialog.vue:69
+msgid "OK"
+msgstr "Εντάξει"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:174
+msgid "OTA EPG grabber scheduled."
+msgstr "Προγραμματίστηκε συλλογή OTA EPG."
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:453
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:641
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:134
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:139
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:320
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:353
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:703
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:122
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:282
+msgid "Off"
+msgstr "Ανενεργό"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:781
+msgid "Off → single brand colour. On → green → amber → red as the event progresses."
+msgstr ""
+"Ανενεργό → ένα χρώμα. Ενεργό → πράσινο, πορτοκαλί και κόκκινο καθώς "
+"εξελίσσεται το συμβάν."
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:135
+msgid "On"
+msgstr "Ενεργό"
+
+#: src/webui/static-vue/src/components/OnlyMultiSelect.vue:82
+msgid "Only"
+msgstr "Μόνο"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:136
+msgid "Only preferred CA PID"
+msgstr "Μόνο το προτιμώμενο CA PID"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:96
+msgid ""
+"Open Configuration → Channel/EPG → Channels or Configuration → DVB Inputs → "
+"Services to start mapping."
+msgstr ""
+"Ανοίξτε Ρυθμίσεις → Κανάλια / EPG → Κανάλια ή Ρυθμίσεις → Είσοδοι DVB → "
+"Υπηρεσίες για να ξεκινήσετε την αντιστοίχιση."
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:140
+msgid "Open Subscriptions"
+msgstr "Άνοιγμα συνδρομών"
+
+#: src/webui/static-vue/src/components/CommandPaletteTrigger.vue:79
+#: src/webui/static-vue/src/components/CommandPaletteTrigger.vue:94
+msgid "Open command palette"
+msgstr "Άνοιγμα παλέτας εντολών"
+
+#: src/webui/static-vue/src/components/DrillDownCell.vue:100
+#: src/webui/static-vue/src/components/DrillDownCell.vue:101
+#: src/webui/static-vue/src/components/EnumNameCell.vue:248
+#: src/webui/static-vue/src/components/EnumNameCell.vue:249
+msgid "Open in editor"
+msgstr "Άνοιγμα στον επεξεργαστή"
+
+#: src/webui/static-vue/src/commands/settingsSource.ts:173
+msgid "Open setting"
+msgstr "Άνοιγμα ρύθμισης"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:490
+msgid "Open the Service Mapper preselected with the chosen services"
+msgstr "Άνοιγμα αντιστοίχισης υπηρεσιών με προεπιλεγμένες τις επιλεγμένες υπηρεσίες"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:422
+msgid "Open the Service Mapper to add channels from services"
+msgstr "Άνοιγμα αντιστοίχισης υπηρεσιών για δημιουργία καναλιών"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:491
+msgid "Open the Service Mapper to start a new mapping job"
+msgstr "Άνοιγμα αντιστοίχισης υπηρεσιών για νέα εργασία"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:453
+msgid ""
+"Open the dedicated reorganise drawer (drag-to-reorder, bulk tag, bulk "
+"enable/disable)"
+msgstr ""
+"Άνοιγμα ειδικού παραθύρου αναδιάταξης (σύρετε για αλλαγή σειράς, μαζική "
+"προσθήκη ετικετών και ενεργοποίηση/απενεργοποίηση)"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:572
+msgid "Open the live channel in your external media player"
+msgstr "Άνοιγμα ζωντανού καναλιού στον εξωτερικό αναπαραγωγέα"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:594
+msgid "Open the recording in your external media player"
+msgstr "Άνοιγμα εγγραφής στον εξωτερικό αναπαραγωγέα"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:716
+msgid "Open this event's DVR entry"
+msgstr "Άνοιγμα της καταχώρισης DVR αυτού του συμβάντος"
+
+#: src/webui/static-vue/src/components/NumericFilterControls.vue:90
+msgid "Operator"
+msgstr "Πάροχος"
+
+#: src/webui/static-vue/src/components/EnumFilterControl.vue:150
+msgid "Other"
+msgstr "Άλλο"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterOtherView.vue:17
+msgid "Other Stream Filter"
+msgstr "Άλλο φίλτρο ροής"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:85
+msgid "Other Stream Filters"
+msgstr "Άλλα φίλτρα ροών"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:610
+msgid "Other showings"
+msgstr "Άλλες μεταδόσεις"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:140
+msgid "Out"
+msgstr "Έξοδος"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:196
+msgid "Out (dashed)"
+msgstr "Έξοδος (διακεκομμένη γραμμή)"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:106
+msgid "Output (kb/s)"
+msgstr "Έξοδος (kb/s)"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:119
+msgid "Override disabled"
+msgstr "Η παράκαμψη είναι απενεργοποιημένη"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:231
+msgid "PID"
+msgstr "PID"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:87
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:100
+msgid "PID list"
+msgstr "Λίστα PID"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:78
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:87
+msgid "Parent disabled"
+msgstr "Απενεργοποιημένο από γονική ρύθμιση"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1020
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1030
+msgid "Parental rating"
+msgstr "Γονική καταλληλότητα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersLayout.vue:22
+msgid "Passwords"
+msgstr "Κωδικοί πρόσβασης"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:370
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:373
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:450
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:453
+msgid "Pause"
+msgstr "Παύση"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:89
+msgid "Peak count of objects"
+msgstr "Μέγιστο πλήθος αντικειμένων"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:71
+msgid "Peak size"
+msgstr "Μέγιστο μέγεθος"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:539
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:628
+msgid "Per column"
+msgstr "Ανά στήλη"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2431
+msgid ""
+"Pick a single genre and a single tag to create an AutoRec rule — multi-"
+"select filters can’t be saved as a rule."
+msgstr ""
+"Επιλέξτε ένα είδος και μία ετικέτα για να δημιουργήσετε κανόνα AutoRec — "
+"φίλτρα πολλαπλής επιλογής δεν μπορούν να αποθηκευτούν ως κανόνας."
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:138
+msgid "Pie"
+msgstr "Κυκλικό διάγραμμα"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:531
+msgid "Pin event titles when scrolling past"
+msgstr "Διατήρηση τίτλων συμβάντων κατά την κύλιση"
+
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:135
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:90
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:131
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:181
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:87
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:557
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:593
+msgid "Play"
+msgstr "Αναπαραγωγή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:562
+msgid "Play in browser"
+msgstr "Αναπαραγωγή στο πρόγραμμα περιήγησης"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:571
+msgid "Play in external player"
+msgstr "Αναπαραγωγή σε εξωτερικό πρόγραμμα"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:579
+msgid "Play in external player with profile…"
+msgstr "Αναπαραγωγή σε εξωτερικό πρόγραμμα με προφίλ…"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:558
+msgid "Play the live channel"
+msgstr "Αναπαραγωγή ζωντανού καναλιού"
+
+#: src/webui/static-vue/src/components/PlayCell.vue:77
+#: src/webui/static-vue/src/components/PlayCell.vue:78
+msgid "Play this stream"
+msgstr "Αναπαραγωγή αυτής της ροής"
+
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:103
+msgid "Play with stream profile"
+msgstr "Αναπαραγωγή με προφίλ ροής"
+
+#: src/webui/static-vue/src/views/epg/EpgMagazine.vue:609
+#: src/webui/static-vue/src/views/epg/EpgMagazine.vue:610
+#: src/webui/static-vue/src/views/epg/EpgTimeline.vue:626
+#: src/webui/static-vue/src/views/epg/EpgTimeline.vue:627
+#, python-brace-format
+msgid "Play {0}"
+msgstr "Αναπαραγωγή {0}"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:322
+#, python-brace-format
+msgid ""
+"Playback failed. The stream could not be played in the browser using profile"
+" \"{0}\" — try another profile, or use the external player instead."
+msgstr ""
+"Η αναπαραγωγή απέτυχε. Η ροή δεν μπορεί να αναπαραχθεί στο πρόγραμμα "
+"περιήγησης με το προφίλ «{0}». Δοκιμάστε άλλο προφίλ ή εξωτερικό "
+"αναπαραγωγέα."
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:131
+msgid "Prepend to Description"
+msgstr "Προσθήκη στην αρχή της περιγραφής"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:358
+msgid "Preserving sub-channels (1, 1.1, 2, …)"
+msgstr "Διατήρηση υποκαναλιών (1, 1.1, 2, …)"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:173
+msgid "Previous"
+msgstr "Προηγούμενο"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:500
+msgid "Previously recorded"
+msgstr "Έχει ήδη εγγραφεί"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:91
+msgid "Profile"
+msgstr "Προφίλ"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:93
+msgid "Profile Name"
+msgstr "Όνομα προφίλ"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:116
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:96
+msgid "Profile created. Edit name + settings on the right."
+msgstr "Το προφίλ δημιουργήθηκε. Επεξεργαστείτε το όνομα και τις ρυθμίσεις στα δεξιά."
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:239
+msgid "Profile type"
+msgstr "Τύπος προφίλ"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1121
+msgid "Programme poster"
+msgstr "Αφίσα εκπομπής"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:296
+msgid "Progress"
+msgstr "Πρόοδος"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:737
+msgid "Progress display"
+msgstr "Εμφάνιση προόδου"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:121
+msgid "Radio"
+msgstr "Ραδιόφωνο"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:391
+msgid "Rating"
+msgstr "Αξιολόγηση"
+
+#: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:51
+msgid "Rating Labels"
+msgstr "ετικέτες καταλληλότητας"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:197
+msgid "Re-fetch and re-apply mapping for the selected bouquets"
+msgstr "Νέα ανάκτηση και αντιστοίχιση των επιλεγμένων πακέτων καναλιών"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralImageCacheView.vue:67
+msgid "Re-fetch images"
+msgstr "Νέα λήψη εικόνων"
+
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:216
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:75
+msgid "Re-record"
+msgstr "Επανεγγραφή"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:126
+#: src/webui/static-vue/src/views/configuration/EpgGrabberView.vue:69
+msgid "Re-run Internal EPG Grabbers"
+msgstr "Επανεκτέλεση εσωτερικών συλλεκτών EPG"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:155
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:115
+msgid "Re-run failed"
+msgstr "Η επανεκτέλεση απέτυχε"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:975
+msgid "Read-only Info"
+msgstr "Πληροφορίες μόνο για ανάγνωση"
+
+#: src/webui/static-vue/src/views/configuration/CaStatusCell.vue:35
+msgid "Ready"
+msgstr "Έτοιμο"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:346
+msgid "Reassign channel numbers across all visible rows"
+msgstr "Νέα αρίθμηση καναλιών σε όλες τις ορατές γραμμές"
+
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:213
+msgid "Recently recorded"
+msgstr "Πρόσφατες εγγραφές"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:669
+msgid "Record"
+msgstr "Εγγραφή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:700
+msgid "Record series"
+msgstr "Εγγραφή σειράς"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:191
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:192
+msgid "Record this airing"
+msgstr "Εγγραφή αυτής της μετάδοσης"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:670
+msgid "Record this program now"
+msgstr "Εγγραφή αυτής της εκπομπής τώρα"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:459
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:495
+msgid ""
+"Recorded the new airing, but could not cancel the original — both are now "
+"scheduled."
+msgstr ""
+"Εγγράφηκε η νέα μετάδοση, αλλά δεν ήταν δυνατή η ακύρωση της αρχικής — έχουν"
+" προγραμματιστεί και οι δύο."
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:82
+#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:47
+#: src/webui/static-vue/src/views/epg/TableView.vue:262
+msgid "Recording"
+msgstr "Εγγραφή"
+
+#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:49
+msgid "Recording (errors)"
+msgstr "Εγγραφή (σφάλματα)"
+
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:103
+msgid "Recording now"
+msgstr "Εγγραφή σε εξέλιξη"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:436
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:476
+msgid "Recording scheduled"
+msgstr "Προγραμματισμένη εγγραφή"
+
+#: src/webui/static-vue/src/commands/epgEventSource.ts:210
+#, python-brace-format
+msgid "Recording scheduled: {0}"
+msgstr "Προγραμματισμένη εγγραφή: {0}"
+
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:111
+msgid "Recording with errors"
+msgstr "Εγγραφή με σφάλματα"
+
+#: src/webui/static-vue/src/views/epg/DvrOverlayBar.vue:123
+#, python-brace-format
+msgid "Recording: {0}"
+msgstr "Εγγραφή: {0}"
+
+#: src/webui/static-vue/src/components/NavRail.vue:120
+msgid "Recordings"
+msgstr "Εγγραφές"
+
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:110
+#, python-brace-format
+msgid "Recordings on {0}"
+msgstr "Εγγραφές στις {0}"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:226
+msgid "Refresh failed"
+msgstr "Η ανανέωση απέτυχε"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:223
+msgid "Refresh scheduled."
+msgstr "Προγραμματίστηκε ανανέωση."
+
+#: src/webui/static-vue/src/views/status/LogView.vue:328
+msgid "Regex mode is on — disable to use plain substring"
+msgstr ""
+"Η λειτουργία regex είναι ενεργή — απενεργοποιήστε τη για απλή αναζήτηση "
+"υποσυμβολοσειράς."
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:93
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:507
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:615
+msgid "Related broadcasts"
+msgstr "Συναφείς μεταδόσεις"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:315
+msgid "Removal failed"
+msgstr "Η αφαίρεση απέτυχε"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:312
+msgid "Removal scheduled."
+msgstr "Προγραμματίστηκε αφαίρεση."
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:56
+msgid "Remove"
+msgstr "Αφαίρεση"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:306
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:425
+msgid "Remove ALL services not seen for at least 7 days?"
+msgstr ""
+"Να αφαιρεθούν ΟΛΕΣ οι υπηρεσίες που δεν έχουν εντοπιστεί για τουλάχιστον 7 "
+"ημέρες;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:453
+msgid "Remove a tag from every selected channel"
+msgstr "Αφαίρεση ετικέτας από όλα τα επιλεγμένα κανάλια"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:514
+msgid "Remove all unseen services (7+ days)"
+msgstr "Αφαίρεση όλων των μη εντοπισμένων υπηρεσιών (7+ ημέρες)"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:305
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:424
+msgid "Remove services not seen in PAT/SDT for at least 7 days?"
+msgstr ""
+"Να αφαιρεθούν υπηρεσίες που δεν έχουν εντοπιστεί σε PAT/SDT για τουλάχιστον "
+"7 ημέρες;"
+
+#: src/webui/static-vue/src/components/EditableTagChipCell.vue:247
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:452
+msgid "Remove tag"
+msgstr "Αφαίρεση ετικέτας"
+
+#: src/webui/static-vue/src/components/EditableTagChipCell.vue:248
+#, python-brace-format
+msgid "Remove tag {0}"
+msgstr "Αφαίρεση ετικέτας {0}"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:303
+msgid "Remove the active column sort"
+msgstr "Κατάργηση ταξινόμησης ενεργής στήλης"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:428
+msgid "Remove the bouquet linkage from the selected channels"
+msgstr "Αποσύνδεση επιλεγμένων καναλιών από το πακέτο καναλιών"
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:57
+msgid "Remove the selected recording from storage"
+msgstr "Αφαίρεση επιλεγμένης εγγραφής από τον αποθηκευτικό χώρο"
+
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:256
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:257
+msgid "Remove this recording"
+msgstr "Αφαίρεση αυτής της εγγραφής"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:508
+msgid "Remove unseen services (PAT/SDT, 7+ days)"
+msgstr "Αφαίρεση μη εντοπισμένων υπηρεσιών (PAT/SDT, 7+ ημέρες)"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:56
+msgid "Removed"
+msgstr "Αφαιρέθηκε"
+
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:56
+msgid "Removing…"
+msgstr "Γίνεται αφαίρεση…"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:345
+msgid "Renumber"
+msgstr "Επαναρίθμηση"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:360
+msgid ""
+"Renumber major channels sequentially while keeping each sub-channel's .N "
+"suffix attached."
+msgstr ""
+"Διαδοχική επαναρίθμηση κύριων καναλιών, με διατήρηση της κατάληξης .N των "
+"υποκαναλιών."
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:452
+msgid "Reorganize"
+msgstr "Αναδιοργάνωση"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:235
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:500
+msgid "Reorganize channels"
+msgstr "Αναδιοργάνωση καναλιών"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:450
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:487
+msgid "Replace this recording with the selected airing?"
+msgstr "Να αντικατασταθεί αυτή η εγγραφή με την επιλεγμένη μετάδοση;"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:400
+msgid "Reset Icon"
+msgstr "Επαναφορά εικονιδίου"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:379
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:382
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:459
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:462
+msgid "Reset history"
+msgstr "Εκκαθάριση ιστορικού"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:318
+#, python-brace-format
+msgid "Reset icons for {0} channels?"
+msgstr "Να επαναφερθούν τα εικονίδια για {0} κανάλια;"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:308
+msgid "Reset sort order"
+msgstr "Επαναφορά σειράς ταξινόμησης"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:317
+msgid "Reset the icon for the selected channel?"
+msgstr "Να επαναφερθεί το εικονίδιο του επιλεγμένου καναλιού;"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:480
+msgid "Reset to default width"
+msgstr "Επαναφορά προεπιλεγμένου πλάτους"
+
+#: src/webui/static-vue/src/components/SettingsPopover.vue:247
+msgid "Reset to defaults"
+msgstr "Επαναφορά προεπιλογών"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:400
+msgid "Resetting…"
+msgstr "Γίνεται επαναφορά…"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:439
+#, python-brace-format
+msgid "Resize bandwidth chart panel (currently {0} px wide)"
+msgstr "Αλλαγή μεγέθους γραφήματος εύρους ζώνης (τρέχον πλάτος {0} px)"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#, python-brace-format
+msgid "Resolve {0} before saving"
+msgstr "Διορθώστε {0} πριν την αποθήκευση"
+
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:370
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:373
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:450
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:453
+msgid "Resume"
+msgstr "Συνέχιση"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralLayout.vue:43
+msgid "SAT>IP Server"
+msgstr "Διακομιστής SAT>IP"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:122
+msgid "SD TV"
+msgstr "Τηλεόραση SD"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:113
+msgid "SNR"
+msgstr "Λόγος σήματος προς θόρυβο (SNR)"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Sat"
+msgstr "Σάβ"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:925
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1898
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2660
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2808
+msgid "Save"
+msgstr "Αποθήκευση"
+
+#: src/webui/static-vue/src/views/wizard/WizardFooter.vue:107
+msgid "Save & Next"
+msgstr "Αποθήκευση και συνέχεια"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
+#, python-brace-format
+msgid "Save changes to {0}"
+msgstr "Αποθήκευση αλλαγών στο {0}"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+#, python-brace-format
+msgid "Save changes to {0} and exit edit mode"
+msgstr "Αποθήκευση αλλαγών στο {0} και έξοδος από την επεξεργασία"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1400
+msgid "Save failed"
+msgstr "Η αποθήκευση απέτυχε"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:764
+#, python-brace-format
+msgid "Save failed: {0}"
+msgstr "Η αποθήκευση απέτυχε: {0}"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:129
+msgid "Save in Description"
+msgstr "Αποθήκευση στην περιγραφή"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2656
+msgid "Save pending changes"
+msgstr "Αποθήκευση εκκρεμών αλλαγών"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2804
+msgid "Save pending changes and exit edit mode"
+msgstr "Αποθήκευση εκκρεμών αλλαγών και έξοδος από την επεξεργασία"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:925
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1898
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2660
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2808
+msgid "Saving…"
+msgstr "Γίνεται αποθήκευση…"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:65
+msgid "Scan started on 1 network."
+msgstr "Η σάρωση ξεκίνησε σε 1 δίκτυο."
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:66
+#, python-brace-format
+msgid "Scan started on {0} networks."
+msgstr "Η σάρωση ξεκίνησε σε {0} δίκτυα."
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:169
+#, python-brace-format
+msgid "Scan triggered for {0} bouquets."
+msgstr "Ξεκίνησε σάρωση για {0} πακέτα καναλιών."
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:196
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:175
+msgid "Scanning…"
+msgstr "Γίνεται σάρωση…"
+
+#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:51
+msgid "Scheduled for recording"
+msgstr "Προγραμματισμένο για εγγραφή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:669
+msgid "Scheduling…"
+msgstr "Γίνεται προγραμματισμός…"
+
+#: src/webui/static-vue/src/views/epg/EpgToolbar.vue:55
+msgid "Scroll to current time"
+msgstr "Κύλιση στην τρέχουσα ώρα"
+
+#: src/webui/static-vue/src/components/CommandPalette.vue:511
+#: src/webui/static-vue/src/views/epg/TableView.vue:2395
+#: src/webui/static-vue/src/views/epg/TableView.vue:2398
+msgid "Search"
+msgstr "Αναζήτηση"
+
+#: src/webui/static-vue/src/components/CommandPalette.vue:512
+#, python-brace-format
+msgid "Search anywhere · {0}K"
+msgstr "Αναζήτηση παντού · {0}K"
+
+#: src/webui/static-vue/src/components/CommandPaletteTrigger.vue:78
+#: src/webui/static-vue/src/components/CommandPaletteTrigger.vue:93
+#, python-brace-format
+msgid "Search anywhere — {0}K"
+msgstr "Αναζήτηση παντού — {0}K"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:271
+msgid "Search channels…"
+msgstr "Αναζήτηση καναλιών…"
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:86
+msgid "Search failed."
+msgstr "Η αναζήτηση απέτυχε."
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:74
+msgid "Search the TV guide"
+msgstr "Αναζήτηση στον τηλεοπτικό οδηγό"
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:73
+msgid "Search the TV guide…"
+msgstr "Αναζήτηση στον τηλεοπτικό οδηγό…"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2884
+#: src/webui/static-vue/src/views/epg/TableView.vue:2370
+#: src/webui/static-vue/src/views/epg/TableView.vue:2407
+#, python-brace-format
+msgid "Search {0}"
+msgstr "Αναζήτηση {0}"
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:82
+msgid "Searching…"
+msgstr "Γίνεται αναζήτηση…"
+
+#: src/webui/static-vue/src/components/CommandPaletteTrigger.vue:83
+msgid "Search…"
+msgstr "Αναζήτηση…"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:259
+msgid "Section"
+msgstr "Ενότητα"
+
+#: src/webui/static-vue/src/components/L2Sidebar.vue:151
+#: src/webui/static-vue/src/components/L2Sidebar.vue:163
+#: src/webui/static-vue/src/components/PageTabs.vue:154
+#: src/webui/static-vue/src/components/PageTabs.vue:166
+msgid "Section navigation"
+msgstr "Πλοήγηση ενοτήτων"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:256
+msgid "Select a CA client on the left to view and edit its configuration."
+msgstr ""
+"Επιλέξτε πελάτη CA στα αριστερά για προβολή και επεξεργασία των ρυθμίσεών "
+"του."
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:272
+msgid "Select a channel"
+msgstr "Επιλέξτε κανάλι"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:318
+msgid "Select a channel to watch."
+msgstr "Επιλέξτε κανάλι για προβολή."
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:232
+msgid "Select a codec profile on the left to view and edit its configuration."
+msgstr ""
+"Επιλέξτε προφίλ κωδικοποιητή στα αριστερά για προβολή και επεξεργασία των "
+"ρυθμίσεών του."
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:172
+msgid "Select a module on the left to view and edit its configuration."
+msgstr "Επιλέξτε άρθρωμα στα αριστερά για προβολή και επεξεργασία των ρυθμίσεών του."
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:194
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:231
+msgid "Select a profile on the left to view and edit its configuration."
+msgstr "Επιλέξτε προφίλ στα αριστερά για προβολή και επεξεργασία των ρυθμίσεών του."
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1660
+msgid "Select all visible"
+msgstr "Επιλογή όλων των ορατών"
+
+#: src/webui/static-vue/src/views/epg/EpgToolbar.vue:112
+msgid "Select another day"
+msgstr "Επιλέξτε άλλη ημέρα"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1776
+#: src/webui/static-vue/src/components/DataGrid.vue:1930
+msgid "Select row"
+msgstr "Επιλογή γραμμής"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:147
+msgid "Select rows in the grid to chart their bandwidth."
+msgstr ""
+"Επιλέξτε γραμμές στον πίνακα για να εμφανίσετε το εύρος ζώνης τους σε "
+"γράφημα."
+
+#: src/webui/static-vue/src/commands/epgEventSource.ts:236
+#, python-brace-format
+msgid "Series recording set: {0}"
+msgstr "Ορίστηκε εγγραφή σειράς: {0}"
+
+#: src/webui/static-vue/src/components/NavRail.vue:125
+#: src/webui/static-vue/src/views/home/HomeView.vue:271
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:116
+msgid "Server"
+msgstr "Διακομιστής"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:82
+msgid "Server returned no client uuid."
+msgstr "Ο διακομιστής δεν επέστρεψε UUID πελάτη."
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:118
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:97
+msgid "Server returned no profile uuid."
+msgstr "Ο διακομιστής δεν επέστρεψε UUID προφίλ."
+
+#: src/webui/static-vue/src/composables/useMasterDetailActions.ts:129
+msgid "Server returned no uuid."
+msgstr "Ο διακομιστής δεν επέστρεψε UUID."
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:90
+msgid "Service"
+msgstr "Υπηρεσία"
+
+#: src/webui/static-vue/src/views/StatusLayout.vue:27
+msgid "Service Mapper"
+msgstr "Αντιστοίχιση υπηρεσιών (Service Mapper)"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:57
+msgid "Service Mapping Status"
+msgstr "Κατάσταση αντιστοίχισης υπηρεσιών"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:68
+msgid "Service details"
+msgstr "Λεπτομέρειες υπηρεσίας"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:66
+#, python-brace-format
+msgid "Service details: {0}"
+msgstr "Λεπτομέρειες υπηρεσίας: {0}"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:417
+msgid "Service-mapping shortcuts"
+msgstr "Συντομεύσεις αντιστοίχισης υπηρεσιών"
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:173
+#: src/webui/static-vue/src/views/configuration/DvbInputsLayout.vue:51
+msgid "Services"
+msgstr "Υπηρεσίες"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2438
+msgid ""
+"Set at least one filter (title, channel, genre, duration, tag, or “New "
+"only”) to create an AutoRec rule."
+msgstr ""
+"Ορίστε τουλάχιστον ένα φίλτρο (τίτλο, κανάλι, είδος, διάρκεια, ετικέτα ή "
+"«Μόνο νέα») για τη δημιουργία κανόνα AutoRec."
+
+#: src/webui/static-vue/src/views/wizard/WizardLayout.vue:67
+msgid "Setup Wizard"
+msgstr "Οδηγός αρχικής ρύθμισης"
+
+#: src/webui/static-vue/src/views/wizard/WizardProgress.vue:124
+#: src/webui/static-vue/src/views/wizard/WizardProgress.vue:137
+msgid "Setup Wizard progress"
+msgstr "Πρόοδος οδηγού αρχικής ρύθμισης"
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:105
+msgid "Setup complete"
+msgstr "Η εγκατάσταση ολοκληρώθηκε"
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:106
+msgid "Setup complete — 1 channel ready"
+msgstr "Η εγκατάσταση ολοκληρώθηκε — 1 κανάλι έτοιμο"
+
+#: src/webui/static-vue/src/views/home/HomeView.vue:107
+#, python-brace-format
+msgid "Setup complete — {0} channels ready"
+msgstr "Η εγκατάσταση ολοκληρώθηκε — {0} κανάλια έτοιμα"
+
+#: src/webui/static-vue/src/components/EditableNumberCell.vue:80
+msgid "Shares this number with 1 other channel"
+msgstr "Μοιράζεται τον ίδιο αριθμό με 1 ακόμη κανάλι"
+
+#: src/webui/static-vue/src/components/EditableNumberCell.vue:81
+#, python-brace-format
+msgid "Shares this number with {0} other channels"
+msgstr "Μοιράζεται τον ίδιο αριθμό με {0} ακόμη κανάλια"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:124
+msgid "Short events"
+msgstr "Σύντομα συμβάντα"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:125
+msgid "Show"
+msgstr "Εμφάνιση"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:508
+msgid "Show EPG events related to the selected upcoming recording"
+msgstr "Εμφάνιση συμβάντων EPG συναφών με την επιλεγμένη επερχόμενη εγγραφή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:616
+msgid "Show EPG events related to this programme"
+msgstr "Εμφάνιση συμβάντων EPG συναφών με αυτή την εκπομπή"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:515
+msgid "Show alternative airings of the selected upcoming recording"
+msgstr "Εμφάνιση εναλλακτικών μεταδόσεων της επιλεγμένης επερχόμενης εγγραφής"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:622
+msgid "Show alternative airings of this programme"
+msgstr "Εμφάνιση εναλλακτικών μεταδόσεων αυτής της εκπομπής"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:224
+#: src/webui/static-vue/src/views/status/StreamView.vue:232
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:176
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:184
+msgid "Show bandwidth chart"
+msgstr "Εμφάνιση γραφήματος εύρους ζώνης"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:515
+msgid "Show disabled entries"
+msgstr "Εμφάνιση απενεργοποιημένων καταχωρίσεων"
+
+#: src/webui/static-vue/src/components/InfoCell.vue:54
+#: src/webui/static-vue/src/components/InfoCell.vue:55
+msgid "Show stream details"
+msgstr "Εμφάνιση λεπτομερειών ροής"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:474
+msgid "Show stream details for the selected service"
+msgstr "Εμφάνιση λεπτομερειών ροής της επιλεγμένης υπηρεσίας"
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:107
+#, python-brace-format
+msgid "Showing first {0} of {1} matches — refine to narrow."
+msgstr "Εμφανίζονται οι πρώτες {0} από {1} αντιστοιχίες — περιορίστε την αναζήτηση."
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:119
+msgid "Shown (dimmed)"
+msgstr "Εμφανίζεται (αχνό)"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:104
+msgid "Signal Strength"
+msgstr "Ισχύς σήματος"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:62
+msgid "Size"
+msgstr "Μέγεθος"
+
+#: src/webui/static-vue/src/layouts/AppShell.vue:207
+msgid "Skip to main content"
+msgstr "Μετάβαση στο κύριο περιεχόμενο"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:116
+msgid "Skipped reruns"
+msgstr "Παραλειφθείσες επαναλήψεις"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:409
+msgid "Sort A → Z"
+msgstr "Ταξινόμηση Α → Ω"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:421
+msgid "Sort Z → A"
+msgstr "Ταξινόμηση Ω → Α"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:408
+msgid "Sort alphabetically"
+msgstr "Αλφαβητική ταξινόμηση"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:590
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:652
+msgid "Sort by"
+msgstr "Ταξινόμηση κατά"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:353
+msgid "Sort direction: ascending. Click to change."
+msgstr "Αύξουσα σειρά ταξινόμησης. Κάντε κλικ για αλλαγή."
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:362
+msgid "Sort direction: descending. Click to change."
+msgstr "Φθίνουσα σειρά ταξινόμησης. Κάντε κλικ για αλλαγή."
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:104
+msgid "Source codec profile has no codec_name."
+msgstr "Το αρχικό προφίλ κωδικοποιητή δεν περιέχει codec_name."
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:131
+msgid "Spacious"
+msgstr "Άνετη προβολή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1038
+msgid "Star rating"
+msgstr "Αξιολόγηση με αστέρια"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1087
+msgid "Starring"
+msgstr "Πρωταγωνιστούν"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:382
+msgid "Stars"
+msgstr "Αστέρια"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:222
+#: src/webui/static-vue/src/views/epg/TableView.vue:351
+#: src/webui/static-vue/src/views/epg/TableView.vue:488
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:93
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:92
+msgid "Start"
+msgstr "Έναρξη"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:968
+msgid "Start Time"
+msgstr "Ώρα έναρξης"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:406
+msgid "Start date"
+msgstr "Ημερομηνία έναρξης"
+
+#: src/webui/static-vue/src/views/configuration/ConfigGeneralBaseView.vue:127
+msgid "Start wizard"
+msgstr "Εκκίνηση οδηγού"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:103
+msgid "Started"
+msgstr "Ξεκίνησε"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:95
+msgid "State"
+msgstr "Κατάσταση"
+
+#: src/webui/static-vue/src/components/NavRail.vue:128
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:123
+msgid "Status"
+msgstr "Κατάσταση"
+
+#: src/webui/static-vue/src/views/wizard/WizardProgress.vue:118
+msgid "Step"
+msgstr "Βήμα"
+
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:280
+msgid "Sticky titles"
+msgstr "Σταθεροί τίτλοι"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:486
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:66
+msgid "Stop"
+msgstr "Διακοπή"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:640
+msgid "Stop recording"
+msgstr "Διακοπή εγγραφής"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:641
+msgid "Stop recording of this program"
+msgstr "Διακοπή εγγραφής αυτής της εκπομπής"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:487
+msgid "Stop the selected recording"
+msgstr "Διακοπή επιλεγμένης εγγραφής"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:486
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:640
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:66
+msgid "Stopping…"
+msgstr "Γίνεται διακοπή…"
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:118
+msgid "Storage is running low"
+msgstr "Ο αποθηκευτικός χώρος εξαντλείται"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:81
+#: src/webui/static-vue/src/views/StatusLayout.vue:24
+#: src/webui/static-vue/src/views/status/StreamView.vue:78
+msgid "Stream"
+msgstr "Ροή (Stream)"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:52
+msgid "Stream Profiles"
+msgstr "Προφίλ ροών (Stream)"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:262
+msgid "Stream debug-level lines to this session only"
+msgstr "Μετάδοση γραμμών αποσφαλμάτωσης μόνο σε αυτή τη συνεδρία"
+
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:115
+#: src/webui/static-vue/src/components/PlayProfileDialog.vue:119
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:277
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:282
+msgid "Stream profile"
+msgstr "Προφίλ ροής (Stream)"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:111
+msgid "Streaming"
+msgstr "Ροή μετάδοσης (Streaming)"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:83
+msgid "Subs No."
+msgstr "Αριθ. συνδρομών"
+
+#: src/webui/static-vue/src/views/StatusLayout.vue:25
+msgid "Subscriptions"
+msgstr "Συνδρομές"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:353
+msgid "Subsystem"
+msgstr "Υποσύστημα"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:288
+msgid "Subsystem Output Settings"
+msgstr "Ρυθμίσεις εξόδου υποσυστημάτων"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:346
+msgid "Subsystem filter"
+msgstr "Φίλτρο υποσυστημάτων"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterSubtitView.vue:17
+msgid "Subtitle Stream Filter"
+msgstr "Φίλτρο ροής υποτίτλων"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:75
+msgid "Subtitle Stream Filters"
+msgstr "Φίλτρα ροών υποτίτλων"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:962
+msgid "Summary"
+msgstr "Σύνοψη"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Sun"
+msgstr "Κυρ"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:202
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:203
+msgid "Switch this recording to this airing"
+msgstr "Μεταφορά αυτής της εγγραφής στην επιλεγμένη μετάδοση"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1708
+#: src/webui/static-vue/src/views/epg/TableView.vue:2270
+msgid "Switch to ascending cluster order"
+msgstr "Αλλαγή σε αύξουσα σειρά ομάδων"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1709
+#: src/webui/static-vue/src/views/epg/TableView.vue:2271
+msgid "Switch to descending cluster order"
+msgstr "Αλλαγή σε φθίνουσα σειρά ομάδων"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:464
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:499
+msgid "Switched to the selected airing"
+msgstr "Έγινε μετάβαση στην επιλεγμένη μετάδοση"
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:329
+msgid "Switching…"
+msgstr "Γίνεται αλλαγή…"
+
+#: src/webui/static-vue/src/components/NavRail.vue:117
+#: src/webui/static-vue/src/views/home/HomeView.vue:247
+msgid "TV"
+msgstr "Τηλεόραση"
+
+#: src/webui/static-vue/src/views/configuration/DvbInputsLayout.vue:48
+msgid "TV adapters"
+msgstr "Προσαρμογείς τηλεόρασης"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:105
+msgid "TV guide refresh started."
+msgstr "Ξεκίνησε η ανανέωση του τηλεοπτικού οδηγού."
+
+#: src/webui/static-vue/src/views/epg/EpgLayout.vue:28
+msgid "Table"
+msgstr "Πίνακας"
+
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:88
+#: src/webui/static-vue/src/components/HelpPanelInner.vue:191
+msgid "Table of contents"
+msgstr "Πίνακας περιεχομένων"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:555
+msgid "Tag"
+msgstr "Ετικέτα"
+
+#: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:83
+msgid "Tag filter"
+msgstr "Φίλτρο ετικετών"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:119
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:208
+#: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:75
+#: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:354
+msgid "Tags"
+msgstr "ετικέτες"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:302
+msgid "Tail (on)"
+msgstr "Παρακολούθηση τέλους καταγραφής (ενεργή)"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:302
+msgid "Tail (paused)"
+msgstr "Παρακολούθηση τέλους καταγραφής (σε παύση)"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:293
+msgid "Tail mode is on — new lines auto-scroll"
+msgstr ""
+"Η παρακολούθηση καταγραφής είναι ενεργή — οι νέες γραμμές εμφανίζονται "
+"αυτόματα"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:294
+msgid "Tail mode is paused — click to resume"
+msgstr "Η παρακολούθηση καταγραφής έχει παύσει — κάντε κλικ για συνέχεια"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterTeletextView.vue:17
+msgid "Teletext Stream Filter"
+msgstr "Φίλτρο ροής Teletext"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:70
+msgid "Teletext Stream Filters"
+msgstr "Φίλτρα ροών Teletext"
+
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:123
+msgid "This week's recordings"
+msgstr "Εγγραφές αυτής της εβδομάδας"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2086
+msgid ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query:"
+msgstr ""
+"Θα δημιουργηθεί αυτόματος κανόνας που ελέγχει συνεχώς τον EPG και εγγράφει "
+"τις εκπομπές που ταιριάζουν με αυτή την αναζήτηση:"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:198
+msgid ""
+"This will delete every cached image. The server will re-fetch them on demand"
+" afterwards. Continue?"
+msgstr ""
+"Θα διαγραφούν όλες οι αποθηκευμένες εικόνες. Ο διακομιστής θα τις ανακτήσει "
+"ξανά όταν χρειαστούν. Συνέχεια;"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Thu"
+msgstr "Πέμ"
+
+#: src/webui/static-vue/src/views/epg/EpgMagazine.vue:596
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:517
+msgid "Time"
+msgstr "Ώρα"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:523
+msgid "Time window"
+msgstr "Χρονικό διάστημα"
+
+#: src/webui/static-vue/src/views/epg/EpgLayout.vue:26
+msgid "Timeline"
+msgstr "Χρονογραμμή"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:58
+msgid "Timers"
+msgstr "Χρονοδιακόπτες"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingLayout.vue:41
+msgid "Timeshift"
+msgstr "Χρονική μετατόπιση (Timeshift)"
+
+#: src/webui/static-vue/src/components/EpgRelatedDialog.vue:211
+#: src/webui/static-vue/src/views/epg/TableView.vue:304
+#: src/webui/static-vue/src/views/epg/TableView.vue:490
+#: src/webui/static-vue/src/views/epg/TableView.vue:1247
+#: src/webui/static-vue/src/views/epg/TableView.vue:2089
+#: src/webui/static-vue/src/views/epg/TableView.vue:2370
+#: src/webui/static-vue/src/views/epg/TableView.vue:2407
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:91
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:71
+msgid "Title"
+msgstr "Τίτλος"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:1409
+msgid "Title only"
+msgstr "Μόνο τίτλος"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2387
+#: src/webui/static-vue/src/views/epg/TableView.vue:2415
+msgid "Title search scope"
+msgstr "Πεδίο αναζήτησης τίτλου"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:149
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:62
+msgid "Today"
+msgstr "Σήμερα"
+
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:108
+msgid "Today's recordings"
+msgstr "Σημερινές εγγραφές"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:359
+#, python-brace-format
+msgid "Toggle both debug and trace for {0}"
+msgstr "Εναλλαγή αποσφαλμάτωσης και ανίχνευσης για {0}"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:333
+#, python-brace-format
+msgid "Toggle debug for {0}"
+msgstr "Εναλλαγή αποσφαλμάτωσης για {0}"
+
+#: src/webui/static-vue/src/components/TopBar.vue:122
+msgid "Toggle navigation"
+msgstr "Εμφάνιση / απόκρυψη πλοήγησης"
+
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:217
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:76
+msgid "Toggle re-record functionality"
+msgstr "Εναλλαγή δυνατότητας επανεγγραφής"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:501
+msgid "Toggle the previously recorded state"
+msgstr "Εναλλαγή κατάστασης «Έχει ήδη εγγραφεί»"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:348
+#, python-brace-format
+msgid "Toggle trace for {0}"
+msgstr "Εναλλαγή ανίχνευσης για {0}"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:500
+#: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:216
+#: src/webui/static-vue/src/views/dvr/finishedActions.ts:75
+msgid "Toggling…"
+msgstr "Γίνεται εναλλαγή…"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:150
+#: src/webui/static-vue/src/views/epg/EpgToolbar.vue:75
+msgid "Tomorrow"
+msgstr "Αύριο"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:130
+msgid "Total"
+msgstr "Σύνολο"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:343
+msgid "Trace"
+msgstr "Ανίχνευση (Trace)"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:121
+msgid "Transport Errors"
+msgstr "Σφάλματα μεταφοράς"
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberView.vue:77
+msgid "Trigger OTA EPG Grabber"
+msgstr "Εκκίνηση συλλέκτη OTA EPG"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:176
+msgid "Trigger a scan pass on the selected networks"
+msgstr "Εκκίνηση σάρωσης στα επιλεγμένα δίκτυα"
+
+#: src/webui/static-vue/src/commands/actionHandlers.ts:177
+msgid "Trigger failed"
+msgstr "Η εκκίνηση απέτυχε"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Tue"
+msgstr "Τρί"
+
+#: src/webui/static-vue/src/views/AboutView.vue:157
+msgid "Tvheadend uses APIs from (but is not endorsed or certified by)"
+msgstr ""
+"Το Tvheadend χρησιμοποιεί API από (χωρίς έγκριση ή πιστοποίηση εκ μέρους "
+"τους)"
+
+#: src/webui/static-vue/src/views/AboutView.vue:85
+#, python-brace-format
+msgid "Tvheadend {0}"
+msgstr "Tvheadend {0}"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:236
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:264
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:77
+msgid "Type"
+msgstr "Τύπος"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:125
+msgid "UHD TV"
+msgstr "Τηλεόραση UHD"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:262
+msgid "URL"
+msgstr "URL"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:294
+msgid "Uncheck every subsystem (commits on Save)"
+msgstr "Αποεπιλογή όλων των υποσυστημάτων (εφαρμόζεται με την Αποθήκευση)"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:120
+msgid "Uncorrected Blocks"
+msgstr "Μη διορθωμένα μπλοκ"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:933
+msgid "Undo"
+msgstr "Αναίρεση"
+
+#: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:439
+#: src/webui/static-vue/src/components/DataGrid.vue:1723
+#: src/webui/static-vue/src/views/epg/TableView.vue:2286
+msgid "Ungroup"
+msgstr "Κατάργηση ομαδοποίησης"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:116
+msgid "Unimportant"
+msgstr "Μικρής σημασίας"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1953
+msgid "Unsaved changes"
+msgstr "Μη αποθηκευμένες αλλαγές"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:430
+msgid "Unseen services removed."
+msgstr "Οι μη εντοπισμένες υπηρεσίες αφαιρέθηκαν."
+
+#: src/webui/static-vue/src/views/home/HomeSearchCard.vue:121
+msgid "Untitled"
+msgstr "Χωρίς τίτλο"
+
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:246
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:115
+msgid "Untitled recording"
+msgstr "Εγγραφή χωρίς τίτλο"
+
+#: src/webui/static-vue/src/views/DvrLayout.vue:53
+msgid "Upcoming / Current"
+msgstr "Επερχόμενες / Τρέχουσες"
+
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:243
+msgid "Used"
+msgstr "Χρησιμοποιημένο"
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:96
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:68
+msgid "Username"
+msgstr "Όνομα χρήστη"
+
+#: src/webui/static-vue/src/views/ConfigurationLayout.vue:78
+msgid "Users"
+msgstr "Χρήστες"
+
+#: src/webui/static-vue/src/components/NumericFilterControls.vue:107
+msgid "Value"
+msgstr "Τιμή"
+
+#: src/webui/static-vue/src/views/AboutView.vue:84
+msgid "Version"
+msgstr "Έκδοση"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterVideoView.vue:17
+msgid "Video Stream Filter"
+msgstr "Φίλτρο ροής βίντεο"
+
+#: src/webui/static-vue/src/views/configuration/ConfigStreamLayout.vue:60
+msgid "Video Stream Filters"
+msgstr "Φίλτρα ροών βίντεο"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:715
+msgid "View DVR entry"
+msgstr "Προβολή καταχώρισης DVR"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:673
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:1641
+#: src/webui/static-vue/src/components/LevelMenu.vue:85
+#: src/webui/static-vue/src/components/LevelMenu.vue:88
+#: src/webui/static-vue/src/components/LevelMenu.vue:97
+msgid "View level"
+msgstr "Επίπεδο προβολής"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:697
+#: src/webui/static-vue/src/components/LevelMenu.vue:117
+msgid "View level is fixed by the administrator"
+msgstr "Το επίπεδο προβολής καθορίζεται από τον διαχειριστή"
+
+#: src/webui/static-vue/src/components/SettingsPopover.vue:69
+#: src/webui/static-vue/src/components/SettingsPopover.vue:70
+msgid "View options"
+msgstr "Επιλογές προβολής"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:416
+msgid "Waiting for log lines…"
+msgstr "Αναμονή για γραμμές καταγραφής…"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:514
+msgid "Watch the live channel here in the browser"
+msgstr "Παρακολούθηση ζωντανού καναλιού εδώ, στο πρόγραμμα περιήγησης"
+
+#: src/webui/static-vue/src/views/AboutView.vue:108
+msgid "Web UI built with"
+msgstr "Περιβάλλον Web με"
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+msgid "Wed"
+msgstr "Τετ"
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:84
+msgid "Weight"
+msgstr "Στάθμιση"
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:189
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:930
+msgid "Will be skipped"
+msgstr "Θα παραλειφθεί"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:110
+msgid "Window"
+msgstr "Παράθυρο"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1095
+msgid "Writer"
+msgstr "Σεναριογράφος"
+
+#: src/webui/static-vue/src/components/DataGrid.vue:1238
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:949
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3176
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:195
+#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+msgid "Yes"
+msgstr "Ναι"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1951
+#, python-brace-format
+msgid "You have unsaved cell edits across {0}. Discard them?"
+msgstr "Υπάρχουν μη αποθηκευμένες αλλαγές σε κελιά του {0}. Να απορριφθούν;"
+
+#: src/webui/static-vue/src/views/AboutView.vue:117
+#: src/webui/static-vue/src/views/AboutView.vue:160
+msgid "and"
+msgstr "και"
+
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:139
+msgid "autorec entries"
+msgstr "κανόνες αυτόματης εγγραφής"
+
+#: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:931
+msgid "because it is a rerun of:"
+msgstr "επειδή πρόκειται για επαναμετάδοση του:"
+
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:215
+msgid "bouquets"
+msgstr "πακέτα καναλιών"
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:515
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:530
+#: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:212
+msgid "channels"
+msgstr "κανάλια"
+
+#: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:235
+msgid "clients"
+msgstr "πελάτες"
+
+#: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:218
+msgid "codec profiles"
+msgstr "Προφίλ κωδικοποιητών (Codec)"
+
+#: src/webui/static-vue/src/commands/autorecSource.ts:163
+msgid "disabled"
+msgstr "ανενεργό"
+
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1024
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1056
+msgid "editor support not implemented for this field type"
+msgstr "Δεν έχει υλοποιηθεί επεξεργαστής για αυτόν τον τύπο πεδίου"
+
+#: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:107
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:361
+msgid "entries"
+msgstr "καταχωρίσεις"
+
+#: src/webui/static-vue/src/views/configuration/EsfilterAudioView.vue:18
+#: src/webui/static-vue/src/views/configuration/EsfilterCaView.vue:18
+#: src/webui/static-vue/src/views/configuration/EsfilterOtherView.vue:18
+#: src/webui/static-vue/src/views/configuration/EsfilterSubtitView.vue:18
+#: src/webui/static-vue/src/views/configuration/EsfilterTeletextView.vue:18
+#: src/webui/static-vue/src/views/configuration/EsfilterVideoView.vue:18
+msgid "filters"
+msgstr "φίλτρα"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2012
+msgid "full text"
+msgstr "πλήρες κείμενο"
+
+#: src/webui/static-vue/src/views/AboutView.vue:119
+msgid "icons."
+msgstr "εικονίδια."
+
+#: src/webui/static-vue/src/views/status/StreamView.vue:248
+msgid "input"
+msgstr "Είσοδος"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:587
+msgid "max"
+msgstr "Μέγιστο"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2013
+msgid "merged text"
+msgstr "Συγχωνευμένο κείμενο"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:202
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:576
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:593
+msgid "min"
+msgstr "λεπ."
+
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:153
+msgid "modules"
+msgstr "αρθρώματα"
+
+#: src/webui/static-vue/src/components/OnlyMultiSelect.vue:147
+msgid "more"
+msgstr "περισσότερα"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:274
+msgid "muxes"
+msgstr "Πολυπλέκτες (Mux)"
+
+#: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:196
+msgid "networks"
+msgstr "δίκτυα"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:201
+msgid "now"
+msgstr "τώρα"
+
+#: src/webui/static-vue/src/views/wizard/WizardProgress.vue:118
+msgid "of"
+msgstr "από"
+
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:138
+msgid "passwords"
+msgstr "κωδικοί πρόσβασης"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:203
+msgid "peak"
+msgstr "αιχμή"
+
+#: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:175
+#: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:207
+msgid "profiles"
+msgstr "προφίλ"
+
+#: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:146
+msgid "rating labels"
+msgstr "Ετικέτες καταλληλότητας"
+
+#: src/webui/static-vue/src/components/CommandPalette.vue:588
+msgid "results"
+msgstr "αποτελέσματα"
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:188
+msgid "schedulers"
+msgstr "προγραμματιστές"
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:536
+msgid "services"
+msgstr "υπηρεσίες"
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:200
+msgid "subscription"
+msgstr "συνδρομή"
+
+#: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:154
+msgid "tags"
+msgstr "Ετικέτες"
+
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:100
+msgid "timer entries"
+msgstr "καταχωρίσεις χρονοδιακοπτών"
+
+#: src/webui/static-vue/src/components/IdnodeEditor.vue:467
+#, python-brace-format
+msgid "{0} ({1} entries)"
+msgstr "{0} ({1} καταχωρίσεις)"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:232
+#, python-brace-format
+msgid "{0} / {1} line(s)"
+msgstr "{0} / {1} γραμμές"
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:112
+#, python-brace-format
+msgid "{0} / {1} processed ({2}%)"
+msgstr "{0} / {1} επεξεργασμένα ({2}%)"
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:63
+#, python-brace-format
+msgid "{0} active subscriptions"
+msgstr "{0} ενεργές συνδρομές"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:294
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:444
+#, python-brace-format
+msgid "{0} columns"
+msgstr "{0} στήλες"
+
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:227
+#, python-brace-format
+msgid "{0} failed recordings in the last 7 days"
+msgstr "{0} αποτυχημένες εγγραφές τις τελευταίες 7 ημέρες"
+
+#: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:232
+#, python-brace-format
+msgid "{0} failed · last 7 days"
+msgstr "{0} απέτυχαν · τελευταίες 7 ημέρες"
+
+#: src/webui/static-vue/src/views/home/HealthLine.vue:126
+#, python-brace-format
+msgid "{0} free of {1}"
+msgstr "{0} ελεύθερα από {1}"
+
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:443
+#, python-brace-format
+msgid "{0} global"
+msgstr "{0} καθολικά"
+
+#: src/webui/static-vue/src/views/status/LogView.vue:234
+#, python-brace-format
+msgid "{0} line(s)"
+msgstr "{0} γραμμές"
+
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:397
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:291
+#, python-brace-format
+msgid "{0} of {1}"
+msgstr "{0} από {1}"
+
+#: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:139
+#, python-brace-format
+msgid "{0} recordings on {1}"
+msgstr "{0} εγγραφές στις {1}"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1949
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+#, python-brace-format
+msgid "{0} rows"
+msgstr "{0} γραμμές"
+
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#, python-brace-format
+msgid "{0} validation errors"
+msgstr "{0} σφάλματα επικύρωσης"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2025
+#, python-brace-format
+msgid "{0} – {1} min"
+msgstr "{0} – {1} λεπτά"
+
+#: src/webui/static-vue/src/views/home/RecordingNow.vue:123
+#, python-brace-format
+msgid "{0}% recorded"
+msgstr "{0}% εγγράφηκε"
+
+#: src/webui/static-vue/src/components/EnumNameCell.vue:181
+#: src/webui/static-vue/src/components/idnode-fields/IdnodeFieldEnumMulti.vue:155
+#, python-brace-format
+msgid "{0}, +{1} more"
+msgstr "{0}, +{1} ακόμη"
+
+#: src/webui/static-vue/src/views/AboutView.vue:71
+#, python-brace-format
+msgid "© 2006–{0} Tvheadend Project"
+msgstr "© 2006–{0} Έργο Tvheadend"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:228
+msgid "Σ In"
+msgstr "Σ Είσοδος"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:240
+msgid "Σ Out"
+msgstr "Σ Έξοδος"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:283
+#: src/webui/static-vue/src/components/BandwidthChartView.vue:235
+msgid "Σ Total"
+msgstr "Σ Σύνολο"
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:215
+#, python-brace-format
+msgid "Σ Total ({0} {1})"
+msgstr "Σ Σύνολο ({0} {1})"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2028
+#, python-brace-format
+msgid "≤ {0} min"
+msgstr "≤ {0} λεπτά"
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2027
+#, python-brace-format
+msgid "≥ {0} min"
+msgstr "≥ {0} λεπτά"
