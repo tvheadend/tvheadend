@@ -7,16 +7,16 @@
 # Christian Hewitt, 2025
 # Wurenji Wu, 2025
 # herosam gong <herosam.gong@gmail.com>, 2026
-# jiezhao li, 2026
+# gitciu8080, 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-21 02:16+0000\n"
+"POT-Creation-Date: 2026-09-28 02:21+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: jiezhao li, 2026\n"
+"Last-Translator: gitciu8080, 2026\n"
 "Language-Team: Chinese Simplified (https://app.transifex.com/tvheadend/teams/43381/zh-Hans/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -374,6 +374,7 @@ msgid ""
 "(`support/tv_imagecache_audit.py` in the source tree) cross-checks the cache"
 " against the EPG, by airing day, to see how the artwork is filling in."
 msgstr ""
+"（源码树中的 `support/tv_imagecache_audit.py`）按播出日将缓存与 EPG 进行交叉核对，以查看图像的填充情况。"
 
 #: src/docs_inc.c:26
 msgid "(c) 2006 - date Tvheadend contributors"
@@ -385,7 +386,7 @@ msgstr "（默认录像配置）下拉菜单"
 
 #: src/docs_inc.c:2054
 msgid "(default)"
-msgstr ""
+msgstr "（默认）"
 
 #: src/docs_inc.c:2279
 msgid "(except /mux) Override streaming profile"
@@ -401,7 +402,7 @@ msgstr "（标准）用于频道编号"
 
 #: src/docs_inc.c:2064
 msgid ")"
-msgstr ""
+msgstr "）"
 
 #: src/docs_inc.c:174
 msgid ") is using position 1 (or AA)."
@@ -914,7 +915,7 @@ msgid ""
 "A missing image that is a genuine `404`/dead link is reported separately "
 "from one that is merely still queued, so a few broken provider URLs are not "
 "mistaken for a fetch problem."
-msgstr ""
+msgstr "真正属于 `404`/失效链接的缺失图像会与仍在排队等待获取的图像分开报告，因此少量失效的提供商 URL 不会被误认为是获取故障。"
 
 #: src/docs_inc.c:4333
 msgid ""
@@ -1251,15 +1252,15 @@ msgstr "始终拒绝。"
 
 #: src/docs_inc.c:6336
 msgid "Always use the dark theme, a low-glare palette for night-time use."
-msgstr ""
+msgstr "始终使用深色主题，一种适合夜间使用的低眩光配色方案。"
 
 #: src/docs_inc.c:6340
 msgid "Always use the high contrast accessibility theme."
-msgstr ""
+msgstr "始终使用高对比度无障碍主题。"
 
 #: src/docs_inc.c:6332
 msgid "Always use the light theme."
-msgstr ""
+msgstr "始终使用浅色主题。"
 
 #: src/docs_inc.c:126
 msgid "An Example TV Adapter Tree"
@@ -2377,7 +2378,7 @@ msgstr "录像配置和相关设置"
 
 #: src/docs_inc.c:6326 src/docs_inc.c:6334
 msgid "Dark"
-msgstr ""
+msgstr "深色"
 
 #: src/docs_inc.c:13
 msgid "Debug options"
@@ -2489,6 +2490,10 @@ msgid ""
 "Any source can be overridden with `--imagecache`, `--log`, `--epg` or "
 "`--api`."
 msgstr ""
+"检测顺序（全部派生自 Tvheadend 本身，与具体安装环境无关）：正在运行的 tvheadend "
+"进程的命令行（`-c`/`--config`、`-l`/`--logfile`、`--http_port`）、tvheadend "
+"启动时在日志中输出的配置目录，以及 tvheadend 内置的默认配置位置。EPG 在可访问时从实时 HTTP API 读取，否则从已保存的 "
+"`epg.json` 读取。任何来源都可以通过 `--imagecache`、`--log`、`--epg` 或 `--api` 进行覆盖。"
 
 #: src/docs_inc.c:78 src/docs_inc.c:114 src/docs_inc.c:2813
 #: src/docs_inc.c:4193 src/docs_inc.c:4213 src/docs_inc.c:4233
@@ -2733,6 +2738,9 @@ msgid ""
 "reused on many days, it also de-duplicates across the window to show the "
 "true unique workload."
 msgstr ""
+"每个 EPG 事件都以 `imagecache/<id>` 的形式引用其图像。在磁盘上，`<imagecache>/data/<id>` "
+"的存在表示图像已下载；`<imagecache>/meta/<id>` 则是它的 JSON "
+"记录。该工具将两者关联起来，按播出日报告所引用的不同图像数量，以及其中多少已缓存、仍待下载或获取失败。由于同一张海报常在多天中重复使用，它还会在整个时间窗口内去重，以显示真正独特的工作量。"
 
 #: src/docs_inc.c:1655
 msgid "Each numbered (ordered) list will restart from 1."
@@ -3073,7 +3081,7 @@ msgstr "第一有序列表项"
 
 #: src/docs_inc.c:6320
 msgid "Follow the browser or operating system, switching between"
-msgstr ""
+msgstr "跟随浏览器或操作系统，并在其间自动切换"
 
 #: src/docs_inc.c:5784
 msgid ""
@@ -3478,7 +3486,7 @@ msgstr ""
 
 #: src/docs_inc.c:2038
 msgid "How it works"
-msgstr ""
+msgstr "工作原理"
 
 #: src/docs_inc.c:1999
 msgid "How to compile/install on _insert your distro here_"
@@ -3879,7 +3887,7 @@ msgstr "图像缓存"
 
 #: src/docs_inc.c:2026 src/docs_inc.c:4139
 msgid "Image cache audit tool"
-msgstr ""
+msgstr "图像缓存审计工具"
 
 #: src/docs_inc.c:1597
 msgid ""
@@ -4064,13 +4072,13 @@ msgid ""
 "It answers questions like _\"is the guide artwork filling in?\"_ , _\"are "
 "the soonest-airing (\"now\") images fetched first?\"_ and _\"how much is "
 "left to download?\"_ ."
-msgstr ""
+msgstr "它可以回答诸如 _\"节目指南的图像填充得如何？\"_ 、 _\"最先播出（\"now\"）的图像是否最先抓取？\"_ 以及 _\"还有多少待下载？\"_ 之类的问题。"
 
 #: src/docs_inc.c:2034
 msgid ""
 "It is not installed with Tvheadend — run it straight from a source checkout "
 "(`support/tv_imagecache_audit.py`)."
-msgstr ""
+msgstr "它不随 Tvheadend 一同安装——直接从源码检出目录中运行即可（`support/tv_imagecache_audit.py`）。"
 
 #: src/docs_inc.c:6214
 msgid ""
@@ -4167,7 +4175,7 @@ msgstr "授权许可"
 
 #: src/docs_inc.c:6322 src/docs_inc.c:6330
 msgid "Light"
-msgstr ""
+msgstr "浅色"
 
 #: src/docs_inc.c:5196
 msgid "Limit access to DVR functionality only."
@@ -5617,7 +5625,7 @@ msgstr "Re-计划 the 已选中 条目/录像 if possible."
 
 #: src/docs_inc.c:2080
 msgid "Reading the result"
-msgstr ""
+msgstr "解读结果"
 
 #: src/docs_inc.c:458 src/docs_inc.c:1204
 msgid "Record"
@@ -5893,7 +5901,7 @@ msgstr "运行中"
 
 #: src/docs_inc.c:2042
 msgid "Running it"
-msgstr ""
+msgstr "运行方式"
 
 #: src/docs_inc.c:6506
 msgid ""
@@ -6066,7 +6074,7 @@ msgstr "参见"
 
 #: src/docs_inc.c:4135
 msgid "See also"
-msgstr ""
+msgstr "另请参阅"
 
 #: src/docs_inc.c:5288
 msgid "See below."
@@ -6285,7 +6293,7 @@ msgstr "显示/隐藏 more advanced 选项."
 
 #: src/docs_inc.c:2052
 msgid "Shows"
-msgstr ""
+msgstr "显示"
 
 #: src/docs_inc.c:688
 msgid "Signal type"
@@ -8621,7 +8629,7 @@ msgstr "视图级别"
 
 #: src/docs_inc.c:2048
 msgid "Views"
-msgstr ""
+msgstr "视图"
 
 #: src/docs_inc.c:4097
 msgid "Visual Verification of Filtering"
@@ -8859,7 +8867,7 @@ msgstr "将生成："
 msgid ""
 "With no arguments it auto-detects everything from Tvheadend itself, so on "
 "the server it is simply:"
-msgstr ""
+msgstr "不带任何参数时，它会自动从 Tvheadend 本身检测所有内容，因此在服务器上只需执行："
 
 #: src/docs_inc.c:5844
 msgid ""
@@ -9192,6 +9200,8 @@ msgid ""
 "changes; no reload is needed. Because it is the default, only a user who "
 "wants to ignore the host setting has to pick a theme at all."
 msgstr ""
+"__Auto__ 会跟踪主机的 `prefers-color-scheme` "
+"设置，因此当系统在日落时自行切换时，界面也会随之切换，无需手动更改主题。主机设置一旦变化，切换立即生效；无需重新加载。由于它是默认选项，只有想要忽略主机设置的用户才需要手动选择主题。"
 
 #: src/docs_inc.c:1808
 msgid "__BER__ :"
@@ -9286,6 +9296,8 @@ msgid ""
 "interface has no dark stylesheet of its own and falls back to its light one "
 "when either theme is selected."
 msgstr ""
+"__Dark__ 和 __Auto__ 仅对 Vue Web 界面生效。旧版 ExtJS "
+"界面没有自己的深色样式表，因此在选择这两个主题中的任何一个时，都会回退使用其浅色样式。"
 
 #: src/docs_inc.c:1899
 msgid "__Descramble__ : The CAID used to descramble the stream."
@@ -9750,7 +9762,7 @@ msgstr ""
 msgid ""
 "__now-first__ is working when the _primary_ (first-seen) cached% is highest "
 "for the nearest days and lowest for the far end of the guide."
-msgstr ""
+msgstr "当 _primary_（首次出现）的缓存百分比在最近几日最高、在节目指南最远端最低时，说明 __now-first__ 正常工作。"
 
 #: src/docs_inc.c:2084
 msgid ""
@@ -9759,6 +9771,8 @@ msgid ""
 "hours to fill — the tool prints a rough estimate at the throttle's "
 "sustainable rate."
 msgstr ""
+"__to download__ 是仍缺失图像去重后的不同数量；图像提供商通常按 IP "
+"限速，因此一份大型节目指南需要数小时才能填满属于正常现象——该工具会按限流可持续的速率打印一个粗略的估计。"
 
 #: src/docs_inc.c:5838
 msgid "`$2A` would insert `02` into the file name."
@@ -9780,7 +9794,7 @@ msgstr "`$B` would insert `6` into the 文件 名称."
 msgid ""
 "`tv_imagecache_audit.py` is a small command-line developer tool, shipped in "
 "the `support/` directory of the source tree, that cross-checks what the"
-msgstr ""
+msgstr "`tv_imagecache_audit.py` 是一个小型命令行开发者工具，随源码树的 `support/` 目录一同提供，它会交叉核对"
 
 #: src/docs_inc.c:3485
 msgid "access"
@@ -9809,7 +9823,7 @@ msgstr "arm"
 
 #: src/docs_inc.c:6328
 msgid "as that setting changes. This is the default."
-msgstr ""
+msgstr "随该设置的变化而变化。这是默认值。"
 
 #: src/docs_inc.c:3605
 msgid "audioes"
@@ -9922,7 +9936,7 @@ msgstr "codec"
 #: src/docs_inc.c:2058
 #, c-format
 msgid "compact one-column-per-day cached% matrix (whole guide at a glance)"
-msgstr ""
+msgstr "紧凑的每日一列缓存百分比矩阵（整个节目指南一目了然）"
 
 #: src/docs_inc.c:3481
 msgid "config"
@@ -10118,7 +10132,7 @@ msgstr "文件系统监控"
 
 #: src/docs_inc.c:2078
 msgid "full option list and more examples"
-msgstr ""
+msgstr "完整选项列表及更多示例"
 
 #: src/docs_inc.c:948
 msgid "github"
@@ -10156,7 +10170,7 @@ msgstr "grid"
 msgid ""
 "has actually downloaded against the rolling EPG, bucketed by airing day. It "
 "is a read-only diagnostic: it never changes the cache."
-msgstr ""
+msgstr "实际已下载的内容与滚动的 EPG 是否相符（按播出日分桶）。它是一个只读的诊断工具：绝不会更改缓存。"
 
 #: src/docs_inc.c:670 src/docs_inc.c:788 src/docs_inc.c:862 src/docs_inc.c:895
 msgid "here"
@@ -10284,7 +10298,7 @@ msgstr "items"
 
 #: src/docs_inc.c:2060
 msgid "just unique images, in cache, and still to download"
-msgstr ""
+msgstr "仅统计不重复图像、已缓存和仍待下载的数量"
 
 #: src/docs_inc.c:2341 src/docs_inc.c:2345
 msgid "lcn"
@@ -10406,7 +10420,7 @@ msgstr "numname"
 msgid ""
 "one machine-readable row, for logging the trend over time, with the per-day "
 "cached% and first-seen% of"
-msgstr ""
+msgstr "一行机器可读记录，用于记录随时间变化的趋势，其中包含每天的缓存百分比和首次出现百分比"
 
 #: src/docs_inc.c:3761
 msgid "opentv"
@@ -10438,15 +10452,15 @@ msgstr "pcr"
 
 #: src/docs_inc.c:2062
 msgid "per-channel coverage, worst first (combine with"
-msgstr ""
+msgstr "各频道的覆盖率，最差优先（可与"
 
 #: src/docs_inc.c:2056
 msgid "per-day table, de-duplicated breakdown, and the now-first check"
-msgstr ""
+msgstr "每日表格、去重明细以及 now-first 检查"
 
 #: src/docs_inc.c:2076
 msgid "per-image detail / filters"
-msgstr ""
+msgstr "单张图像的详情 / 过滤"
 
 #: src/docs_inc.c:2137
 msgid "pernament code which must be enabled in the password table"
@@ -10487,7 +10501,7 @@ msgstr "recordings"
 
 #: src/docs_inc.c:2068
 msgid "restrict to airing day N (1 = today)"
-msgstr ""
+msgstr "限制为第 N 个播出日（1 = 今天）"
 
 #: src/docs_inc.c:3469
 msgid "rtsp"
