@@ -4329,3 +4329,21 @@ msgstr "≤ {0} λεπτά"
 #, python-brace-format
 msgid "≥ {0} min"
 msgstr "≥ {0} λεπτά"
+
+msgid "Welcome"
+msgstr "Καλώς ορίσατε"
+
+msgid "Access Control"
+msgstr "Έλεγχος πρόσβασης"
+
+msgid "Tuner and Network"
+msgstr "Δέκτης και δίκτυο"
+
+msgid "Predefined Muxes"
+msgstr "Προκαθορισμένοι πολυπλέκτες (Muxes)"
+
+msgid "Scanning"
+msgstr "Σάρωση σε εξέλιξη"
+
+msgid "Service Mapping"
+msgstr "Αντιστοίχιση υπηρεσιών"
