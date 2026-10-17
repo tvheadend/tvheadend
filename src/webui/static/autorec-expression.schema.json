@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/tvheadend/tvheadend/master/src/webui/static/autorec-expression.schema.json",
+  "title": "Tvheadend smart autorec expression",
+  "description": "Boolean match expression for a smart autorec. The authoritative validator is the server (dvr_autorec_expr.c); this schema mirrors its structural rules for editor integration. Not expressible here and enforced server-side only: regex validity, min <= max on ranges, the nesting depth, raw size and total node count caps, and JSONC comments (strip comments before validating).",
+  "$ref": "#/$defs/rootNode",
+  "$defs": {
+    "rootNode": {
+      "type": "object",
+      "properties": {
+        "skip": {
+          "const": false,
+          "description": "Not allowed on the root node (only the literal false is tolerated); use the rule's Enabled setting instead."
+        },
+        "all": { "$ref": "#/$defs/nodeList" },
+        "any": { "$ref": "#/$defs/nodeList" },
+        "not": { "$ref": "#/$defs/node" },
+        "title": { "$ref": "#/$defs/regexString" },
+        "subtitle": { "$ref": "#/$defs/regexString" },
+        "summary": { "$ref": "#/$defs/regexString" },
+        "description": { "$ref": "#/$defs/regexString" },
+        "credits": { "$ref": "#/$defs/regexString" },
+        "keyword": { "$ref": "#/$defs/regexString" },
+        "mergedtext": { "$ref": "#/$defs/regexString" },
+        "channel_pattern": { "$ref": "#/$defs/regexString" },
+        "channel": { "$ref": "#/$defs/reference" },
+        "tag": { "$ref": "#/$defs/reference" },
+        "content_type": { "$ref": "#/$defs/contentType" },
+        "category": { "$ref": "#/$defs/nonEmptyString" },
+        "serieslink": { "$ref": "#/$defs/nonEmptyString" },
+        "broadcast_type": { "$ref": "#/$defs/broadcastType" },
+        "duration": { "$ref": "#/$defs/range" },
+        "year": { "$ref": "#/$defs/range" },
+        "season": { "$ref": "#/$defs/range" },
+        "star_rating": { "$ref": "#/$defs/starRange" },
+        "start": { "$ref": "#/$defs/startWindow" },
+        "weekdays": { "$ref": "#/$defs/weekdays" },
+        "present": { "$ref": "#/$defs/presentField" }
+      },
+      "additionalProperties": false,
+      "allOf": [ { "$ref": "#/$defs/exactlyOneKey" } ]
+    },
+    "node": {
+      "type": "object",
+      "properties": {
+        "skip": {
+          "type": "boolean",
+          "description": "true removes this branch from evaluation, as if it were not written."
+        },
+        "all": { "$ref": "#/$defs/nodeList" },
+        "any": { "$ref": "#/$defs/nodeList" },
+        "not": { "$ref": "#/$defs/node" },
+        "title": { "$ref": "#/$defs/regexString" },
+        "subtitle": { "$ref": "#/$defs/regexString" },
+        "summary": { "$ref": "#/$defs/regexString" },
+        "description": { "$ref": "#/$defs/regexString" },
+        "credits": { "$ref": "#/$defs/regexString" },
+        "keyword": { "$ref": "#/$defs/regexString" },
+        "mergedtext": { "$ref": "#/$defs/regexString" },
+        "channel_pattern": { "$ref": "#/$defs/regexString" },
+        "channel": { "$ref": "#/$defs/reference" },
+        "tag": { "$ref": "#/$defs/reference" },
+        "content_type": { "$ref": "#/$defs/contentType" },
+        "category": { "$ref": "#/$defs/nonEmptyString" },
+        "serieslink": { "$ref": "#/$defs/nonEmptyString" },
+        "broadcast_type": { "$ref": "#/$defs/broadcastType" },
+        "duration": { "$ref": "#/$defs/range" },
+        "year": { "$ref": "#/$defs/range" },
+        "season": { "$ref": "#/$defs/range" },
+        "star_rating": { "$ref": "#/$defs/starRange" },
+        "start": { "$ref": "#/$defs/startWindow" },
+        "weekdays": { "$ref": "#/$defs/weekdays" },
+        "present": { "$ref": "#/$defs/presentField" }
+      },
+      "additionalProperties": false,
+      "allOf": [ { "$ref": "#/$defs/exactlyOneKey" } ]
+    },
+    "exactlyOneKey": {
+      "description": "A node holds exactly one operator or condition; skip rides alongside.",
+      "oneOf": [
+        { "required": ["all"] },
+        { "required": ["any"] },
+        { "required": ["not"] },
+        { "required": ["title"] },
+        { "required": ["subtitle"] },
+        { "required": ["summary"] },
+        { "required": ["description"] },
+        { "required": ["credits"] },
+        { "required": ["keyword"] },
+        { "required": ["mergedtext"] },
+        { "required": ["channel_pattern"] },
+        { "required": ["channel"] },
+        { "required": ["tag"] },
+        { "required": ["content_type"] },
+        { "required": ["category"] },
+        { "required": ["serieslink"] },
+        { "required": ["broadcast_type"] },
+        { "required": ["duration"] },
+        { "required": ["year"] },
+        { "required": ["season"] },
+        { "required": ["star_rating"] },
+        { "required": ["start"] },
+        { "required": ["weekdays"] },
+        { "required": ["present"] }
+      ]
+    },
+    "nodeList": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/node" },
+      "minItems": 1
+    },
+    "regexString": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Case-insensitive, unanchored regular expression."
+    },
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reference": {
+      "type": "object",
+      "properties": {
+        "uuid": { "type": "string" },
+        "name": { "type": "string", "description": "Exact name, never a pattern. Fallback when the uuid is absent or no longer resolves." }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["uuid"] },
+        { "required": ["name"] }
+      ]
+    },
+    "contentType": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 255,
+      "description": "DVB genre code. A code with a zero minor nibble matches the whole major category."
+    },
+    "broadcastType": {
+      "enum": ["new", "new_or_unknown", "repeat"]
+    },
+    "range": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["min"] },
+        { "required": ["max"] }
+      ]
+    },
+    "starRange": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "max": { "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["min"] },
+        { "required": ["max"] }
+      ]
+    },
+    "startWindow": {
+      "type": "object",
+      "properties": {
+        "after": { "$ref": "#/$defs/hhmm" },
+        "before": { "$ref": "#/$defs/hhmm" }
+      },
+      "additionalProperties": false,
+      "required": ["after", "before"],
+      "description": "Local time of day window for the event start. Wraps past midnight when before is earlier than after."
+    },
+    "hhmm": {
+      "type": "string",
+      "pattern": "^([01]?[0-9]|2[0-3]):([0-5]?[0-9])$"
+    },
+    "weekdays": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 7 },
+      "minItems": 1,
+      "description": "Days the event may start on, 1 = Monday through 7 = Sunday."
+    },
+    "presentField": {
+      "enum": ["subtitle", "summary", "description", "credits", "keyword", "category", "genre", "serieslink", "year", "season", "star_rating"]
+    }
+  }
+}
