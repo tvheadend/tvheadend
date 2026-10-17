@@ -34,6 +34,15 @@
 #endif
 #include "dvr/dvr.h"
 
+#if ENABLE_LIBAV
+PROP_DOC(dvr_streaming)
+#define PROFILE_RECPLAY_PROPERTY { \
+  .type = PT_BOOL, .id = "dvr_streaming", \
+  .name = N_("Stream recordings over HTSP"), .doc = prop_doc_dvr_streaming, \
+  .off = offsetof(profile_t, pro_dvr_streaming), .opts = PO_EXPERT, .group = 1 \
+}
+#endif
+
 extern const idclass_t profile_htsp_class;
 
 profile_builders_queue profile_builders;
@@ -1212,7 +1221,9 @@ const idclass_t profile_htsp_class =
   .ic_class      = "profile-htsp",
   .ic_caption    = N_("HTSP Stream Profile"),
   .ic_properties = (const property_t[]){
-    /* Ready for future extensions */
+#if ENABLE_LIBAV
+    PROFILE_RECPLAY_PROPERTY,
+#endif
     { }
   }
 };
@@ -2522,6 +2533,7 @@ const idclass_t profile_transcode_class =
     {}
   },
   .ic_properties = (const property_t[]){
+    PROFILE_RECPLAY_PROPERTY,
     {
       .type     = PT_INT,
       .id       = "container",
