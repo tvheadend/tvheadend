@@ -136,6 +136,9 @@ export interface EpgEventDetail {
    *     being recorded ⇒ render Stop button.
    *   - `dvrState` starts with `'scheduled'` ⇒ event is scheduled
    *     to record ⇒ render Delete button.
+   *   - `dvrState` starts with `'completed'` ⇒ the entry has
+   *     finished ⇒ render Record button, to record it again. For
+   *     plain `'completed'` it asks first (see recordEvent).
    *   - Neither field present ⇒ no DVR entry ⇒ render Record button.
    * Full taxonomy in `dvr_db.c:704-737` (`scheduled`, `recording`,
    * `recordingError`, `completed`, `completedError`,
@@ -331,14 +334,16 @@ const playProfileChannel = ref<string | null>(null)
  * Mirrors ExtJS' EPG detail dialog at `static/app/epg.js:327-435`.
  * One of three buttons is rendered depending on `event.dvrState`:
  *
- *   - Record         ← no DVR entry. POST `dvr/entry/create_by_event`.
+ *   - Record         ← no DVR entry, or a finished one. POST
+ *                      `dvr/entry/create_by_event`. Confirms
+ *                      first for a `completed` entry.
  *   - Stop recording ← dvrState starts with 'recording'. POST
  *                      `dvr/entry/stop`. Confirms before firing.
  *   - Delete recording ← dvrState starts with 'scheduled'. POST
  *                      `idnode/delete`. Confirms before firing.
  *
- * Confirmation strings copied verbatim from the legacy UI for
- * translation reuse when vue-i18n lands. Confirmations use the
+ * Stop / Delete confirmation strings copied verbatim from the legacy
+ * UI for translation reuse when vue-i18n lands. Confirmations use the
  * themed PrimeVue `<ConfirmDialog>` (`useConfirmDialog`); errors
  * surface via PrimeVue Toast (`useToastNotify`).
  *
@@ -364,7 +369,8 @@ async function runAction(
   if (confirmText) {
     /* Stop / Delete are destructive — render the accept button red.
      * Record (the only non-destructive action) passes confirmText=null
-     * so this branch is skipped. */
+     * so this branch is skipped. It asks on its own where needed, see
+     * recordEvent. */
     const ok = await confirmDialog.ask(confirmText, { severity: 'danger' })
     if (!ok) return
   }
@@ -381,16 +387,28 @@ async function runAction(
   emit('close')
 }
 
-function recordEvent() {
-  if (!props.event) return
+async function recordEvent(): Promise<void> {
+  const ev = props.event
+  if (!ev) return
   /* Empty `config_uuid` means "use the default DVR config" server-
    * side — see `api_dvr.c:207` `api_dvr_entry_create_by_event`. */
-  runAction(
-    'dvr/entry/create_by_event',
-    { event_id: props.event.eventId, config_uuid: selectedConfigUuid.value },
-    null,
-    t('Failed to schedule recording'),
-  )
+  const params = { event_id: ev.eventId, config_uuid: selectedConfigUuid.value }
+  /* Exact match: `completed` is what the server reports for a
+   * recording it finished, including one stopped early, marked as
+   * previously recorded, or over the data error threshold (DVR
+   * lists that one under Failed, but the EPG row cannot tell).
+   * Record still makes sense there, for the rest of a programme
+   * after Stop recording or for one marked as previously recorded,
+   * so ask first. completedError, completedWarning and
+   * completedRerecord failed or were missed and record at once. */
+  if (ev.dvrState === 'completed') {
+    /* i18n: new string */
+    const ok = await confirmDialog.ask(
+      t('This programme has already been recorded. Record it again?')
+    )
+    if (!ok) return
+  }
+  await runAction('dvr/entry/create_by_event', params, null, t('Failed to schedule recording'))
 }
 
 function stopRecording() {

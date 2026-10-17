@@ -13,7 +13,8 @@
  * This composable closes that gap with two triggers that call the
  * caller's `refetch`:
  *
- *   - comet reconnect — the disconnected -> connected transition.
+ *   - comet reconnect — the first connected state after a
+ *     disconnected one, however many retries came in between.
  *   - visibility regain — the tab becoming visible again after being
  *     hidden longer than `thresholdMs` (system sleep, screen lock,
  *     long-backgrounded tab). Brief Alt-Tab aways stay under the
@@ -34,7 +35,6 @@
 
 import { onScopeDispose } from 'vue'
 import { cometClient } from '@/api/comet'
-import type { ConnectionState } from '@/types/comet'
 
 /* 5 minutes — well beyond normal "switched tabs briefly" usage, still
  * short enough that a sleep / lock cycle reliably triggers a refresh
@@ -58,15 +58,22 @@ export function useStaleDataRecovery(options: StaleDataRecoveryOptions): void {
    * reconnects and replays buffered notifications via boxid resume,
    * but the server's mailbox can be GC'd during a long
    * sleep — anything that came and went during the gap is then lost.
-   * A refetch on the disconnected -> connected transition makes the
-   * view converge on the server's truth regardless of replay
-   * coverage. */
-  let lastState: ConnectionState = cometClient.getState()
+   * A refetch once the connection is back makes the view converge on
+   * the server's truth regardless of replay coverage.
+   *
+   * The client never goes from disconnected straight to connected.
+   * Every retry passes through connecting (`connectPoll` in
+   * `api/comet.ts`) and a failed retry goes back to disconnected, so
+   * remember the loss until the next connected. A view set up while
+   * the client waits for its next retry starts with the loss noted. */
+  let connectionLost = cometClient.getState() === 'disconnected'
   const unsubscribeState = cometClient.onStateChange((state) => {
-    if (state === 'connected' && lastState === 'disconnected') {
+    if (state === 'disconnected') {
+      connectionLost = true
+    } else if (state === 'connected' && connectionLost) {
+      connectionLost = false
       options.refetch()
     }
-    lastState = state
   })
 
   /* Refetch on visibility regain. `lastHiddenAt` is the wall-clock
