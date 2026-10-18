@@ -13,10 +13,11 @@
  *     `IdnodeEditor`, `EpgEventDrawer`, `StreamView`) flow as
  *     synchronous-feeling guard checks — `if (!confirm(...)) return`.
  *     A Promise<boolean> preserves that read order with one `await`.
- *   - `onHide` covers Esc / click-outside / backdrop-tap dismissal —
- *     we resolve those as `false` so the consumer's "no action"
- *     branch fires correctly. PrimeVue calls `onHide` AFTER `accept`/
- *     `reject` too, so we guard against double-resolve with a flag.
+ *   - `onHide` covers click-outside / backdrop-tap dismissal, and
+ *     our own Escape listener covers Esc — we resolve those as
+ *     `false` so the consumer's "no action" branch fires correctly.
+ *     PrimeVue calls `onHide` AFTER `accept`/`reject` too, so we
+ *     guard against double-resolve with a flag.
  *
  * Must be called from a Vue setup context (component or composable
  * `setup()`) — `useConfirm()` reads from the current instance's
@@ -49,8 +50,21 @@ export function useConfirmDialog() {
       const settle = (v: boolean) => {
         if (settled) return
         settled = true
+        window.removeEventListener('keydown', onEscape, true)
         resolve(v)
       }
+      /* Escape closes only the confirmation. The dialog or drawer it
+       * was asked from (the player, the EPG drawer) listens for Escape
+       * on the document too and would close as well, so take the key
+       * in the capture phase on the window first. */
+      const onEscape = (ev: KeyboardEvent) => {
+        if (ev.key !== 'Escape') return
+        ev.stopPropagation()
+        ev.preventDefault()
+        confirm.close()
+        settle(false)
+      }
+      window.addEventListener('keydown', onEscape, true)
       confirm.require({
         message,
         header: opts.header ?? 'Confirm',
