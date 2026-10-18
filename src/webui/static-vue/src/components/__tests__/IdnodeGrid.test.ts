@@ -1844,7 +1844,7 @@ describe('IdnodeGrid', () => {
       expect(wrapper.find('.idnode-grid__edit-toggle').exists()).toBe(false)
     })
 
-    it('renders the Edit cells icon toggle on the right cluster in read mode (no Save / Cancel)', () => {
+    it('renders the labelled Edit cells toggle on the right cluster in read mode (no Save / Cancel)', () => {
       mockStore = makeStore({
         entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
         isEmpty: false,
@@ -1858,12 +1858,12 @@ describe('IdnodeGrid', () => {
         },
         global: { plugins: [[PrimeVue, {}]] },
       })
-      /* Toggle is the icon-only button in the right cluster
-       * (alongside View options cog), not in the left action
-       * area. Aria-label carries the label since the button
-       * has no visible text. */
+      /* Toggle sits in the right cluster (alongside View
+       * options cog), not in the left action area. Unlike the
+       * cog it shows its label, so users find edit mode. */
       const toggle = wrapper.find('.idnode-grid__edit-toggle')
       expect(toggle.exists()).toBe(true)
+      expect(toggle.text()).toBe('Edit cells')
       expect(toggle.attributes('aria-label')).toBe('Edit cells in this grid')
       /* No Save / Cancel buttons visible until in edit mode. */
       expect(wrapper.findAll('.idnode-grid__edit-btn')).toHaveLength(0)
@@ -2369,6 +2369,31 @@ describe('IdnodeGrid', () => {
       const createdTd = tds.find((t) => t.attributes('data-field') === 'created')
       expect(titleTd?.attributes('data-editable')).toBe('')
       expect(createdTd?.attributes('data-editable')).toBeUndefined()
+    })
+
+    it('read mode: an editable td says how to edit it, a read-only td does not', async () => {
+      idnodeClassStub.meta = {
+        props: [
+          { id: 'title', type: 'str' } as unknown as MetaProp,
+          { id: 'created', type: 'time' } as unknown as MetaProp,
+        ],
+      }
+      const wrapper = await mountInEditMode({
+        columns: [
+          { field: 'title', label: 'Title', editable: true, minVisible: 'phone' },
+          { field: 'created', label: 'Created', editable: true, minVisible: 'phone' },
+        ],
+        entries: [{ uuid: 'a', title: 'Alpha', size: 1, created: 0 }],
+        storeKey: 'edit-cell-read-hint',
+      })
+      const td = (field: string) => wrapper.find(`tbody tr td[data-field="${field}"]`)
+      /* In edit mode the cell is the editor, no hint. */
+      expect(td('title').attributes('title')).toBeUndefined()
+      const exposed = wrapper.vm as unknown as { toggleEditMode: () => void }
+      exposed.toggleEditMode()
+      await wrapper.vm.$nextTick()
+      expect(td('title').attributes('title')).toBe('Click Edit cells to change this value')
+      expect(td('created').attributes('title')).toBeUndefined()
     })
 
     it('validation: numeric out-of-range commit flags cell invalid + disables Save', async () => {
