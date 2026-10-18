@@ -1397,6 +1397,17 @@ describe('IdnodeGrid', () => {
     expect(html).toContain('Size')
   })
 
+  it('opens the editor drawer above the phone Basic clamp', () => {
+    /* At phone width the cards show Basic, but the drawer opened
+     * from them lists every field, so it keeps the user's level. */
+    mockAccessUilevel = 'expert'
+    setViewport(400)
+    const wrapper = mountGrid()
+    const exposed = wrapper.vm as unknown as { effectiveLevel: UiLevel; editorLevel: UiLevel }
+    expect(exposed.effectiveLevel).toBe('basic')
+    expect(exposed.editorLevel).toBe('expert')
+  })
+
   it('lockLevel hides the View level section in the grid settings menu', async () => {
     mockStore = makeStore({
       entries: [{ uuid: 'a', title: 'Alpha', size: 1 }],
