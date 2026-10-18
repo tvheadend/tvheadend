@@ -83,6 +83,12 @@ function openInfoDialog(row: BaseRow): void {
  * Filters summary say so instead of "None". */
 const hideMode = ref<'default' | 'all' | 'none'>('default')
 
+/* "Mapping" filter — only the services without a channel, or only
+ * those with one. Feeds the server's `mapping` param
+ * (`api/api_mpegts.c`, which looks at the service's channel
+ * links), so the count line says how many services are unmapped. */
+const mappingMode = ref<'all' | 'unmapped' | 'mapped'>('all')
+
 const filters = computed<GlobalFilterSpec[]>(() => [
   {
     kind: 'select',
@@ -96,11 +102,25 @@ const filters = computed<GlobalFilterSpec[]>(() => [
     current: hideMode.value,
     inactiveValue: 'none',
   },
+  {
+    kind: 'select',
+    key: 'mapping',
+    label: t('Mapping'),
+    options: [
+      { value: 'all', label: t('All') },
+      { value: 'unmapped', label: t('Unmapped') },
+      { value: 'mapped', label: t('Mapped') },
+    ],
+    current: mappingMode.value,
+  },
 ])
 
 function onFilterChange(key: string, value: string) {
   if (key === 'hidemode' && (value === 'default' || value === 'all' || value === 'none')) {
     hideMode.value = value
+  }
+  if (key === 'mapping' && (value === 'all' || value === 'unmapped' || value === 'mapped')) {
+    mappingMode.value = value
   }
 }
 
