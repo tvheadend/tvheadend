@@ -721,11 +721,20 @@ function setLevelOverride(v: UiLevel | null) {
   }
 }
 
+/* The grid's level without the phone clamp below. The views open
+ * their editor drawer at this level (useEditorMode): at phone
+ * width the cards show only their phone fields, but the drawer
+ * lists every field and has its own View level select. */
+const editorLevel = computed<UiLevel>(() => {
+  if (props.lockLevel) return props.lockLevel
+  if (access.locked) return access.uilevel
+  return levelOverride.value ?? access.uilevel
+})
+
 const effectiveLevel = computed<UiLevel>(() => {
   if (props.lockLevel) return props.lockLevel
   if (isPhone.value) return 'basic'
-  if (access.locked) return access.uilevel
-  return levelOverride.value ?? access.uilevel
+  return editorLevel.value
 })
 
 function resetGridPrefs() {
@@ -2639,6 +2648,7 @@ defineExpose({
    * GridSettingsMenu uses. Computed; read as `.value`. */
   isAtDefaults,
   effectiveLevel,
+  editorLevel,
   scrollToUuid,
   /* Exposed for tests + parent views that need direct access
    * to the dirty state (e.g. unsaved-changes warning before
