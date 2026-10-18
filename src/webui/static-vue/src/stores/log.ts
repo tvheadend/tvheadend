@@ -257,6 +257,13 @@ export const useLogStore = defineStore('log', () => {
        * off then, which is where the new mailbox stands, so the toggle
        * worked only if the user asked for off. */
       if (cometClient.getBoxId() !== boxid) return debugEnabled.value === wanted
+      /* 404: the server has dropped this mailbox (a restart, or no
+       * poll for a minute) and Comet has not noticed yet. Its next
+       * mailbox starts with debug off, the same case as above. */
+      if (res.status === 404) {
+        debugEnabled.value = false
+        return !wanted
+      }
       if (!res.ok) return false
       /* Server is the source of truth (the flag flips on its side
        * regardless of what the client thinks). Mirror it locally
