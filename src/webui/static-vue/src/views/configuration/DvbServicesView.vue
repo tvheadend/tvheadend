@@ -43,6 +43,7 @@ import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
 import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
+import { useBulkSave } from '@/composables/useBulkSave'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useToastNotify } from '@/composables/useToastNotify'
 import { apiCall } from '@/api/client'
@@ -395,6 +396,20 @@ const remove = useBulkAction({
   failPrefix: t('Failed to delete'),
 })
 
+/* Enable / Disable — set `enabled` on every selected service with
+ * one request. Both are undone with the other one, so neither asks
+ * first. */
+const enable = useBulkSave({
+  fields: { enabled: true },
+  failPrefix: t('Failed to enable'),
+  successText: (n) => (n === 1 ? t('Enabled 1 service.') : t('Enabled {0} services.', n)),
+})
+const disable = useBulkSave({
+  fields: { enabled: false },
+  failPrefix: t('Failed to disable'),
+  successText: (n) => (n === 1 ? t('Disabled 1 service.') : t('Disabled {0} services.', n)),
+})
+
 /* Maintenance actions — bulk server-side prune of services
  * whose `last_seen` timestamp is more than seven days old.
  * Server endpoint accepts a `type` query param; `'pat'` limits
@@ -531,6 +546,30 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
           label: t('Remove all unseen services (7+ days)'),
           tooltip: t('Drop every service not seen for at least 7 days'),
           onClick: () => runRemoveUnseen('all'),
+        },
+      ],
+    },
+    /* Enable / Disable — one submenu, as on Muxes. Last, so that
+     * on a narrow toolbar it goes into the … menu before any of
+     * the actions above. */
+    {
+      id: 'enabled',
+      label: t('Enable/Disable'),
+      tooltip: t('Enable or disable the selected services'),
+      children: [
+        {
+          id: 'enable',
+          label: t('Enable'),
+          tooltip: t('Enable the selected services'),
+          disabled: selection.length === 0 || enable.inflight.value,
+          onClick: () => enable.run(selection, clearSelection),
+        },
+        {
+          id: 'disable',
+          label: t('Disable'),
+          tooltip: t('Disable the selected services'),
+          disabled: selection.length === 0 || disable.inflight.value,
+          onClick: () => disable.run(selection, clearSelection),
         },
       ],
     },

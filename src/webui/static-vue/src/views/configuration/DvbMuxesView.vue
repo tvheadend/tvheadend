@@ -47,6 +47,7 @@ import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useBulkSave } from '@/composables/useBulkSave'
 import { useToastNotify } from '@/composables/useToastNotify'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
 import PlayCell from '@/components/PlayCell.vue'
@@ -338,6 +339,38 @@ async function onRescan(selection: BaseRow[], clearSelection: () => void) {
   )
 }
 
+/* Enable / Disable / Ignore — set the tri-state `enabled` (see the
+ * column above) on every selected mux with one request. Enable and
+ * Disable are undone with each other, so they do not ask first.
+ * Ignore removes the services of the mux, and with them their
+ * channel mappings (`mpegts_mux_class_enabled_notify`), so it asks. */
+const enable = useBulkSave({
+  fields: { enabled: 1 },
+  failPrefix: t('Failed to enable'),
+  successText: (n) => (n === 1 ? t('Enabled 1 mux.') : t('Enabled {0} muxes.', n)),
+})
+const disable = useBulkSave({
+  fields: { enabled: 0 },
+  failPrefix: t('Failed to disable'),
+  successText: (n) => (n === 1 ? t('Disabled 1 mux.') : t('Disabled {0} muxes.', n)),
+})
+const ignore = useBulkSave({
+  fields: { enabled: -1 },
+  failPrefix: t('Failed to ignore'),
+  successText: (n) => (n === 1 ? t('Ignored 1 mux.') : t('Ignored {0} muxes.', n)),
+})
+const confirm = useConfirmDialog()
+
+async function onIgnore(selection: BaseRow[], clearSelection: () => void) {
+  const ok = await confirm.ask(
+    t(
+      'Ignore the selected muxes? This removes their services and the channel mappings of those services.',
+    ),
+    { severity: 'danger' },
+  )
+  if (ok) await ignore.run(selection, clearSelection)
+}
+
 /* Network-picker dialog state. Open when the user clicks Add.
  * Pick → openCreateForParent with the per-network mux endpoints
  * + the chosen network UUID. */
@@ -365,8 +398,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     onEdit: openEditor,
     addTooltip: t('Add a new mux'),
   })
-  /* Before Delete, as Force Scan on Bouquets, so the destructive
-   * action stays at the end of the toolbar. */
+  /* Rescan before Delete, as Force Scan on Bouquets. */
   const deleteIdx = base.findIndex((a) => a.id === 'delete')
   const insertAt = deleteIdx === -1 ? base.length : deleteIdx
   const rescanAction: ActionDef = {
@@ -376,7 +408,37 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     disabled: selection.length === 0 || rescan.inflight.value,
     onClick: () => onRescan(selection, clearSelection),
   }
-  return [...base.slice(0, insertAt), rescanAction, ...base.slice(insertAt)]
+  /* One submenu for the three states. Last, so that on a narrow
+   * toolbar it goes into the … menu before Delete does. */
+  const enabledAction: ActionDef = {
+    id: 'enabled',
+    label: t('Enable/Disable'),
+    tooltip: t('Enable, disable or ignore the selected muxes'),
+    children: [
+      {
+        id: 'enable',
+        label: t('Enable'),
+        tooltip: t('Enable the selected muxes'),
+        disabled: selection.length === 0 || enable.inflight.value,
+        onClick: () => enable.run(selection, clearSelection),
+      },
+      {
+        id: 'disable',
+        label: t('Disable'),
+        tooltip: t('Disable the selected muxes, keeping their services'),
+        disabled: selection.length === 0 || disable.inflight.value,
+        onClick: () => disable.run(selection, clearSelection),
+      },
+      {
+        id: 'ignore',
+        label: t('Ignore…'),
+        tooltip: t('Ignore the selected muxes and remove their services'),
+        disabled: selection.length === 0 || ignore.inflight.value,
+        onClick: () => onIgnore(selection, clearSelection),
+      },
+    ],
+  }
+  return [...base.slice(0, insertAt), rescanAction, ...base.slice(insertAt), enabledAction]
 }
 </script>
 
