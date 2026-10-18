@@ -33,17 +33,17 @@ describe('useEditorMode', () => {
   })
 
   describe('editorLevel', () => {
-    it('reflects gridRef.value.effectiveLevel when set', () => {
+    it('reflects gridRef.value.editorLevel when set', () => {
       const e = useEditorMode({ editList: ref('a') })
-      e.gridRef.value = { effectiveLevel: 'expert' }
+      e.gridRef.value = { editorLevel: 'expert' }
       expect(e.editorLevel.value).toBe('expert')
-      e.gridRef.value = { effectiveLevel: 'advanced' }
+      e.gridRef.value = { editorLevel: 'advanced' }
       expect(e.editorLevel.value).toBe('advanced')
     })
 
     it('falls back to "basic" if gridRef is unset again', () => {
       const e = useEditorMode({ editList: ref('a') })
-      e.gridRef.value = { effectiveLevel: 'expert' }
+      e.gridRef.value = { editorLevel: 'expert' }
       e.gridRef.value = null
       expect(e.editorLevel.value).toBe('basic')
     })
