@@ -434,7 +434,12 @@ comet_mailbox_dbg(http_connection_t *hc, const char *remain, void *opaque)
   tvh_cond_signal(&comet_cond, 1);
   tvh_mutex_unlock(&comet_mutex);
 
-  http_output_content(hc, "text/plain; charset=UTF-8");
+  /* The answer has no body. Send Content-Length: 0, or an HTTP/1.1
+   * client keeps waiting for a body on the kept-alive connection. */
+  http_send_begin(hc);
+  http_send_header(hc, HTTP_STATUS_OK, "text/plain; charset=UTF-8", INT64_MIN,
+                   NULL, NULL, 0, NULL, NULL, NULL);
+  http_send_end(hc);
   return 0;
 }
 
