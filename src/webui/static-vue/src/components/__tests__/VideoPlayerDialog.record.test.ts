@@ -15,7 +15,10 @@ import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import VideoPlayerDialog from '../VideoPlayerDialog.vue'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
-import { DIALOG_PASSTHROUGH_STUB } from './__helpers__/idnodeEditorTestUtils'
+import {
+  DIALOG_PASSTHROUGH_STUB,
+  TOOLTIP_DIRECTIVE_STUB,
+} from './__helpers__/idnodeEditorTestUtils'
 
 const apiMock = vi.fn()
 vi.mock('@/api/client', () => ({
@@ -69,6 +72,8 @@ function mountDialog() {
         Dialog: DIALOG_PASSTHROUGH_STUB,
         Select: true,
       },
+      /* The profile select's warning icon has a tooltip. */
+      directives: { tooltip: TOOLTIP_DIRECTIVE_STUB },
     },
   })
 }
