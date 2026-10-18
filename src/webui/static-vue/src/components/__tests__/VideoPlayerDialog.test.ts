@@ -13,7 +13,7 @@
  * stub those on the prototype.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref, type Component } from 'vue'
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import { setActivePinia, createPinia } from 'pinia'
 import VideoPlayerDialog from '../VideoPlayerDialog.vue'
@@ -130,13 +130,13 @@ afterEach(() => {
   player.profile.value = ''
 })
 
-function mountDialog() {
+function mountDialog(dialog: Component = DIALOG_PASSTHROUGH_STUB) {
   return mount(VideoPlayerDialog, {
     global: {
       stubs: {
         /* Tested on its own, see PlayerRecordButton.test.ts. */
         PlayerRecordButton: true,
-        Dialog: DIALOG_PASSTHROUGH_STUB,
+        Dialog: dialog,
         Select: SelectStub,
       },
       directives: { tooltip: tooltipStub },
@@ -235,6 +235,34 @@ describe('VideoPlayerDialog', () => {
     expect(pauseStub).toHaveBeenCalled()
     expect(loadStub).toHaveBeenCalled()
     expect(wrapper.find('video').exists()).toBe(false)
+  })
+
+  it('tears down a <video> that the dialog drops while it stays open', async () => {
+    mockApi()
+    useVideoPlayer().open(TARGET)
+    /* PrimeVue's Dialog rebuilds its content while it stays open when
+     * the player is reopened during the close animation. This stand-in
+     * rebuilds it whenever `generation` changes. */
+    const generation = ref(0)
+    const RebuildingDialog = {
+      template: '<div v-if="visible" :key="generation"><slot /></div>',
+      props: ['visible'],
+      setup: () => ({ generation }),
+    }
+    const wrapper = mountDialog(RebuildingDialog)
+    await flushPromises()
+    const dropped = wrapper.find('video').element
+    loadStub.mockClear()
+
+    generation.value++
+    await flushPromises()
+
+    /* The dropped element lets go of its stream, the new one plays. */
+    expect(dropped.hasAttribute('src')).toBe(false)
+    expect(loadStub.mock.contexts).toContain(dropped)
+    const video = wrapper.find('video')
+    expect(video.element).not.toBe(dropped)
+    expect(video.attributes('src')).toBe('/stream/channel/ch-abc?profile=webtv')
   })
 
   it('shows the error overlay (video stays mounted) on a media error', async () => {

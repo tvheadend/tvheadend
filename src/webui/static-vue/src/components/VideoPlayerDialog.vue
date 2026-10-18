@@ -23,7 +23,7 @@
  * the HTTP connection lasts; dropping the connection deterministically
  * releases the subscription without waiting for element GC.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, type VNode } from 'vue'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import { TriangleAlert } from 'lucide-vue-next'
@@ -177,13 +177,22 @@ async function pickInitialProfile(): Promise<void> {
   player.profile.value = list.find((p) => p.name === last)?.name ?? list[0]?.name ?? ''
 }
 
-function teardownVideo(): void {
-  const el = videoEl.value
+function teardownVideo(el: HTMLVideoElement | null): void {
   if (el) {
     el.pause()
     el.removeAttribute('src')
     el.load()
   }
+}
+
+/* Tear down every <video> as it unmounts, not only on close. Reopened
+ * during its close animation, PrimeVue's Dialog cuts the animation
+ * short and then rebuilds its content while it stays open, so a new
+ * <video> is dropped right after it started loading. Without this it
+ * keeps its stream, and with it the subscription and the tuner, until
+ * the page is closed. */
+function onVideoUnmount(vnode: VNode): void {
+  teardownVideo(vnode.el as HTMLVideoElement | null)
 }
 
 /* Reset / teardown wired to the open<->close transition. Vue's
@@ -203,7 +212,7 @@ watch(
       void loadChannels()
       return
     }
-    teardownVideo()
+    teardownVideo(videoEl.value)
   },
   { immediate: true },
 )
@@ -360,6 +369,7 @@ function onPlaying(): void {
         controlslist="nodownload noplaybackrate"
         autoplay
         playsinline
+        @vue:before-unmount="onVideoUnmount"
         @error="onError"
         @playing="onPlaying"
       />
