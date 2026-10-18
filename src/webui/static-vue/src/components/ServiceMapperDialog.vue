@@ -49,6 +49,7 @@ import Dialog from 'primevue/dialog'
 import IdnodeConfigForm from './IdnodeConfigForm.vue'
 import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
+import type { UiLevel } from '@/types/access'
 
 const { t } = useI18n()
 
@@ -63,6 +64,10 @@ const props = defineProps<{
   /* Preselect every service (Classic's "Map all services").
    * Takes precedence over `preselect`. */
   mapAll?: boolean
+  /* View level of the grid the dialog was opened from. The form
+   * opens at it, so "Check availability" and the tag options
+   * (Advanced) show when the grid is at Advanced. */
+  level?: UiLevel
 }>()
 
 const emit = defineEmits<{
@@ -169,6 +174,7 @@ function onSaved() {
       :preselect="effectivePreselect"
       :always-dirty="true"
       :save-disabled="pickedCount === 0"
+      :default-level="level"
       @saved="onSaved"
     />
   </Dialog>
