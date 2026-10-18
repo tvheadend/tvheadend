@@ -100,6 +100,7 @@ async function mountWithParams(
   params: ReadonlyArray<Record<string, unknown>>,
   formProps: Partial<{
     lockLevel: 'basic' | 'advanced' | 'expert'
+    defaultLevel: 'basic' | 'advanced' | 'expert'
     disabledFor: (id: string, vals: Record<string, unknown>) => boolean
     saveLabel: string
     saveTooltip: string
@@ -321,6 +322,20 @@ describe('IdnodeConfigForm — access.uilevel reactivity', () => {
 
     const wrapper = await mountWithParams(MIXED_PARAMS)
     wrapper.findComponent({ name: 'LevelMenu' }).vm.$emit('set-level', 'expert')
+    await flushPromises()
+
+    expect(wrapper.html()).not.toContain('Expert')
+  })
+
+  it('opens at defaultLevel in place of access.uilevel', async () => {
+    /* A dialog opened from a grid passes the grid's level. */
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'basic' }
+
+    const wrapper = await mountWithParams(MIXED_PARAMS, { defaultLevel: 'expert' })
+    expect(wrapper.html()).toContain('Expert')
+
+    wrapper.findComponent({ name: 'LevelMenu' }).vm.$emit('set-level', 'basic')
     await flushPromises()
 
     expect(wrapper.html()).not.toContain('Expert')

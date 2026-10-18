@@ -63,6 +63,7 @@ function mountDialog(
     visible: boolean
     preselect: Record<string, unknown> | null
     mapAll: boolean
+    level: 'basic' | 'advanced' | 'expert'
   }> = {},
 ) {
   return mount(ServiceMapperDialog, {
@@ -200,6 +201,35 @@ describe('ServiceMapperDialog', () => {
     await flushPromises()
 
     expect(wrapper.emitted('started')).toBeFalsy()
+  })
+
+  it('opens the form at the level of the grid it came from', async () => {
+    /* Check availability is an Advanced option. The user's own
+     * level is Basic, the grid is at Advanced. */
+    const load = {
+      entries: [
+        {
+          params: [
+            {
+              id: 'check_availability',
+              type: 'bool',
+              caption: 'Check availability',
+              value: false,
+              advanced: true,
+            },
+          ],
+        },
+      ],
+    }
+    apiMock.mockResolvedValueOnce(load)
+    const atUserLevel = mountDialog({ visible: true })
+    await flushPromises()
+    expect(atUserLevel.text()).not.toContain('Check availability')
+
+    apiMock.mockResolvedValueOnce(load)
+    const atGridLevel = mountDialog({ visible: true, level: 'advanced' })
+    await flushPromises()
+    expect(atGridLevel.text()).toContain('Check availability')
   })
 
   describe('mapAll', () => {
