@@ -136,7 +136,7 @@ iptv_service_create0
     const char *uuid, htsmsg_t *conf )
 {
   iptv_service_t *is = (iptv_service_t*)
-    mpegts_service_create0(calloc(1, sizeof(mpegts_service_t)),
+    mpegts_service_create0(calloc(1, sizeof(iptv_service_t)),
                            &mpegts_service_class, uuid,
                            (mpegts_mux_t*)im, sid, pmt, conf);
   
