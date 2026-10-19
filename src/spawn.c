@@ -194,7 +194,7 @@ find_exec ( const char *name, char *out, size_t len )
   struct dirent *de;
   struct stat st;
   if (name[0] == '/') {
-    if (lstat(name, &st)) return 0;
+    if (stat(name, &st)) return 0;
     if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) return 0;
     strlcpy(out, name, len);
     return 1;
@@ -207,7 +207,7 @@ find_exec ( const char *name, char *out, size_t len )
       while ((de = readdir(dir))) {
         if (strstr(de->d_name, name) != de->d_name) continue;
         snprintf(bin, sizeof(bin), "%s/%s", tmp, de->d_name);
-        if (lstat(bin, &st)) continue;
+        if (stat(bin, &st)) continue;
         if (!S_ISREG(st.st_mode) || !(st.st_mode & S_IEXEC)) continue;
         strlcpy(out, bin, len);
         ret = 1;
