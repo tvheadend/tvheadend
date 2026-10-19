@@ -486,6 +486,16 @@ export const AUTOREC_FIELDS = {
     phoneOrder: 99,
     width: 220,
   },
+  /* Raw JSONC of a smart rule, a code blob edited in the drawer's
+   * expression editor; the Smart autorecs view shows it as a column
+   * (the flat view's endpoint filters smart rules out). */
+  expression: {
+    sortable: false,
+    filterType: 'string',
+    minVisible: 'desktop',
+    hiddenByDefault: true,
+    width: 240,
+  },
   fulltext: {
     sortable: true,
     filterType: 'boolean',

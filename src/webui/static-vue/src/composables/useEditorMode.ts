@@ -43,6 +43,12 @@ import { useRoute, useRouter } from 'vue-router'
 import type { UiLevel } from '@/types/access'
 import type { BaseRow } from '@/types/grid'
 
+/* what the editor-mode composable needs from the grid it drives */
+export interface EditorGridHandle {
+  effectiveLevel: UiLevel
+  store?: { fetch: () => Promise<void> }
+}
+
 export interface EditorModeOptions {
   /**
    * Idnode-class base path. When set, `openCreate()` switches the
@@ -124,8 +130,13 @@ export interface EditorModeHandle {
    * The grid's exposed `effectiveLevel` flows to the editor's `level`
    * prop via `editorLevel` below — single source of truth so the
    * editor renders the same view-level the grid is filtered to.
+   * `store` is the grid's exposed data store, for flows that must
+   * force a refetch the Comet patch path can't cover — a change that
+   * moves a row OUT of a filtering endpoint (autorec convert: the
+   * rule leaves `dvr/autorec/grid` for `grid_smart`, but the change
+   * notification only patches loaded rows in place).
    */
-  gridRef: Ref<{ effectiveLevel: UiLevel } | null>
+  gridRef: Ref<EditorGridHandle | null>
   editorLevel: ComputedRef<UiLevel>
   /**
    * Active field-list — switches between createList (in create mode)
@@ -193,7 +204,7 @@ export function useEditorMode(opts: EditorModeOptions): EditorModeHandle {
     createEndpoint: string
     params: Record<string, unknown>
   } | null>(null)
-  const gridRef = ref<{ effectiveLevel: UiLevel } | null>(null)
+  const gridRef = ref<EditorGridHandle | null>(null)
 
   const editorLevel = computed<UiLevel>(() => gridRef.value?.effectiveLevel ?? 'basic')
 

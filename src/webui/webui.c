@@ -286,6 +286,8 @@ page_static_file_maxage(http_connection_t *hc, const char *_remain,
       content = "text/html; charset=UTF-8";
     else if(!strcmp(postfix, "css"))
       content = "text/css; charset=UTF-8";
+    else if(!strcmp(postfix, "json"))
+      content = "application/json; charset=UTF-8";
     else if(!strcmp(postfix, "git"))
       nogzip = 1;
     else if(!strcmp(postfix, "jpg") || !strcmp(postfix, "png")) {

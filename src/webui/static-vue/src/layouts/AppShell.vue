@@ -13,6 +13,7 @@ import VideoPlayerDialog from '@/components/VideoPlayerDialog.vue'
 import ErrorDialog from '@/components/ErrorDialog.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
+import type { ConfirmationOptions } from 'primevue/confirmationoptions'
 import Toast from 'primevue/toast'
 import { HelpCircle } from 'lucide-vue-next'
 import { useRailPreference } from '@/composables/useRailPreference'
@@ -23,6 +24,9 @@ import { useAccessStore } from '@/stores/access'
 import { useCommandPalette } from '@/composables/useCommandPalette'
 import { registerShortcut } from '@/composables/useGlobalShortcuts'
 import { useI18n } from '@/composables/useI18n'
+
+/* what `askWithDetail()` hangs on the confirmation object */
+type DetailMessage = ConfirmationOptions & { detail?: string; items?: string[] }
 
 const { t } = useI18n()
 
@@ -241,6 +245,37 @@ function skipToMain(): void {
         <HelpCircle :size="22" :stroke-width="2" />
       </template>
     </ConfirmDialog>
+    <!-- Second confirm for `useConfirmDialog().askWithDetail()`:
+         the same dialog, addressed by group, whose message slot
+         adds a preformatted block and a bullet list under the
+         text (the convert flow shows the generated expression and
+         the dry-run warnings). The default dialog stays
+         message-only for every other caller. -->
+    <ConfirmDialog group="detail">
+      <template #icon>
+        <HelpCircle :size="22" :stroke-width="2" />
+      </template>
+      <template #message="{ message }">
+        <div class="app-shell__confirm-detail">
+          <p class="app-shell__confirm-text">{{ message.message }}</p>
+          <pre
+            v-if="(message as DetailMessage).detail"
+            class="app-shell__confirm-pre"
+          >{{ (message as DetailMessage).detail }}</pre>
+          <ul
+            v-if="(message as DetailMessage).items?.length"
+            class="app-shell__confirm-items"
+          >
+            <li
+              v-for="(item, i) in (message as DetailMessage).items"
+              :key="i"
+            >
+              {{ item }}
+            </li>
+          </ul>
+        </div>
+      </template>
+    </ConfirmDialog>
     <Toast position="top-right" />
     <!-- Singleton error dialog. Save failures across the app
          (IdnodeEditor drawer, in-grid inline edit, batch ops) pop
@@ -297,6 +332,35 @@ function skipToMain(): void {
 </template>
 
 <style scoped>
+.app-shell__confirm-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tvh-space-3, 12px);
+  max-width: min(70vw, 48rem);
+}
+
+.app-shell__confirm-text {
+  margin: 0;
+}
+
+.app-shell__confirm-pre {
+  margin: 0;
+  padding: var(--tvh-space-2, 8px) var(--tvh-space-3, 12px);
+  max-height: 40vh;
+  overflow: auto;
+  font-family: var(--tvh-font-mono, monospace);
+  font-size: 0.85em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--tvh-bg-sunken, rgba(0, 0, 0, 0.06));
+  border-radius: var(--tvh-radius-sm, 4px);
+}
+
+.app-shell__confirm-items {
+  margin: 0;
+  padding-left: 1.25em;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
