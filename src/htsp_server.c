@@ -186,8 +186,9 @@ typedef struct htsp_recplay {
   int64_t seek_time, position;
   int64_t duration, offset;
   int discard;
-  int started;
-  int64_t clock;
+  int read_error;
+  int following, growing, started, live;
+  int64_t next_update, clock;
   dvr_playback_t *reader;
 } htsp_recplay_t;
 
@@ -248,10 +249,14 @@ typedef struct htsp_file {
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
 #define RECPLAY_QUEUE_MIN (64 * 1024)
 #define RECPLAY_QUEUE_MAX (4 * 1024 * 1024)
+#define RECPLAY_UPDATE_INTERVAL sec2mono(2)
 #define RECPLAY_POLL_INTERVAL ms2mono(200)
 #define RECPLAY_JUMP_WINDOW sec2mono(1)
 /* Same playback lead as TIMESHIFT_PLAY_BUF. */
 #define RECPLAY_PLAY_BUF sec2mono(1)
+/* Playback further behind the end is not live. A skip past the end lands
+ * on the last key frame, so this must cover a key frame interval. */
+#define RECPLAY_LIVE_WINDOW sec2mono(10)
 #define RECPLAY_TS_PACKET_SIZE 188
 
 static void htsp_send_subscription(htsp_connection_t *htsp, htsmsg_t *m,
@@ -421,7 +426,7 @@ htsp_recplay_filename(dvr_entry_t *de)
   htsmsg_field_t *field;
   int count = 0;
   const char *filename;
-  if (de->de_sched_state != DVR_COMPLETED ||
+  if ((de->de_sched_state != DVR_COMPLETED && de->de_sched_state != DVR_RECORDING) ||
       !de->de_files)
     return NULL;
   HTSMSG_FOREACH(field, de->de_files)
@@ -471,11 +476,92 @@ htsp_recplay_chain(htsp_subscription_t *hs)
   return 0;
 }
 
+static void
+htsp_recplay_status(htsp_subscription_t *hs)
+{
+  htsp_recplay_t *dvr = hs->hs_dvr;
+  htsmsg_t *message = htsmsg_create_map();
+  htsmsg_add_str(message, "method", "subscriptionStatus");
+  htsmsg_add_u32(message, "subscriptionId", hs->hs_sid);
+  htsmsg_add_u32(message, "growing", dvr->growing);
+  htsmsg_add_s64(message, "duration", hs->hs_90khz ? dvr->duration :
+                               ts_rescale(dvr->duration, 1000000));
+  htsp_msg_t *pending;
+  tvh_mutex_lock(&hs->hs_htsp->htsp_out_mutex);
+  TAILQ_FOREACH(pending, &hs->hs_q.hmq_q, hm_link) {
+    if (htsmsg_field_find(pending->hm_msg, "duration") &&
+        !strcmp(htsmsg_get_str(pending->hm_msg, "method") ?: "", "subscriptionStatus")) {
+      htsmsg_destroy(pending->hm_msg);
+      pending->hm_msg = message;
+      tvh_mutex_unlock(&hs->hs_htsp->htsp_out_mutex);
+      return;
+    }
+  }
+  tvh_mutex_unlock(&hs->hs_htsp->htsp_out_mutex);
+  htsp_send_subscription(hs->hs_htsp, message, NULL, hs, 0);
+}
 
+/* Refresh the available duration while recording. */
+static int
+htsp_recplay_update(htsp_subscription_t *hs, int force)
+{
+  htsp_recplay_t *dvr = hs->hs_dvr;
+  dvr_entry_t *de;
+  const char *filename;
+  int growing, completed, error;
+  int64_t duration;
+
+  if (!dvr->following || (!force && getmonoclock() < dvr->next_update))
+    return 0;
+  dvr->next_update = getmonoclock() + RECPLAY_UPDATE_INTERVAL;
+  tvh_mutex_lock(&global_lock);
+  de = dvr_entry_find_by_id(dvr->id);
+  filename = de ? htsp_recplay_filename(de) : NULL;
+  error = !filename || strcmp(filename, dvr->filename);
+  growing = de && de->de_sched_state == DVR_RECORDING;
+  completed = de && de->de_sched_state == DVR_COMPLETED;
+  tvh_mutex_unlock(&global_lock);
+  if (completed)
+    dvr->following = 0;
+  if (error && !completed)
+    return AVERROR_INVALIDDATA;
+  error = dvr_playback_refresh(dvr->reader, dvr->filename);
+  /* A moved completed file remains readable through its open descriptor. */
+  if (error < 0 && !completed)
+    return error;
+  duration = dvr_playback_duration(dvr->reader);
+  tvh_mutex_lock(&hs->hs_htsp->htsp_out_mutex);
+  dvr->duration = duration;
+  dvr->growing = growing;
+  tvh_mutex_unlock(&hs->hs_htsp->htsp_out_mutex);
+  dvr->following = growing;
+  htsp_recplay_status(hs);
+  return 0;
+}
 
 enum htsp_recplay_wait {
-  RECPLAY_WAIT_PAUSE, RECPLAY_WAIT_EOF, RECPLAY_WAIT_QUEUE, RECPLAY_WAIT_PACE
+  RECPLAY_WAIT_PAUSE, RECPLAY_WAIT_EOF, RECPLAY_WAIT_QUEUE, RECPLAY_WAIT_PACE, RECPLAY_WAIT_EDGE
 };
+
+static void
+htsp_recplay_skip(htsp_subscription_t *hs, const streaming_skip_t *skip)
+{
+  streaming_message_t *message = streaming_msg_create(SMT_SKIP);
+  message->sm_data = malloc(sizeof(*skip));
+  memcpy(message->sm_data, skip, sizeof(*skip));
+  streaming_target_deliver2(hs->hs_prch.prch_st, message);
+}
+
+/* Like timeshift, a skip past the live end fails while playback is there:
+ * after a skip landed at the live end, until a pause, a skip inside or
+ * until playback falls behind. Kodi fast forwards with seeks and goes back
+ * to normal speed only when a seek fails. */
+static int
+htsp_recplay_skip_fails(htsp_recplay_t *dvr, int64_t target)
+{
+  return dvr->live && dvr->growing && target >= dvr->duration &&
+         ts_rescale(dvr->duration - dvr->position, MONOCLOCK_RESOLUTION) <= RECPLAY_LIVE_WINDOW;
+}
 
 /* Producer stalls shift the clock; pacing waits advance playback. */
 static int
@@ -484,11 +570,23 @@ htsp_recplay_wait_until(htsp_subscription_t *hs, enum htsp_recplay_wait reason,
 {
   htsp_recplay_t *dvr = hs->hs_dvr;
   htsp_connection_t *htsp = hs->hs_htsp;
+  streaming_skip_t skip = { .type = SMT_SKIP_ERROR };
   int64_t before, now;
-  int waiting;
+  int waiting, error;
 
   for (;;) {
+    error = htsp_recplay_update(hs, 0);
+    if (error < 0)
+      return error;
     tvh_mutex_lock(&htsp->htsp_out_mutex);
+    /* Answer a skip that must fail here, so a reader waiting at the file
+     * edge keeps its libav state. */
+    if (dvr->seek_pending && htsp_recplay_skip_fails(dvr, dvr->seek_time)) {
+      dvr->seek_pending = 0;
+      tvh_mutex_unlock(&htsp->htsp_out_mutex);
+      htsp_recplay_skip(hs, &skip);
+      continue;
+    }
     if (atomic_get(&dvr->stop) || dvr->seek_pending ||
         ((reason == RECPLAY_WAIT_PACE || reason == RECPLAY_WAIT_QUEUE) && dvr->paused)) {
       tvh_mutex_unlock(&htsp->htsp_out_mutex);
@@ -499,6 +597,7 @@ htsp_recplay_wait_until(htsp_subscription_t *hs, enum htsp_recplay_wait reason,
     case RECPLAY_WAIT_PAUSE: waiting = dvr->paused; break;
     case RECPLAY_WAIT_EOF:   waiting = dvr->eof; break;
     case RECPLAY_WAIT_QUEUE: waiting = hs->hs_q.hmq_payload >= hs->hs_queue_depth; break;
+    case RECPLAY_WAIT_EDGE:  waiting = dvr->growing && now < deadline; break;
     default:            waiting = now < deadline; break;
     }
     if (!waiting) {
@@ -514,6 +613,20 @@ htsp_recplay_wait_until(htsp_subscription_t *hs, enum htsp_recplay_wait reason,
   }
 }
 
+/* A temporary file edge must preserve libav's partial TS/PES buffers. */
+static int
+htsp_recplay_wait(void *opaque)
+{
+  htsp_subscription_t *hs = opaque;
+  int result = htsp_recplay_wait_until(hs, RECPLAY_WAIT_EDGE,
+                                  getmonoclock() + RECPLAY_POLL_INTERVAL);
+  if (result <= 0) {
+    if (result < 0)
+      hs->hs_dvr->read_error = result;
+    return -1;
+  }
+  return hs->hs_dvr->growing;
+}
 
 static void
 htsp_recplay_end(htsp_subscription_t *hs, int code)
@@ -530,23 +643,28 @@ htsp_recplay_end(htsp_subscription_t *hs, int code)
   dvr->started = 0;
 }
 
-static void
-htsp_recplay_skip(htsp_subscription_t *hs, const streaming_skip_t *skip)
-{
-  streaming_message_t *message = streaming_msg_create(SMT_SKIP);
-  message->sm_data = malloc(sizeof(*skip));
-  memcpy(message->sm_data, skip, sizeof(*skip));
-  streaming_target_deliver2(hs->hs_prch.prch_st, message);
-}
-
 static int
 htsp_recplay_seek(htsp_subscription_t *hs, int64_t target)
 {
   htsp_recplay_t *dvr = hs->hs_dvr;
   streaming_skip_t skip = { .type = SMT_SKIP_ERROR };
   int64_t landed;
-  int error;
+  int error, rejected;
 
+  dvr->read_error = 0;
+  error = htsp_recplay_update(hs, 1);
+  if (error < 0)
+    return error;
+  tvh_mutex_lock(&hs->hs_htsp->htsp_out_mutex);
+  rejected = htsp_recplay_skip_fails(dvr, target);
+  /* A skip past the end lands at the live end, but paused is not live. */
+  if (!rejected)
+    dvr->live = !dvr->paused && dvr->growing && target >= dvr->duration;
+  tvh_mutex_unlock(&hs->hs_htsp->htsp_out_mutex);
+  if (rejected) {
+    htsp_recplay_skip(hs, &skip);
+    return 1;
+  }
   error = dvr_playback_seek(dvr->reader, target, &landed);
   if (error < 0) {
     htsp_recplay_skip(hs, &skip);
@@ -568,6 +686,8 @@ htsp_recplay_seek(htsp_subscription_t *hs, int64_t target)
   skip.type = SMT_SKIP_ABS_TIME;
   skip.time = landed;
   htsp_recplay_skip(hs, &skip);
+  /* SKIP flushes queued status from the old epoch. */
+  htsp_recplay_status(hs);
   return 0;
 }
 
@@ -640,6 +760,8 @@ htsp_recplay_thread(void *opaque)
   error = dvr_playback_seek(dvr->reader, 0, &landed);
   if (error < 0)
     goto fail;
+  if (dvr->following)
+    dvr_playback_follow(dvr->reader, htsp_recplay_wait, hs);
 
   while (!htsp_recplay_interrupted(hs)) {
     tvh_mutex_lock(&hs->hs_htsp->htsp_out_mutex);
@@ -651,10 +773,13 @@ htsp_recplay_thread(void *opaque)
       error = htsp_recplay_seek(hs, target);
       if (error < 0)
         goto fail;
-      if (packet)
-        pkt_ref_dec(packet);
-      packet = NULL;
-      epoch = 1;
+      /* A rejected skip keeps the current epoch and packet. */
+      if (!error) {
+        if (packet)
+          pkt_ref_dec(packet);
+        packet = NULL;
+        epoch = 1;
+      }
     }
     error = htsp_recplay_wait_until(hs, RECPLAY_WAIT_EOF, INT64_MAX);
     if (error < 0)
@@ -698,6 +823,8 @@ htsp_recplay_thread(void *opaque)
   }
   goto done;
 fail:
+  if (dvr->read_error)
+    error = dvr->read_error;
   tvh_mutex_lock(&hs->hs_htsp->htsp_out_mutex);
   dvr->failed = 1;
   tvh_mutex_unlock(&hs->hs_htsp->htsp_out_mutex);
@@ -3030,7 +3157,7 @@ htsp_recplay_support(dvr_entry_t *de, const char **filename)
   *filename = htsp_recplay_filename(de);
   if (!*filename) {
     if (!de->de_files || !dvr_get_filename(de) ||
-        de->de_sched_state != DVR_COMPLETED)
+        (de->de_sched_state != DVR_COMPLETED && de->de_sched_state != DVR_RECORDING))
       return N_("Recording has no recorded data");
     return N_("A single recorded file is required");
   }
@@ -3123,6 +3250,7 @@ htsp_method_dvr_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
   hs->hs_q.hmq_drain = &dvr->cond;
   dvr->filename = strdup(filename);
   dvr->id = idnode_get_short_uuid(&de->de_id);
+  dvr->following = dvr->growing = de->de_sched_state == DVR_RECORDING;
   dvr->profile = pro;
   profile_grab(pro);
   if (htsp_recplay_chain(hs)) {
@@ -3445,6 +3573,9 @@ htsp_method_speed(htsp_connection_t *htsp, htsmsg_t *in)
       return htsp_error(htsp, N_("Stream setup error"));
     }
     hs->hs_dvr->paused = speed == 0;
+    /* Pausing leaves the live end, as in timeshift. */
+    if (!speed)
+      hs->hs_dvr->live = 0;
     tvh_cond_signal(&hs->hs_dvr->cond, 1);
     tvh_mutex_unlock(&htsp->htsp_out_mutex);
     htsp_subscription_speed(hs, speed);
@@ -5011,6 +5142,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
   if (hs->hs_dvr) {
     hs->hs_dvr->started = 1;
     htsmsg_add_u32(m, "dvrId", hs->hs_dvr->id);
+    htsmsg_add_u32(m, "growing", hs->hs_dvr->growing);
     htsmsg_add_s64(m, "duration", hs->hs_90khz ? hs->hs_dvr->duration :
                                  ts_rescale(hs->hs_dvr->duration, 1000000));
   }
