@@ -784,13 +784,32 @@ static int epg_match_event_fuzzy(epg_broadcast_t *a, epg_broadcast_t *b)
 
 epg_broadcast_t *epg_match_now_next ( channel_t *ch, epg_broadcast_t *ebc )
 {
-  epg_broadcast_t *ret;
+  epg_broadcast_t *cand[4], *ret = NULL, *e;
+  int64_t diff, best = 0;
+  int i;
 
-  if (epg_match_event_fuzzy(ch->ch_epg_now, ebc))
-    ret = ch->ch_epg_now;
-  else if (epg_match_event_fuzzy(ch->ch_epg_next, ebc))
-    ret = ch->ch_epg_next;
-  else
+  /* The now/next pointers stop following the clock while the current
+   * broadcast is flagged running, so also consider the broadcast that
+   * is on air by the clock and the one after it */
+  RB_FOREACH(e, &ch->ch_epg_schedule, sched_link)
+    if (e->stop > gclk()) break;
+  cand[0] = ch->ch_epg_now;
+  cand[1] = ch->ch_epg_next;
+  cand[2] = e;
+  cand[3] = e ? RB_NEXT(e, sched_link) : NULL;
+
+  /* Prefer the candidate whose start time is closest */
+  for (i = 0; i < 4; i++) {
+    e = cand[i];
+    if (e == NULL || !epg_match_event_fuzzy(e, ebc))
+      continue;
+    diff = llabs((int64_t)e->start - (int64_t)ebc->start);
+    if (ret == NULL || diff < best) {
+      ret = e;
+      best = diff;
+    }
+  }
+  if (ret == NULL)
     return NULL;
   /* update eid for further lookups */
   if (ret->dvb_eid != ebc->dvb_eid && ret->dvb_eid == 0 && ebc->dvb_eid)
