@@ -94,10 +94,20 @@ function pillState(idx: number, current: number): PillState['state'] {
   return 'pending'
 }
 
+const translatedStepLabels = computed<Record<WizardStepName, string>>(() => ({
+  hello: t('Welcome'),
+  login: t('Access Control'),
+  network: t('Tuner and Network'),
+  muxes: t('Predefined Muxes'),
+  status: t('Scanning'),
+  mapping: t('Service Mapping'),
+  channels: t('Finished'),
+}))
+
 const pills = computed<PillState[]>(() =>
   WIZARD_STEPS.map((step, idx) => ({
     step,
-    label: t(STEP_LABELS[step]),
+    label: translatedStepLabels.value[step],
     state: pillState(idx, currentIndex.value),
   })),
 )
@@ -110,7 +120,7 @@ const pills = computed<PillState[]>(() =>
 const phoneLabel = computed(() => {
   const n = currentIndex.value + 1
   const total = WIZARD_STEPS.length
-  const stepLabel = t(STEP_LABELS[activeStep.value as WizardStepName] ?? 'hello')
+  const stepLabel = translatedStepLabels.value[activeStep.value as WizardStepName] ?? translatedStepLabels.value.hello
   /* i18n: new string — sentence template; concatenation is
    * unavoidable today without a printf-style helper, but the
    * three pieces are simple enough that translators can
