@@ -18,10 +18,8 @@
  * Hidden by default everywhere: `index` (server-managed sort key
  * driving Move-Up / Move-Down) and `class` (subclass tag). Both
  * still arrive on the wire — we just don't surface them as
- * columns.
- *
- * Mirrors the `eslist = '-class,index'` exclusion in legacy
- * `static/app/esfilter.js:22` for the grid display.
+ * columns, matching the editor's `eslist = '-class,index'`
+ * exclusion.
  */
 import BooleanCell from '@/components/BooleanCell.vue'
 import EnumNameCell from '@/components/EnumNameCell.vue'
@@ -71,8 +69,7 @@ const SERVICE_ENUM = {
  * order modulo class-specific insertions handled below. Every
  * column gets `editable: true`; the framework's
  * isInlineEditable strips unsupported / rdonly types at
- * runtime. Mirrors Classic's EditorGridPanel which permits
- * every non-rdonly cell to edit by default. */
+ * runtime, so every non-rdonly cell is editable by default. */
 const enabledCol: ColumnDef = {
   field: 'enabled',
   sortable: true,
@@ -176,8 +173,7 @@ const commentCol: ColumnDef = {
 }
 
 /* Per-class arrays. Field order matches the C property table
- * order so the column display reads in the same order an admin
- * sees in Classic. */
+ * order. */
 
 export const videoColumns: ColumnDef[] = [
   enabledCol,

@@ -6,15 +6,11 @@
 /*
  * Configuration → Users → Access Entries.
  *
- * Mirrors the legacy ExtJS Access Entries grid
- * (`src/webui/static/app/acleditor.js:5-58`, `tvheadend.acleditor`).
  * Backed by the `access_entry_class` idnode at
  * `src/access.c:1718-2000`.
  *
- * Column display set + edit-drawer field set are taken verbatim from
- * the ExtJS `list` (line 7-11) and `list2` (line 13-18) constants so
- * existing translations apply once vue-i18n lands. Field order in the
- * editor follows the `list2` order — `prop_serialize` in
+ * The edit-drawer field order follows the `list` sent with the
+ * request — `prop_serialize` in
  * `src/prop.c` walks the client-supplied list HTSMSG and emits
  * properties in that order.
  *
@@ -96,15 +92,14 @@ const CHANNEL_TAG_ENUM = {
   params: { all: 1 },
 }
 
-/* Column display set — `acleditor.js:7-11`. Inline-array enums
+/* Column display set. Inline-array enums
  * (uilevel, themeui) auto-resolve via IdnodeGrid's
  * `decoratedColumns` (key→label map from class metadata).
  * Deferred-enum single-value fields (lang) are wired explicitly
  * to `EnumNameCell`. Booleans (enabled, change, admin, streaming,
  * dvr, uilevel_nochange) get their default truthy/falsy
- * formatting from the grid. Width hints from `acleditor.js:26-40`
- * translated where they meaningfully differ from the grid
- * default. */
+ * formatting from the grid. Width hints are set only where they
+ * meaningfully differ from the grid default. */
 /*
  * Phone-card layout: username as bold headline (most readable
  * row identifier when set), enabled + admin as the 2-up health
@@ -136,9 +131,9 @@ const cols: ColumnDef[] = [
     editable: true,
   },
   /* `access_entry_class` has no `password` prop (the grid response
-   * carries no such key), so this column is blank today. It keeps
-   * the ExtJS column set, masked like the Passwords grid in case
-   * the server ever returns a value here. */
+   * carries no such key), so this column is blank today. It is
+   * masked like the Passwords grid in case the server ever
+   * returns a value here. */
   { field: 'password', sortable: false, width: 250, format: fmtPassword },
   {
     field: 'prefix',
@@ -258,9 +253,9 @@ const cols: ColumnDef[] = [
   { field: 'comment', sortable: true, filterType: 'string', width: 250, editable: true },
 ]
 
-/* Edit + create field list — `acleditor.js:13-18` `list2`. ExtJS
- * uses the SAME list for both edit and create (no narrowing), so
- * useEditorMode's createList equals editList. */
+/* Edit + create field list. The same list serves both edit and
+ * create (no narrowing), so useEditorMode's createList equals
+ * editList. */
 const ACCESS_LIST =
   'enabled,username,password,prefix,change,' +
   'lang,webui,themeui,langui,uilevel,uilevel_nochange,admin,' +
@@ -308,8 +303,7 @@ const remove = useBulkAction({
  * natural order produces a swap-then-unswap cascade — net zero
  * movement. The position-sort fix in `idnodeMove.ts` sends UUIDs
  * in topmost-first (Up) or bottommost-first (Down) order so each
- * processed row finds a non-selected sibling to swap with. ExtJS
- * has this bug; we don't.
+ * processed row finds a non-selected sibling to swap with.
  *
  * Caveat: position is read from the grid's loaded `entries` array,
  * accurate when the grid is in natural (unsorted) order. If the

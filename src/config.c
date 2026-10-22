@@ -1806,7 +1806,6 @@ config_boot
   config.proxy = 0;
   config.realm = strdup("tvheadend");
   config.info_area = strdup("login,storage,time");
-  config.cookie_expires = 7;
   config.ticket_expires = 5 * 60;
   config.dscp = -1;
   config.descrambler_buffer = 9000;
@@ -2599,17 +2598,6 @@ const idclass_t config_class = {
       .desc   = N_("The hash algorithm type for the digest authentication."),
       .list   = config_class_http_auth_algo_list,
       .off    = offsetof(config_t, http_auth_algo),
-      .opts   = PO_EXPERT,
-      .group  = 5
-    },
-    {
-      .type   = PT_U32,
-      .intextra = INTEXTRA_RANGE(1, 0x7ff, 1),
-      .id     = "cookie_expires",
-      .name   = N_("Cookie expiration (days)"),
-      .desc   = N_("The number of days cookies set by Tvheadend should "
-                   "expire."),
-      .off    = offsetof(config_t, cookie_expires),
       .opts   = PO_EXPERT,
       .group  = 5
     },

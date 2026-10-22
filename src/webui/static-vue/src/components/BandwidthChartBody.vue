@@ -75,8 +75,8 @@ const modeButtons: Array<{ value: Mode; label: string }> = [
   { value: 'aggregate', label: t('Aggregate') },
 ]
 
-/* Classic builds durations as value + ' ' + _('min'), so reuse its
- * msgid. There is no Classic msgid for seconds. */
+/* Minute durations are built as value + ' ' + t('min') to reuse
+ * the plain 'min' msgid; seconds stay untranslated. */
 const windowButtons: Array<{ value: WindowSec; label: string }> = [
   { value: 30, label: '30s' },
   { value: 60, label: `1 ${t('min')}` },

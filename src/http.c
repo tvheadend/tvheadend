@@ -816,27 +816,6 @@ http_redirect(http_connection_t *hc, const char *location,
 
 
 /**
- * Send an CSS @import
- */
-void
-http_css_import(http_connection_t *hc, const char *location)
-{
-  const char *loc = location;
-
-  htsbuf_queue_flush(&hc->hc_reply);
-
-  if (tvheadend_webroot && location[0] == '/') {
-    loc = alloca(strlen(location) + strlen(tvheadend_webroot) + 1);
-    strcpy((char *)loc, tvheadend_webroot);
-    strcat((char *)loc, location);
-  }
-
-  htsbuf_qprintf(&hc->hc_reply, "@import url('%s');\r\n", loc);
-
-  http_send_reply(hc, HTTP_STATUS_OK, "text/css", NULL, loc, 0, NULL);
-}
-
-/**
  *
  */
 void

@@ -154,7 +154,7 @@ describe('useStreamProfilesStore', () => {
     expect(store.profileNames).toEqual(['pass'])
     expect(apiMock).toHaveBeenCalledTimes(1)
 
-    /* A profile added elsewhere — e.g. via the legacy ExtJS UI. */
+    /* A profile added elsewhere — e.g. by another client. */
     mockProfileList([
       { key: 'p1', val: 'pass' },
       { key: 'p2', val: 'webtv' },

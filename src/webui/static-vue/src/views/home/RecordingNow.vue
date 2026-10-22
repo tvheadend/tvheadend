@@ -50,8 +50,7 @@ onMounted(() => {
    * (`src/api/api_dvr.c:576`); fetching it as anonymous returns
    * 401 + WWW-Authenticate which pops the browser's Digest
    * dialog before the user has interacted. Skip when the user
-   * has no DVR rights — the card simply renders empty for them.
-   * ExtJS's equivalent panel also no-ops for non-DVR users. */
+   * has no DVR rights — the card simply renders empty for them. */
   if (!access.has('dvr')) return
   dvr.ensure().catch(() => { /* error state surfaced via dvr store */ })
 })

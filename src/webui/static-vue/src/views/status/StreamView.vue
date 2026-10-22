@@ -22,8 +22,7 @@
  *     at api/api_status.c:163-170), so one round-trip per multi-
  *     select action regardless of count.
  *
- * Column choices mirror the ExtJS list (status.js:398-481) but drop
- * a few rarely-useful raw-counter columns.
+ * Rarely-useful raw-counter columns are left out.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
 import SignalBarCell from './SignalBarCell.vue'
@@ -48,11 +47,10 @@ const fmtPids = (v: unknown) => {
   const sorted = [...(v as number[])].sort((a, b) => a - b)
   if (sorted[sorted.length - 1] === 65535) return t('all')
   /*
-   * Use ", " (comma + space) so long PID lists have wrap points;
-   * ExtJS's formatter uses "," with no space and relies on its
-   * grid's forceFit layout to redistribute widths. Our DataTable
-   * doesn't redistribute, so unbreakable strings force the column
-   * wide enough to dominate the row.
+   * Use ", " (comma + space) so long PID lists have wrap points.
+   * The DataTable doesn't redistribute column widths, so
+   * unbreakable strings force the column wide enough to dominate
+   * the row.
    */
   return sorted.join(', ')
 }

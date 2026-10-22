@@ -10,7 +10,7 @@
  * The dialog calls `fetch(uuid)` when both visible+uuid are
  * set, and `reset()` when it closes. Closing + reopening on
  * the same service refetches — matches `useEpgRelatedFetch.ts`
- * and Classic's livegrid behaviour (snapshot at open).
+ * (snapshot at open).
  */
 
 import { ref } from 'vue'

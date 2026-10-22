@@ -17,10 +17,6 @@
  * styling rules are duplicated rather than shared because the
  * volume is small (~30 lines each) and a shared <Popover> primitive
  * isn't yet earned by the rest of the codebase.
- *
- * Strings ("View level", "Basic", "Advanced", "Expert") match the
- * existing translations in `intl/js/tvheadend.js.pot` so vue-i18n
- * will pick them up without re-translation when it lands.
  */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { SlidersHorizontal } from 'lucide-vue-next'

@@ -6,8 +6,7 @@
 /*
  * ConfigUsersLayout — L3 navigation scaffold inside Configuration →
  * Users. Hosts the three sub-tabs (Access Entries / Passwords / IP
- * Blocking) per ExtJS' tvheadend.js:1090-1102 wiring (`acleditor`,
- * `passwdeditor`, `ipblockeditor` in static/app/acleditor.js).
+ * Blocking).
  *
  * Same shape as ConfigGeneralLayout / DvbInputsLayout: PageTabs row
  * above a router-view. No capability gates — Users tabs always

@@ -7,9 +7,7 @@
  * ServiceStreamsDialog — modal listing the per-PID elementary
  * streams of a service.
  *
- * Port of Classic's `tvheadend.show_service_streams(data)` window
- * (`static/app/mpegts.js:140-266`) triggered by the per-row
- * Details icon on the Services grid (`mpegts.js:351-372`).
+ * Opened by the per-row Details icon on the Services grid.
  * Driven by:
  *
  *   - `uuid`     — the service uuid to fetch.
@@ -19,12 +17,11 @@
  * `src/api/api_service.c:194`):
  *   GET /api/service/streams?uuid=<id>
  *
- * Classic shows two stacked tables — raw streams (incl.
- * PCR / PMT) and filtered streams. The v2 dialog merges them
- * into a single table with a Used indicator column: a stream is
+ * Raw streams (incl. PCR / PMT) and filtered streams share a
+ * single table with a Used indicator column: a stream is
  * Used (✓) when it survives `esfilter` and ends up in
  * `fstreams[]`; PCR / PMT and esfilter-suppressed rows render
- * with Used=blank. Same information, one fewer table to scan.
+ * with Used=blank.
  *
  * Per-stream "Details" column synthesises a type-specific
  * summary (video → resolution + aspect, audio → mode + lang,
@@ -178,9 +175,8 @@ function fmtCaid(c: ServiceCaid): string {
 
 /* ---- HbbTV section ---- */
 
-/* One row per section, application and title (language), like
- * Classic (`mpegts.js:226-250`). Applications without a title are
- * skipped there too. */
+/* One row per section, application and title (language).
+ * Applications without a title are skipped. */
 interface HbbTvRow {
   key: string
   section: string

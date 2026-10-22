@@ -81,8 +81,6 @@
    * '{highlight.color}'` falls through to). On a primary-tinted
    * background, primary-colored text has near-zero contrast — a
    * highlighted row becomes unreadable in the Light theme.
-   * ExtJS's xtheme-blue solves this the same way: light tint +
-   * explicit black text (xtheme-blue.css:676 — `color: #000`).
    *
    * Setting `--p-highlight-color` globally (not just the datatable
    * row) covers other PrimeVue components that key off the same
@@ -322,8 +320,8 @@
  * PrimeVue's default CSS collapses whitespace; without this rule
  * the message renders as one long line regardless of embedded
  * newlines. Used by the EPG Table's Create AutoRec confirmation
- * to mirror Classic's multi-line summary layout (one filter per
- * line, blank line before the match count + "Are you sure?").
+ * for its multi-line summary (one filter per line, blank line
+ * before the match count + "Are you sure?").
  * Safe globally — confirm messages that contain no `\n` render
  * identically with or without this rule. */
 .p-confirmdialog-message {

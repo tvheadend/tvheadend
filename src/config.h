@@ -60,7 +60,6 @@ typedef struct config {
   int tvhtime_ntp_enabled;
   uint32_t tvhtime_tolerance;
   char *cors_origin;
-  uint32_t cookie_expires;
   int dscp;
   uint32_t descrambler_buffer;
   int caclient_ui;

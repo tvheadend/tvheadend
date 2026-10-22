@@ -147,7 +147,6 @@ static cmdline_opt_t* cmdline_opt_find
 int              tvheadend_running; /* do not use directly: tvheadend_is_running() */
 int              tvheadend_mainloop;
 int              tvheadend_webui_port;
-int              tvheadend_webui_debug;
 int              tvheadend_htsp_port;
 int              tvheadend_htsp_port_extra;
 const char      *tvheadend_cwd0;
@@ -954,7 +953,7 @@ main(int argc, char **argv)
 #if ENABLE_LIBAV
     {   0, "libav",     N_("More verbose libav log"),  OPT_BOOL, &opt_libav },
 #endif
-    {   0, "uidebug",   N_("Enable web UI debug (non-minified JS)"), OPT_BOOL, &opt_uidebug },
+    {   0, "uidebug",   N_("Ignored (deprecated flag)"), OPT_BOOL, &opt_uidebug },
     { 'A', "abort",     N_("Immediately abort"),       OPT_BOOL, &opt_abort   },
     { 'D', "dump",      N_("Enable coredumps for daemon"), OPT_BOOL, &opt_dump },
     {   0, "noacl",     N_("Disable all access control checks"),
@@ -1081,7 +1080,6 @@ main(int argc, char **argv)
       tvheadend_webroot = NULL;
     }
   }
-  tvheadend_webui_debug = opt_uidebug;
 
   /* Setup logging */
   if (isatty(2))

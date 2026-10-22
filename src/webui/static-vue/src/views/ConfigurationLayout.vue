@@ -10,12 +10,12 @@
  * on desktop, select dropdown on phone), delegate to the active
  * child route.
  *
- * Per ADR 0008, several UI-affordance gates apply at the L2 / L3 level
- * mirroring ExtJS exactly:
+ * Per ADR 0008, several UI-affordance gates apply at the L2 / L3
+ * level:
  *   - `tvadapters` capability gates only the TV Adapters L3 tab inside
  *     DVB Inputs (in DvbInputsLayout), not the L2 entry — Networks /
  *     Muxes / Services are input-type-agnostic (IPTV uses them too) and
- *     stay visible, matching ExtJS tvheadend.js:1154
+ *     stay visible
  *   - `caclient` capability gates the CAs L2 entry's existence
  *   - `caclient_advanced` capability (emitted when `config.caclient_ui
  *     == true`) shifts the CAs L2 entry from Expert-only to
@@ -70,9 +70,8 @@ const capabilities = useCapabilitiesStore()
  *   - `caclient_advanced` capability (emitted only when
  *     `config.caclient_ui == true`, src/main.c:1538) →
  *     surfaced at the Advanced UI level instead of Expert.
- * Off / capability absent → CAs is Expert-only, matching
- * Classic's "By default, it's visible only to the Expert level"
- * help text and the `caclient.js:41` ternary. */
+ * Off / capability absent → CAs is Expert-only, as the
+ * `caclient_ui` option's description says (src/config.c). */
 const allTabs = computed<ConfigTab[]>(() => [
   { to: '/configuration/general', label: t('General'), icon: Settings },
   { to: '/configuration/users', label: t('Users'), icon: Users },

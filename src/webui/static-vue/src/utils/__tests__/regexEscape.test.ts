@@ -10,7 +10,7 @@ describe('regexEscape', () => {
     expect(regexEscape('')).toBe('')
   })
 
-  it('escapes every metacharacter Classic escapes', () => {
+  it('escapes every regex metacharacter', () => {
     expect(regexEscape('-/\\^$*+?.()|[]{}')).toBe(
       String.raw`\-\/\\\^\$\*\+\?\.\(\)\|\[\]\{\}`,
     )

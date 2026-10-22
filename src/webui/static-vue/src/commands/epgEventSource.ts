@@ -177,9 +177,9 @@ function buildEventCommand(entry: EpgEventEntry, deps: EpgEventSourceDeps): Comm
   /* Secondary: Record this event. Gated on `dvr` permission —
    * the server endpoint requires the RECORDER access flag, so a
    * user without it would get a 403; hiding the action is the
-   * honest UX. The handler fires the same endpoint Classic's
-   * EPG event drawer uses, with just `event_id` — `config_uuid`
-   * is omitted so the server picks the user's default DVR config.
+   * honest UX. The handler fires the same endpoint as the EPG
+   * event drawer, with an empty `config_uuid` so the server
+   * picks the user's default DVR config.
    * Tertiary: Record series — schedules an autorec by the event's
    * series link (or title fallback), so every airing of the show
    * is recorded automatically. Same permission gate; same shape
@@ -207,10 +207,7 @@ async function recordEvent(
      * server (`api_dvr_entry_create_from_single` in
      * src/api/api_dvr.c — returns EINVAL/400 if either is
      * missing). Passing `config_uuid: ''` lets the server fall
-     * back to the user's default DVR config — same as Classic's
-     * EPG record dialog when no specific config is selected
-     * (`tvheadend.epgrec.js` calls `getValue()` on the unset
-     * combo, which returns the empty string). */
+     * back to the user's default DVR config. */
     await apiCall('dvr/entry/create_by_event', {
       event_id: eventId,
       config_uuid: '',

@@ -6,8 +6,7 @@
 /*
  * Configuration → DVB Inputs → Muxes.
  *
- * Mirrors the legacy ExtJS Muxes grid (`static/app/mpegts.js:93-138`,
- * `tvheadend.muxes`). Backed by the `mpegts_mux` parent class
+ * Backed by the `mpegts_mux` parent class
  * (`src/input/mpegts/mpegts_mux.c:521`) plus per-network mux
  * subclasses dispatched at create time via the network's
  * `mn_mux_class()` callback (DVB-T mux for DVB-T network, DVB-C
@@ -27,7 +26,7 @@
  * and routes both metadata fetch and create POST through those
  * endpoints with the network UUID merged into the payload.
  *
- * No Force Scan toolbar action — ExtJS doesn't have one on muxes;
+ * No Force Scan toolbar action on muxes;
  * scan-everything-on-this-network lives on the Networks page
  * already (see `DvbNetworksView.vue`).
  */
@@ -51,12 +50,11 @@ import { formatMuxFrequency } from './muxFrequency'
 const { t } = useI18n()
 
 /* "Hide" filter — three-option dropdown surfaced in the
- * GridSettingsMenu (above View level). Mirrors the legacy ExtJS
- * picklist (`idnode.js:1998-2026`) and feeds the server's
+ * GridSettingsMenu (above View level). It feeds the server's
  * `hidemode` param (`api/api_mpegts.c:236-252`). The keys + the
- * mapping rules are hardcoded both in ExtJS and the server's
+ * mapping rules are hardcoded both here and in the server's
  * `if (!strcmp(s, "all"))` branches; if a future tvheadend release
- * adds a fourth mode, both clients need a small patch alongside
+ * adds a fourth mode, this list needs a small patch alongside
  * the server change.
  *
  *   - 'default' (server `hide=1`, default fallthrough): hide muxes
@@ -69,9 +67,9 @@ const { t } = useI18n()
  *   - 'none'    (server `hide=0`): show everything regardless of
  *     network or mux enabled state. Useful for debugging.
  *
- * Classic labels the default "Inactive services" on both grids.
  * Muxes are not services, so the default reads "Disabled
- * networks" here, which is what it hides. The default already
+ * networks" here (not "Inactive services" as on the Services
+ * grid), which is what it hides. The default already
  * hides rows, so `inactiveValue` makes the Filters summary say so
  * instead of "None". */
 const hideMode = ref<'default' | 'all' | 'none'>('default')
@@ -138,8 +136,7 @@ function onFilterChange(key: string, value: string) {
  * svc/chn counts stay desktop-only — diagnostic detail behind
  * a tap. */
 const cols: ColumnDef[] = [
-  /* Per-row Play icon. Synthetic column — matches Classic's
-   * leftmost Play column on Muxes (`mpegts.js:118-131`).
+  /* Per-row Play icon. Synthetic leftmost column.
    * `hideHeaderLabel` keeps the header icon-only while the
    * column picker / screen reader / hover tooltip see "Play". */
   {
@@ -256,7 +253,7 @@ const cols: ColumnDef[] = [
 /* No `list` filter for the editor — the parent-scoped class
  * fetch (`mpegts/network/mux_class?uuid=<network>`) returns the
  * full per-network mux subclass props, which is exactly what
- * ExtJS surfaces in its create dialog. */
+ * the create form needs. */
 const editList = ref('')
 
 const {

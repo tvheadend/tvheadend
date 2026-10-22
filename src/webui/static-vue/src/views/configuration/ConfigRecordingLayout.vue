@@ -5,8 +5,7 @@
 <script setup lang="ts">
 /*
  * ConfigRecordingLayout — L3 navigation scaffold inside
- * Configuration → Recording. Hosts the two sub-tabs in
- * Classic-UI order per `static/app/tvheadend.js:1161-1173`:
+ * Configuration → Recording. Hosts the two sub-tabs:
  *
  *   1. DVR Profiles  — always visible to admins
  *   2. Timeshift     — gated on `timeshift` capability
@@ -15,10 +14,7 @@
  * PageTabs row above a router-view. Timeshift is filtered
  * client-side here so builds without the capability don't see
  * the tab; the matching `configRecordingTimeshiftGuard` route
- * guard catches direct-URL access. Mirrors the legacy ExtJS
- * conditional `if (tvheadend.capabilities.indexOf('timeshift')
- * !== -1) tvheadend.timeshift(tsdvr)` at
- * `static/app/tvheadend.js:1170`.
+ * guard catches direct-URL access.
  */
 import { computed } from 'vue'
 import PageTabs from '@/components/PageTabs.vue'
@@ -29,8 +25,7 @@ interface L3Tab {
   to: string
   label: string
   /* Hidden unless `capabilities.has(name)` returns true. Only
-   * `'timeshift'` is in use today (matches the legacy ExtJS
-   * `tvheadend.capabilities.indexOf('timeshift')` check). */
+   * `'timeshift'` is in use today. */
   requiredCapability?: string
 }
 

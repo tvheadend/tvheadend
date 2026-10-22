@@ -16,11 +16,7 @@
  *   - RIGHT: IdnodeConfigForm bound to the selected profile's UUID
  *     — the per-codec subclass fields auto-render here on edit.
  *
- * Add / Clone — both form-based, mirroring ExtJS's
- * `tvheadend.codec_tab()` (`static/app/codec.js:550`) +
- * `idnode_form_grid`'s Clone shape
- * (`idnode.js:2378-2388` — `idnode_create(conf.add, true,
- * currentFormValues)`):
+ * Add / Clone — both form-based:
  *
  *   - Add: pick a codec → open an IdnodeEditor create-mode drawer
  *     scoped on that codec; the user fills name + settings; save
@@ -34,8 +30,7 @@
  *     create-mode drawer scoped on the source's codec, with the
  *     source's values pre-filled (`name` suffixed " (copy)"). The
  *     simple one-click `cloneIdnode` doesn't fit
- *     `codec_profile/create` (name required, no uuid back) and
- *     ExtJS's Clone is itself form-based, so the v2 follows suit.
+ *     `codec_profile/create` (name required, no uuid back).
  *
  * `codec_profile_class` (`src/transcoding/codec/profile_class.c`,
  * `ic_perm_def = ACCESS_ADMIN`). Only reachable when the server is
@@ -91,8 +86,8 @@ async function onCloneClick(): Promise<void> {
   if (!selected.value || cloneInflight.value) return
   cloneInflight.value = true
   try {
-    /* Mirror ExtJS Clone (`idnode.js:2385`) — open the same Add
-     * form pre-filled with the source row's current values. */
+    /* Open the same Add form pre-filled with the source row's
+     * current values. */
     const resp = await apiCall<{
       entries?: Array<{ params?: Array<{ id: string; value?: unknown }> }>
     }>('idnode/load', { uuid: selected.value })

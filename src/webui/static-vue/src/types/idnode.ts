@@ -95,9 +95,8 @@ export interface IdnodeProp {
    *   2. Deferred reference — `{ type: 'api', uri: string, params: {…} }`.
    *      Used for dynamic lists (channels, DVR configs). Client must
    *      fetch the listed `uri` with `params` to materialize the
-   *      options. The ExtJS UI handles this via
-   *      `tvheadend.idnode_enum_store`; our IdnodeFieldEnum has its
-   *      own equivalent (with a module-level result cache).
+   *      options. IdnodeFieldEnum does this, with a module-level
+   *      result cache.
    */
   enum?:
     | { key: string | number; val: string }[]
@@ -158,8 +157,7 @@ export function propLevel(p: IdnodeProp): UiLevel {
 
 /*
  * Does a column at level `target` show when the user's effective level
- * is `current`? Mirrors tvheadend.uilevel_match() in the existing UI
- * (src/webui/static/app/tvheadend.js:382).
+ * is `current`? Monotonic — a higher level sees every lower one.
  *
  *   current = 'basic'    → only target='basic' visible
  *   current = 'advanced' → 'basic' + 'advanced' visible

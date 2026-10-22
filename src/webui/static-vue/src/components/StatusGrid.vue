@@ -52,8 +52,8 @@ interface Props {
   storageKey: string
   /* Optional initial sort. When provided, the grid mounts with
    * this column / direction selected so it lands in a defined
-   * sort state immediately (always-defined-sort policy —
-   * matches Classic ExtJS parity for IdnodeGrid). Status views
+   * sort state immediately (always-defined-sort policy, as for
+   * IdnodeGrid). Status views
    * pass per-view defaults; the column-header click cycle
    * inside DataGrid does the rest. The default is also fed to
    * useGridLayout so a user pick that matches it gets elided
@@ -69,9 +69,8 @@ interface Props {
    * behaviour as IdnodeGrid's `helpPage`. When set, renders a
    * Lucide HelpCircle icon button to the right of GridSettingsMenu
    * in the toolbar; clicking toggles the AppShell-mounted
-   * HelpDialog. Values follow the legacy ExtJS path strings used
-   * by `status.js` / `servicemapper.js` (`status_stream`,
-   * `status_subscriptions`, `status_connections`,
+   * HelpDialog. Values are the status markdown page keys
+   * (`status_stream`, `status_subscriptions`, `status_connections`,
    * `status_service_mapper`). Unset → no Help button (Log tab). */
   helpPage?: string
 }

@@ -15,7 +15,7 @@
  * section); IdnodeGrid seeds each spec's `current` into the fetch
  * params — the production contract DvbServices' "Hide" select rides
  * daily. Pins:
- *   - the spec defaults to `duplicates` = '0' (hidden, ExtJS parity),
+ *   - the spec defaults to `duplicates` = '0' (hidden),
  *   - a filter-change flips it to '1' and persists across mounts,
  *   - skipped rows (duplicate > 0) classify as dimmed via the
  *     grid's rowClass hook; normal rows don't,
@@ -111,7 +111,7 @@ function skipFilterSpec(): GlobalFilterSpec | undefined {
 }
 
 describe('UpcomingView — dedup-skipped entries', () => {
-  it('declares the duplicates filter defaulting to "0" (hidden, ExtJS parity)', () => {
+  it('declares the duplicates filter defaulting to "0" (hidden)', () => {
     mount(UpcomingView)
     expect(gridProps.current?.endpoint).toBe('dvr/entry/grid_upcoming')
     const spec = skipFilterSpec()!
@@ -236,7 +236,7 @@ describe('UpcomingView — translations from existing catalogs', () => {
     expect(after?.enumSource).toEqual(csPri)
   })
 
-  it('uses the Classic msgid for the Previously recorded tooltip', () => {
+  it('translates the Previously recorded tooltip through its msgid', () => {
     g.tvh_locale = {
       'Toggle the previously recorded state.': 'Przełącz stan wcześniej nagranych.',
     }

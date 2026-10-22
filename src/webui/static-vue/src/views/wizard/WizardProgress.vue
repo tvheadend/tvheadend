@@ -61,12 +61,10 @@ const activeStep = computed<string>(() => routeNameToStep(route.name))
 /*
  * Step labels mirror the C-side `ic_caption` strings declared in
  * `src/wizard.c`. These literals are NOVEL to the Vue UI's
- * client-side i18n surface — the Classic UI catalog never had
- * them, so seeding `intl/vue` brought no translations. They
- * reach `t()` through `STEP_LABELS`, which `make intl` cannot
- * extract, so they fall back to English on every locale until a
- * follow-up marks them for extraction. Each is marked
- * `/* i18n: new string *\/` so a future audit finds them. */
+ * client-side i18n surface. They reach `t()` through `STEP_LABELS`,
+ * which `make intl` cannot extract, so they fall back to English on
+ * every locale until a follow-up marks them for extraction. Each is
+ * marked `/* i18n: new string *\/` so a future audit finds them. */
 const STEP_LABELS: Record<WizardStepName, string> = {
   /* i18n: new string */ hello: 'Welcome',
   /* i18n: new string */ login: 'Access Control',

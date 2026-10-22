@@ -15,11 +15,10 @@
  * verified at api/api_status.c:117-128). The action label "Drop"
  * is deliberately not "Cancel" — the latter conflicts with the
  * Cancel-this-dialog button in the editor drawer and would confuse
- * users. ExtJS itself uses "Drop all connections" for the bulk
- * variant, so the verb has translation precedent.
+ * users.
  *
- * Columns mirror status.js:681-738. Server addresses / ports are
- * coalesced into one "Server" cell to save columns; same for client.
+ * Server addresses / ports are coalesced into one "Server" cell to
+ * save columns; same for client.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'

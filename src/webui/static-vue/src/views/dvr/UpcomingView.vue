@@ -7,18 +7,17 @@
  * DVR Upcoming view — first concrete consumer of <IdnodeGrid>.
  *
  * Mounts the generic grid against `dvr/entry/grid_upcoming` with a
- * column set chosen to match what the ExtJS UI's "Upcoming / Current
- * Recordings" panel shows (see src/webui/static/app/dvr.js
- * `tvheadend.dvr_upcoming`). Field choices:
+ * column set for the "Upcoming / Current Recordings" list. Field
+ * choices:
  *
  *   - `disp_title`   server-resolved display string (avoids the raw
  *                    PT_LANGSTR { "ger": "..." } object that the
  *                    `title` field carries).
  *   - `channelname`  flat string. `channel` is a UUID reference.
  *   - `start`/`stop` Unix epoch seconds — formatted client-side.
- *                    The grid sorts on `start`. (ExtJS shows and
- *                    sorts on `start_real`, which differs from
- *                    `start` by the `start_extra` padding; the plain
+ *                    The grid sorts on `start`. (`start_real`
+ *                    differs from `start` by the `start_extra`
+ *                    padding; the plain
  *                    start time is close enough for sorting purposes
  *                    and it is the column the user can see.) The
  *                    padded `start_real` / `stop_real` pair is
@@ -32,9 +31,9 @@
  *                    ("Waiting for stream", no free adapter, …).
  *                    Its own column, and the state icon's label.
  *
- * Dedup-skipped reruns: hidden by default (`duplicates=0`, mirroring
- * the ExtJS grid at `dvr.js:508` — the server includes them unless
- * asked not to, `api_dvr.c`, and they'd show as ordinary "Scheduled"
+ * Dedup-skipped reruns: hidden by default (`duplicates=0` — the
+ * server includes them unless asked not to, `api_dvr.c`, and they'd
+ * show as ordinary "Scheduled"
  * rows although they will not record). A "Skipped reruns" setting in
  * the grid-settings popover's Filters section reveals them dimmed
  * with a "Will be skipped" status — see the showSkipped block below.
@@ -43,22 +42,17 @@
  *   - `pri`          priority enum (server renders to a localized
  *                    string in the `pri` field for the grid view).
  *
- * Abort is a bulk action driven by row selection — matches the ExtJS
- * pattern (see src/webui/static/app/dvr.js `dvrButtonFcn`): the user
+ * Abort is a bulk action driven by row selection: the user
  * selects rows in the grid (checkbox column on desktop, leading card
  * checkbox on phone), then clicks the toolbar Abort button which sends
  * a single API call with all selected UUIDs as a JSON-encoded array.
- *
- * Button label, tooltip, and confirmation copy match ExtJS verbatim
- * so all three strings already exist in `intl/js/tvheadend.js.pot` —
- * no re-translation work needed once the Vue i18n surface is wired.
  *
  * Comet pushes a `dvrentry` notification once the server processes
  * the abort; the grid store auto-refetches.
  *
  * `api/dvr/entry/cancel` (the URL) covers both upcoming and currently-
  * recording cases. Endpoint name and user-facing button text differ;
- * we follow ExtJS in showing "Abort" to the user.
+ * the user sees "Abort".
  *
  */
 import { computed, ref, watch } from 'vue'
@@ -93,11 +87,10 @@ const kodiFmt = makeKodiPlainFmt(() => !!access.data?.label_formatting)
  * popover's Filters section (the GlobalFilterSpec machinery — same
  * idiom as DvbServices' "Hide" select). Hidden (default): the grid
  * fetches with `duplicates=0` — dedup-skipped rerun entries are
- * hidden, matching the classic grid. Shown: `duplicates=1` brings
- * them back, dimmed with a "Will be skipped" status, so the one list
- * people consult for "what will actually record" can also explain
- * what will NOT — something neither UI offered before (the classic
- * grid hides them with no way back). Persisted per-browser.
+ * hidden. Shown: `duplicates=1` brings them back, dimmed with a
+ * "Will be skipped" status, so the one list people consult for "what
+ * will actually record" can also explain what will NOT. Persisted
+ * per-browser.
  * IdnodeGrid seeds each spec's `current` into the fetch params and
  * refetches on change; the non-default pick lights the Filters
  * section's accent chip for free.
@@ -151,17 +144,16 @@ function rowClassFor(row: BaseRow): string | undefined {
 }
 
 /* A skipped rerun's server status still says "Scheduled for
- * recording" — name it honestly (classic msgid, translations ride
- * along) when the toggle reveals such rows. Empty for other rows. */
+ * recording" — name it honestly when the toggle reveals such
+ * rows. Empty for other rows. */
 function skippedLabel(row: BaseRow): string {
   return isSkipped(row) ? t('Will be skipped') : ''
 }
 
 /*
- * Column set roughly matches the ExtJS Upcoming view's `list` (see
- * `src/webui/static/app/dvr.js` `tvheadend.dvr_upcoming`). Server
- * idnode metadata supplies each property's view-level (basic /
- * advanced / expert flag from PO_ADVANCED / PO_EXPERT) and
+ * Column set for the Upcoming view. Server idnode metadata
+ * supplies each property's view-level (basic / advanced / expert
+ * flag from PO_ADVANCED / PO_EXPERT) and
  * hidden-by-default state, so most users see a tight grid even with
  * 12+ columns declared. Per-field config (sortable, filterType,
  * width, minVisible, format) comes from the shared DVR_FIELDS map so
@@ -189,8 +181,7 @@ const cols: ColumnDef[] = [
   /* `channel` (UUID, deferred enum) instead of `channelname`
    * (resolved string, server-side rdonly) — gives the user an
    * inline-editable dropdown with channel names while the cell
-   * still displays the resolved name via `EnumNameCell`.
-   * Matches Classic's edit list at `static/app/dvr.js:504`. */
+   * still displays the resolved name via `EnumNameCell`. */
   /* Override the shared phone-card pairing for Upcoming: force
    * `channel` and `start` onto their own rows (no 2-up split).
    * Recording titles + start times read clearer at full width
@@ -201,8 +192,7 @@ const cols: ColumnDef[] = [
   { field: 'stop', ...DVR_FIELDS.stop },
   { field: 'duration', ...DVR_FIELDS.duration },
   /* Localized status text. Says why an entry is not recording
-   * yet (waiting for stream, no free adapter, no access), which
-   * Classic's Upcoming grid leaves to the icon's details dialog. */
+   * yet (waiting for stream, no free adapter, no access). */
   {
     field: 'status',
     ...DVR_FIELDS.status,
@@ -254,10 +244,7 @@ const gridCols = computed(() => withServerPriEnum(cols, idnodeClass.get('dvrentr
  * full rationale (was duplicated inline across 6 sub-views before
  * extraction).
  *
- * Confirmation copy + failure-prefix strings are the verbatim
- * phrasings from `static/app/dvr.js` so existing translations
- * apply once vue-i18n lands. Endpoints match the ExtJS calls
- * exactly (cancel / stop / prevrec/toggle / idnode/delete).
+ * Endpoints: cancel / stop / prevrec/toggle / idnode/delete.
  */
 const cancel = useBulkAction({
   endpoint: 'dvr/entry/cancel',
@@ -287,8 +274,7 @@ const remove = useBulkAction({
 
 /*
  * Editor field allowlist — sent to api/idnode/load as `list=...` so
- * the server returns only these properties. Mirrors the elist string
- * built in src/webui/static/app/dvr.js (`tvheadend.dvr_upcoming`):
+ * the server returns only these properties:
  *   list  = base fields visible to all users
  *   elist = base + admin-only fields when the current user is admin
  *
@@ -299,8 +285,7 @@ const remove = useBulkAction({
  * list metadata endpoint so generic code derives the right list per
  * class without each caller restating it.
  *
- * Edit and Create use DIFFERENT field lists, mirroring ExtJS's two
- * strings in dvr.js:
+ * Edit and Create use DIFFERENT field lists:
  *
  *   list  = base 11 fields, used for the Add dialog. No `enabled`
  *           (a new entry is enabled by default — choosing otherwise
@@ -338,8 +323,7 @@ const editList = adminAwareEditList({
  * reads it through the gridRef template ref).
  *
  * editorList switches between editList (admin-aware, with enabled +
- * retention/removal) and the bare base list for create mode (matches
- * ExtJS's `add: { params: { list: list } }`).
+ * retention/removal) and the bare base list for create mode.
  */
 const {
   editingUuid,
@@ -361,13 +345,13 @@ const {
 
 /*
  * Predicate: at least one selected row is currently RECORDING (vs
- * scheduled-but-not-yet-started). Mirrors ExtJS's gating rule for
- * the Stop / Abort buttons in dvr.js:560-572 — those buttons make
- * sense only against an in-progress operation, not against entries
- * that haven't started yet (those go through Delete instead).
+ * scheduled-but-not-yet-started). Gates the Stop / Abort buttons —
+ * those make sense only against an in-progress operation, not
+ * against entries that haven't started yet (those go through
+ * Delete instead).
  *
  * `sched_status` is a string like "scheduled", "recording", "completed",
- * "completedError", etc. (see dvr_db.c). ExtJS uses startsWith
+ * "completedError", etc. (see dvr_db.c). Matched with startsWith
  * because the server occasionally adorns the value (e.g. "recording-warning")
  * but the leading token is canonical.
  */
@@ -382,8 +366,7 @@ function hasRecording(selection: BaseRow[]): boolean {
  * array each render — the composer is invoked from the slot scope so
  * the caller's `selection` and `clearSelection` are bound fresh.
  *
- * Order and gating mirror the ExtJS DVR Upcoming toolbar
- * (dvr.js:640 + the `selected` callback at dvr.js:560-572):
+ * Toolbar order and gating:
  *   - Add (always enabled)               framework button
  *   - Edit (single-row)                  framework button
  *   - Delete (≥1)                        framework button
@@ -402,8 +385,8 @@ function hasRecording(selection: BaseRow[]): boolean {
  * api/epg/events/{related,alternative} (`src/api/api_epg.c:783-784`).
  * Double-click on a dialog row pivots into the shared
  * EpgEventDrawer for Record / Stop / Delete actions. Single-row
- * gate is deliberately tighter than Classic — Classic spawns one
- * dialog per selected row, which doesn't read in a modal SPA.
+ * gate is deliberate — one dialog per selected row doesn't read in
+ * a modal SPA.
  */
 
 /* Broadcast-id sniff for the EPG-dialog action gate. DVR rows
@@ -617,8 +600,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
      (only this view's rowClass resolver emits it). Same unscoped-
      rules pattern as the EPG views. -->
 <style>
-/* Dedup-skipped rows — struck through (the classic UI's duplicate
- * treatment, ext.css .x-epg-duplicate) and dimmed, on the desktop
+/* Dedup-skipped rows — struck through and dimmed, on the desktop
  * table and the phone card alike. The status column carries the
  * "Will be skipped" wording. */
 tr.upcoming__row--skipped > td {

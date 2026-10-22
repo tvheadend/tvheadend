@@ -4,12 +4,9 @@
 /*
  * DVR Removed toolbar actions — minimal action set, three buttons.
  *
- * Mirrors `tvheadend.dvr_removed` in src/webui/static/app/dvr.js
- * (toolbar at line 1009: `tbar: [rerecordButton]`; gating at
- * 975-978 — count-only). The framework adds Edit (single-row) and
- * Delete (≥1) automatically based on `edit:` and `del: true`. We
- * surface those explicitly to match the pattern Failed and Finished
- * use.
+ * Re-record is gated on selection count only. Edit (single-row)
+ * and Delete (≥1) are listed explicitly, as on Failed and
+ * Finished.
  *
  * Final order: Edit, Delete, Re-record. No Download (file is gone),
  * no Move (no destination), no Abort (recording is over). The

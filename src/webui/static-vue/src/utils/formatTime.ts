@@ -10,9 +10,6 @@
  * etc. Without this guard, naive `new Date(0)` would render as
  * "1/1/1970, 1:00:00 AM" which is meaningless to the user.
  *
- * Mirrors ExtJS's idnode time renderer (see
- * `src/webui/static/app/idnode.js:368-401` in the legacy UI).
- *
  * Phone-mode (shared `useIsPhone` breakpoint) switches to a
  * smart-relative compact form so dates fit comfortably inside
  * the 50%-width card-pair cells. Same hierarchy iMessage / Slack
@@ -27,8 +24,7 @@
  * (year + seconds preserved). When the admin has tuned
  * `config.date_mask` (Config → General → Base → "Custom date
  * Format") and the access store carries a non-empty value, the
- * desktop path runs the mask through `toCustomDate` instead —
- * same grammar Classic uses (`tvheadend.js:1458-1497`). Phone
+ * desktop path runs the mask through `toCustomDate` instead. Phone
  * intentionally stays on smart-relative; full custom formats
  * don't fit in card-pair cells.
  */
@@ -117,9 +113,8 @@ export const fmtDate = (v: unknown): string => {
   }
   const mask = getDateMask()
   if (mask) return toCustomDate(d, mask)
-  /* Mirror Classic's `tvheadend.niceDate` (static/app/tvheadend.js:
-   * 800-808) default shape: short weekday + locale numeric date +
-   * 24-hour clock with seconds, regardless of browser locale's
+  /* Default shape: short weekday + locale numeric date + 24-hour
+   * clock with seconds, regardless of browser locale's
    * habitual 12h/24h convention. Keeps every admin surface
    * (DVR Start / Stop, EPG drawer Start Time / End Time, EPG
    * Table Start, idnode form PT_TIME fields) on a single,

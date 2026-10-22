@@ -6,13 +6,10 @@
 /*
  * Configuration → Users → Passwords.
  *
- * Mirrors the legacy ExtJS Passwords grid
- * (`src/webui/static/app/acleditor.js:64-96`,
- * `tvheadend.passwdeditor`). Backed by `passwd_entry_class` at
- * `src/access.c:2265-2346`.
+ * Backed by `passwd_entry_class` at `src/access.c:2265-2346`.
  *
- * Field set is small enough that ExtJS uses the same `list`
- * (line 66) for both grid display AND the edit drawer:
+ * Field set is small enough that the same `list` serves both grid
+ * display AND the edit drawer:
  * `enabled,username,password,auth,authcode,comment`.
  *
  * No move support — `passwd_entry_class` declares no
@@ -34,9 +31,7 @@ import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
 const { t } = useI18n()
 
-/* `acleditor.js:73-79` widths translated.
- *
- * Phone-card layout: username as bold headline, enabled + auth
+/* Phone-card layout: username as bold headline, enabled + auth
  * as the 2-up health snapshot, comment as full-width trailer
  * (free text, typically wider than a 50% column).
  * Password / authcode stay desktop-only — drawer-edited

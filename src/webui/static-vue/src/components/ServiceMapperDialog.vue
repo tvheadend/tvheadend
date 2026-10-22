@@ -6,11 +6,7 @@
 /*
  * ServiceMapperDialog — modal that hosts the Service Mapper
  * configure-and-trigger form. Opened from the Channels and DVB
- * Services grid pages via their "Map services" toolbar action;
- * mirrors Classic's `tvheadend.service_mapper_sel` /
- * `service_mapper0` (`static/app/servicemapper.js:96-163`)
- * which opens the form via `tvheadend.idnode_editor_win` from
- * the same grid trigger points.
+ * Services grid pages via their "Map services" toolbar action.
  *
  * Why a dialog (and not a side drawer or a dedicated route):
  *   - The configure form is a one-shot trigger, not edit-this-
@@ -39,8 +35,8 @@
  * is picked, and `started` is only relayed when the submitted list
  * was non-empty.
  *
- * `mapAll` is Classic's "Map all services" (`servicemapper.js:
- * 130-158`): the dialog fetches every service from the field's own
+ * `mapAll` is "Map all services": the dialog fetches every
+ * service from the field's own
  * enum source (`service/list?enum=1`) and preselects all of them
  * before the form loads. The user can still narrow the pick.
  */
@@ -60,7 +56,7 @@ const props = defineProps<{
    * non-empty selection (DVB Services). Channels passes null
    * (no service uuids in scope on that page). */
   preselect?: Readonly<Record<string, unknown>> | null
-  /* Preselect every service (Classic's "Map all services").
+  /* Preselect every service ("Map all services").
    * Takes precedence over `preselect`. */
   mapAll?: boolean
 }>()

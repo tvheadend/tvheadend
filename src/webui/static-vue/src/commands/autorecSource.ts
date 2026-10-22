@@ -152,8 +152,8 @@ function formatContext(entry: AutorecRow, isEnabled: boolean): string {
   const parts: string[] = []
   /* When the user labelled the rule themselves, the `title`
    * matcher is the most useful description ("matches: Doc
-   * Martin"). When name === title (Classic's fallback shape),
-   * skip the duplicate. */
+   * Martin"). When name === title (a rule named after its
+   * title), skip the duplicate. */
   if (entry.title && entry.title !== entry.name) {
     parts.push(entry.title)
   }

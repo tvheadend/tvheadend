@@ -23,7 +23,7 @@ const SRC_ROOT = resolve(process.cwd(), 'src')
 
 /* Server routes registered under the webroot (http_path_add). Router
  * paths like '/dvr/upcoming' are internal and deliberately absent. */
-const ROUTES = String.raw`(api|comet|play|dvrfile|stream|imagecache|markdown|redir|static|extjs\.html|login|logout|gui)`
+const ROUTES = String.raw`(api|comet|play|dvrfile|stream|imagecache|markdown|redir|static|login|logout|gui)`
 
 /* Root-absolute server route inside ' or " quotes. Comments quote
  * paths with backticks, so plain prose doesn't trip this. */

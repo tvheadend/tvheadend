@@ -10,8 +10,7 @@
  * non-default config when scheduling a recording.
  *
  * Response shape: `{ entries: [{ key: <uuid>, val: <name> }, ...] }`.
- * `enum=1` filters to enabled configs only — the same toggle the
- * legacy ExtJS popup uses (`src/webui/static/app/epg.js:377-386`).
+ * `enum=1` filters to enabled configs only.
  *
  * Error policy: a fetch failure leaves `entries` empty and `error`
  * set; the consumer falls back to "default profile only", which
@@ -52,11 +51,10 @@ export const useDvrConfigStore = defineStore('dvrConfig', () => {
     })
       .then((res) => {
         const list = Array.isArray(res?.entries) ? res.entries : []
-        /* Server's enum=1 response isn't guaranteed sorted; legacy
-         * combo applied a client-side sort by val ASC
-         * (`static/app/epg.js:382-385`). Sorting here puts the auto-
-         * created default config (localised title "(Default profile)",
-         * leading `(` sorts before letters) at the top of the list. */
+        /* Server's enum=1 response isn't guaranteed sorted. Sorting
+         * by val ASC puts the auto-created default config
+         * (localised title "(Default profile)", leading `(` sorts
+         * before letters) at the top of the list. */
         list.sort((a, b) => a.val.localeCompare(b.val))
         entries.value = list
         loaded.value = true

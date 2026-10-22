@@ -2,10 +2,9 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * toCustomDate — TypeScript port of Classic's tvheadend.toCustomDate
- * (tvheadend.js:1458-1497). Tests pin each grammar token to the same
- * output Classic produces, so an admin's `config.date_mask` renders
- * identically across the two UIs.
+ * toCustomDate — the `config.date_mask` formatter. Tests pin each
+ * grammar token's output, so an admin's mask keeps rendering the
+ * same way.
  *
  * Date fixture: 2026-05-12 13:07:09.025 local time. Year 2026,
  * month 5 (May), day 12, hour 13, minute 7, second 9, millis 25.
@@ -42,9 +41,9 @@ describe('toCustomDate — fallback when no tokens present', () => {
 })
 
 describe('toCustomDate — numeric tokens', () => {
-  it('%y returns the year as-is (single-token short-circuit, Classic parity)', () => {
-    /* Classic's `match.length === 2 ? value : padded`: %y is two
-     * chars so no padding/slicing — full year emitted. */
+  it('%y returns the year as-is (single-token short-circuit)', () => {
+    /* `match.length === 2 ? value : padded`: %y is two chars so
+     * no padding/slicing — full year emitted. */
     expect(toCustomDate(D, '%y', LOCALE)).toBe('2026')
   })
 
@@ -106,8 +105,8 @@ describe('toCustomDate — numeric tokens', () => {
     expect(toCustomDate(D, '%ss', LOCALE)).toBe('09')
   })
 
-  it('%S returns one digit of milliseconds (Classic parity)', () => {
-    /* Classic's `%S` has no `+`; match length is always 2 so the
+  it('%S returns the milliseconds as-is (single-token short-circuit)', () => {
+    /* `%S` has no `+`; match length is always 2 so the
      * short-circuit branch returns the value as-is. For our
      * `25` fixture that's "25". */
     expect(toCustomDate(D, '%S', LOCALE)).toBe('25')

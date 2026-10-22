@@ -7,11 +7,9 @@
  * The server reports a DVR entry's state as a fixed token
  * (`dvr_entry_schedstatus`, `src/dvr/dvr_db.c:703-737`): the
  * `sched_status` property of dvr_entry rows and the `dvrState`
- * field of EPG event rows. Classic turns the token straight into
- * an icon CSS class (`ext.css` `.scheduled`, `.recording`, …).
- * DvrStateCell (EPG Table, DVR grids) and DvrOverlayBar (Timeline,
- * Magazine) share this mapping so every surface names a state the
- * same way.
+ * field of EPG event rows. DvrStateCell (EPG Table, DVR grids) and
+ * DvrOverlayBar (Timeline, Magazine) share this mapping so every
+ * surface names a state the same way.
  */
 import { t } from '@/composables/useI18n'
 

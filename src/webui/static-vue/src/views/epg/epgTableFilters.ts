@@ -421,8 +421,7 @@ export function countActiveGlobalFilters(
 /*
  * `options` with every GLOBAL filter axis back at its default and
  * everything else (columns, grouping, display) kept. Used by the
- * empty Table's "Clear filters", which, like Classic's "Reset All"
- * (`static/app/epg.js` `epgQueryClear`), only drops filters.
+ * empty Table's "Clear filters", which only drops filters.
  */
 export function withGlobalFiltersCleared<T extends GlobalFilterAxes>(
   options: T,
@@ -524,8 +523,8 @@ export interface AutoRecConfInput {
 
 /*
  * Build the `conf` body POSTed to `dvr/autorec/create`. Carries
- * every filter axis that has a corresponding AutoRec rule field
- * (per Classic's `static/app/epg.js:1548-1574`). Excludes axes
+ * every filter axis that has a corresponding AutoRec rule field.
+ * Excludes axes
  * that don't translate:
  *   - Time window — display-only (rule should fire on future
  *     events whenever they appear, not bounded by today/now).

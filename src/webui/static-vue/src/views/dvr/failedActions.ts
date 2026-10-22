@@ -5,21 +5,18 @@
  * DVR Failed toolbar actions — builder split out from FailedView.vue
  * so the gating logic is unit-testable without mounting the view.
  *
- * Mirrors `tvheadend.dvr_failed` in src/webui/static/app/dvr.js
- * (toolbar at line 945, gating at line 892-898). Five actions:
+ * Five actions:
  *
  *   - Edit (single-row, drawer-edit via the limited Failed edit list)
- *   - Delete (≥1, api/idnode/delete with the verbatim two-line
- *     confirmation copy from dvr.js:910-911)
+ *   - Delete (≥1, api/idnode/delete with a two-line confirmation)
  *   - Re-record (≥1, api/dvr/entry/rerecord/toggle — count-only gate)
  *   - Move to finished (≥1, api/dvr/entry/move/finished — count-only)
  *   - Download (1-row, file>0, /dvrfile/<uuid> in a new tab)
  *
  * Critical difference from Finished: Re-record and Move-to-finished
  * are gated on selection count alone. Only Download requires the
- * first row's filesize > 0 (verified at dvr.js:892-898 — Failed's
- * `selected` callback differs from Finished's, even though the same
- * `firstRowHasFile` predicate applies to Download).
+ * first row's filesize > 0 (the same `firstRowHasFile` predicate
+ * Finished uses).
  */
 import type { BaseRow } from '@/types/grid'
 import type { ActionDef } from '@/types/action'

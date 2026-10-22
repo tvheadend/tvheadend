@@ -4,10 +4,8 @@
 /*
  * IdnodeConfigForm unit tests. Focused on the `lockLevel` prop —
  * whose presence pins the displayed view level and hides the
- * `<LevelMenu>` chooser. Mirrors the legacy ExtJS
- * `idnode_simple({ uilevel: 'expert', … })` semantic
- * (config.js:111 / idnode.js:2953) for pages whose entire field set
- * is single-level-gated server-side (e.g. Image Cache, every field
+ * `<LevelMenu>` chooser, for pages whose entire field set is
+ * single-level-gated server-side (e.g. Image Cache, every field
  * `PO_EXPERT`).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -331,9 +329,9 @@ describe('IdnodeConfigForm — mandatoryFields', () => {
   /* IdnodeConfigForm synthesises `prop.mandatory: true` on the
    * listed field ids inside effectiveProp. IdnodeFieldEnum reads
    * that flag to suppress its `(none)` clear-to-null option for
-   * str-typed enum singletons (language_ui / theme_ui) that have
-   * no clearable equivalent in Classic. Manual allowlist today,
-   * future PO_MANDATORY flag tomorrow. */
+   * str-typed enum singletons (language_ui / theme_ui) that
+   * always carry a value. Manual allowlist today, future
+   * PO_MANDATORY flag tomorrow. */
   const STR_ENUM_PARAMS = [
     {
       id: 'theme_ui',
@@ -378,9 +376,8 @@ describe('IdnodeConfigForm — mandatoryFields', () => {
 describe('IdnodeConfigForm — sub-group merging', () => {
   /* Mirrors the dvr_config layout: parent group "Filename / Tagging
    * Settings" (number 4) plus an unnamed sub-group (number 5,
-   * parent: 4) carrying secondary filename fields. The legacy
-   * ExtJS form nests the sub-group inside the parent fieldset; we
-   * flatten by merging sub-group fields into the parent's bucket
+   * parent: 4) carrying secondary filename fields. We flatten
+   * by merging sub-group fields into the parent's bucket
    * so users see one collapsible "Filename / Tagging" section
    * containing all 4 fields rather than two adjacent sections
    * (one named, one orphaned). */
@@ -472,9 +469,8 @@ describe('IdnodeConfigForm — sub-group merging', () => {
 })
 
 describe('IdnodeConfigForm — level-bucket fallback', () => {
-  /* Mirrors Classic `idnode_simple` at `static/app/idnode.js:
-   * 1047-1059`: when the class declares no server-defined
-   * groups, fall back to bucketing fields by view level into
+  /* When the class declares no server-defined groups, fall back
+   * to bucketing fields by view level into
    * "Basic Settings" / "Advanced Settings" / "Expert Settings"
    * synthetic fieldsets. Special case: if only the Basic bucket
    * has fields, render a single unnamed section. This is what
@@ -526,10 +522,8 @@ describe('IdnodeConfigForm — level-bucket fallback', () => {
   it('renders only the Expert Settings section for an all-expert class (Image cache shape)', async () => {
     /* Image cache: every field is PO_EXPERT. lockLevel='expert'
      * so basic/advanced level filters don't suppress anything.
-     * Classic renders this as a single "Expert Settings"
-     * fieldset (line 1054 of idnode.js fires; lines 1052/1054/
-     * 1056 are if-not-else-if so each adds independently — only
-     * Expert fires here because df / af are empty). */
+     * Only the Expert bucket has fields, so it renders as a
+     * single "Expert Settings" fieldset. */
     const access = useAccessStore()
     access.data = { admin: true, dvr: true, uilevel: 'expert' }
 
@@ -577,9 +571,9 @@ describe('IdnodeConfigForm — level-bucket fallback', () => {
     access.data = { admin: true, dvr: true, uilevel: 'expert' }
 
     /* With explicit server-side groups, the standard group-
-     * based path runs even when fields have mixed levels.
-     * Classic does the same — `meta.groups` presence flips
-     * idnode_editor_form into group-rendering mode. */
+     * based path runs even when fields have mixed levels —
+     * `meta.groups` presence flips the form into
+     * group-rendering mode. */
     const wrapper = await mountWithParams(
       [
         { id: 'enabled', type: 'bool', caption: 'Enabled', value: false, group: 1 },
@@ -602,9 +596,7 @@ describe('IdnodeConfigForm — Save button overrides', () => {
   /* `saveLabel` + `saveTooltip` let pages tweak the Save button's
    * wording without slot scaffolding. The Debugging page uses
    * "Apply configuration (run-time only)" with a tooltip
-   * explaining changes are runtime-only — matching Classic's
-   * `saveText` / `saveTooltip` pattern at `static/app/tvhlog.js:
-   * 369-371`. */
+   * explaining changes are runtime-only. */
   it('renders the default "Save" label when saveLabel is unset', async () => {
     const access = useAccessStore()
     access.data = { admin: true, dvr: true, uilevel: 'basic' }
@@ -743,8 +735,7 @@ describe('IdnodeConfigForm — alwaysDirty (trigger forms)', () => {
    * "persist these field changes". Service Mapper is the
    * canonical consumer — Map services should always be
    * clickable, even when the form's options match the server's
-   * last-saved state. Mirrors Classic's
-   * `idnode_editor_win({ alwaysDirty: true })` flag. */
+   * last-saved state. */
   it('Save button stays enabled with alwaysDirty=true on a clean form', async () => {
     const access = useAccessStore()
     access.data = { admin: true, dvr: true, uilevel: 'basic' }
@@ -1343,5 +1334,46 @@ describe('IdnodeConfigForm — access refetch on save', () => {
     const endpoints = apiMock.mock.calls.map((c) => c[0])
     expect(endpoints).toContain('imagecache/config/save')
     expect(endpoints).not.toContain('access/whoami')
+  })
+})
+
+describe('IdnodeConfigForm — field rules', () => {
+  async function mountCodec(params: ReadonlyArray<Record<string, unknown>>) {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+    apiMock.mockResolvedValueOnce({ entries: [{ class: 'codec_profile_libx264', params }] })
+    const wrapper = mount(IdnodeConfigForm, {
+      props: { uuid: 'u1' },
+      global: { stubs: { Select: SELECT_STUB } },
+    })
+    await flushPromises()
+    return wrapper
+  }
+
+  const PARAMS = [
+    { id: 'crf', type: 'int', caption: 'CRF', value: 23 },
+    { id: 'bit_rate', type: 'dbl', caption: 'Bitrate', value: 2000 },
+  ]
+
+  it('locks and zeroes bit_rate while a quality is set, and saves the pinned value', async () => {
+    const wrapper = await mountCodec(PARAMS)
+    const [, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(bitRate.attributes('disabled')).toBeDefined()
+
+    apiMock.mockResolvedValueOnce({})
+    apiMock.mockResolvedValueOnce({ entries: [{ class: 'codec_profile_libx264', params: PARAMS }] })
+    await wrapper.find('.idnode-config-form__btn--save').trigger('click')
+    await flushPromises()
+    const save = apiMock.mock.calls.find((c) => c[0] === 'idnode/save')
+    expect(JSON.parse((save![1] as { node: string }).node)).toMatchObject({ crf: 23, bit_rate: 0 })
+  })
+
+  it('unlocks bit_rate when the quality goes back to zero', async () => {
+    const wrapper = await mountCodec(PARAMS)
+    const [crf] = wrapper.findAll('input[type="number"]')
+    await crf.setValue('0')
+    await flushPromises()
+    const [, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(bitRate.attributes('disabled')).toBeUndefined()
   })
 })

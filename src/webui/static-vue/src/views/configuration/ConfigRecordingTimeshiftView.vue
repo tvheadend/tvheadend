@@ -8,12 +8,10 @@
  *
  * Singleton config form for the `timeshift_conf_class` idnode
  * (`src/timeshift.c:181-304`, ACCESS_ADMIN, 11 fields across
- * basic / advanced / expert). Mirrors the legacy ExtJS page at
- * `static/app/timeshift.js:1-27` which uses `idnode_simple`
- * against `api/timeshift/config`.
+ * basic / advanced / expert), loaded from and saved to
+ * `api/timeshift/config`.
  *
- * Conditional disable mirrors the legacy `onchange` handler at
- * `static/app/timeshift.js:3-14`:
+ * Conditional disable:
  *   - max_period disabled when unlimited_period.
  *   - max_size  disabled when unlimited_size || ram_only.
  *

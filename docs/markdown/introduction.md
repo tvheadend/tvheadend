@@ -76,7 +76,7 @@ for both live and recorded streams in various formats.
 
 ### Rich Browser-Driven Interface
 * The entire application is loaded into the browser.
-* Based on extJS, all pages are dynamic and self-refreshing.
+* All pages are dynamic and self-refreshing.
 * All sorting/filtering is then done in C by the main application for speed.
 
 ### Easy to Configure and Administer
@@ -336,8 +336,8 @@ these values.
 
 !["Column options"](static/img/doc/introduction/columnoptions.png)
 
-Note, a cookie is used to remember your column/filtering preferences; Clearing
-your cookies will reset the interface to default.
+Note, the browser's local storage is used to remember your column/filtering
+preferences; Clearing your site data will reset the interface to default.
 
 ### Split panels
 

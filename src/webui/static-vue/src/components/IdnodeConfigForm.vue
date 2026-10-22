@@ -50,6 +50,7 @@ import {
 } from '@/components/idnode-fields/validationRules'
 import LevelMenu from '@/components/LevelMenu.vue'
 import { useI18n } from '@/composables/useI18n'
+import { useFieldRules } from '@/composables/useFieldRules'
 import { useHelp } from '@/composables/useHelp'
 import { HelpCircle } from 'lucide-vue-next'
 
@@ -98,9 +99,7 @@ const props = withDefaults(
      * `<LevelMenu>` chooser entirely. Use when every field on the
      * page is gated at a single server-side `PO_*` level and there
      * is nothing for the user to choose between (e.g. Image Cache
-     * — every field `PO_EXPERT`; matches legacy ExtJS
-     * `uilevel: 'expert'` at `static/app/config.js:111` which
-     * suppresses ExtJS's own level button at `idnode.js:2953`).
+     * — every field `PO_EXPERT`).
      * Combines pin + hide in a single prop so call sites can't hide
      * the chooser without committing to a level (which would leave
      * the form blank for users on a lower default level). */
@@ -113,13 +112,12 @@ const props = withDefaults(
      * only path each renderer already honours), so no per-renderer
      * changes are needed.
      *
-     * Use for ExtJS-style onchange dependencies — e.g. Timeshift's
-     * `max_period` disabled when `unlimited_period` is checked,
-     * `max_size` disabled when `unlimited_size || ram_only` (per
-     * legacy `static/app/timeshift.js:3-14`). The predicate runs
-     * inside the form's reactive scope so toggling the trigger
-     * field immediately re-renders the dependent field as
-     * disabled.
+     * Use for onchange dependencies between fields — e.g.
+     * Timeshift's `max_period` disabled when `unlimited_period` is
+     * checked, `max_size` disabled when `unlimited_size ||
+     * ram_only`. The predicate runs inside the form's reactive
+     * scope so toggling the trigger field immediately re-renders
+     * the dependent field as disabled.
      *
      * Server-side `rdonly: true` always wins — the predicate only
      * adds extra disabled states; it can't re-enable a field the
@@ -127,7 +125,7 @@ const props = withDefaults(
     disabledFor?: (id: string, values: Record<string, unknown>) => boolean
     /* Optional override for the Save button's text. Defaults to
      * "Save". Use when a page wants different wording — e.g.
-     * Configuration → Debugging where Classic's button reads
+     * Configuration → Debugging, where the button reads
      * "Apply configuration (run-time only)" because the tvhlog
      * config doesn't persist across restarts. While saving, the
      * button still shows "Saving…" regardless of this prop so
@@ -162,9 +160,7 @@ const props = withDefaults(
      * "trigger this process" forms where each click should fire
      * the request — Service Mapper is the canonical consumer
      * (one click = start a mapping job, regardless of whether
-     * the form's options changed since last save). Mirrors
-     * Classic's `idnode_editor_win({ alwaysDirty: true })` flag
-     * at `static/app/idnode.js:1155`.
+     * the form's options changed since last save).
      *
      * Default false — every existing edit-form / singleton-config
      * consumer (Base / Image cache / SAT>IP / Timeshift /
@@ -200,8 +196,7 @@ const props = withDefaults(
      * decorates each matching prop's `mandatory: true` flag
      * inside effectiveProp, which IdnodeFieldEnum then honours.
      * Use for config singletons whose runtime defaults are
-     * always set (language_ui, theme_ui, etc.) — Classic doesn't
-     * offer a clear affordance for these either.
+     * always set (language_ui, theme_ui, etc.).
      *
      * Manual mapping holds until a server-emitted `PO_MANDATORY`
      * prop opt surfaces the same flag on `prop.mandatory`
@@ -340,6 +335,9 @@ const currentClass = ref<string | null>(null)
 const touched = ref<Set<string>>(new Set())
 const submitAttempted = ref(false)
 
+/* Live per-class field dependencies — see fieldRules.ts. */
+const fieldRules = useFieldRules(currentClass, currentValues)
+
 async function load() {
   /* In uuid mode, an unset uuid (null / undefined / '') means
    * "nothing selected yet" — don't fire a load. Caller normally
@@ -454,9 +452,8 @@ const visibleFields = computed(() =>
  * Without merging, those secondary fields render as an unnamed
  * orphan section between Filename/Tagging and EPG/Autorec —
  * users complained that "these belong to the filename/tagging
- * group". Classic ExtJS renders them nested inside the parent's
- * fieldset; flat-merge gets the same end-state with simpler
- * markup.
+ * group". Flat-merging them into the parent's fieldset keeps
+ * them together with simpler markup than nested fieldsets.
  *
  * For pages with NO server groups (e.g., Image Cache emits
  * fields without a group structure), every field falls into a
@@ -500,16 +497,14 @@ const fieldsByGroup = computed(() => {
 })
 
 /* Classes with NO server-defined groups (Timeshift, Image cache)
- * get level-bucketed rendering — same as Classic `idnode_simple`
- * at `static/app/idnode.js:1047-1059`. Three synthetic fieldsets
+ * get level-bucketed rendering: three synthetic fieldsets
  * ("Basic Settings" / "Advanced Settings" / "Expert Settings"),
- * each holding the visible fields of that level. Special case
- * (line 1047): if ONLY the Basic bucket has fields, render a
- * single unnamed section — no point titling a fieldset when
- * there's only one. Matches Classic's `df.length && !af.length
- * && !rf.length` gate (we don't track read-only as a separate
- * bucket today; read-only fields stay in their natural level
- * bucket and render disabled inline). Negative synthetic group
+ * each holding the visible fields of that level. Special case:
+ * if ONLY the Basic bucket has fields, render a single unnamed
+ * section — no point titling a fieldset when there's only one
+ * (we don't track read-only as a separate bucket today;
+ * read-only fields stay in their natural level bucket and
+ * render disabled inline). Negative synthetic group
  * numbers so we don't collide with any real server group number
  * (always >= 0). */
 function bucketByLevel(
@@ -634,7 +629,8 @@ const mandatorySet = computed(
  * `currentValues.value` — toggling a trigger field re-evaluates
  * the disabled predicate and re-renders dependent fields with
  * the synthesised state. */
-function effectiveProp(p: IdnodeProp): IdnodeProp {
+function effectiveProp(raw: IdnodeProp): IdnodeProp {
+  const p = fieldRules.overlay(raw)
   const isMandatory = mandatorySet.value.has(p.id)
   const isDisabled =
     !!props.disabledFor &&
@@ -668,10 +664,14 @@ const errors = computed<Map<string, string>>(() => {
   const map = new Map<string, string>()
   /* Per-field type-driven first. Skip server-rdonly + UI-hidden
    * props — the user can't fix them anyway. */
-  for (const p of fieldProps.value) {
+  for (const raw of fieldProps.value) {
+    const p = fieldRules.overlay(raw)
     if (p.rdonly || p.noui || p.phidden) continue
     const e = validateField(p, currentValues.value[p.id])
     if (e) map.set(p.id, e)
+  }
+  for (const [id, msg] of fieldRules.ruleErrors()) {
+    if (!map.has(id)) map.set(id, msg)
   }
   /* Class-level rules (required, cross-field, minLength) — only
    * fill IDs that don't already carry a per-field error. */
@@ -965,13 +965,11 @@ onBeforeUnmount(() => {
       <!--
         Help button — same shape + behaviour as IdnodeGrid's
         help button. Sits at the very right of the toolbar
-        (after LevelMenu) so it's the trailing-edge affordance,
-        matching where the Help button sits in the Classic UI's
-        idnode dialogs (`idnode.js:2521`). Suppressed when
-        `lockLevel` is set OR when the page has no help page
-        configured — the LevelMenu's absence shifts the Help
-        button into its place visually rather than leaving a
-        gap.
+        (after LevelMenu) so it's the trailing-edge affordance.
+        Suppressed when `lockLevel` is set OR when the page has
+        no help page configured — the LevelMenu's absence shifts
+        the Help button into its place visually rather than
+        leaving a gap.
       -->
       <button
         v-if="props.helpPage"
@@ -1012,9 +1010,9 @@ onBeforeUnmount(() => {
            browser's default details element disclosure text. Named
            groups render as a collapsible details + summary block;
            unnamed groups render as a plain section with no heading
-           and no collapse affordance. Mirrors ExtJS for single-
-           section idnodes (e.g. Image Cache) that don't declare
-           any property groups server-side. -->
+           and no collapse affordance, as for single-section
+           idnodes (e.g. Image Cache) that don't declare any
+           property groups server-side. -->
       <template v-for="g in displayedGroups" :key="g.group.number">
         <details v-if="g.group.name" class="idnode-config-form__group" open>
           <summary class="idnode-config-form__group-title">{{ g.group.name }}</summary>

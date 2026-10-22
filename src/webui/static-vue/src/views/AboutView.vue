@@ -4,14 +4,12 @@
 -->
 <script setup lang="ts">
 /*
- * AboutView — Vue port of the legacy ExtJS About page
- * (`src/webui/extjs.c:182-229`). Pulls dynamic fields (server
+ * AboutView — the About page. Pulls dynamic fields (server
  * version, API version, enabled capabilities) from
  * `/api/serverinfo`; the rest (copyright, attribution,
- * donation CTA, TMDB/TheTVDB disclaimer) is static text
- * matching the legacy page word-for-word.
+ * donation CTA, TMDB/TheTVDB disclaimer) is static text.
  *
- * Two legacy bits intentionally NOT carried across:
+ * Two details are intentionally not shown:
  *   - Build timestamp — not exposed via any API today; would
  *     need a server change to surface (one `htsmsg_add_str`
  *     line in `api.c:api_serverinfo`).
@@ -23,9 +21,8 @@
  * persistent chrome" follow-up (surfacing version + build
  * details beyond this page).
  *
- * Static images come from the legacy bundle path
- * (`/static/img/...`) — same source the ExtJS About page
- * uses, so we share assets without re-vendoring.
+ * Static images come from the server's `/static/img/...`
+ * path, so assets are shared without re-vendoring.
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { apiCall } from '@/api/client'
@@ -56,9 +53,8 @@ onMounted(async () => {
 })
 
 /* Year in the copyright line — dynamic so it stays current
- * without needing a release. Legacy uses the 4-char prefix of
- * `build_timestamp` which freezes at compile time; the dynamic
- * version is closer to user expectation. */
+ * without needing a release, rather than freezing at compile
+ * time. */
 const currentYear = new Date().getFullYear()
 
 /* Readable names for the server's capability ids
@@ -86,10 +82,10 @@ const capabilities = computed(() =>
     .sort((a, b) => a.label.localeCompare(b.label)),
 )
 
-/* The TMDb and TheTVDB marks are dark artwork that disappears on the
- * dark palettes. Use the white variants there, as the classic Access
- * theme does (xtheme-access.css). `data-theme` always names a
- * concrete palette, Auto is resolved before it is written. */
+/* The TMDb and TheTVDB marks are dark artwork that disappears on
+ * the dark palettes. Use the white variants there. `data-theme`
+ * always names a concrete palette, Auto is resolved before it is
+ * written. */
 const theme = ref(document.documentElement.dataset.theme ?? '')
 let themeObserver: MutationObserver | null = null
 onMounted(() => {
@@ -168,8 +164,7 @@ const tvdbLogo = computed(() => serverUrl(`static/img/tvdb${logoSuffix.value}.pn
         {{ t('icons.') }}
       </p>
       <!-- The help pages embed FamFamFam Silk icons (static/icons
-           links into vendor/famfamsilk). The classic UI credits its
-           own stack on its about.html page. -->
+           links into vendor/famfamsilk). -->
       <p>
         {{ t('Help page icons from') }}
         <a

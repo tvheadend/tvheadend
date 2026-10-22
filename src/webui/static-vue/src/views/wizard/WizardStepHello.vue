@@ -14,9 +14,7 @@
  *    hello-page chrome (form field labels, group headers,
  *    description Markdown, footer buttons) flips to the new
  *    language without a page reload. The user sees the wizard
- *    speak their language immediately on the same screen —
- *    better than ExtJS which does a full
- *    `window.location.reload()` (wizard.js:147) after save.
+ *    speak their language immediately on the same screen.
  *
  *    Debounced 300 ms so a quick scroll through the dropdown
  *    options doesn't fire multiple save round-trips.

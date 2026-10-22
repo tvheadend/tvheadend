@@ -6,16 +6,12 @@
 /*
  * Configuration → Users → IP Blocking.
  *
- * Mirrors the legacy ExtJS IP Blocking grid
- * (`src/webui/static/app/acleditor.js:102-133`,
- * `tvheadend.ipblockeditor`). Backed by `ipblock_entry_class` at
- * `src/access.c:2442-2477`.
+ * Backed by `ipblock_entry_class` at `src/access.c:2442-2477`.
  *
- * ExtJS pins `uilevel: 'expert'` (line 117) which suppresses the
- * View level button per `idnode.js:2953`. None of the 3 fields
- * (enabled, prefix, comment) are level-gated server-side, so the
- * pin is functionally a no-op — it just removes the meaningless
- * level chooser from the toolbar. Mirror with `lock-level="expert"`.
+ * `lock-level="expert"` hides the View level chooser. None of the
+ * 3 fields (enabled, prefix, comment) are level-gated server-side,
+ * so the lock is functionally a no-op — it just removes the
+ * meaningless level chooser from the toolbar.
  *
  * No move support — `ipblock_entry_class` declares no
  * `ic_moveup` / `ic_movedown`.
@@ -35,9 +31,7 @@ import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 
 const { t } = useI18n()
 
-/* `acleditor.js:111-115` widths translated.
- *
- * Phone-card layout: prefix (the blocked CIDR — the natural row
+/* Phone-card layout: prefix (the blocked CIDR — the natural row
  * identifier) as bold headline; enabled + comment as the
  * single 2-up row. Only three columns total, so every one
  * surfaces on phone.

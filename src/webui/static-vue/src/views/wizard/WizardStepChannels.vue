@@ -77,14 +77,13 @@ async function handleFinish(): Promise<void> {
   finishing.value = true
   let saved = false
   try {
-    /* Cancel first, then save, the order Classic uses (the cancel
-     * in presave, static/app/wizard.js). The save's
-     * channels_changed callback removes the default wide-open
-     * access entry once a wizard admin exists (src/wizard.c), and
-     * wizard/cancel needs admin rights. Sent after the save, the
-     * cancel could hit a credentials prompt and leave the wizard
-     * active. The save still runs when the cancel fails, because
-     * it is what removes the wide-open entry. */
+    /* Cancel first, then save. The save's channels_changed callback
+     * removes the default wide-open access entry once a wizard
+     * admin exists (src/wizard.c), and wizard/cancel needs admin
+     * rights. Sent after the save, the cancel could hit a
+     * credentials prompt and leave the wizard active. The save
+     * still runs when the cancel fails, because it is what removes
+     * the wide-open entry. */
     let cancelled = false
     try {
       await wizard.cancel()
@@ -107,23 +106,21 @@ async function handleFinish(): Promise<void> {
   } finally {
     finishing.value = false
   }
-  /* Page reload, not router.push — mirrors ExtJS at
-   * static/app/wizard.js:154. The finish path is the END of the
+  /* Page reload, not router.push. The finish path is the END of the
    * wizard, not a step transition: (1) the channels_changed
-   * callback may have just removed the wide-open default
-   * access entry that the user was authenticated via, so the
-   * browser needs a fresh auth round-trip; (2) `accessUpdate`
-   * isn't re-broadcast when config.wizard clears (server only
-   * emits at mailbox creation, per src/webui/comet.c:300) so a
-   * soft router.push would land back on /wizard/hello via the
-   * stale-cursor guard. Reloading at /gui/ forces a fresh WS
-   * connection that carries the now-empty wizard field; the
-   * regular UI mounts cleanly. ADR 0015 §4's soft-refresh
-   * decision applies to in-wizard transitions, not to the
-   * exit. Runs even if one of the POSTs threw — the user
-   * explicitly chose to finish; trapping them on the channels
-   * step is worse than slight server-side inconsistency
-   * (recoverable from the Configuration UI). */
+   * callback may have just removed the wide-open default access
+   * entry that the user was authenticated via, so the browser needs
+   * a fresh auth round-trip; (2) `accessUpdate` isn't re-broadcast
+   * when config.wizard clears (server only emits at mailbox
+   * creation, per src/webui/comet.c:300) so a soft router.push
+   * would land back on /wizard/hello via the stale-cursor guard.
+   * Reloading at /gui/ forces a fresh WS connection that carries
+   * the now-empty wizard field; the regular UI mounts cleanly. ADR
+   * 0015 §4's soft-refresh decision applies to in-wizard
+   * transitions, not to the exit. Runs even if one of the POSTs
+   * threw — the user explicitly chose to finish; trapping them on
+   * the channels step is worse than slight server-side
+   * inconsistency (recoverable from the Configuration UI). */
   /* Flag the Home dashboard's "Setup complete" greeting for after
    * the reload — sessionStorage survives the full reload, in-memory
    * state does not. The Home reads + clears it once. Only after a
@@ -149,8 +146,7 @@ async function handleCancel(): Promise<void> {
         <img v-if="iconUrl" :src="iconUrl" alt="" class="wizard-step__icon" />
         <!-- Server-emitted Markdown description rendered through
              `marked` and v-html'd. Safe by trust: source is
-             compiled-in `docs/wizard/*.md`, not user input.
-             Matches ExtJS at `static/app/wizard.js:106`. -->
+             compiled-in `docs/wizard/*.md`, not user input. -->
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-if="descriptionHtml" class="wizard-step__description" v-html="descriptionHtml"></div>
       </header>

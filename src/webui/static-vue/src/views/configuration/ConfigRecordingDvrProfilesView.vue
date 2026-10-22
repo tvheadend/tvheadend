@@ -8,8 +8,6 @@
  *
  * Master-detail layout backed by the `dvr_config_class` idnode
  * (`src/dvr/dvr_config.c:912-1547`, ACCESS_OR(ADMIN, RECORDER)).
- * Mirrors the legacy ExtJS page at `static/app/dvr.js:1019-1038`
- * which uses `idnode_form_grid` against `api/dvr/config`.
  *
  * Same shape as ConfigStreamProfilesView, with two differences:
  *
@@ -42,8 +40,8 @@
  * Default-config delete protection: the server's
  * `dvr_config_class_delete` callback silently no-ops on the
  * default config (`dvr_config.c:589-594`), so attempting Delete
- * on it surfaces no error and leaves it in place — which matches
- * Classic's UX. Rename of the default config is also blocked
+ * on it surfaces no error and leaves it in place. Rename of the
+ * default config is also blocked
  * server-side; the form's Save will reject those attempts and
  * we surface them as toasts.
  */

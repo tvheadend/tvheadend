@@ -129,8 +129,8 @@ interface Props {
   /*
    * Pin the grid's view level and hide the View level section in
    * GridSettingsMenu. Use when every relevant field is single-level-
-   * gated server-side (e.g. IP Blocking — `acleditor.js:117` sets
-   * `uilevel: 'expert'`). Same semantic as `IdnodeConfigForm`'s
+   * gated server-side (e.g. IP Blocking, every field expert).
+   * Same semantic as `IdnodeConfigForm`'s
    * `lockLevel` prop. The localStorage-persisted level override is
    * also bypassed when the prop is set.
    */
@@ -179,9 +179,9 @@ interface Props {
    * surface — useful when the parent view always wants a
    * specific param value regardless of user choice. Example:
    * Channels needs `all: 1` so admins see disabled channels
-   * too (`api/api_channel.c:30-34`); Classic always passes
-   * this with no user toggle. Use `filters` instead when the
-   * user should be able to flip the value.
+   * too (`api/api_channel.c:30-34`), with no user toggle. Use
+   * `filters` instead when the user should be able to flip the
+   * value.
    *
    * Merged BEFORE `filters` so a user-flippable filter with
    * the same key (rare but legal) wins.
@@ -244,9 +244,7 @@ interface Props {
    *   - `'single'`: single-row highlight (PrimeVue's
    *     `selection-mode="single"`), no checkbox column. Used by
    *     master-detail layouts so the user sees which row's config
-   *     is showing in the sibling pane. Mirrors legacy
-   *     `idnode_form_grid`'s `singleSelect: true`
-   *     (`static/app/idnode.js:2316`).
+   *     is showing in the sibling pane.
    *   - `false`: no selection model at all (no checkbox, no
    *     highlight).
    */
@@ -255,13 +253,12 @@ interface Props {
    * Inline cell editing mode. When `'cell'`, columns whose
    * `ColumnDef.editable === true` open an inline editor on
    * cell click; the grid's toolbar gains Save / Undo buttons
-   * for batch commit / revert (Classic ExtJS pattern). Default
-   * undefined — read-only grid, the existing drawer / dialog
-   * editor flows stay the only edit surface.
+   * for batch commit / revert. Default undefined — read-only
+   * grid, the existing drawer / dialog editor flows stay the
+   * only edit surface.
    *
-   * Mirrors Classic's `EditorGridPanel` opt-in
-   * (`static/app/idnode.js:2150-2151`); read-only grids
-   * (Finished / Failed / Removed recordings) don't pass this.
+   * Opt-in per grid; read-only grids (Finished / Failed /
+   * Removed recordings) don't pass this.
    */
   editMode?: 'cell'
   /*
@@ -374,9 +371,8 @@ interface Props {
    *   - true  → cell edit allowed,
    *   - false → blocked silently,
    *   - string → blocked, surface as tooltip / toast.
-   * Mirrors Classic's `beforeedit` listener
-   * (`static/app/dvr.js:574-577` for DVR Upcoming, where rows
-   * with `sched_status === 'recording'` aren't editable).
+   * E.g. DVR Upcoming, where rows with
+   * `sched_status === 'recording'` aren't editable.
    * Only meaningful with `editMode: 'cell'`.
    */
   beforeEdit?: (row: Row, field: string) => boolean | string
@@ -416,9 +412,7 @@ interface Props {
    * `class/dvrentry`, `class/dvrautorec`, `class/channel`).
    * Several DVR tabs (Upcoming / Finished / Failed / Removed)
    * legitimately share `class/dvrentry` since they all show
-   * the same record shape filtered by state — mirrors the
-   * Classic UI's behaviour (`idnode.js:2517 — mdhelp('class/' +
-   * conf.clazz)`).
+   * the same record shape filtered by state.
    *
    * Unset → no Help button rendered (the grid surface stays
    * unchanged for views without an applicable help page).
@@ -468,9 +462,8 @@ const emit = defineEmits<{
 /* Effective default sort — what the grid will use when no
  * consumer-supplied `defaultSort` is in play. Always returns a
  * defined `{ key, dir }`, so every IdnodeGrid lands in a
- * sorted state on first mount (Classic ExtJS parity). When the
- * caller supplied `defaultSort`,
- * that wins. Otherwise pick the first column whose field is
+ * sorted state on first mount. When the caller supplied
+ * `defaultSort`, that wins. Otherwise pick the first column whose field is
  * not `enabled` — `enabled` is rarely a useful sort key (most
  * rows share the same value) so we skip past it. Falls back to
  * the literal first column, then to an empty key, only if the
@@ -921,10 +914,7 @@ function colLabel(col: ColumnDef): string {
 }
 
 /* Server-localized column description for hover tooltips on
- * the column header. Mirrors the Classic UI's per-column hover
- * affordance that Modern was missing — Classic shows the
- * server-emitted `prop.description` on a column-header tooltip;
- * Modern previously just repeated the column title.
+ * the column header — the server-emitted `prop.description`.
  * Returns the empty string when no description is available,
  * which DataGrid interprets as "fall back to the label". */
 function colDescription(col: ColumnDef): string {
@@ -1067,9 +1057,8 @@ const enumLabels = computed<Record<string, Map<string, string>>>(() => {
 
 /*
  * Set of property ids whose server-side type is `'time'` (PT_TIME).
- * Drives the date auto-format branch in `decoratedColumns`. Mirrors
- * ExtJS's idnode time renderer (`src/webui/static/app/idnode.js:368-401`)
- * so a Created / Last seen column doesn't have to wire `format: fmtDate`
+ * Drives the date auto-format branch in `decoratedColumns`, so a
+ * Created / Last seen column doesn't have to wire `format: fmtDate`
  * by hand in every view. Duration-flagged time fields render as `Hh MMm`
  * and are excluded — views that surface them (DVR) still set their own
  * `format: fmtDuration` per-column.
@@ -1326,7 +1315,7 @@ function loadMore() {
  *    Local mirror keeps the indicator in lockstep with the
  *    sort-on-click event. Initialised from the persisted
  *    `gridPrefs.sort` slot (so the user's last sort survives
- *    reloads — Classic-parity) or, when no
+ *    reloads) or, when no
  *    persisted sort exists, from the column-based defaultSort so
  *    the chevron paints correctly on first mount.
  *
@@ -2303,8 +2292,8 @@ function commitCellWithValidation(
  *   - While in edit mode: strip `sortable` + `filterType`
  *     from every column. Re-sorting or filtering would tear
  *     up the user's pending edits visually (rows shuffle /
- *     filter out) — Classic locks these down too. The
- *     toolbar search input is gated separately below. */
+ *     filter out). The toolbar search input is gated
+ *     separately below. */
 const editGatedColumns = computed<ColumnDef[]>(() =>
   decoratedColumns.value.map((col) => {
     let out: ColumnDef = col
@@ -3017,8 +3006,7 @@ defineExpose({
 
     <!--
       Inline cell editing display path. Booleans take the
-      always-mounted-checkbox approach (matching Classic's
-      checkcolumn xtype) so a single tap toggles the value
+      always-mounted-checkbox approach so a single tap toggles the value
       without a separate edit-mode swap. Strings (and the
       numeric / enum / time variants that share this slot)
       render plain text until clicked; PrimeVue's cell-edit

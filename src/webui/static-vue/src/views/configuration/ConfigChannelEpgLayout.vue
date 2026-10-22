@@ -5,8 +5,7 @@
 <script setup lang="ts">
 /*
  * ConfigChannelEpgLayout — L3 navigation scaffold inside
- * Configuration → Channel / EPG. Hosts the seven sub-tabs in
- * Classic-UI order per `static/app/tvheadend.js:1126-1142`:
+ * Configuration → Channel / EPG. Hosts the seven sub-tabs:
  *
  *   1. Channels
  *   2. Channel Tags
@@ -20,8 +19,8 @@
  * row above a router-view. The Rating Labels entry is filtered
  * client-side here so non-expert users don't see the tab; the
  * matching `configRatingLabelsGuard` route guard catches direct-
- * URL access. Mirrors `mpegts.js:429` / `dvbMuxSchedGuard` —
- * page-level gate, not field-level.
+ * URL access. Like `dvbMuxSchedGuard`, it is a page-level gate,
+ * not field-level.
  */
 import { computed } from 'vue'
 import PageTabs from '@/components/PageTabs.vue'
@@ -34,8 +33,8 @@ interface L3Tab {
   to: string
   label: string
   /* Hidden unless the access level reaches this one (monotonic — see
-   * levelMatches). Only 'expert' is in use today (matches the legacy
-   * ExtJS `uilevel: 'expert'` panel attribute on Rating Labels). */
+   * levelMatches). Only 'expert' is in use today, on Rating
+   * Labels. */
   requiredLevel?: UiLevel
 }
 

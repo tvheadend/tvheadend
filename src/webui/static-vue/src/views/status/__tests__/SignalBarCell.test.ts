@@ -2,9 +2,9 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * SignalBarCell — Signal / SNR rendering for the Status → Stream grid
- * (issue #2197). Verifies the scale-driven modes: relative (1) → bar +
- * raw value with classic ProgressColumn colour thresholds, decibel
+ * SignalBarCell — Signal / SNR rendering for the Status → Stream
+ * grid. Verifies the scale-driven modes: relative (1) → bar + raw
+ * value with green / amber / red colour thresholds, decibel
  * (2) → dB(m) text only, other → nothing.
  */
 import { describe, expect, it } from 'vitest'
@@ -29,7 +29,7 @@ describe('SignalBarCell', () => {
     expect(w.find('.signal-bar-cell__fill').attributes('style')).toContain('68.6')
   })
 
-  it('applies the classic colour thresholds (green > 2/3, amber > 1/3, red below)', () => {
+  it('applies the colour thresholds (green > 2/3, amber > 1/3, red below)', () => {
     expect(
       mountCell(60000, { signal_scale: 1 }).find('.signal-bar-cell__fill--good').exists(),
     ).toBe(true)

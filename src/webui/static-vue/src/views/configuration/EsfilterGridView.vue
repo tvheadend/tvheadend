@@ -12,9 +12,8 @@
  * files (`EsfilterVideoView.vue`, …) become 12-line wrappers
  * that supply the class-specific bits.
  *
- * Mirrors the legacy ExtJS `tvheadend.idnode_grid` shape at
- * `src/webui/static/app/esfilter.js:20-124` — Add / Edit /
- * Delete / Move Up / Move Down toolbar, every grid pinned to
+ * Add / Edit / Delete / Move Up / Move Down toolbar, every grid
+ * pinned to
  * `uilevel: 'expert'`, the read-only `class` and `index` fields
  * suppressed from the per-row form via `eslist = '-class,index'`.
  *
@@ -23,15 +22,14 @@
  * sibling and call `esfilter_reindex` (`esfilter.c:112-130`) so
  * the row order on the wire is the order rules are evaluated.
  * Multi-row moves use `idnodeMove.ts`'s position-sort fix to
- * avoid the swap-then-unswap cascade ExtJS itself has — same
- * helpers ConfigUsersAccessEntriesView uses, generic in BaseRow.
+ * avoid a swap-then-unswap cascade — same helpers
+ * ConfigUsersAccessEntriesView uses, generic in BaseRow.
  *
  * The L3 router (`router/index.ts`) already gates the six routes
  * on `uilevel === 'expert'` via `configStreamFiltersGuard`, and
  * `ConfigStreamLayout` filters the tab strip to match — so non-
  * expert users never reach this component. The `lock-level=
- * "expert"` here is for parity with Classic + makes the editor
- * drawer render at expert too.
+ * "expert"` here makes the editor drawer render at expert too.
  */
 import { ref } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
@@ -88,13 +86,13 @@ const props = defineProps<{
   countLabel: string
 }>()
 
-/* eslist — `'-class,index'` per Classic `static/app/esfilter.js:22`.
+/* eslist — `'-class,index'`.
  * Tells the editor's `idnode/load` + `idnode/class` requests to
  * EXCLUDE the read-only `class` (subclass tag) and `index`
  * (server-managed sort key) fields from the form. Class is
  * implicit per endpoint; index is server-managed via the
- * Move-Up / Move-Down buttons. Mirrors the eslist constant
- * verbatim — same string applies to all six classes. */
+ * Move-Up / Move-Down buttons. The same string applies to all
+ * six classes. */
 const ESFILTER_LIST = '-class,index'
 
 const editList = ref(ESFILTER_LIST)

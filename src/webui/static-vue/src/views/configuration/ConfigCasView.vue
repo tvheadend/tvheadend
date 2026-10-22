@@ -7,10 +7,8 @@
  * Configuration → CAs (Conditional Access Clients).
  *
  * Master-detail layout backed by the `caclient` idnode family
- * (`src/descrambler/caclient.c:262-334`, ACCESS_ADMIN). Mirrors
- * the legacy ExtJS page at `static/app/caclient.js:5-67` which
- * uses `idnode_form_grid` against `api/caclient/list` with a
- * subclass picker for Add.
+ * (`src/descrambler/caclient.c:262-334`, ACCESS_ADMIN), listed
+ * via `api/caclient/list` with a subclass picker for Add.
  *
  * Eight subclasses spanning DVB-CAM, CWC (Newcamd), CCcam,
  * CAPMT, plus four Constant-CW variants (CSA-CBC / DES-NCB /
@@ -128,7 +126,7 @@ const cols: ColumnDef[] = [
      * because it shouldn't appear in the per-row FORM (it's a
      * read-only state, not a setting). But for the GRID we
      * explicitly want it visible — that's the whole point of
-     * mirroring Classic's status icon column. Without
+     * the Connected column. Without
      * `hiddenByDefault: false`, IdnodeGrid's visibility
      * cascade falls through to the server's PO_HIDDEN flag
      * (`IdnodeGrid.vue:389-394`) after a Reset, re-hiding the
