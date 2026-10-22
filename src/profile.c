@@ -1270,6 +1270,7 @@ typedef struct profile_mpegts {
   int pro_rewrite_sdt;
   int pro_rewrite_nit;
   int pro_rewrite_eit;
+  int pro_continuous_timeline;
 } profile_mpegts_t;
 
 static int
@@ -1351,6 +1352,21 @@ const idclass_t profile_mpegts_pass_class =
     {}
   },
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_BOOL,
+      .id       = "continuous_timeline",
+      .name     = N_("Continuous recording timeline (experimental)"),
+      .desc     = N_("Rewrite PCR/PTS/DTS in pass-through recordings so that playback "
+                     "and seeking stay continuous across large broadcast clock jumps "
+                     "(for example regional programme switches). Requires 'Rewrite PMT'. "
+                     "Delays recording output by up to about one second. If the stream "
+                     "cannot be handled, a warning is logged and the rest of the recording "
+                     "keeps its original timestamps. Live streaming is not affected."),
+      .off      = offsetof(profile_mpegts_t, pro_continuous_timeline),
+      .opts     = PO_EXPERT,
+      .def.i    = 0,
+      .group    = 1
+    },
     {
       .type     = PT_U16,
       .id       = "sid",
@@ -1462,6 +1478,7 @@ profile_mpegts_pass_reopen(profile_chain_t *prch,
   c.u.pass.m_rewrite_sdt = pro->pro_rewrite_sdt;
   c.u.pass.m_rewrite_nit = pro->pro_rewrite_nit;
   c.u.pass.m_rewrite_eit = pro->pro_rewrite_eit;
+  c.u.pass.m_continuous_timeline = pro->pro_continuous_timeline;
 
   assert(!prch->prch_muxer);
   prch->prch_muxer = muxer_create(&c, hints);
