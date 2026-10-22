@@ -505,6 +505,11 @@ static void _epg_channel_rem_broadcast
   _epg_object_putref(ebc);
 }
 
+/* How long a running flag is honoured past the last report from the
+ * stream. The present/following table repeats every few seconds while
+ * the mux is tuned, so a silence this long means it is not. */
+#define EPG_RUNNING_STALE (5*60)
+
 static void _epg_channel_timer_callback ( void *p )
 {
   time_t next = 0;
@@ -515,9 +520,19 @@ static void _epg_channel_timer_callback ( void *p )
   /* Clear now/next */
   if ((cur = ch->ch_epg_now)) {
     if (cur->running != EPG_RUNNING_STOP && cur->running != EPG_RUNNING_NOTSET) {
-      /* running? don't do anything */
-      gtimer_arm_rel(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, 2);
-      return;
+      if (cur->running_updated + EPG_RUNNING_STALE > gclk()) {
+        /* running? don't do anything */
+        gtimer_arm_rel(&ch->ch_epg_timer, _epg_channel_timer_callback, ch, 2);
+        return;
+      }
+      /* The flag is only ever changed by the stream, and the stream has
+       * not reported it for a while, so nothing can clear it: the mux is
+       * no longer tuned. Treat the broadcast as stopped. */
+      tvhdebug(LS_EPG, "stale running state on event %u (%s) from %s",
+               cur->id, epg_broadcast_get_title(cur, NULL),
+               channel_get_name(ch, channel_blank_name));
+      cur->running = EPG_RUNNING_STOP;
+      dvr_event_running(cur, EPG_RUNNING_STOP);
     }
     cur->ops->getref(cur);
   }
@@ -1163,6 +1178,7 @@ int epg_broadcast_set_running
   ( epg_broadcast_t *broadcast, epg_running_t running )
 {
   int save = 0;
+  broadcast->running_updated = gclk();
   if (running != broadcast->running) {
     broadcast->update_running = running;
     _epg_object_set_updated(broadcast);
