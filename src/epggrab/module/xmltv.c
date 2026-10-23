@@ -601,7 +601,9 @@ static epg_genre_list_t
             {
               tvhdebug(LS_XMLTV, "XPath category code '%s' recognised as ETSI '0x%02x'.", cat_etsi, cat_val);
               if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
-              cat_flag = epg_genre_list_add_by_eit (egl, cat_val);
+              //The add returns 0 if the code is already in the list, which is still a valid code.
+              epg_genre_list_add_by_eit (egl, cat_val);
+              cat_flag = 1;
             }
             else
             {
