@@ -1839,7 +1839,8 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 
       if (match(de, de2, &aux)) {
         free(aux);
-        return de2;
+        /* A shared timer may also be requested by a Record all rule. */
+        return dvr_autorec_record_all_matches(de->de_bcast, de->de_owner) ? NULL : de2;
       }
     }
   } else {
@@ -1871,7 +1872,7 @@ static dvr_entry_t *_dvr_duplicate_event(dvr_entry_t *de)
 
       if (match(de, de2, &aux)) {
         free(aux);
-        return de2;
+        return dvr_autorec_record_all_matches(de->de_bcast, de->de_owner) ? NULL : de2;
       }
     }
   }
@@ -2026,12 +2027,18 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
   dvr_entry_t *de, *replace = NULL;
   uint32_t count = 0, max_count;
   htsmsg_t *conf;
+  int record = dae->dae_record;
 
-  /* Identical duplicate detection
+  if (record == DVR_AUTOREC_RECORD_DVR_PROFILE && dae->dae_config)
+    record = dae->dae_config->dvr_autorec_dedup;
+
+  /* Coalesce the same broadcast, but do not suppress or replace distinct
+     broadcasts requested by a matching Record all rule.
      NOTE: Semantic duplicate detection is deferred to the start time of recording and then done using _dvr_duplicate_event by dvr_timer_start_recording. */
   LIST_FOREACH(de, &dvrentries, de_global_link) {
-    if (de->de_bcast == e || epg_episode_match(de->de_bcast, e))
-      if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0) {
+    if (strcmp(dae->dae_owner ?: "", de->de_owner ?: "") == 0)
+      if (de->de_bcast == e ||
+          (record != DVR_AUTOREC_RECORD_ALL && epg_episode_match(de->de_bcast, e))) {
         /* See if our new broadcast is better than our existing schedule,
          * but only if user want this overhead.
          */
@@ -2049,6 +2056,10 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
 
         /* Same broadcast, so new one can't be any better. */
         if (de->de_bcast == e)
+          return;
+
+        /* This episode is handled, but another rule needs this airing. */
+        if (dvr_autorec_record_all_matches(de->de_bcast, de->de_owner))
           return;
 
         /* Existing entry wasn't enabled? If so assume user does not
