@@ -82,12 +82,15 @@ static void epg_memoryinfo_broadcasts_update(memoryinfo_t *my)
   channel_t *ch;
   epg_broadcast_t *ebc;
   int64_t size = 0, count = 0;
+  int t;
 
   CHANNEL_FOREACH(ch) {
     if (ch->ch_epg_parent) continue;
     RB_FOREACH(ebc, &ch->ch_epg_schedule, sched_link) {
       size += sizeof(*ebc);
       size += tvh_strlen(ebc->image);
+      for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++)
+        size += tvh_strlen(ebc->typed_image[t]);
       size += tvh_strlen(ebc->epnum.text);
       size += lang_str_size(ebc->title);
       size += lang_str_size(ebc->subtitle);
