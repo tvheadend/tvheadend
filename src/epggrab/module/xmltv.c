@@ -600,8 +600,7 @@ static epg_genre_list_t
             if(cat_val != 0)
             {
               tvhdebug(LS_XMLTV, "XPath category code '%s' recognised as ETSI '0x%02x'.", cat_etsi, cat_val);
-              if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
-              cat_flag = epg_genre_list_add_by_eit (egl, cat_val);
+              cat_flag = epg_genre_list_add_by_eit (&egl, cat_val);
             }
             else
             {
@@ -618,10 +617,7 @@ static epg_genre_list_t
 
       //If a hex value was not found or is invalid, use the text value instead.
       if(!cat_flag)
-      {
-        if (!egl) egl = calloc(1, sizeof(epg_genre_list_t));
-        epg_genre_list_add_by_str(egl, cat_name, NULL);
-      }
+        epg_genre_list_add_by_str(&egl, cat_name, NULL);
     }
   }
   return egl;
