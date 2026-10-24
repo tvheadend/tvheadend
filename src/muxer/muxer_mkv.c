@@ -232,8 +232,13 @@ mk_build_segment_info(mk_muxer_t *mk)
   if(!mk->webm)
     ebml_append_bin(q, 0x73a4, mk->uuid, sizeof(mk->uuid));   //0x73a4 = SegmentUUID
 
-  if(!mk->webm)
-    ebml_append_string(q, 0x7ba9, mk->title);                 //0x7ba9 = Title
+  /* Title is part of WebM's Segment Information, unlike SegmentUUID above --
+     libavformat writes it for both (matroskaenc.c: the title tag is emitted
+     unconditionally, only SEGMENTUID is guarded by IS_WEBM). Skipping it left
+     players with nothing to show for a webm stream, so VLC fell back to the
+     request URL and displayed the channel UUID and profile name instead of the
+     channel. */
+  ebml_append_string(q, 0x7ba9, mk->title);                   //0x7ba9 = Title
 
   ebml_append_string(q, 0x4d80, "Tvheadend Matroska muxer");  //0x4d80 = MuxingApp
   ebml_append_string(q, 0x5741, app);                         //0x5741 = WritingApp
@@ -283,8 +288,10 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
     tr->sri = ssc->es_sri;
     tr->nextpts = PTS_UNSET;
 
-    if (mk->webm && ssc->es_type != SCT_VP8 && ssc->es_type != SCT_VORBIS)
-      tvhwarn(LS_MKV, "WEBM format supports only VP8+VORBIS streams (detected %s)",
+    if (mk->webm &&
+        ssc->es_type != SCT_VP8 && ssc->es_type != SCT_VP9 &&
+        ssc->es_type != SCT_VORBIS && ssc->es_type != SCT_OPUS)
+      tvhwarn(LS_MKV, "WEBM format supports only VP8/VP9 video and Vorbis/Opus audio (detected %s)",
               streaming_component_type2txt(ssc->es_type));
 
     switch(ssc->es_type) {

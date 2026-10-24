@@ -444,6 +444,11 @@ h264_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype,
     parser_set_stream_vparam(st, width, height, d);
 
   if (sps->aspect_num && sps->aspect_den) {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = sps->aspect_num;
+    st->es_sample_aspect_ratio.den = sps->aspect_den;
+#endif
     width  *= sps->aspect_num;
     height *= sps->aspect_den;
     if (width && height) {
@@ -452,6 +457,11 @@ h264_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype,
       st->es_aspect_den = height / v;
     }
   } else {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = 0;
+    st->es_sample_aspect_ratio.den = 1;
+#endif
     st->es_aspect_num = 0;
     st->es_aspect_den = 1;
   }

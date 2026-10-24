@@ -72,6 +72,7 @@ TVHAudioCodec tvh_codec_mp2 = {
     .name    = "mp2",
     .size    = sizeof(TVHAudioCodecProfile),
     .idclass = &codec_profile_mp2_class,
+    .profiles        = NULL,
     .profile_init = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
 };
