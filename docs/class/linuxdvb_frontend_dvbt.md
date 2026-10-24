@@ -7,8 +7,6 @@
 This panel lists all the available Terrestrial (DVB-T/T2/ISDB-T/ATSC-T) frontend 
 parameters.
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons
