@@ -863,7 +863,9 @@ const idclass_t t2mi_mux_class =
       .id       = "t2mi_auto",
       .name     = N_("Automatically created"),
       .desc     = N_("This mux was created automatically from a discovered "
-                     "carrier and is removed when its source mux is removed."),
+                     "carrier. It is removed when its source mux is removed, "
+                     "or when its carrier service no longer exists or was "
+                     "disabled by the stale-service check."),
       .off      = offsetof(t2mi_mux_t, mm_t2mi_auto),
       .opts     = PO_RDONLY | PO_HIDDEN,
     },
@@ -1423,9 +1425,13 @@ const idclass_t t2mi_network_class = {
                      "for carriers and a T2-MI mux is created for each "
                      "carrier found (unless network discovery is disabled). "
                      "A mux whose carrier disappears is kept - its scan "
-                     "fails - and resumes when the carrier returns; muxes "
-                     "are only removed when their source mux is removed "
-                     "from Tvheadend."),
+                     "fails - and resumes when the carrier returns. An "
+                     "automatically created mux is removed, with its "
+                     "services and channel mappings, when its source mux "
+                     "is removed from Tvheadend, or when its carrier "
+                     "service no longer exists or was disabled by the "
+                     "stale-service check (missing for 24 hours). A "
+                     "carrier service disabled by hand keeps its mux."),
       .set      = t2mi_network_class_src_muxes_set,
       .get      = t2mi_network_class_src_muxes_get,
       .list     = t2mi_src_mux_enum,

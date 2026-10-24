@@ -36,9 +36,18 @@ and recorded normally. Muxes can also be added by hand.
 
 A multiplex whose carrier temporarily disappears is kept (its scan
 fails, like a DVB multiplex that went dark), so services and channel
-mappings survive changes in the feed. Multiplexes are removed only when
-their source mux is removed from Tvheadend or the network itself is
-deleted. Set *Network discovery* to **Disable** to stop new carriers
+mappings survive changes in the feed. An automatically created
+multiplex is removed, together with its services and channel mappings,
+when:
+
+* its source mux is removed from Tvheadend, or the network itself is
+  deleted;
+* its carrier service no longer exists on the source mux; or
+* its carrier service was disabled by Tvheadend's stale-service check
+  (not seen in the source PAT/SDT for 24 hours).
+
+A carrier service that you disable by hand does not remove its
+multiplex. Set *Network discovery* to **Disable** to stop new carriers
 being added automatically.
 
 ---
