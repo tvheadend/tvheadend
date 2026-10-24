@@ -29,6 +29,7 @@ const fakeToast = {
 
 const fakeConfirm = {
   ask: vi.fn().mockResolvedValue(true),
+  askWithDetail: vi.fn().mockResolvedValue(true),
 }
 
 const deps: AutorecSourceDeps = {

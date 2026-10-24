@@ -22,6 +22,7 @@
 #include "settings.h"
 #include "string_list.h"
 #include "dvr.h"
+#include "dvr_autorec_expr.h"
 #include "epg.h"
 #include "htsp_server.h"
 
@@ -202,7 +203,21 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 
   if (!e) return 0;
   if (!e->channel) return 0;
-  if(dae->dae_enabled == 0 || dae->dae_weekdays == 0)
+  if(dae->dae_enabled == 0)
+    return 0;
+
+  /* Smart entry: the expression is the whole predicate, the flat
+   * selector fields are ignored (they sit at their no-constraint
+   * defaults, enforced by the write masking). */
+  if(dvr_autorec_entry_is_smart(dae)) {
+    if(dae->dae_expr == NULL)
+      return 0; /* invalid expression, dae_error is set */
+    if(dae->dae_config == NULL)
+      return 0;
+    return dvr_autorec_expr_eval(dae->dae_expr, e);
+  }
+
+  if(dae->dae_weekdays == 0)
     return 0;
 
   if(dae->dae_channel == NULL &&
@@ -417,19 +432,29 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 /**
  *
  */
-dvr_autorec_entry_t *
-dvr_autorec_create(const char *uuid, htsmsg_t *conf)
+static dvr_autorec_entry_t *
+autorec_entry_create(const char *uuid, htsmsg_t *conf, int transient)
 {
   dvr_autorec_entry_t *dae;
 
   dae = calloc(1, sizeof(*dae));
 
-  if (idnode_insert(&dae->dae_id, uuid, &dvr_autorec_entry_class, 0)) {
+  if (transient) {
+    /* A preview or scan entry is not registered in the idnode tree:
+     * registering it would announce a created and then a deleted
+     * autorec to every connected client. It carries the class so
+     * idnode_load applies the property table, and a uuid of its own
+     * so nothing downstream sees an empty one. */
+    dae->dae_id.in_class = &dvr_autorec_entry_class;
+    uuid_set(&dae->dae_id.in_uuid, NULL);
+  } else if (idnode_insert(&dae->dae_id, uuid, &dvr_autorec_entry_class, 0)) {
     if (uuid)
       tvhwarn(LS_DVR, "invalid autorec entry uuid '%s'", uuid);
     free(dae);
     return NULL;
   }
+
+  dae->dae_transient = transient;
 
   dvr_config_t *c = dvr_config_find_by_uuid(htsmsg_get_str(conf, "config_name"));
   if (c && c->dvr_autorec_dedup) dae->dae_record = c->dvr_autorec_dedup;
@@ -442,13 +467,47 @@ dvr_autorec_create(const char *uuid, htsmsg_t *conf)
   dae->dae_config = dvr_config_find_by_name_default(NULL);
   LIST_INSERT_HEAD(&dae->dae_config->dvr_autorec_entries, dae, dae_config_link);
 
-  TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
+  if (!transient)
+    TAILQ_INSERT_TAIL(&autorec_entries, dae, dae_link);
 
   idnode_load(&dae->dae_id, conf);
 
-  htsp_autorec_entry_add(dae);
+  /* The setter guard in dvr_autorec_entry_class_expression_set only
+   * sees the selectors written before it, and the property table
+   * writes expression first; a single payload carrying both (a raw
+   * create, a hand-edited file) slips past it. Flag it here, the
+   * one place every load passes, so the rule never runs with
+   * selectors the matcher ignores but HTSP clients would show. */
+  if (dvr_autorec_entry_is_smart(dae) &&
+      dvr_autorec_entry_selectors_live(dae)) {
+    if (!transient)
+      tvherror(LS_DVR, "autorec '%s': expression combined with flat "
+               "selectors, disabled", dae->dae_name ?: "");
+    dae->dae_error = 1;
+  }
+
+  /* the load path skips the changed hook, so mirror its invalid-
+   * expression force-disable here; flat rules keep their historic
+   * enabled-but-inert behaviour on an invalid title pattern */
+  if (dvr_autorec_entry_is_smart(dae) && dae->dae_error)
+    dae->dae_enabled = 0;
+
+  if (!transient)
+    htsp_autorec_entry_add(dae);
 
   return dae;
+}
+
+dvr_autorec_entry_t *
+dvr_autorec_create(const char *uuid, htsmsg_t *conf)
+{
+  return autorec_entry_create(uuid, conf, 0);
+}
+
+dvr_autorec_entry_t *
+dvr_autorec_create_transient(htsmsg_t *conf)
+{
+  return autorec_entry_create(NULL, conf, 1);
 }
 
 
@@ -535,10 +594,11 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   if (delconf)
     hts_settings_remove("dvr/autorec/%s", idnode_uuid_as_str(&dae->dae_id, ubuf));
 
-  htsp_autorec_entry_delete(dae);
-
-  TAILQ_REMOVE(&autorec_entries, dae, dae_link);
-  idnode_unlink(&dae->dae_id);
+  if (!dae->dae_transient) {
+    htsp_autorec_entry_delete(dae);
+    TAILQ_REMOVE(&autorec_entries, dae, dae_link);
+    idnode_unlink(&dae->dae_id);
+  }
 
   if(dae->dae_config)
     LIST_REMOVE(dae, dae_config_link);
@@ -551,8 +611,12 @@ autorec_entry_destroy(dvr_autorec_entry_t *dae, int delconf)
   free(dae->dae_cat1);
   free(dae->dae_cat2);
   free(dae->dae_cat3);
+  free((void *)dae->dae_serieslink_uri);
 
   autorec_regfree(dae);
+
+  free(dae->dae_expression);
+  dvr_autorec_expr_free(dae->dae_expr);
 
   if(dae->dae_channel != NULL)
     LIST_REMOVE(dae, dae_channel_link);
@@ -595,6 +659,13 @@ static void
 dvr_autorec_entry_class_delete(idnode_t *self)
 {
   autorec_entry_destroy((dvr_autorec_entry_t *)self, 1);
+}
+
+void
+dvr_autorec_destroy_transient(dvr_autorec_entry_t *dae)
+{
+  assert(dae->dae_transient);
+  autorec_entry_destroy(dae, 0);
 }
 
 static int
@@ -685,6 +756,122 @@ dvr_autorec_entry_class_title_set(void *o, const void *v)
     return 1;
   }
   return 0;
+}
+
+/* Any flat selector away from its no-constraint default? Must cover
+ * the same fields as the convert endpoint's phase-1 clear list
+ * (api_dvr_autorec_convert). */
+int
+dvr_autorec_entry_selectors_live(dvr_autorec_entry_t *dae)
+{
+  return (dae->dae_title && dae->dae_title[0] != '\0') ||
+         dae->dae_fulltext ||
+         dae->dae_mergetext ||
+         dae->dae_channel != NULL ||
+         dae->dae_channel_tag != NULL ||
+         dae->dae_btype != DVR_AUTOREC_BTYPE_ALL ||
+         dae->dae_content_type != 0 ||
+         (dae->dae_cat1 && dae->dae_cat1[0] != '\0') ||
+         (dae->dae_cat2 && dae->dae_cat2[0] != '\0') ||
+         (dae->dae_cat3 && dae->dae_cat3[0] != '\0') ||
+         dae->dae_star_rating != 0 ||
+         dae->dae_start != -1 ||
+         dae->dae_start_window != -1 ||
+         dae->dae_weekdays != 0x7f ||
+         dae->dae_minduration != 0 ||
+         dae->dae_maxduration != 0 ||
+         dae->dae_minyear != 0 ||
+         dae->dae_maxyear != 0 ||
+         dae->dae_minseason != 0 ||
+         dae->dae_maxseason != 0 ||
+         (dae->dae_serieslink_uri && dae->dae_serieslink_uri[0] != '\0');
+}
+
+/* Reset every flat selector that dvr_autorec_entry_selectors_live()
+ * tests, field for field; the two must stay in step. Setters do the
+ * work (title regex, channel and tag links), so this goes through a
+ * mask-free write. serieslink has no setter and a written "" would
+ * be stored as a non-NULL empty string, which dvr_autorec_cmp treats
+ * as a constraint no event meets, so it is reset by hand. */
+void
+dvr_autorec_entry_clear_selectors(dvr_autorec_entry_t *dae)
+{
+  htsmsg_t *m, *days;
+  int i;
+
+  m = htsmsg_create_map();
+  htsmsg_add_str(m, "title", "");
+  htsmsg_add_bool(m, "fulltext", 0);
+  htsmsg_add_bool(m, "mergetext", 0);
+  htsmsg_add_str(m, "channel", "");
+  htsmsg_add_str(m, "tag", "");
+  htsmsg_add_u32(m, "btype", DVR_AUTOREC_BTYPE_ALL);
+  htsmsg_add_u32(m, "content_type", 0);
+  htsmsg_add_str(m, "cat1", "");
+  htsmsg_add_str(m, "cat2", "");
+  htsmsg_add_str(m, "cat3", "");
+  htsmsg_add_u32(m, "star_rating", 0);
+  htsmsg_add_str(m, "start", "");
+  htsmsg_add_str(m, "start_window", "");
+  htsmsg_add_s64(m, "minduration", 0);
+  htsmsg_add_s64(m, "maxduration", 0);
+  htsmsg_add_u32(m, "minyear", 0);
+  htsmsg_add_u32(m, "maxyear", 0);
+  htsmsg_add_u32(m, "minseason", 0);
+  htsmsg_add_u32(m, "maxseason", 0);
+  days = htsmsg_create_list();
+  for (i = 1; i <= 7; i++)
+    htsmsg_add_u32(days, NULL, i);
+  htsmsg_add_msg(m, "weekdays", days);
+  idnode_write0(&dae->dae_id, m, 0, 0);
+  htsmsg_destroy(m);
+  free((void *)dae->dae_serieslink_uri);
+  dae->dae_serieslink_uri = NULL;
+}
+
+static int
+dvr_autorec_entry_class_expression_set(void *o, const void *v)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  const char *expr = v ?: "";
+  char errbuf[512];
+
+  if (!strcmp(expr, dae->dae_expression ?: ""))
+    return 0;
+  /* Flat-to-smart transition guard: an entry cannot become smart
+   * while flat selectors are live; convert clears them first inside
+   * its atomic apply, so it passes. Setters have no error channel,
+   * so the write is dropped, PO_RDONLY-style. */
+  if (expr[0] != '\0' && dvr_autorec_entry_selectors_live(dae))
+    return 0;
+  free(dae->dae_expression);
+  dvr_autorec_expr_free(dae->dae_expr);
+  dae->dae_expression = NULL;
+  dae->dae_expr = NULL;
+  dae->dae_error = 0;
+  if (expr[0] != '\0') {
+    dae->dae_expression = strdup(expr);
+    dae->dae_expr = dvr_autorec_expr_compile(expr, errbuf, sizeof(errbuf));
+    if (dae->dae_expr == NULL) {
+      /* the flat title idiom: store, flag, let class_changed
+       * force-disable — never a silently broken active rule */
+      dae->dae_error = 1;
+      tvherror(LS_DVR, "invalid autorec expression: %s", errbuf);
+    }
+  }
+  return 1;
+}
+
+/* Flat selector fields are read-only on smart entries: the
+ * expression is the whole predicate, and keeping the flat fields at
+ * their no-constraint defaults keeps the HTSP encoding truthful. */
+static uint32_t
+dvr_autorec_entry_class_selector_opts(void *o, uint32_t opts)
+{
+  dvr_autorec_entry_t *dae = (dvr_autorec_entry_t *)o;
+  if (dae && dvr_autorec_entry_is_smart(dae))
+    return opts | PO_RDONLY;
+  return opts;
 }
 
 static int
@@ -1127,6 +1314,7 @@ PROP_DOC(autorec_directory)
                  "supply programme categories."                       \
                  ),                                                   \
   .off      = offsetof(dvr_autorec_entry_t, dae_cat ## NUM),          \
+  .get_opts = dvr_autorec_entry_class_selector_opts,                  \
   .opts     = PO_EXPERT,                                              \
   .list     = dvr_autorec_entry_category_list
 
@@ -1172,12 +1360,25 @@ const idclass_t dvr_autorec_entry_class = {
     },
     {
       .type     = PT_STR,
+      .id       = "expression",
+      .name     = N_("Smart expression"),
+      .desc     = N_("Boolean match expression (JSONC). When set, this "
+                     "expression alone selects the events to record and "
+                     "the flat matching fields below are ignored and "
+                     "read-only. See Help for the expression language."),
+      .set      = dvr_autorec_entry_class_expression_set,
+      .off      = offsetof(dvr_autorec_entry_t, dae_expression),
+      .opts     = PO_MULTILINE | PO_ADVANCED,
+    },
+    {
+      .type     = PT_STR,
       .id       = "title",
       .name     = N_("Title (regexp)"),
       .desc     = N_("The title of the program to look for. Note that "
                      "this accepts case-insensitive regular expressions."),
       .set      = dvr_autorec_entry_class_title_set,
       .off      = offsetof(dvr_autorec_entry_t, dae_title),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
     },
     /* We provide a small number of selection drop-downs. This is to
      * make it easier for users to see what categories are available and
@@ -1201,6 +1402,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("When the fulltext is checked, the title pattern is "
                      "matched against title, subtitle, summary and description."),
       .off      = offsetof(dvr_autorec_entry_t, dae_fulltext),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
     },
     {
       .type     = PT_BOOL,
@@ -1211,6 +1413,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "title + subtitle + summary + description + credits + keywords "
                      "for all languages contained in the EPG entry being searched."),
       .off      = offsetof(dvr_autorec_entry_t, dae_mergetext),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
     },
     {
       .type     = PT_STR,
@@ -1224,6 +1427,7 @@ const idclass_t dvr_autorec_entry_class = {
       .get      = dvr_autorec_entry_class_channel_get,
       .rend     = dvr_autorec_entry_class_channel_rend,
       .list     = channel_class_get_list,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
     },
     {
       .type     = PT_STR,
@@ -1235,6 +1439,7 @@ const idclass_t dvr_autorec_entry_class = {
       .get      = dvr_autorec_entry_class_tag_get,
       .rend     = dvr_autorec_entry_class_tag_rend,
       .list     = channel_tag_class_get_list,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_ADVANCED
     },
     {
@@ -1245,6 +1450,7 @@ const idclass_t dvr_autorec_entry_class = {
       .def.i    = DVR_AUTOREC_BTYPE_ALL,
       .off      = offsetof(dvr_autorec_entry_t, dae_btype),
       .list     = dvr_autorec_entry_class_btype_list,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_HIDDEN | PO_ADVANCED | PO_DOC_NLIST,
     },
     {
@@ -1255,6 +1461,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "be used to filter matching events/programs."),
       .list     = dvr_autorec_entry_class_content_type_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_content_type),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_ADVANCED,
     },
     {
@@ -1267,6 +1474,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_star_rating_set,
       .list     = dvr_autorec_entry_class_star_rating_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_star_rating),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1280,6 +1488,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_start_set,
       .get      = dvr_autorec_entry_class_start_get,
       .list     = dvr_autorec_entry_class_time_list_,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_SORTKEY | PO_DOC_NLIST,
     },
     {
@@ -1293,6 +1502,7 @@ const idclass_t dvr_autorec_entry_class = {
       .set      = dvr_autorec_entry_class_start_window_set,
       .get      = dvr_autorec_entry_class_start_window_get,
       .list     = dvr_autorec_entry_class_time_list_,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_SORTKEY | PO_DOC_NLIST,
     },
     {
@@ -1326,6 +1536,7 @@ const idclass_t dvr_autorec_entry_class = {
       .list     = dvr_autorec_entry_class_weekdays_list,
       .rend     = dvr_autorec_entry_class_weekdays_rend_,
       .def.list = dvr_autorec_entry_class_weekdays_default,
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_DOC_NLIST,
     },
     {
@@ -1337,6 +1548,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "shorter than this duration."),
       .list     = dvr_autorec_entry_class_minduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minduration),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1348,6 +1560,7 @@ const idclass_t dvr_autorec_entry_class = {
                      "longer than this duration."),
       .list     = dvr_autorec_entry_class_maxduration_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxduration),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1357,6 +1570,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("The earliest year for the programme. Programmes must be equal to or later than this year."),
       .list     = dvr_autorec_entry_class_year_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_minyear),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1366,6 +1580,7 @@ const idclass_t dvr_autorec_entry_class = {
       .desc     = N_("The latest year for the programme. Programmes must be equal to or earlier than this year."),
       .list     = dvr_autorec_entry_class_year_list,
       .off      = offsetof(dvr_autorec_entry_t, dae_maxyear),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1374,6 +1589,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = N_("Minimum season"),
       .desc     = N_("The earliest season for the programme. Programmes must be equal to or later than this season."),
       .off      = offsetof(dvr_autorec_entry_t, dae_minseason),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
@@ -1382,6 +1598,7 @@ const idclass_t dvr_autorec_entry_class = {
       .name     = N_("Maximum season"),
       .desc     = N_("The latest season for the programme. Programmes must be equal to or earlier than this season."),
       .off      = offsetof(dvr_autorec_entry_t, dae_maxseason),
+      .get_opts = dvr_autorec_entry_class_selector_opts,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
     },
     {
