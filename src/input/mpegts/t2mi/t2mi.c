@@ -1307,7 +1307,8 @@ t2mi_network_discover ( t2mi_network_t *tn )
   /* Retire auto-discovered muxes whose carrier is confirmed gone.  A
    * carrier is confirmed gone when its source service was deleted, or
    * disabled by tvheadend's stale-service check because it vanished from
-   * the source PAT/SDT (24h without being seen).  This clears phantom
+   * the source PAT/SDT (24h without being seen); a service an
+   * administrator disabled by hand does not count.  This clears phantom
    * carriers that a transponder no longer emits - or never did, when a
    * stale service lingered from an earlier feed layout.  A mux whose
    * source mux has simply not been (re)scanned keeps an enabled service
@@ -1322,8 +1323,10 @@ t2mi_network_discover ( t2mi_network_t *tn )
     if (src == NULL)
       continue;
     s = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
-    if (s == NULL || !s->s_enabled) {
-      tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or disabled)",
+    /* a service an administrator disabled by hand is not a vanished one:
+     * only the stale-service check marks its disabling PAT_MISSING */
+    if (s == NULL || (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING)) {
+      tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or stale)",
               mm->mm_nicename);
       mm->mm_delete(mm, 1);
       retired++;
