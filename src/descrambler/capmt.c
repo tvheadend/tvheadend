@@ -1111,7 +1111,14 @@ capmt_notify_server(capmt_t *capmt, capmt_service_t *ct, int force)
 
   tvh_mutex_lock(&capmt->capmt_mutex);
   if (capmt_oscam_new(capmt)) {
-    if (!LIST_EMPTY(&capmt->capmt_services))
+    /*
+     * Update an already selected network DVBAPI service in place.
+     * Rebuilding the complete FIRST/MORE/LAST list can disturb other
+     * services which are descrambling on the same connection.
+     */
+    if (ct && capmt_oscam_netproto(capmt))
+      capmt_send_request(ct, CAPMT_LIST_UPDATE);
+    else if (!LIST_EMPTY(&capmt->capmt_services))
       capmt_enumerate_services(capmt, force);
   } else {
     if (ct)
@@ -2254,12 +2261,12 @@ capmt_caid_change(th_descrambler_t *td)
     }
   }
 
-  if (change) {
-    if (capmt_oscam_netproto(capmt))
-      capmt_send_stop_descrambling(capmt, ct->ct_adapter);
-    else
-      capmt_send_stop(ct);
-  }
+  /*
+   * Network DVBAPI updates the affected service in place below.
+   * Do not stop the whole adapter before that update.
+   */
+  if (change && !capmt_oscam_netproto(capmt))
+    capmt_send_stop(ct);
 
   tvh_mutex_unlock(&t->s_stream_mutex);
   tvh_mutex_unlock(&capmt->capmt_mutex);
