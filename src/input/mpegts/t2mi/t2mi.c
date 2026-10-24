@@ -237,6 +237,37 @@ t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
   }
 }
 
+static void
+t2mi_mux_busy_cb ( void *aux )
+{
+  t2mi_mux_t *tm = aux;
+
+  lock_assert(&global_lock);
+  if (tm->mm_active)
+    tm->mm_stop((mpegts_mux_t *)tm, 1, SM_CODE_NO_FREE_ADAPTER);
+}
+
+/* The source needs a tuner that another transponder holds.  A scan must not
+ * fail because of that (and a scan of every carrier starts them all at
+ * once, before any of them has taken a tuner): stop the mux so the core puts
+ * the scan back in its queue and tries it again later.  Stopping joins the
+ * decap thread we are running on, so it is done from a timer.  Returns 1 if
+ * the mux is being requeued. */
+static int
+t2mi_mux_requeue_scan ( t2mi_mux_t *tm )
+{
+  int r = 0;
+
+  if (tvh_mutex_timedlock(&global_lock, 2000000))
+    return 0;
+  if (tm->mm_active && tm->mm_scan_state == MM_SCAN_STATE_ACTIVE) {
+    mtimer_arm_rel(&tm->tm_busy_timer, t2mi_mux_busy_cb, tm, 0);
+    r = 1;
+  }
+  tvh_mutex_unlock(&global_lock);
+  return r;
+}
+
 /* Process one message from the source subscription.  Runs on the mux's
  * own decap thread (t2mi_mux_thread), not on the source tuner's input
  * thread, so decapping a busy carrier cannot stall the tuner and overflow
@@ -295,6 +326,8 @@ t2mi_mux_process ( t2mi_mux_t *tm, streaming_message_t *sm )
     tvhwarn(LS_T2MI, "%s - source subscription cannot start (%s)",
             tm->mm_nicename,
             streaming_code2txt(sm->sm_code));
+    if (sm->sm_code == SM_CODE_NO_FREE_ADAPTER && t2mi_mux_requeue_scan(tm))
+      break;
     /* The source cannot deliver (parent mux did not lock, carrier service
      * gone, ...).  Fail our own mux instance now instead of letting a scan
      * sit idle until its grace timeout.  mpegts_mux_tuning_error takes the
@@ -595,6 +628,7 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   t2mi_mux_t *tm = (t2mi_mux_t *)mmi->mmi_mux;
   const t2mi_decap_stats_t *st;
 
+  mtimer_disarm(&tm->tm_busy_timer);
   t2mi_mux_unsubscribe(tm);
 
   /* Stop the decap thread (and drop its queue) before touching the decap
