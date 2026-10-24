@@ -30,6 +30,8 @@
  * No Force Scan toolbar action — ExtJS doesn't have one on muxes;
  * scan-everything-on-this-network lives on the Networks page
  * already (see `DvbNetworksView.vue`).
+ *
+ * Rescan scans just the selected muxes again (`onRescan`).
  */
 import { computed, ref } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
@@ -43,6 +45,10 @@ import type { BaseRow, GlobalFilterSpec } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
 import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
+import { useBulkSave } from '@/composables/useBulkSave'
+import { useToastNotify } from '@/composables/useToastNotify'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
 import PlayCell from '@/components/PlayCell.vue'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
@@ -129,8 +135,9 @@ function onFilterChange(key: string, value: string) {
  * propFor returns null). For subclass edits the user opens
  * the drawer.
  *
- * `scan_state` / `scan_result` / `num_svc` / `num_chn` are
- * server-rdonly — stripped at runtime. */
+ * `scan_result` / `num_svc` / `num_chn` are server-rdonly —
+ * stripped at runtime. `scan_state` is writable, PEND queues a
+ * scan (see Rescan below). */
 /* Phone-card: mux name as bold headline; enabled + network as
  * the 2-up identifier; scan_state as full-width trailer (the
  * "is this mux being scanned right now" cue). Tuning specifics
@@ -284,6 +291,86 @@ const remove = useBulkAction({
   failPrefix: t('Failed to delete'),
 })
 
+/* Rescan — queue a scan of the selected muxes, the same as setting
+ * their Scan status to PEND (MM_SCAN_STATE_PEND). The server only
+ * queues a mux that is set to Enable on an enabled network
+ * (`mpegts_mux_class_scan_state_set`) and reports success for the
+ * others too, so they are left out of the request and a warning
+ * names them. Only Hide: None lists muxes of a disabled network,
+ * and a mux row does not say whether its network is enabled, so
+ * that mode asks the server for the disabled networks first. */
+const rescan = useBulkSave({
+  fields: { scan_state: 1 },
+  failPrefix: t('Failed to start scan'),
+  successText: (n) => (n === 1 ? t('Scan queued for 1 mux.') : t('Scan queued for {0} muxes.', n)),
+})
+const toast = useToastNotify()
+
+async function disabledNetworks(): Promise<Set<unknown>> {
+  if (hideMode.value !== 'none') return new Set()
+  const resp = await apiCall<{ entries?: BaseRow[] }>('mpegts/network/grid', {
+    start: 0,
+    limit: 5000,
+    filter: JSON.stringify([{ field: 'enabled', type: 'boolean', value: false }]),
+  })
+  return new Set((resp.entries ?? []).map((n) => n.uuid))
+}
+
+async function onRescan(selection: BaseRow[], clearSelection: () => void) {
+  let offNetworks: Set<unknown>
+  try {
+    offNetworks = await disabledNetworks()
+  } catch (err) {
+    toast.error(`${t('Failed to start scan')}: ${err instanceof Error ? err.message : String(err)}`)
+    return
+  }
+  const skipped = selection.filter((r) => r.enabled !== 1 || offNetworks.has(r.network_uuid))
+  if (skipped.length > 0) {
+    toast.warn(
+      t(
+        'Not scanned: {0}. A mux is scanned only when it is set to Enable and its network is enabled.',
+        skipped.map((r) => String(r.name ?? r.uuid)).join(', '),
+      ),
+    )
+  }
+  await rescan.run(
+    selection.filter((r) => !skipped.includes(r)),
+    clearSelection,
+  )
+}
+
+/* Enable / Disable / Ignore — set the tri-state `enabled` (see the
+ * column above) on every selected mux with one request. Enable and
+ * Disable are undone with each other, so they do not ask first.
+ * Ignore removes the services of the mux, and with them their
+ * channel mappings (`mpegts_mux_class_enabled_notify`), so it asks. */
+const enable = useBulkSave({
+  fields: { enabled: 1 },
+  failPrefix: t('Failed to enable'),
+  successText: (n) => (n === 1 ? t('Enabled 1 mux.') : t('Enabled {0} muxes.', n)),
+})
+const disable = useBulkSave({
+  fields: { enabled: 0 },
+  failPrefix: t('Failed to disable'),
+  successText: (n) => (n === 1 ? t('Disabled 1 mux.') : t('Disabled {0} muxes.', n)),
+})
+const ignore = useBulkSave({
+  fields: { enabled: -1 },
+  failPrefix: t('Failed to ignore'),
+  successText: (n) => (n === 1 ? t('Ignored 1 mux.') : t('Ignored {0} muxes.', n)),
+})
+const confirm = useConfirmDialog()
+
+async function onIgnore(selection: BaseRow[], clearSelection: () => void) {
+  const ok = await confirm.ask(
+    t(
+      'Ignore the selected muxes? This removes their services and the channel mappings of those services.',
+    ),
+    { severity: 'danger' },
+  )
+  if (ok) await ignore.run(selection, clearSelection)
+}
+
 /* Network-picker dialog state. Open when the user clicks Add.
  * Pick → openCreateForParent with the per-network mux endpoints
  * + the chosen network UUID. */
@@ -303,7 +390,7 @@ function onNetworkPicked(networkUuid: string) {
 }
 
 function buildActions(selection: BaseRow[], clearSelection: () => void): ActionDef[] {
-  return buildAddEditDeleteActions({
+  const base = buildAddEditDeleteActions({
     selection,
     clearSelection,
     remove,
@@ -311,6 +398,47 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     onEdit: openEditor,
     addTooltip: t('Add a new mux'),
   })
+  /* Rescan before Delete, as Force Scan on Bouquets. */
+  const deleteIdx = base.findIndex((a) => a.id === 'delete')
+  const insertAt = deleteIdx === -1 ? base.length : deleteIdx
+  const rescanAction: ActionDef = {
+    id: 'rescan',
+    label: t('Rescan'),
+    tooltip: t('Scan the selected muxes again'),
+    disabled: selection.length === 0 || rescan.inflight.value,
+    onClick: () => onRescan(selection, clearSelection),
+  }
+  /* One submenu for the three states. Last, so that on a narrow
+   * toolbar it goes into the … menu before Delete does. */
+  const enabledAction: ActionDef = {
+    id: 'enabled',
+    label: t('Enable/Disable'),
+    tooltip: t('Enable, disable or ignore the selected muxes'),
+    children: [
+      {
+        id: 'enable',
+        label: t('Enable'),
+        tooltip: t('Enable the selected muxes'),
+        disabled: selection.length === 0 || enable.inflight.value,
+        onClick: () => enable.run(selection, clearSelection),
+      },
+      {
+        id: 'disable',
+        label: t('Disable'),
+        tooltip: t('Disable the selected muxes, keeping their services'),
+        disabled: selection.length === 0 || disable.inflight.value,
+        onClick: () => disable.run(selection, clearSelection),
+      },
+      {
+        id: 'ignore',
+        label: t('Ignore…'),
+        tooltip: t('Ignore the selected muxes and remove their services'),
+        disabled: selection.length === 0 || ignore.inflight.value,
+        onClick: () => onIgnore(selection, clearSelection),
+      },
+    ],
+  }
+  return [...base.slice(0, insertAt), rescanAction, ...base.slice(insertAt), enabledAction]
 }
 </script>
 
