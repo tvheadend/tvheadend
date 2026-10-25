@@ -67,6 +67,8 @@ typedef struct pass_muxer {
   uint16_t pm_dst_tsid;
   uint16_t pm_src_onid;
   uint16_t pm_dst_onid;
+  uint8_t  pm_src_tsid_valid;
+  uint8_t  pm_src_onid_valid;
 
   mpegts_psi_table_t pm_pat;
   mpegts_psi_table_t pm_pmt;
@@ -636,8 +638,8 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   tsid = (buf[8] << 8) | buf[9];
   onid = (buf[10] << 8) | buf[11];
   if (sid != pm->pm_src_sid ||
-      (pm->pm_src_tsid && tsid != pm->pm_src_tsid) ||
-      (pm->pm_src_onid && onid != pm->pm_src_onid))
+      (pm->pm_src_tsid_valid && tsid != pm->pm_src_tsid) ||
+      (pm->pm_src_onid_valid && onid != pm->pm_src_onid))
     return;
 
   /* TODO: set free_CA_mode bit to zero */
@@ -721,6 +723,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_src_sid     = ss->ss_service_id;
   pm->pm_src_tsid    = ss->ss_si.si_tsid;
   pm->pm_src_onid    = ss->ss_si.si_onid;
+  pm->pm_src_tsid_valid = ss->ss_si.si_tsid_valid;
+  pm->pm_src_onid_valid = ss->ss_si.si_onid_valid;
   if (pm->m_config.u.pass.m_rewrite_sid > 0) {
     pm->pm_dst_sid   = pm->m_config.u.pass.m_rewrite_sid;
     pm->pm_dst_tsid  = 1;
