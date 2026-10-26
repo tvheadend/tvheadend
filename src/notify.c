@@ -25,12 +25,38 @@
 #include "tvheadend.h"
 #include "notify.h"
 #include "webui/webui.h"
+#include "redblack.h"
+
+/* One per id waiting in notify_queue, so a duplicate is found without
+ * walking a list that grows to every mux and service while loading. */
+typedef struct notify_pending {
+  RB_ENTRY(notify_pending) link;
+  char key[];
+} notify_pending_t;
 
 static tvh_cond_t             notify_cond;
 static tvh_mutex_t        notify_mutex;
 static htsmsg_t              *notify_queue;
 static pthread_t              notify_tid;
 static void*                  notify_thread(void* p);
+static RB_HEAD(, notify_pending) notify_pending;
+
+static int
+notify_pending_cmp(notify_pending_t *a, notify_pending_t *b)
+{
+  return strcmp(a->key, b->key);
+}
+
+static void
+notify_pending_clear(void)
+{
+  notify_pending_t *p;
+
+  while ((p = RB_FIRST(&notify_pending)) != NULL) {
+    RB_REMOVE(&notify_pending, p, link);
+    free(p);
+  }
+}
 
 void
 notify_by_msg(const char *class, htsmsg_t *m, int isrestricted, int rewrite)
@@ -53,12 +79,22 @@ void
 notify_delayed(const char *id, const char *event, const char *action)
 {
   htsmsg_t *m = NULL, *e = NULL;
-  htsmsg_field_t *f;
+  notify_pending_t *p;
+  size_t len;
 
   if (!tvheadend_is_running())
     return;
 
+  len = strlen(event) + strlen(action) + strlen(id) + 3;
+  p = malloc(sizeof(*p) + len);
+  snprintf(p->key, len, "%s\x01%s\x01%s", event, action, id);
+
   tvh_mutex_lock(&notify_mutex);
+  if (RB_INSERT_SORTED(&notify_pending, p, link, notify_pending_cmp)) {
+    tvh_mutex_unlock(&notify_mutex);
+    free(p);
+    return;
+  }
   if (notify_queue == NULL) {
     notify_queue = htsmsg_create_map();
   } else {
@@ -71,12 +107,8 @@ notify_delayed(const char *id, const char *event, const char *action)
   }
   if (e == NULL)
     e = htsmsg_add_msg(m, action, htsmsg_create_list());
-  HTSMSG_FOREACH(f, e)
-    if (strcmp(htsmsg_field_get_str(f) ?: "", id) == 0)
-      goto skip;
   htsmsg_add_str(e, NULL, id);
   tvh_cond_signal(&notify_cond, 0);
-skip:
   tvh_mutex_unlock(&notify_mutex);
 }
 
@@ -97,6 +129,7 @@ notify_thread ( void *p )
     }
     q            = notify_queue;
     notify_queue = NULL;
+    notify_pending_clear();
     tvh_mutex_unlock(&notify_mutex);
 
     /* Process */
@@ -125,6 +158,7 @@ notify_thread ( void *p )
 void notify_init( void )
 {
   notify_queue = NULL;
+  RB_INIT(&notify_pending);
   tvh_mutex_init(&notify_mutex, NULL);
   tvh_cond_init(&notify_cond, 1);
   tvh_thread_create(&notify_tid, NULL, notify_thread, NULL, "notify");
@@ -139,5 +173,6 @@ void notify_done( void )
   tvh_mutex_lock(&notify_mutex);
   htsmsg_destroy(notify_queue);
   notify_queue = NULL;
+  notify_pending_clear();
   tvh_mutex_unlock(&notify_mutex);
 }

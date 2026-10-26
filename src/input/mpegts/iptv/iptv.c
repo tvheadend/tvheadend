@@ -1077,6 +1077,13 @@ iptv_network_config_save ( mpegts_network_t *mn, char *filename, size_t fsize )
   return c;
 }
 
+static int
+iptv_network_field_cmp ( const void *a, const void *b )
+{
+  return strcmp(htsmsg_field_name(*(htsmsg_field_t * const *)a),
+                htsmsg_field_name(*(htsmsg_field_t * const *)b));
+}
+
 iptv_network_t *
 iptv_network_create0
   ( const char *uuid, htsmsg_t *conf, const idclass_t *idc )
@@ -1117,14 +1124,27 @@ iptv_network_create0
   /* Load muxes */
   if ((c = hts_settings_load_r(1, "input/iptv/networks/%s/muxes",
                                 idnode_uuid_as_str(&in->mn_id, ubuf)))) {
-    htsmsg_field_t *f;
+    htsmsg_field_t *f, **fields;
     htsmsg_t *e;
-    HTSMSG_FOREACH(f, c) {
+    size_t i, count = 0;
+    HTSMSG_FOREACH(f, c)
+      count++;
+    /* The initial scan queue is kept in UUID order and is searched from
+     * its tail; muxes added in that order go straight to the end instead
+     * of walking a queue that grows to every mux. */
+    fields = malloc(MAX(count, 1) * sizeof(*fields));
+    count = 0;
+    HTSMSG_FOREACH(f, c)
+      fields[count++] = f;
+    qsort(fields, count, sizeof(*fields), iptv_network_field_cmp);
+    for (i = 0; i < count; i++) {
+      f = fields[i];
       if (!(e = htsmsg_get_map_by_field(f)))  continue;
       if (!(e = htsmsg_get_map(e, "config"))) continue;
       im = iptv_mux_create0(in, htsmsg_field_name(f), e);
       mpegts_mux_post_create((mpegts_mux_t *)im);
     }
+    free(fields);
     htsmsg_destroy(c);
   }
 
