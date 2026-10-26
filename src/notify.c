@@ -79,6 +79,7 @@ void
 notify_delayed(const char *id, const char *event, const char *action)
 {
   htsmsg_t *m = NULL, *e = NULL;
+  htsmsg_field_t *f;
   notify_pending_t *p;
   size_t len;
 
@@ -87,10 +88,11 @@ notify_delayed(const char *id, const char *event, const char *action)
 
   len = strlen(event) + strlen(action) + strlen(id) + 3;
   p = malloc(sizeof(*p) + len);
-  snprintf(p->key, len, "%s\x01%s\x01%s", event, action, id);
+  if (p)
+    snprintf(p->key, len, "%s\x01%s\x01%s", event, action, id);
 
   tvh_mutex_lock(&notify_mutex);
-  if (RB_INSERT_SORTED(&notify_pending, p, link, notify_pending_cmp)) {
+  if (p && RB_INSERT_SORTED(&notify_pending, p, link, notify_pending_cmp)) {
     tvh_mutex_unlock(&notify_mutex);
     free(p);
     return;
@@ -107,8 +109,14 @@ notify_delayed(const char *id, const char *event, const char *action)
   }
   if (e == NULL)
     e = htsmsg_add_msg(m, action, htsmsg_create_list());
+  /* Without a pending entry, look for the id the slow way. */
+  if (p == NULL)
+    HTSMSG_FOREACH(f, e)
+      if (strcmp(htsmsg_field_get_str(f) ?: "", id) == 0)
+        goto skip;
   htsmsg_add_str(e, NULL, id);
   tvh_cond_signal(&notify_cond, 0);
+skip:
   tvh_mutex_unlock(&notify_mutex);
 }
 
