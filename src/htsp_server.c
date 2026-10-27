@@ -2832,6 +2832,9 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
     if (!hs->hs_90khz &&
         (s64 > INT64_MAX / HTSP_CLOCK || s64 < INT64_MIN / HTSP_CLOCK))
       return htsp_error(htsp, N_("Invalid arguments"));
+    if (hs->hs_90khz &&
+        (s64 > INT64_MAX / 1000000 || s64 < INT64_MIN / 1000000))
+      return htsp_error(htsp, N_("Invalid arguments"));
     skip.time = hs->hs_90khz ? s64 : ts_rescale_inv(s64, 1000000);
     tvhtrace(LS_HTSP_SUB, "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
