@@ -96,6 +96,7 @@ struct satip_device
   int                        sd_sig_tunerno;
   char                      *sd_tunercfg;
   int                        sd_pids21;
+  int                        sd_dummy_play;
   int                        sd_pilot_on;
   int                        sd_default_rolloff;
   int                        sd_no_univ_lnb;
@@ -306,6 +307,9 @@ satip_rtsp_setup( http_client_t *hc,
                   int src, int fe, int udp_port,
                   const dvb_mux_conf_t *dmc,
                   int flags, int weight );
+
+int
+satip_rtsp_play_bare( http_client_t *hc );
 
 int
 satip_rtsp_play( http_client_t *hc, const char *pids,
