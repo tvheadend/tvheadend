@@ -32,32 +32,18 @@
 int
 vaapi_decode_setup_context(AVCodecContext *avctx);
 
-void
-vaapi_decode_close_context(AVCodecContext *avctx);
-
 int
-vaapi_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx, char *filter, size_t filter_len);
-
-int
-vaapi_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len);
-
-int
-vaapi_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
-
-int
-vaapi_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len);
-
+vaapi_get_filters(TVHContext *self, char *filter, size_t filter_len);
 
 /* encoding ================================================================= */
 
 int
 vaapi_encode_setup_context(AVCodecContext *avctx);
 
-void
-vaapi_encode_close_context(AVCodecContext *avctx);
-
-
 /* module =================================================================== */
+
+void
+vaapi_decode_destroy(TVHContext *ctx);
 
 void
 vaapi_done(void);
