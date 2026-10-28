@@ -6,8 +6,7 @@
 /*
  * Configuration → General → Base.
  *
- * Mirrors the existing ExtJS Base config page (static/app/config.js
- * + idnode.js's `idnode_simple`). Thin shell over
+ * Thin shell over
  * `<IdnodeConfigForm>`, which owns load/dirty/save/undo/level/
  * grouping. Per-page specifics here:
  *
@@ -18,14 +17,11 @@
  *     and the store's reactive consumers apply the change live.
  *     `RELOAD_FIELDS` keeps the full-reload path for the one field
  *     the SPA can't apply in place (`language_ui` — /locale-vue.js is
- *     loaded once at bootstrap). ExtJS still hard-reloads for all
- *     of them — config.js:35-61.
- *   - Start wizard button — admin-only toolbar action mirroring
- *     legacy ExtJS at `static/app/config.js:7-24`. POSTs
+ *     loaded once at bootstrap).
+ *   - Start wizard button — admin-only toolbar action. POSTs
  *     `api/wizard/start` (ACCESS_ADMIN per
  *     `src/api/api_wizard.c:126`), then navigates to the wizard's
- *     first step. ExtJS hard-reloads on success (full HTTP refresh
- *     of access state); the wizard store does the SPA equivalent —
+ *     first step without a page reload — the wizard store's
  *     `start()` updates the access store's wizard cursor
  *     optimistically so the router's beforeEach guard sees the
  *     new cursor immediately rather than racing the comet
@@ -84,8 +80,8 @@ const ACCESS_REFETCH_FIELDS: readonly string[] = [
 ]
 
 /* Str-typed enum singletons that always carry a runtime value —
- * Classic offers no clear-to-null affordance for these, so the
- * Vue IdnodeFieldEnum's synthetic `(none)` option is suppressed.
+ * clearing them is never valid, so IdnodeFieldEnum's synthetic
+ * `(none)` option is suppressed.
  * Manual allowlist; replaced by a server-emitted `PO_MANDATORY`
  * prop opt once the C-side flag lands.
  *

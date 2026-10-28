@@ -17,13 +17,9 @@
  *   tvh_locale       — flat dict {"English literal": "Translation"}
  *   tvh_locale_lang  — language code string (e.g. 'de', 'fr', '')
  *
- * The ExtJS UI keeps its own catalog from `intl/js` at
- * `/redir/locale.js`, so removing it leaves this one untouched.
- *
  * **Why gettext-text-as-key**: the English literal IS the
- * translation key, as in ExtJS's `_('Setup Wizard')` lookup of
- * `tvh_locale['Setup Wizard']`. The Vue catalog was seeded with
- * the ExtJS translations of identical strings.
+ * translation key, so `t('Setup Wizard')` looks up
+ * `tvh_locale['Setup Wizard']`.
  *
  * **Only literals are extracted**: `t(label)` with a variable
  * works at runtime, but the string reaches translators only when
@@ -52,10 +48,9 @@ interface TvhLocaleGlobals {
  * present in the loaded `tvh_locale` dict; otherwise returns
  * the English literal unchanged.
  *
- * Optional `{0}`, `{1}`, … positional substitution mirrors
- * ExtJS's `String.format` convention so a sentence with a
- * dynamic part (a column name, a count, etc.) can be
- * extracted as ONE msgid for translators — `t('Move {0}
+ * Optional `{0}`, `{1}`, … positional substitution lets a
+ * sentence with a dynamic part (a column name, a count, etc.)
+ * be extracted as ONE msgid for translators — `t('Move {0}
  * up', name)` keeps the whole sentence translatable rather
  * than concatenating split fragments. Substitution runs AFTER
  * the catalog lookup so translators control word order:

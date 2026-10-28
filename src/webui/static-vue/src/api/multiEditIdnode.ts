@@ -10,10 +10,8 @@
  *
  * Walks `currentValues` and picks only the keys whose
  * `applyChecked[id]` is `true`. The `uuid` key is always set
- * to the supplied list. Mirrors Classic's
- * `getFieldValues` override at
- * `static/app/idnode.js:1081-1092` — the user's per-field
- * apply-checkbox is the gate.
+ * to the supplied list — the user's per-field apply-checkbox is
+ * the gate.
  *
  * Same testing posture as `cloneIdnode.ts` / `idnodeMove.ts` /
  * `timeshiftDisable.ts` — pure, framework-free, easy to unit-

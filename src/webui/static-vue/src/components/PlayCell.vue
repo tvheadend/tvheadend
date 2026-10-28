@@ -6,9 +6,8 @@
 /*
  * PlayCell — per-row inline Play icon for grid action columns.
  *
- * Mirrors Classic's `playLink()` shape (`static/app/tvheadend.js:856-861`)
- * but renders a bare Lucide icon-button instead of an `<img>` anchor.
- * One click opens `/play/ticket/<col.playPath>/<row.uuid>` in a new
+ * Renders a bare Lucide icon-button. One click opens
+ * `/play/ticket/<col.playPath>/<row.uuid>` in a new
  * tab via `openPlay()` from `utils/playUrl.ts`, which the OS MIME
  * handler routes to the user's external media player.
  *
@@ -17,8 +16,8 @@
  *   - `playPath`    — REQUIRED. Stream-path prefix without the uuid
  *                     (e.g. 'stream/channel', 'dvrfile').
  *   - `playTitle`   — optional builder for the `?title=` URL query
- *                     param (Classic decorates this for m3u track
- *                     display in the external player).
+ *                     param (the external player shows it as the
+ *                     m3u track title).
  *   - `playEnabled` — optional predicate; defaults true. DVR
  *                     Finished sets `r => r.filesize > 0` so deleted-
  *                     on-disk rows render disabled.

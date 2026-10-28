@@ -60,7 +60,7 @@ export interface WizardProgress {
   services: number
 }
 
-/* Polling cadence — matches ExtJS at `static/app/wizard.js:182`. */
+/* Progress polling cadence. */
 const PROGRESS_POLL_MS = 1000
 
 /* ---- Module-scope pure helpers (Sonar S7721) ----
@@ -92,9 +92,7 @@ export function prevStepBefore(name: string): WizardStepName | null {
  * beforeEach guard with the stale (empty) cursor and been
  * redirected back to the default tab.
  *
- * ExtJS sidesteps this by hard-reloading the page on success
- * (`static/app/config.js:19-21`) so the access state is fetched
- * fresh during cold-load. The Vue stores do the SPA equivalent:
+ * Instead of reloading the page to fetch the access state fresh,
  * mirror the just-acked state into the access store via
  * `setWizardCursor`. The next `accessUpdate` from comet
  * wholesale-replaces `access.data` with the server view; in the
@@ -108,8 +106,7 @@ export async function start(): Promise<void> {
 
 export async function cancel(): Promise<void> {
   /* Server clears `config.wizard`; partial config from prior
-   * step saves is NOT rolled back (matches ADR 0015 §5 and
-   * ExtJS behaviour). */
+   * step saves is NOT rolled back (matches ADR 0015 §5). */
   await apiCall('wizard/cancel')
   useAccessStore().setWizardCursor('')
 }

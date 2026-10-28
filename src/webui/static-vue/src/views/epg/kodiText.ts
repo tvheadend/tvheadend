@@ -6,17 +6,14 @@
  *
  * Walks an XMLTV-derived description string once and emits a flat
  * array of text segments + Vue VNodes that the consumer renders
- * inside an enclosing <span>. Matches the seven-tag set the legacy
- * tvheadend ExtJS parser supports (`tvheadend.labelFormattingParser`
- * at `static/app/dvr.js:9-22`):
+ * inside an enclosing <span>. Supports seven tags:
  *
  *   [B]…[/B]              bold span
  *   [I]…[/I]              italic span
  *   [COLOR x]…[/COLOR]    coloured span — `x` must match /^[\w#]+$/
  *                         (word chars + hex `#`); anything else
- *                         falls through as literal text. Same regex
- *                         constraint the legacy parser relies on,
- *                         which closes the CSS-injection door.
+ *                         falls through as literal text. The
+ *                         constraint closes the CSS-injection door.
  *   [CR]                  self-closing line break (h('br'))
  *   [UPPERCASE]…[/…]      transforms inner text segments to upper
  *   [LOWERCASE]…[/…]      lower
@@ -30,9 +27,8 @@
  *     don't strip silently because the user might be looking at a
  *     bug in their XMLTV feed and seeing raw codes is more honest.
  *   - Malformed tag (`[B]bold without closing`) — open frame is
- *     auto-closed at end-of-input; the bold span covers the rest.
- *     Cleaner than the legacy regex, which would leak an open
- *     `<b>` into the surrounding HTML.
+ *     auto-closed at end-of-input; the bold span covers the rest,
+ *     so no open `<b>` leaks into the surrounding HTML.
  *   - Nested codes (`[B]bold [I]bold-italic[/I][/B]`) — render-
  *     function naturally nests; styles compose.
  *   - Case mutators wrapping styled content
@@ -98,8 +94,8 @@ interface Consumed {
 
 /* Open style-tag handler: recurses into the inner range, wraps
  * the result in the style span. Unknown / malformed COLOR arg
- * falls through as literal text — same intent as the legacy
- * parser; surfaces a feed bug instead of silently swallowing. */
+ * falls through as literal text; surfaces a feed bug instead of
+ * silently swallowing. */
 function consumeStyleTag(
   input: string,
   matchStart: number,

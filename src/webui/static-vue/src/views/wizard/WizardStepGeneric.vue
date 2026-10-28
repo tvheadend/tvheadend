@@ -24,8 +24,7 @@
  * Why `alwaysDirty`: the wizard's Save & Next button is the only
  * way forward, so it must POST even when the user didn't touch
  * a field (idempotent save: server re-runs the step's
- * `ic_changed` callback with the same values; matches ExtJS
- * behaviour where Save & Next always fires).
+ * `ic_changed` callback with the same values).
  *
  * Save → navigate flow:
  *   1. User clicks Save & Next in WizardFooter.
@@ -95,15 +94,14 @@ const formRef = ref<InstanceType<typeof IdnodeConfigForm> | null>(null)
  * footer doesn't need to reach through the template ref. */
 const saving = ref(false)
 
-/* Server-emitted chrome. Bound from the `loaded` emit. Falls
- * back to empty so the header just collapses when nothing's
- * loaded yet. `descriptionHtml` is the Markdown-rendered HTML
- * shape — every wizard description is Markdown (mirrors ExtJS
- * which runs the same field through marked() before injecting
- * into a div). Image paths inside the rendered HTML are
+/* Server-emitted chrome. Bound from the `loaded` emit. Falls back
+ * to empty so the header just collapses when nothing's loaded yet.
+ * `descriptionHtml` is the Markdown-rendered HTML shape — every
+ * wizard description is Markdown, run through marked() before
+ * injecting into a div. Image paths inside the rendered HTML are
  * normalised to root-absolute so relative URLs like
- * `static/img/opencollective.png` resolve correctly under the
- * Vue route prefix. */
+ * `static/img/opencollective.png` resolve correctly under the Vue
+ * route prefix. */
 const iconUrl = ref<string>('')
 const descriptionHtml = ref<string>('')
 
@@ -141,14 +139,13 @@ function handleLoaded(params: IdnodeProp[]): void {
 }
 
 /*
- * Server emits the wizard icon path as a bare relative string
- * like `static/img/logobig.png` (src/wizard.c:icon_get). The
- * ExtJS UI is served from the document root so the browser
- * resolves the relative path to `/static/img/...`; the Vue UI
- * is mounted under `/gui/...` so the same string resolves to
- * `/gui/wizard/<step>/static/...` and 404s. Coerce to a root-
- * absolute URL whenever the server hands us a bare path. Leaves
- * full URLs (http/https) and already-absolute paths alone.
+ * Server emits the wizard icon path as a bare relative string like
+ * `static/img/logobig.png` (src/wizard.c:icon_get), relative to the
+ * document root. The Vue UI is mounted under `/gui/...` so the same
+ * string resolves to `/gui/wizard/<step>/static/...` and 404s.
+ * Coerce to a root-absolute URL whenever the server hands us a
+ * bare path. Leaves full URLs (http/https) and already-absolute
+ * paths alone.
  */
 function normalizeStaticUrl(u: string): string {
   if (!u) return ''
@@ -235,7 +232,6 @@ defineExpose({ formRef })
           Server-emitted Markdown description rendered through
           `marked` and v-html'd. Safe by trust: source is
           compiled-in `docs/wizard/*.md`, not user input.
-          Matches ExtJS at `static/app/wizard.js:106`.
         -->
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div v-if="descriptionHtml" class="wizard-step__description" v-html="descriptionHtml"></div>
@@ -294,12 +290,11 @@ defineExpose({ formRef })
   border-bottom: 1px solid var(--tvh-border);
 }
 
-/* Hello step only — mirror the Classic UI's welcome-page
- * layout where the wizard logo sits on the trailing edge and
- * the introductory text reads from the leading edge.
- * `row-reverse` swaps visual order without changing the source
- * order (so screen readers still encounter the image first
- * as a decorative pre-header element). */
+/* Hello step only — the wizard logo sits on the trailing edge and
+ * the introductory text reads from the leading edge. `row-reverse`
+ * swaps visual order without changing the source order (so screen
+ * readers still encounter the image first as a decorative
+ * pre-header element). */
 .wizard-step__header--logo-right {
   flex-direction: row-reverse;
 }

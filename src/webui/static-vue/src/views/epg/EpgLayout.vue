@@ -9,12 +9,12 @@
  * Three tabs:
  *   - Timeline: Kodi-style timeline grid (channels left, time top).
  *   - Magazine: TV-magazine-style grid (channels top, time left).
- *   - Table:    1:1 of the existing ExtJS EPG list, using DataGrid
+ *   - Table:    flat EPG event list, using DataGrid
  *     directly (no idnode wrapper since `epg/events` isn't an idnode).
  *
  * Same shape as DvrLayout / ConfigGeneralLayout: PageTabs row above a
  * router-view. No capability or level gates today — all three tabs
- * are available to any authenticated user (matching ExtJS' EPG access).
+ * are available to any authenticated user.
  */
 import { Calendar } from 'lucide-vue-next'
 import PageTabs from '@/components/PageTabs.vue'

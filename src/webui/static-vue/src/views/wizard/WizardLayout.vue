@@ -23,8 +23,7 @@
  * shape at < 768 px. Header collapses.
  *
  * i18n: every user-facing chrome string in this component goes
- * through `t()`. Strings reuse the ExtJS wizard's literals where
- * possible (translations free); novel strings are marked with
+ * through `t()`; novel strings are marked with
  * `/* i18n: new string *\/`.
  */
 import { computed } from 'vue'
@@ -52,10 +51,9 @@ const route = useRoute()
 const routeKey = computed(() => route.fullPath ?? '')
 
 /*
- * Cross-UI logo reference. Bound as an expression (not a literal
+ * Server-side logo reference. Bound as an expression (not a literal
  * `src`) so Vite's Vue plugin doesn't try to bundle the asset —
- * the URL is served at runtime by tvheadend's existing /static
- * handler from the ExtJS bundle.
+ * the URL is served at runtime by tvheadend's /static handler.
  */
 const logoUrl = serverUrl('static/img/logo.png')
 </script>

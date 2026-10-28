@@ -7,7 +7,7 @@
  * Pins the public API:
  *  - dirty tracking (add / read / revert / count)
  *  - canEdit gating via beforeEdit predicate
- *  - save: POST shape (Classic-compatible), success-clears,
+ *  - save: POST shape (per-row partial objects), success-clears,
  *    failure-preserves, in-flight guard, stale-uuid filter
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -474,7 +474,7 @@ describe('useInlineEdit — save', () => {
     expect(apiMock).not.toHaveBeenCalled()
   })
 
-  it('POSTs the Classic per-row partial-object array shape', async () => {
+  it('POSTs the per-row partial-object array shape', async () => {
     const { useInlineEdit } = await import('../useInlineEdit')
     const entries = ref(rows('a', 'b', 'c'))
     const e = useInlineEdit<Row>({ entries })

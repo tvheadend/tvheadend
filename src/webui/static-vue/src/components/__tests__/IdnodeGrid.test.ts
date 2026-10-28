@@ -512,10 +512,7 @@ describe('IdnodeGrid', () => {
   })
 
   /*
-   * Item 7b — sort persistence across reloads. Classic ExtJS gets
-   * this for free via `stateful: true` + Ext.state.CookieProvider
-   * (static/app/idnode.js:2122-2124, static/app/tvheadend.js:55-61);
-   * Vue must persist explicitly to match. These cover: write on
+   * Item 7b — sort persistence across reloads. These cover: write on
    * user-driven sort, seed the store from persisted prefs at mount,
    * drop persisted sort when it matches the column-based default,
    * and respect `persistColumns: false`.
@@ -574,10 +571,8 @@ describe('IdnodeGrid', () => {
   })
 
   /*
-   * Filter persistence — Classic ExtJS persists grid filters
-   * via stateful: true + GridFilters plugin (cookie-backed). The
-   * gridPrefs.filter slot mirrors that on the Vue side so per-
-   * column funnel filters survive reload.
+   * Filter persistence — the gridPrefs.filter slot keeps per-
+   * column funnel filters across reloads.
    */
   it('persists a filter change to localStorage (lazy mode)', async () => {
     /* Filter persistence moved to a sibling `:filter` key when the
@@ -2109,8 +2104,7 @@ describe('IdnodeGrid', () => {
 
     it('strips editable from columns whose type is not yet supported', async () => {
       /* `time` is still out of scope for inline editing
-       * (Classic uses a dedicated TimeField widget; we
-       * defer until that's wired). The cell stays
+       * (it needs a dedicated time widget). The cell stays
        * read-only even when the consumer flags
        * `editable: true`. */
       idnodeClassStub.meta = {

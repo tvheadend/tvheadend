@@ -146,8 +146,8 @@ page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
 {
   /* No Vue UI bundled — neither vue_build (local npm) nor vue_cache
    * (pre-built dist) was enabled at configure time. Serve a minimal
-   * stub pointing users to the existing ExtJS UI rather than 500ing on
-   * a missing dist/index.html. remain/opaque are unused — see above. */
+   * stub explaining why rather than 500ing on a missing
+   * dist/index.html. remain/opaque are unused — see above. */
   (void)remain;
   (void)opaque;
   htsbuf_queue_t *hq = &hc->hc_reply;
@@ -157,11 +157,8 @@ page_vue_index(http_connection_t *hc, const char *remain, void *opaque)
     "</head><body>"
     "<h1>Vue UI not available in this build</h1>"
     "<p>This binary was built without the Vue UI "
-    "(neither <code>vue_build</code> nor <code>vue_cache</code> enabled). ");
-  /* Honour the webroot in the escape link. */
-  htsbuf_qprintf(hq,
-    "<a href=\"%s/extjs.html\">Use the ExtJS UI instead.</a></p>"
-    "</body></html>\n", tvheadend_webroot ?: "");
+    "(neither <code>vue_build</code> nor <code>vue_cache</code> enabled).</p>"
+    "</body></html>\n");
   http_output_html(hc);
   return 0;
 }

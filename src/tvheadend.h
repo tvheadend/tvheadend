@@ -81,7 +81,6 @@ extern tvh_mutex_t tasklet_lock;
 extern tvh_mutex_t fork_lock;
 
 extern int tvheadend_webui_port;
-extern int tvheadend_webui_debug;
 extern int tvheadend_htsp_port;
 
 #if defined(__has_feature)

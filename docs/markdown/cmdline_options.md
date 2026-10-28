@@ -53,7 +53,6 @@ Usage: `tvheadend [OPTIONS]`
       --subsystems            List subsystems
       --fileline              Add file and line numbers to debug
       --threadid              Add the thread ID to debug
-      --uidebug               Enable web UI debug (non-minified JS)
   -A, --abort                 Immediately abort
   -D, --dump                  Enable coredumps for daemon
       --noacl                 Disable all access control checks

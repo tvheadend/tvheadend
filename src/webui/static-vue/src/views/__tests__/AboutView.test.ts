@@ -70,7 +70,7 @@ describe('AboutView capabilities, credits and logos', () => {
     expect(wrapper.findAll('dt').map((d) => d.text())).not.toContain('Capabilities')
   })
 
-  it('credits the help page icons and not the classic UI stack', async () => {
+  it('credits the help page icons and not ExtJS or the Noto emoji', async () => {
     const wrapper = await mountWith({})
     const text = wrapper.text()
     expect(text).toContain('Help page icons from')

@@ -73,7 +73,7 @@ export interface GridResponse<T = Record<string, unknown>> {
  * is used directly.
  *
  * Future projector shapes worth keeping in mind: strip-year from
- * titles for series-grouping (ExtJS's `groupRenderer` concept),
+ * titles for series-grouping,
  * first-letter buckets for big alphabetical lists, etc. The slot is
  * generic — date-only grouping is the first concrete use.
  */

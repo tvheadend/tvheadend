@@ -167,14 +167,14 @@ describe('IdnodeFieldEnumMulti — collapsed-trigger display', () => {
 })
 
 describe('IdnodeFieldEnumMulti — placeholder', () => {
-  /* Reuses Classic's "Select {0} ..." msgid (static/app/idnode.js),
-   * so the placeholder is translated wherever Classic's is. */
+  /* The placeholder is built from the "Select {0} ..." msgid with
+   * the field caption. */
   const PLACEHOLDER_STUB = {
     template: '<div class="ms-stub" :data-placeholder="placeholder" />',
     props: ['modelValue', 'options', 'optionLabel', 'optionValue', 'placeholder'],
   }
 
-  it('uses the Classic msgid with the field caption', () => {
+  it('uses the "Select {0} ..." msgid with the field caption', () => {
     const g = globalThis as { tvh_locale?: Record<string, string> }
     const saved = g.tvh_locale
     g.tvh_locale = { 'Select {0} ...': 'Vyberte {0} ...' }

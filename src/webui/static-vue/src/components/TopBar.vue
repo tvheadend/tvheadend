@@ -28,9 +28,8 @@
  *      so the bar stays a single row regardless of which
  *      info_area items are configured.
  *
- * Logo path mirrors the cross-UI reference in NavRail (served by
- * the existing `/static/...` handler from the ExtJS bundle; copy
- * into `static-vue/src/assets/` once ExtJS retires).
+ * Logo path mirrors the server-side reference in NavRail (served by
+ * the `/static/...` handler).
  */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { Menu } from 'lucide-vue-next'

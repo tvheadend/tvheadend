@@ -1017,9 +1017,8 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
 
   /* Fetch the full forward-EPG window in a single call (no day
    * filter) — the Table view's load path. Server already caps to
-   * future events via `e->stop > gclk()` (`src/epg.c:2335`), so
-   * the response shape matches what the Classic UI's EPG grid
-   * shows. Marks every day in the rendered track range as loaded
+   * future events via `e->stop > gclk()` (`src/epg.c:2335`).
+   * Marks every day in the rendered track range as loaded
    * so the renderer's loading-band overlay turns off everywhere
    * once this resolves.
    *
@@ -1661,8 +1660,6 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
    * burst — a single render pass instead of N (the full-refetch
    * alternative would replace every row on every notification,
    * which causes visible grid flashing during bulk EPG mutations).
-   * ExtJS does the same (`static/app/epg.js:44-81` —
-   * `epgCometUpdate`).
    *
    * Fallback: if `fetchEventsById` throws (network blip), we fall
    * back to a full refetch via `loadAllLoadedDays()` so the grid
@@ -1862,8 +1859,8 @@ export function useEpgViewState(opts: UseEpgViewStateOpts = {}): UseEpgViewState
     loadChannels()
     if (opts.eagerLoadAll) {
       /* Table view path — no scroll-into-day mechanism, so load
-       * the full forward-EPG window in one call. Match Classic's
-       * EPG grid behaviour (no day filter on the wire). */
+       * the full forward-EPG window in one call (no day filter
+       * on the wire). */
       loadAllEvents()
     } else if (opts.tableLazyPaging) {
       /* Table view — page-based lazy load with start ASC default.

@@ -19,15 +19,13 @@
  *   4. timeout  (PT_INT, seconds — rendered as friendly duration)
  *   5. restart  (PT_BOOL)
  *
- * Page is gated to `uilevel: 'expert'` per the legacy ExtJS
- * config (`mpegts.js:429`). The L3 tab is hidden from non-expert
+ * Page is gated to `uilevel: 'expert'`. The L3 tab is hidden from non-expert
  * users in `DvbInputsLayout.vue`; direct URL navigation is
  * handled by `dvbMuxSchedGuard` in the router.
  *
  * No Hide dropdown — the server's mux_sched grid handler
  * (`api/api_mpegts.c:290-297`) doesn't actually read the
- * `hidemode` param, so the legacy ExtJS dropdown is a no-op
- * widget; not worth replicating here.
+ * `hidemode` param, so such a dropdown would be a no-op widget.
  */
 import { ref } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'

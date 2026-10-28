@@ -29,8 +29,7 @@ export interface ChannelDisplay {
  * `channelDisplay.number` deliberately — a user might want the
  * LCN visible AS information but prefer alphabetical scanning
  * order, or hide the LCN but still sort by it. Default `'number'`
- * matches what the legacy ExtJS UI showed (the server returns
- * channels number-ASC and the legacy view never re-sorted them).
+ * keeps the server's order (it returns channels number-ASC).
  */
 export type ChannelSort = 'number' | 'name'
 
@@ -86,9 +85,9 @@ export function showsOverlayPadding(mode: DvrOverlayMode): boolean {
 export type ProgressDisplay = 'bar' | 'pie' | 'off'
 
 /*
- * Title-search scope for the Table view's toolbar Search field.
- * Mirrors Classic's Fulltext + Mergetext toggles (`static/app/
- * epg.js:1326`) collapsed into one mutually-exclusive dropdown.
+ * Title-search scope for the Table view's toolbar Search field:
+ * the server's fulltext and mergetext options, collapsed into one
+ * mutually-exclusive dropdown.
  * Server-side semantics from `src/epg.c:2388-2424`:
  *   - 'title'     : regex matches the title field only.
  *   - 'fulltext'  : regex tried separately against title / subtitle
@@ -117,7 +116,7 @@ export type TitleSearchMode = 'title' | 'fulltext' | 'mergetext'
  * `api_epg_filter_set_num` already accepts gt/lt on those fields).
  * Persisted via viewOptions so the user's pick survives reloads.
  *
- * 'Next' (the classic Now/Next pair — next-airing program per
+ * 'Next' (the usual Now/Next pair — next-airing program per
  * channel) is intentionally absent: the server can't express
  * "first event per channel after now" in one query. Awaiting
  * an upstream `mode=next` PR.
@@ -240,7 +239,7 @@ export interface EpgViewOptions {
 
 /*
  * Channel-display defaults — logo + name on always; number tracks
- * the server's `config.chname_num` preference (which the legacy UI
+ * the server's `config.chname_num` preference (which the server
  * also honours when constructing channel-list dropdown labels via
  * `channel_class_get_list` in `channels.c:258-263`). The static
  * fallback is the "Comet hasn't delivered yet" safety net; the
@@ -355,11 +354,10 @@ export function buildDefaults(quicktips: boolean, chnameNum: boolean): EpgViewOp
   return {
     tagFilter: { ...STATIC_TAG_FILTER_DEFAULTS },
     channelDisplay: defaultChannelDisplay(chnameNum),
-    /* Default to number-ASC ordering — matches the legacy UI's
-     * implicit ordering (server returns channels number-ASC).
-     * Decoupled from `channelDisplay.number` so users can hide
-     * the LCN column while keeping it as the sort key, or vice
-     * versa. */
+    /* Default to number-ASC ordering — the server's own order (it
+     * returns channels number-ASC). Decoupled from
+     * `channelDisplay.number` so users can hide the LCN column
+     * while keeping it as the sort key, or vice versa. */
     channelSort: 'number',
     tooltipMode: defaultTooltipMode(quicktips),
     density: { timeline: 'default', magazine: 'default' },
@@ -394,8 +392,7 @@ export function buildDefaults(quicktips: boolean, chnameNum: boolean): EpgViewOp
      * surprising default — a typed query hits exactly the visible
      * title column. Users opt up to fulltext / mergetext. */
     titleSearchMode: 'title',
-    /* 'All' matches the Classic EPG default — the unfiltered
-     * listing first-time users expect from the legacy UI. They
+    /* 'All' — the unfiltered listing first-time users expect. They
      * opt in to 'Now' / 'Today' / etc. when they want a narrower
      * scope. Persisted via viewOptions so a deliberate flip
      * survives reloads. */

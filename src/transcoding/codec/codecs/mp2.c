@@ -35,12 +35,35 @@ tvh_codec_profile_mp2_open(TVHCodecProfile *self, AVDictionary **opts)
 }
 
 
+// see avpriv_mpa_bitrate_tab and avpriv_mpa_freq_tab
+// in ffmpeg-3.0.2/libavcodec/mpegaudiodata.c
+static const int mp2_hi_bit_rates[] = {
+    32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0
+};
+static const int mp2_lo_bit_rates[] = {
+    8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0
+};
+
+
 static htsmsg_t *
 codec_profile_mp2_class_bit_rate_list(void *obj, const char *lang)
 {
-    // This is a place holder.
-    // The real list is set in src/webui/static/app/codec.js
-    return htsmsg_create_list();
+    TVHAudioCodecProfile *self = (TVHAudioCodecProfile *)obj;
+    const int *rates = mp2_hi_bit_rates;
+    htsmsg_t *list = htsmsg_create_list(), *map = htsmsg_create_map();
+    char buf[16];
+    int i;
+
+    // the lower sample rates (MPEG-2 LSF) use the lower bitrate table
+    if (self && self->sample_rate && self->sample_rate < 32000)
+        rates = mp2_lo_bit_rates;
+    ADD_ENTRY(list, map, s32, 0, str, AUTO_STR);
+    for (i = 0; rates[i]; i++) {
+        map = htsmsg_create_map();
+        snprintf(buf, sizeof(buf), "%d", rates[i]);
+        ADD_ENTRY(list, map, s32, rates[i], str, buf);
+    }
+    return list;
 }
 
 

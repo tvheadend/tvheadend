@@ -2,11 +2,9 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * Custom-date formatter — verbatim TypeScript port of Classic's
- * `tvheadend.toCustomDate(date, format)` at
- * `src/webui/static/app/tvheadend.js:1458-1497`. Mirrors the same
- * grammar so an admin who tuned a `config.date_mask` for Classic
- * sees identical output on the Vue UI.
+ * Custom-date formatter for `config.date_mask` (Config → General →
+ * Base → "Custom date Format"). The grammar is fixed so an admin's
+ * mask keeps rendering the same way.
  *
  * Grammar (with the % escape):
  *   %y / %yy / %yyy / %yyyy  — year, padded to N digits (right slice)
@@ -23,17 +21,15 @@
  *   %q                       — calendar quarter (1-4)
  *
  * When the mask contains no `%[MmsSyYdhHIpPq]` token, fall back
- * to the same default `toLocaleString` options Classic uses — gives
- * a sensible date+time format for masks that are blank or
- * accidentally invalid.
+ * to default `toLocaleString` options — gives a sensible date+time
+ * format for masks that are blank or accidentally invalid.
  *
- * Padding convention matches Classic exactly: each numeric token's
- * value is `String(value).padStart(4, '0').slice(1 - match.length)`.
+ * Padding convention: each numeric token's value is
+ * `String(value).padStart(4, '0').slice(1 - match.length)`.
  * For `%yyyy` (len 5) that's `slice(-4)` → 4 trailing chars;
  * for `%y` (len 2) it's `slice(-1)` → 1 trailing char of the year.
  * This intentionally yields a single-digit "last-of-year" rendering
- * for `%y` — Classic does the same and admins relying on the
- * grammar will already be calibrated to it.
+ * for `%y`; admins relying on the grammar are calibrated to it.
  */
 
 const TOKEN_DETECT = /(%[MmsSyYdhHIpPq]+)/
@@ -66,9 +62,7 @@ export function toCustomDate(date: Date, format: string, locale?: string): strin
     .replaceAll('%ddd', date.toLocaleDateString(locale, { weekday: 'short' }))
 
   /* Numeric tokens — order matters only between same-letter
-   * groups, since each regex matches just one letter group. The
-   * map keeps the same key order as Classic's `o` object literal
-   * (line 1460-1472 of tvheadend.js) for parity. */
+   * groups, since each regex matches just one letter group. */
   const tokens: ReadonlyArray<readonly [RegExp, number | string]> = [
     [/%[yY]+/g, date.getFullYear()],
     [/%M+/g, date.getMonth() + 1],
@@ -87,8 +81,7 @@ export function toCustomDate(date: Date, format: string, locale?: string): strin
     out = out.replace(re, (match) => {
       if (typeof value === 'string') return value
       /* For two-char `%X` tokens (no repetition), keep the value
-       * as-is — Classic uses `match.length === 2 ? value : padded`
-       * to short-circuit single-char output for things like
+       * as-is — short-circuits single-char output for things like
        * %p / %P / %S. */
       if (match.length === 2) return String(value)
       return String(value).padStart(4, '0').slice(1 - match.length)

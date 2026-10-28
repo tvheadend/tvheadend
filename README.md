@@ -17,7 +17,7 @@ Tvheadend
 
 Tvheadend is the leading TV streaming server and Digital Video Recorder for Linux.
 
-![tvheadend front page](https://github.com/tvheadend/tvheadend/raw/master/src/webui/static/img/epg.png)
+![tvheadend front page](img/epg.png)
 
 It supports the following inputs:
 

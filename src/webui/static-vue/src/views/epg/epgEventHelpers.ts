@@ -6,9 +6,8 @@
  * drawer. The single helper today is `extraText()`; lift more in here
  * as cross-view EPG logic accumulates.
  *
- * `extraText()` mirrors the ExtJS `renderExtraText` fallback in
- * `static/app/epg.js:730-740` — the supplementary text shown below
- * (or alongside) the title in every EPG view comes from one of three
+ * `extraText()` — the supplementary text shown below (or
+ * alongside) the title in every EPG view comes from one of three
  * server-emitted fields, populated inconsistently across EPG sources
  * (XMLTV vs EIT vs OTA grabber, etc.):
  *

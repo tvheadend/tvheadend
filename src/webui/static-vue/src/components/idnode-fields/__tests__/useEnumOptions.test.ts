@@ -7,8 +7,7 @@
  * Pins that a deferred-enum descriptor carrying an `event` hint
  * subscribes to that Comet class on mount, refetches the option
  * list when a notification arrives, debounces bursts, and
- * unsubscribes cleanly on unmount. Mirrors Classic ExtJS at
- * `static/app/idnode.js:48-52`.
+ * unsubscribes cleanly on unmount.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -173,12 +172,11 @@ describe('useEnumOptions — Comet-driven refresh', () => {
 })
 
 describe('useEnumOptions — alphabetical sort for deferred enums', () => {
-  it('sorts deferred-enum options by display label (Classic-parity)', async () => {
+  it('sorts deferred-enum options by display label', async () => {
     /* Server emits services in idnode_find_all insertion order
      * (non-deterministic from the user's perspective). The
      * composable should sort by `val` ascending so the rendered
-     * dropdown reads alphabetically — same default as Classic
-     * ExtJS (`static/app/idnode.js:2277-2278`). */
+     * dropdown reads alphabetically. */
     apiMock.mockResolvedValueOnce({
       entries: [
         { key: 'c', val: 'Charlie' },

@@ -24,10 +24,6 @@
  * also drives the EPG Timeline view-options dropdown — same look,
  * same close-on-outside-click, same reset affordance — and is the
  * place to extend if a third settings popover lands.
- *
- * Strings ("View level", "Basic", "Advanced", "Expert", "Columns")
- * match `intl/js/tvheadend.js.pot` verbatim for translation reuse
- * when the Vue i18n surface is wired.
  */
 import { computed, ref } from 'vue'
 import { useIsPhone } from '@/composables/useIsPhone'
@@ -76,8 +72,7 @@ const props = defineProps<{
   isLocked: (col: ColumnDef) => boolean
   /*
    * Hide the View level section entirely when the grid pins its level
-   * (`IdnodeGrid` `lockLevel` prop). Mirrors `acleditor.js:117`'s
-   * `uilevel: 'expert'` pin semantic — there's nothing for the user
+   * (`IdnodeGrid` `lockLevel` prop) — there's nothing for the user
    * to choose between, so the radio is suppressed. Columns + Reset
    * stay; only the level section + its divider disappear. Default
    * false keeps existing callers unchanged.
@@ -133,8 +128,8 @@ const props = defineProps<{
    * doesn't render (the grid has no sortable columns or the parent
    * deliberately suppressed it). Direction is the persisted /
    * effective sort direction, ALWAYS defined when sortField is —
-   * IdnodeGrid keeps the grid in an always-sorted state per Classic
-   * parity. `sortIsDefault` drives the accent chip: true when the
+   * IdnodeGrid keeps the grid in an always-sorted state.
+   * `sortIsDefault` drives the accent chip: true when the
    * current sort matches the column-driven effective default.
    */
   sortField?: string

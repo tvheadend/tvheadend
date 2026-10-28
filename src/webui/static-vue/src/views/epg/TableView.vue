@@ -39,10 +39,8 @@
  *                      server-side by the active tag.
  *                    * QUERY mode (title set): server-side
  *                      `epg/events/grid?title=<value>` results
- *                      spanning the entire EPG database. Mirrors
- *                      ExtJS' `epgFilterTitle` → `epgView.reset()`
- *                      flow (`epg.js:1268-1279` →
- *                      `api_epg.c:371-373` →
+ *                      spanning the entire EPG database
+ *                      (`api_epg.c:371-373` →
  *                      `epg.c:2687` regex caseless match). Other
  *                      column filters (channelName, episodeOnscreen)
  *                      apply CLIENT-SIDE on top.
@@ -60,18 +58,16 @@
  * helper — view-specific formatting that doesn't belong in the
  * composable.
  *
- * Columns are Vue-native rather than literal mirrors of ExtJS' EPG
- * columns. ExtJS uses ~10 columns because it lacks proper search +
- * row-detail mechanisms; we collapse the equivalent information
- * into fewer columns by relying on existing DataGrid affordances:
+ * The column set is kept small by relying on existing DataGrid
+ * affordances:
  *   - Title + subtitle combine in the same cell.
- *   - Description (long text from ExtJS' separate column) is
- *     surfaced in the event drawer rather than as a grid column.
+ *   - Description (long text) is surfaced in the event drawer
+ *     rather than as a grid column.
  *
  * Read-only for now — no toolbar actions. Single-click on a row
  * opens the EPG event drawer, matching Timeline / Magazine. Schedule
- * / Find-related actions matching the ExtJS Action column will land
- * alongside the broader EPG drawer action surface.
+ * / Find-related actions will land alongside the broader EPG drawer
+ * action surface.
  */
 import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
@@ -166,9 +162,9 @@ const access = useAccessStore()
 
 /* Channel name only. The channel number lives in its own
  * adjacent column. The server's `chnameNum` preference (which
- * the legacy ExtJS UI uses to append the number to dropdown
- * labels per `channels.c:258-263`) doesn't apply to a tabular
- * view — separate columns let each value sort on its own. */
+ * appends the number to dropdown labels per
+ * `channels.c:258-263`) doesn't apply to a tabular view —
+ * separate columns let each value sort on its own. */
 const fmtChannel = (_v: unknown, row: Record<string, unknown>) => {
   const r = row as unknown as EpgRow
   return r.channelName ?? ''
@@ -259,9 +255,8 @@ const baseCols: ColumnDef[] = [
   {
     /* Per-row recording-status icon (red dot = recording, clock =
      * scheduled) — the Table view's counterpart of the Timeline /
-     * Magazine DVR overlay, and of the classic UI's per-row
-     * `dvrState` icon. Leading position so recording state scans
-     * down the left edge. Icon-only: the header label is
+     * Magazine DVR overlay. Leading position so recording state
+     * scans down the left edge. Icon-only: the header label is
      * suppressed but still names the column in the column picker
      * and on hover. */
     field: 'dvrState',
@@ -1114,7 +1109,7 @@ interface EpgTableFilters {
    * `perColumn.title` still equals it, the title is literal text:
    * the Search Title box shows it as is and the server gets it
    * regex-escaped (see `effectiveTitle`). Typing a different title
-   * makes it a regex again, as in Classic. */
+   * makes it a regex again. */
   literalTitle: string | null
 }
 
@@ -1139,8 +1134,7 @@ const filters = ref<EpgTableFilters>({
  * The server compiles channelName and title as caseless,
  * unanchored regexes, so passing the raw values would list every
  * channel whose name contains "CT 1", and a title with
- * parentheses would not match itself. Classic filters by the
- * channel combo's uuid and escapes a clicked title the same way.
+ * parentheses would not match itself.
  *
  * Both reuse the per-column filters the user can edit / clear via
  * the existing Table chrome (column funnel UI), so no separate
@@ -1471,14 +1465,12 @@ if (state.viewOptions.value.groupField !== null) {
  * currently in the LOADED day window (`state.events` is the per-
  * day-loaded set the composable maintains). A search for
  * a programme airing tomorrow finds nothing until the user has
- * scrolled far enough to load tomorrow's day. Mirrors a real
- * limitation vs. the ExtJS Table, which calls
- * `epgStore.baseParams.title = value; epgView.reset()` to refetch
- * via `?title=...` and gets a server-side regex-matched result
- * set covering the entire EPG database (`api_epg.c:371-373` →
+ * scrolled far enough to load tomorrow's day. The server can
+ * instead return a regex-matched result set covering the entire
+ * EPG database via `?title=...` (`api_epg.c:371-373` →
  * `epg.c:2687`, `regex_compile(... TVHREGEX_CASELESS)`).
  *
- * Mirror that here: when `filters.perColumn.title` is non-empty,
+ * So when `filters.perColumn.title` is non-empty,
  * fetch `epg/events/grid?title=<value>` once (race-protected),
  * stash results in `queryResults`, and have `visibleEvents` use
  * THAT as its source instead of `state.events`. When the
@@ -1952,7 +1944,7 @@ const hasActiveFilter = computed(
 
 /* Empty state's "Clear filters": drop the column funnels, Search
  * Title and the GLOBAL axes, keep columns, grouping and display
- * options (Classic's "Reset All" also clears filters only). */
+ * options. */
 function onClearAllFilters(): void {
   filters.value = { ...filters.value, perColumn: {}, literalTitle: null }
   const vo = state.viewOptions.value
@@ -2051,8 +2043,7 @@ const activeGroupDef = computed(() => {
 })
 
 /* Help dock — opens the AppShell-mounted HelpDialog on the
- * shared `epg` markdown page (the same target Classic's
- * `tvheadend.mdhelp('epg')` opens). Toggle semantics: clicking
+ * shared `epg` markdown page. Toggle semantics: clicking
  * a second time with the dialog already open closes it. Matches
  * the placement convention IdnodeGrid uses on every other admin
  * grid — Help sits to the right of view-options. */
@@ -2063,15 +2054,14 @@ function onHelpClick() {
 
 /* ---- Create AutoRec from EPG filter state ----
  *
- * Mirrors Classic's top-toolbar `Create AutoRec` button at
- * `static/app/epg.js:1317-1322` + `createAutoRec()` at
- * `:1493-1546`. Click opens a confirmation summarising the
- * active filter state plus the predicted match count (a count
- * query shaped like the rule, see `autoRecMatchCountParams`),
- * then POSTs to `dvr/autorec/create` with the filter-derived conf.
+ * Toolbar `Create AutoRec` button. Click opens a confirmation
+ * summarising the active filter state plus the predicted match
+ * count (a count query shaped like the rule, see
+ * `autoRecMatchCountParams`), then POSTs to `dvr/autorec/create`
+ * with the filter-derived conf.
  *
- * Vue Table's filter surface is narrower than Classic's
- * (channelName + title — no genre / duration / fulltext /
+ * The Table's filter surface is narrow (channelName + title —
+ * no genre / duration / fulltext /
  * mergetext / newOnly / tag inputs on the Table itself today).
  * The conf only includes fields actually settable from the
  * Vue Table view; the server defaults to "don't care" for the
@@ -2200,8 +2190,7 @@ interface AutoRecSummaryInput {
   matchCount: number | null
 }
 
-/* Confirmation-dialog body. Mirrors Classic's verbose copy at
- * `static/app/epg.js:1529-1540` — one row per filter axis with
+/* Confirmation-dialog body — one row per filter axis with
  * either the value or "Don't care", plus the match-count line.
  * Tag row carries a note when the user's multi-tag exclude
  * filter couldn't translate to the rule's single-tag shape.
@@ -2590,8 +2579,7 @@ async function onCreateAutoRecClick() {
             />
           </div>
         </Popover>
-        <!-- Create AutoRec — Classic's top-toolbar button at
-             `static/app/epg.js:1317-1322`. Opens a confirmation
+        <!-- Create AutoRec — opens a confirmation
              dialog summarising the active filter state + match
              count; on confirm POSTs to `dvr/autorec/create` with
              the filter-derived conf. Hidden for users without
@@ -2645,8 +2633,7 @@ async function onCreateAutoRecClick() {
           @clear-per-column="onClearPerColumnFilter"
         />
         <!-- Help button — opens the AppShell-mounted HelpDialog
-             on the `epg` markdown page (same target Classic's
-             `tvheadend.mdhelp('epg')` opens). Placed to the right
+             on the `epg` markdown page. Placed to the right
              of EpgTableOptions to mirror the IdnodeGrid toolbar
              convention. -->
         <button

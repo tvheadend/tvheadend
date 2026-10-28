@@ -220,9 +220,6 @@ comet_access_info_build(struct access *aa, const char *peer_ipstr)
 
   htsmsg_add_s64(m, "time",     time(NULL));
 
-  if (config.cookie_expires)
-    htsmsg_add_u32(m, "cookie_expires", config.cookie_expires);
-
   if (config.ticket_expires)
     htsmsg_add_u32(m, "ticket_expires", config.ticket_expires);
 

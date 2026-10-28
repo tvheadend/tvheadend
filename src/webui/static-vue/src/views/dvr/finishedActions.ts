@@ -9,14 +9,11 @@
  * builder returns a flat ActionDef[] with current-render disabled
  * states.
  *
- * Mirrors `tvheadend.dvr_finished` in src/webui/static/app/dvr.js
- * (toolbar at line 825, gating at line 759-766). Order matches ExtJS
- * with one swap — Edit comes first to match the order Upcoming uses;
- * ExtJS doesn't surface Edit in the tbar because the framework
- * auto-adds it. Edit's enable rule mirrors Upcoming's
- * (`dvrToolbarHelpers.ts`): `selection.length === 0` is the only
- * disable condition, so multi-row Edit is supported (IdnodeEditor
- * accepts a uuid array and applies changes across all rows).
+ * Edit comes first to match the order Upcoming uses. Edit's enable
+ * rule mirrors Upcoming's (`dvrToolbarHelpers.ts`):
+ * `selection.length === 0` is the only disable condition, so
+ * multi-row Edit is supported (IdnodeEditor accepts a uuid array
+ * and applies changes across all rows).
  */
 import type { BaseRow } from '@/types/grid'
 import type { ActionDef } from '@/types/action'
@@ -61,8 +58,7 @@ export function buildFinishedActions(d: FinishedActionDeps): ActionDef[] {
     /* Download is single-row only: the handler reads `selected[0]`
      * and constructs `/dvrfile/<uuid>` for one file. Allowing a
      * multi-row selection while only ever downloading the first
-     * row would silently drop the rest — the legacy ExtJS UI does
-     * exactly that (`dvr.js:668-674` + `:759-766`). */
+     * row would silently drop the rest. */
     {
       id: 'download',
       label: t('Download'),

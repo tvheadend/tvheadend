@@ -4,9 +4,9 @@
 /*
  * DvrStateCell — the per-row recording-status icon of the EPG Table
  * and the DVR entry grids. Verifies the state token → icon mapping
- * (taxonomy in dvr_db.c:704-737, the same set Classic draws icons
- * for in ext.css) and the label precedence: the column's format,
- * then the row's localized `status`, then the generic name.
+ * (taxonomy in dvr_db.c:704-737) and the label precedence: the
+ * column's format, then the row's localized `status`, then the
+ * generic name.
  */
 import { afterEach, describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'

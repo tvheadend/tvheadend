@@ -97,8 +97,7 @@ describe('IdnodePickClassDialog', () => {
     /* api/codec/list returns BOTH caption (the class caption, just
      * the codec family — "libvpx") AND title (disambiguated,
      * "libvpx: libvpx VP8"). The picker must use the title so users
-     * can tell libvpx VP8 from libvpx-vp9, matching what legacy
-     * ExtJS does (displayField: 'title' in codec.js). */
+     * can tell libvpx VP8 from libvpx-vp9. */
     apiMock.mockResolvedValueOnce({
       entries: [
         {

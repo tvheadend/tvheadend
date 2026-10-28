@@ -227,7 +227,7 @@ describe('BandwidthChartView — phone (Drawer) branch', () => {
     expect(w.text()).toContain('5 min')
   })
 
-  it('reuses the Classic "min" msgid in the window selector', () => {
+  it('translates the window selector minutes via the "min" msgid', () => {
     ;(globalThis as { tvh_locale?: unknown }).tvh_locale = { min: 'perc' }
     try {
       const rows = ref<Row[]>([{ uuid: 'a', input: 'A', bps: 1_000_000 }])

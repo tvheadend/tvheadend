@@ -16,7 +16,7 @@
  *                         because the file is gone)
  *
  * All three lead with the recording state icon (`sched_status`,
- * DvrStateCell), as Classic's dvrRowActions column does.
+ * DvrStateCell).
  *
  * The Basic / Advanced / Expert grouping (controlled server-side
  * via PO_ADVANCED / PO_EXPERT) and the per-field config
@@ -50,7 +50,7 @@ export function dvrEntryColumns(
    * when their flag is off. Keeps the array build linear so the
    * Basic / Advanced / Expert grouping reads top-to-bottom. */
   const cols: ColumnDef[] = [
-    /* Leading state icon — Classic's dvrRowActions column. */
+    /* Leading state icon. */
     { field: 'sched_status', ...DVR_FIELDS.sched_status },
     /* Basic */
     { field: 'disp_title', ...DVR_FIELDS.disp_title, format: kodiFmt },

@@ -4,9 +4,9 @@
 /*
  * DvrLayout — verifies the L2 tab list filters by access.uilevel.
  *
- * Specifically tests the Removed Recordings tab gate (mirrors ExtJS
- * dvr.js:988 + 1207-1213): hidden at basic and advanced, visible at
- * expert. The other five tabs are always visible.
+ * Specifically tests the Removed Recordings tab gate: hidden at
+ * basic and advanced, visible at expert. The other five tabs are
+ * always visible.
  *
  * The test stubs PageTabs to inspect the tabs prop directly rather
  * than relying on rendered DOM — keeps the test resilient to
@@ -81,8 +81,7 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
     const tabs = getTabs(mountAtLevel('expert'))
     const labels = tabs.map((t) => t.label)
     expect(labels).toContain('Removed Recordings')
-    /* Position is between Failed and Autorecs (matches ExtJS panel
-     * order at dvr.js:1198-1203). */
+    /* Position is between Failed and Autorecs. */
     expect(labels).toEqual([
       'Upcoming / Current Recordings',
       'Finished Recordings',

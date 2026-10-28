@@ -81,8 +81,8 @@ export async function scanAllNetworks(toast: Toast): Promise<void> {
  *   - epggrab/ota/trigger     — over-the-air grabber (DVB-EIT /
  *     ATSC PSIP captured from the broadcast stream). Same endpoint
  *     Configuration → EPG Grabber's "Trigger OTA EPG Grabber"
- *     button calls. Param `trigger: 1` mirrors Classic's
- *     epggrab.js callback.
+ *     button calls, with the `trigger: 1` param the server
+ *     requires.
  *
  * Covers both EPG topologies from one user click; the server queues
  * each appropriately (OTA waits for an idle tuner). Uses
@@ -144,7 +144,7 @@ export function openLogout(): void {
  *
  * Endpoint verified at `src/api/api_epggrab.c:57-71`. The C
  * handler requires `rerun: 1` in the body and returns EINVAL when
- * absent; Classic ExtJS sends the same value (`epggrab.js:11`).
+ * absent.
  */
 export async function rerunInternalEpg(toast: Toast): Promise<void> {
   try {
@@ -165,8 +165,7 @@ export async function rerunInternalEpg(toast: Toast): Promise<void> {
  * until a tuner is idle.
  *
  * Endpoint verified at `src/api/api_epggrab.c:73-84`. Requires
- * `trigger: 1`; Classic ExtJS sends the same value
- * (`epggrab.js:29`).
+ * `trigger: 1`.
  */
 export async function triggerOtaEpg(toast: Toast): Promise<void> {
   try {
@@ -187,8 +186,7 @@ export async function triggerOtaEpg(toast: Toast): Promise<void> {
  * Cache page's Clean button.
  *
  * Endpoint verified at `src/api/api_imagecache.c:54`. Requires
- * `clean: 1`; Classic ExtJS sends the same value
- * (`config.js:84`).
+ * `clean: 1`.
  */
 export async function cleanImageCache(deps: {
   toast: Toast
@@ -214,8 +212,7 @@ export async function cleanImageCache(deps: {
  * side re-fetches; doesn't delete anything), so no confirm.
  *
  * Endpoint verified at `src/api/api_imagecache.c:55`. Requires
- * `trigger: 1`; Classic ExtJS sends the same value
- * (`config.js:101`).
+ * `trigger: 1`.
  */
 export async function refetchImages(toast: Toast): Promise<void> {
   try {
@@ -235,8 +232,7 @@ export async function refetchImages(toast: Toast): Promise<void> {
  *
  * Endpoint verified at `src/api/api_input.c:46-56` — note the
  * `hardware/` namespace (the page's other endpoints go through
- * `satips/`). Requires `op: 'all'` in the body; Classic ExtJS
- * sends the same param (`config.js:141`).
+ * `satips/`). Requires `op: 'all'` in the body.
  */
 export async function discoverSatipServers(toast: Toast): Promise<void> {
   try {

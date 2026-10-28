@@ -6,20 +6,16 @@
 /*
  * Configuration → Channel / EPG → EPG Grabber Channels.
  *
- * Mirrors the legacy ExtJS EPG Grabber Channels grid
- * (`static/app/epggrab.js:52-71`, `tvheadend.epggrab_map`).
  * Backed by the `epggrab_channel_class` idnode at
  * `src/epggrab/channel.c:741-892`. Server endpoint:
  * `api/epggrab/channel/grid` (`api/api_epggrab.c:91`).
  *
  * Channels here are populated by EPG-grabber scans (EIT, OpenTV,
- * XMLTV, PSIP) — the legacy UI doesn't expose an Add path, and
- * this view mirrors that. Toolbar is Edit + Delete only;
+ * XMLTV, PSIP), so there is no Add path. Toolbar is Edit + Delete only;
  * `epggrab_channel_find()` (`channel.c:364`) auto-creates rows
  * during grabber operation.
  *
- * Page is expert-locked to mirror legacy `uilevel: 'expert'`
- * (`epggrab.js:61`) so PO_ADVANCED fields like `update` stay
+ * Page is expert-locked so PO_ADVANCED fields like `update` stay
  * visible. Permission already gated to admin at the route layer
  * (`router/index.ts:348`).
  */
@@ -49,8 +45,7 @@ const UPDATE_OPTIONS = [
 ]
 
 /* Column declaration order MIRRORS the C-side property table
- * (`channel.c:757-891`) — same order the legacy grid surfaces
- * via auto-generation. View-level (basic / advanced / expert)
+ * (`channel.c:757-891`). View-level (basic / advanced / expert)
  * gating is server-driven via the prop's metadata; the
  * per-column toggle menu starts each column visible-or-hidden
  * according to the server's `hidden` flag (PO_HIDDEN). We only

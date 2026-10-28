@@ -20,17 +20,11 @@
  * Custom action: Force Scan. POSTs `api/bouquet/scan` with the
  * selected uuids — re-fetches the bouquet's source and
  * re-applies the mapping. Non-destructive, so no confirm
- * dialog; success toast on completion. Same shape as
- * Classic's toolbar `scanButton` (`cteditor.js:38-65`).
+ * dialog; success toast on completion.
  *
- * Note: Classic's `cteditor.js` references a `rescan` column /
- * field (lines 33-35 + 80) but the bouquet idnode class
- * (`src/bouquet.c:1208+`) has no such property; the framework
- * silently skips it. The Classic grid therefore has no per-row
- * Rescan affordance — only the toolbar button — and v2 matches
- * that. Earlier worklist notes that claimed v2 was missing a
- * per-row Rescan button were based on a misreading of the
- * Classic source.
+ * There is no per-row Rescan affordance — only the toolbar
+ * button: the bouquet idnode class (`src/bouquet.c:1208+`) has
+ * no `rescan` property.
  */
 import { ref } from 'vue'
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
@@ -52,11 +46,9 @@ import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
 const { t } = useI18n()
 const idnodeClass = useIdnodeClassStore()
 
-/* Column declaration — order matches the Classic UI's grid
- * columns (`cteditor.js:78-89`). The advanced-only `ext_url`
- * pair, `ssl_peer_verify`, and `chtag_ref` are PO_HIDDEN /
- * PO_NOUI server-side and don't surface as columns; the
- * remaining ten match Classic.
+/* Column declaration. The advanced-only `ext_url` pair,
+ * `ssl_peer_verify`, and `chtag_ref` are PO_HIDDEN / PO_NOUI
+ * server-side and don't surface as columns.
  *
  * `mapopt` and `chtag` are PT_INT islist with idnode_slist
  * enums. The grid response carries the raw option ids (e.g.

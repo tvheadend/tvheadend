@@ -373,8 +373,8 @@ describe('IdnodeEditor', () => {
       })
       const wrapper = mountEditor({ uuid: null, createBase: 'dvr/entry' })
       await flushPromises()
-      /* All three fields appear — matches ExtJS, which only skips
-       * `noui` for create mode. PO_NOSAVE fields like `disp_title`
+      /* All three fields appear — create mode only skips
+       * `noui`. PO_NOSAVE fields like `disp_title`
        * accept writes via their prop's `set` callback even though
        * they aren't persisted directly; skipping them broke entry
        * creation (no title). Rdonly fields go to the collapsed
@@ -784,7 +784,7 @@ describe('IdnodeEditor', () => {
         ],
         [
           { number: 4, name: 'Filename/Tagging' },
-          /* Sub-group with parent=4 and an empty name — Classic
+          /* Sub-group with parent=4 and an empty name —
            * dvr_config.c declares the secondary filename block this
            * way; should merge into the Filename/Tagging fieldset. */
           { number: 5, name: '', parent: 4 },
@@ -903,5 +903,25 @@ describe('IdnodeEditor', () => {
       expect(readOnly).toBeTruthy()
       expect(basic).toBeTruthy()
     })
+  })
+})
+
+describe('IdnodeEditor — field rules', () => {
+  it('applies the class field rules in create mode', async () => {
+    const access = useAccessStore()
+    access.data = { admin: true, dvr: true, uilevel: 'expert' }
+    apiMock.mockResolvedValueOnce({
+      class: 'codec_profile_aac',
+      props: [
+        { id: 'qscale', type: 'dbl', caption: 'Quality', default: 1 },
+        { id: 'bit_rate', type: 'dbl', caption: 'Bitrate', default: 128 },
+      ],
+    })
+    const wrapper = mountEditor({ uuid: null, createBase: 'codec_profile' })
+    await flushPromises()
+    const [qscale, bitRate] = wrapper.findAll('input[type="number"]')
+    expect(qscale.attributes('step')).toBe('0.1')
+    expect(bitRate.attributes('disabled')).toBeDefined()
+    expect((bitRate.element as HTMLInputElement).value).toBe('0')
   })
 })

@@ -45,10 +45,8 @@ export interface Access {
   label_formatting?: number
   /* Mirrors `config.dvr_show_seconds` — when truthy, idnode
    * PT_TIME fields expose seconds in their edit picker. Default
-   * off matches Classic. Despite the name, the flag is consumed
-   * by the generic idnode time-field renderer
-   * (`static/app/idnode.js:789`), not just the DVR add/edit
-   * dialog. */
+   * off. Despite the name, the flag is consumed by every idnode
+   * time field, not just the DVR add/edit dialog. */
   dvr_show_seconds?: number
   /* Mirrors `config.default_tab` (per-user resolution from
    * `aa_default_tab` happens server-side in
@@ -63,7 +61,6 @@ export interface Access {
   useddiskspace?: number
   totaldiskspace?: number
 
-  cookie_expires?: number
   ticket_expires?: number
   info_area?: string
 

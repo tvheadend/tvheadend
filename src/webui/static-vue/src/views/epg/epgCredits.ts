@@ -5,13 +5,11 @@
  * XMLTV credits categorisation.
  *
  * Server-side `epg_broadcast_t.credits` (`src/epg.h:297`) is a
- * `name → role-type` map; XMLTV grabbers populate it with
- * lowercase role strings (`actor`, `guest`, `presenter`,
- * `director`, `writer`, plus broadcaster extras like `host`,
- * `producer`, `composer`). The legacy ExtJS UI (`tvheadend.js:339-377`
- * `getDisplayCredits`) buckets these into four display
- * categories — Starring / Director / Writer / Crew — and we
- * mirror that exactly in the Vue drawer.
+ * `name → role-type` map; XMLTV grabbers populate it with lowercase
+ * role strings (`actor`, `guest`, `presenter`, `director`,
+ * `writer`, plus broadcaster extras like `host`, `producer`,
+ * `composer`). These are bucketed into four display categories for
+ * the drawer — Starring / Director / Writer / Crew.
  *
  * Extracted from the SFC for testability — logic-only, no Vue
  * imports.

@@ -2,13 +2,8 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * Markdown rendering — bootstraps the same `marked` library the
- * ExtJS UI ships, then provides a sync renderer.
- *
- * Why share ExtJS's `marked.js` instead of installing the npm
- * package: identical rendering to the ExtJS wizard, zero Vue
- * bundle impact, and one fewer place to update if the library
- * ever needs a security bump.
+ * Markdown rendering — bootstraps the `marked` library served from
+ * `static/marked.js`, then provides a sync renderer.
  *
  * The script defines `globalThis.marked` as a function
  * `(src: string, opts?: object) => string`. We don't reach into
@@ -34,9 +29,9 @@ export function loadMarkedScript(): Promise<void> {
     }
     const s = document.createElement('script')
     s.id = 'tvh-marked-script'
-    s.src = serverUrl('static/app/marked.js')
+    s.src = serverUrl('static/marked.js')
     s.onload = () => resolve()
-    s.onerror = () => reject(new Error('Failed to load static/app/marked.js'))
+    s.onerror = () => reject(new Error('Failed to load static/marked.js'))
     document.head.appendChild(s)
   })
 }
@@ -49,9 +44,7 @@ export function loadMarkedScript(): Promise<void> {
  * Trust model: every consumer in this codebase feeds Markdown
  * that originates from compiled-in C strings (wizard step
  * descriptions in `docs/wizard/*.md`), so HTML sanitization
- * isn't required. Matches ExtJS's
- * `static/app/wizard.js:105 — text = marked(text)` which also
- * skips sanitization. If a future consumer feeds user-supplied
+ * isn't required. If a future consumer feeds user-supplied
  * Markdown, route it through DOMPurify before passing here.
  */
 export function renderMarkdown(text: string): string {
@@ -154,9 +147,9 @@ export function extractFirstHeading(html: string, fallback: string): string {
  * Rewrite root-relative `static/…` attribute values to absolute
  * webroot-aware `/static/…`. The compiled-in markdown (wizard step
  * descriptions + `/markdown/firstconfig` help page) uses paths
- * like `static/img/doc/firstconfig/wizard.png` that work
- * verbatim under ExtJS's `/` root but resolve against the
- * current route under Vue (`/gui/wizard/login` →
+ * like `static/img/doc/firstconfig/wizard.png` that only work
+ * verbatim from the `/` root; under Vue they resolve against the
+ * current route (`/gui/wizard/login` →
  * `/gui/wizard/static/...` → 404). Anchoring them at the
  * webroot-aware server root lets the existing /static handler
  * serve the asset.

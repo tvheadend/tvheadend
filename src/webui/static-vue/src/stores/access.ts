@@ -58,8 +58,6 @@ export const useAccessStore = defineStore('access', () => {
    * arrives. This matches tvheadend's actual server default
    * (config.uilevel is zero-initialized to UILEVEL_BASIC = 0 in
    * src/config.c) — what a fresh non-admin install gives a user.
-   * ExtJS's hard-coded 'expert' initial is a placeholder for admins
-   * via access_full(), not a stated default.
    *
    * `locked` reflects config.uilevel_nochange — when set, the
    * UiLevelMenu disables and the user cannot override their level.
@@ -70,11 +68,9 @@ export const useAccessStore = defineStore('access', () => {
   /*
    * Server-driven tooltip preference. Mirrors `config.ui_quicktips`
    * (config.c:2280, default true), pushed via Comet as a 0/1 uint
-   * (comet.c:184). When false, the existing ExtJS UI suppresses the
-   * field-description hover tooltips on the idnode editor — no
-   * other UI element is affected (idnode.js:658 is the only
-   * consumer). We mirror that scope in the Vue editor by gating
-   * IdnodeFieldXxx's v-tooltip on this flag.
+   * (comet.c:184). When false, the idnode editor suppresses its
+   * field-description hover tooltips — no other UI element is
+   * affected. IdnodeFieldXxx gates its v-tooltip on this flag.
    *
    * Default `true` matches the server's default and keeps tooltips
    * visible during the brief pre-Comet window before the first
@@ -115,9 +111,8 @@ export const useAccessStore = defineStore('access', () => {
    * Seconds-precision PT_TIME preference (`config.dvr_show_seconds`
    * on the wire as 0/1). When truthy, every idnode time-field edit
    * picker exposes seconds. Despite the C-side name, the flag
-   * gates the GENERIC idnode time-field builder
-   * (`static/app/idnode.js:789`) — not just the DVR drawer — so
-   * Vue applies it via `IdnodeFieldTime`. Flag-off matches the
+   * gates every idnode time field — not just the DVR drawer — so
+   * it is applied in `IdnodeFieldTime`. Flag-off matches the
    * pre-flag default (minute precision; user edits truncate
    * seconds to zero, untouched values preserve them via the
    * epoch round-trip).
@@ -269,9 +264,7 @@ export const useAccessStore = defineStore('access', () => {
    * store after `api/wizard/start` / `api/wizard/cancel` succeed,
    * so the router's beforeEach guard sees the new state on the
    * very next navigation without racing the server's
-   * `accessUpdate` comet broadcast (which the legacy ExtJS UI
-   * sidesteps by hard-reloading the page on success — see
-   * `static/app/config.js:19-21`).
+   * `accessUpdate` comet broadcast.
    *
    * The next `accessUpdate` from comet will wholesale-replace
    * `data` with the server's view; in the normal case it carries

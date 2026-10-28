@@ -166,8 +166,7 @@ function buildChannelCommand(entry: ChannelListEntry, deps: ChannelSourceDeps): 
 
 /* Build + open the ticket-authenticated playlist URL in a new tab.
  * `/play/ticket/...` is tvheadend's "open in external player"
- * convention (see Classic's `tvheadend.playLink` in
- * `src/webui/static/app/tvheadend.js`); the server mints a
+ * convention (`src/webui/webui.c`); the server mints a
  * short-lived ticket so the resulting stream URL doesn't need
  * separate auth — important for players like VLC that don't
  * carry browser cookies. The `title=` query param is the human-

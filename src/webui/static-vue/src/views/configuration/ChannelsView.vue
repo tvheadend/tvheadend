@@ -80,8 +80,7 @@ const { t } = useI18n()
  * EPG/DVR timing knobs stay desktop-only. */
 const cols: ColumnDef[] = [
   /* Per-row Play icon. Synthetic column — no row field; the cell
-   * reads playPath / playTitle off `col`. Matches Classic's
-   * leftmost Play column on Channels (`chconf.js:242-255`).
+   * reads playPath / playTitle off `col`. It sits leftmost.
    * `hideHeaderLabel` keeps the column-header chrome icon-only
    * while preserving the "Play" label everywhere else (column
    * picker, screen reader, hover tooltip). */
@@ -254,10 +253,8 @@ const cols: ColumnDef[] = [
 const editList = ref('')
 /* Service Mapper modal state. Channels has no service uuids in
  * scope (channels are mapped TO, not FROM), so the dialog opens
- * either with every service preselected (`mapperAll`, Classic's
- * `mapall: service_mapper_all`) or with none, for the user to
- * pick on the dialog's services field (Classic's
- * `mapsel: service_mapper_none`, `chconf.js:163-165`). */
+ * either with every service preselected (`mapperAll`) or with
+ * none, for the user to pick on the dialog's services field. */
 const mapperOpen = ref(false)
 const mapperAll = ref(false)
 
@@ -290,8 +287,7 @@ const remove = useBulkAction({
  * source bouquet (server `api/bouquet/detach`, ACCESS_ADMIN at
  * `src/api/api_bouquet.c:152`). Same wire shape useBulkAction
  * uses (uuid list); reversible via re-running the bouquet's
- * Force Scan, so no confirm dialog (matches Classic
- * `chconf.js:126-131`'s no-confirm detach). */
+ * Force Scan, so no confirm dialog. */
 const bouquetDetach = useBulkAction({
   endpoint: 'bouquet/detach',
   failPrefix: t('Failed to detach'),
@@ -347,27 +343,11 @@ async function onResetIcon(selection: BaseRow[], clearSelection: () => void) {
   }
 }
 
-/* ---- Number operations (retired) ----
- *
- * The Classic Number Operations menu (Assign / Up / Down / Swap)
- * retired with the Manage-mode drag-to-reorder ship. Drag covers
- * every case the menu offered, with a more direct UX. The handler
- * functions, the per-row dotted-number arithmetic, and the
- * batch-save plumbing previously here lived between the toast
- * import and the Map Services section — git history at the slice
- * commit captures them for reference if a regression makes a
- * subset of the old menu worth resurrecting.
- */
-
-
 /* Map services — opens the ServiceMapperDialog modal in-place.
  * Channels grid has no service-uuids in scope (channels are
  * mapped TO, not FROM), so the dialog opens with every service
- * preselected (`all`) or with none. Mirrors Classic's
- * `chconf.js:163-165` where the Channels page wires the same
- * "Map all" / "Map selected" buttons against
- * `service_mapper_all` / `service_mapper_none` (Channels
- * selection isn't relevant). */
+ * preselected (`all`) or with none; the Channels selection
+ * isn't relevant. */
 function onMapServices(all: boolean) {
   mapperAll.value = all
   mapperOpen.value = true
@@ -404,8 +384,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     disabled: selection.length === 0 || resetIconInflight.value,
     onClick: () => onResetIcon(selection, clearSelection),
   }
-  /* Map services — parent submenu mirroring Classic's
-   * `chconf.js:133-168` shape. Three children:
+  /* Map services — parent submenu. Three children:
    *   - Map all services : open the mapper dialog with every
    *                        service preselected. Always enabled.
    *   - Map services… : open the mapper dialog and let the user

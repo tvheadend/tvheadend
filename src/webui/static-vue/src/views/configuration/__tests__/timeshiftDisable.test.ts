@@ -5,8 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { timeshiftDisable } from '../timeshiftDisable'
 
 /* Unit tests for the Timeshift disabled-when-other-field
- * predicate. Mirrors the legacy ExtJS `onchange` semantics at
- * `static/app/timeshift.js:3-14`. Lives next to its consumer
+ * predicate. Lives next to its consumer
  * (the singleton config view) and stays pure for easy testing
  * — no Vue, no DOM. */
 
@@ -28,8 +27,8 @@ describe('timeshiftDisable', () => {
     })
 
     it('only depends on unlimited_period — ram_only is irrelevant', () => {
-      /* The legacy ExtJS handler has separate disable logic for
-       * max_size; max_period only watches unlimited_period. Pin
+      /* max_size has separate disable logic; max_period only
+       * watches unlimited_period. Pin
        * the independence so a future refactor doesn't accidentally
        * couple them. */
       expect(timeshiftDisable('max_period', { ram_only: true })).toBe(false)

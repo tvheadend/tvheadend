@@ -6,11 +6,11 @@
  *
  * levelMatches is the single source of truth for UI-level gating
  * across the app (idnode fields/columns AND every L2/L3 nav layout).
- * It must be MONOTONIC, mirroring ExtJS tvheadend.uilevel_match():
- * a higher current level sees everything a lower one does. A naive
- * strict-equality (`current === target`) check would pass the
- * expert-only cases by coincidence but wrongly hide advanced-level
- * items from expert users — these tests lock that down.
+ * It must be MONOTONIC: a higher current level sees everything a
+ * lower one does. A naive strict-equality (`current === target`)
+ * check would pass the expert-only cases by coincidence but wrongly
+ * hide advanced-level items from expert users — these tests lock
+ * that down.
  */
 import { describe, it, expect } from 'vitest'
 import { propLevel, levelMatches } from '../idnode'

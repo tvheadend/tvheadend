@@ -9,29 +9,25 @@
  * Singleton config form for the `tvhlog_conf_class` idnode
  * (`src/tvhlog.c:826-927`, ACCESS_ADMIN, 7 fields across 3
  * server-defined groups: General Settings / Subsystem Output
- * Settings / Miscellaneous Settings). Mirrors the legacy ExtJS
- * page at `static/app/tvhlog.js:359-372` which uses
- * `idnode_simple` against `api/tvhlog/config`.
+ * Settings / Miscellaneous Settings), loaded from and saved to
+ * `api/tvhlog/config`.
  *
- * Conditional disable mirrors the Classic onchange handler
- * (`tvhlog.js:3-13`) via the IdnodeConfigForm `disabledFor`
- * predicate — currently just the syslog ↔ enable_syslog pair.
+ * Conditional disable goes through the IdnodeConfigForm
+ * `disabledFor` predicate — currently just the syslog ↔
+ * enable_syslog pair.
  *
  * Save button labelled "Apply configuration (run-time only)"
  * with a tooltip explaining the runtime-only semantic — the
- * tvhlog config doesn't persist across restarts. Matches
- * Classic's `saveText` + `saveTooltip` at `tvhlog.js:369-371`.
+ * tvhlog config doesn't persist across restarts.
  *
  * Subsystem table — single PrimeVue DataTable carrying per-row
  * Debug + Trace checkboxes plus a synthetic 'all' row at the
- * top, ported literally from Classic's `Ext.grid.GridPanel` at
- * `tvhlog.js:135-323`. Click semantics:
+ * top. Click semantics:
  *
  *   - Debug cell      → toggle just `debug` for that row.
  *   - Trace cell      → toggle just `trace` for that row.
  *   - Subsystem name  → toggle BOTH with the XOR rule
- *                       (any off → both on; both on → both off;
- *                        Classic `tvhlog.js:243-257`).
+ *                       (any off → both on; both on → both off).
  *   - Description     → no action.
  *
  * Rendered as the LAST group on the page (via IdnodeConfigForm's
@@ -44,15 +40,13 @@
  * NAMES (not numeric IDs), with the sentinel literal "all"
  * meaning every subsystem. Checking the synthetic 'all' row
  * emits the literal "all" token; other rows stay visually as-is
- * (matches Classic — the server expands the sentinel, the
- * client just records it).
+ * (the server expands the sentinel, the client just records it).
  *
  * When the server flags `tracesubs` as PO_RDONLY (a build
  * without `--enable-trace` — src/tvhlog.c:909-913), the Trace
  * column is hidden entirely. The checkbox cells stay editable
- * when the umbrella `trace` toggle is off — server tolerates
- * pre-curation, and the dual-pane mirror of Classic's text-
- * input gating was unhelpful in a table picker.
+ * when the umbrella `trace` toggle is off — the server tolerates
+ * pre-curation, and gating a table picker on it is unhelpful.
  */
 import { computed, onMounted, ref } from 'vue'
 import IdnodeConfigForm from '@/components/IdnodeConfigForm.vue'
@@ -116,7 +110,7 @@ function onLoadedOnce(params: IdnodeProp[]): void {
  * literal is preserved verbatim — checking the synthetic row
  * stores "all" in the CSV, server-side `tvhlog_set_subsys`
  * expands it. The OTHER rows DON'T visually flip to checked
- * when "all" is present (matches Classic exactly). */
+ * when "all" is present. */
 function csvToSet(value: unknown): Set<string> {
   if (typeof value !== 'string' || value.trim() === '') return new Set()
   return new Set(
@@ -214,11 +208,9 @@ function toggleTrace(row: SubsystemRow): void {
   writeTrace(set)
 }
 
-/* XOR-style "toggle both" — Classic tvhlog.js:243-257.
- * Any off → both on; both on → both off. One-click parity
- * for the common "enable everything for this subsystem"
- * case — the dual-toggle workflow on Classic is the same
- * shape. */
+/* XOR-style "toggle both". Any off → both on; both on → both
+ * off. One click covers the common "enable everything for
+ * this subsystem" case. */
 function toggleBoth(row: SubsystemRow): void {
   const dbg = new Set(debugSet.value)
   const trc = new Set(traceSet.value)

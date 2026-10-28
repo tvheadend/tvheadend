@@ -115,9 +115,8 @@ describe('buildFailedActions', () => {
     it('Download disabled on multi-select even when first row has a file', () => {
       /* Download's handler only consumes selected[0]; allowing
        * multi-select would silently drop every row past the first.
-       * The legacy ExtJS UI accepts multi-select on Download and
-       * has the same drop-the-rest bug; multi-row download support
-       * is pending a per-row iteration path. */
+       * Multi-row download support is pending a per-row iteration
+       * path. */
       const actions = buildFailedActions(
         deps({ selection: [ROW_WITH_FILE, ROW_WITHOUT_FILE] })
       )

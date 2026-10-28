@@ -269,16 +269,15 @@ export interface ColumnDef {
   /*
    * PlayCell-specific: stream-path prefix for the `/play/ticket/...`
    * URL the per-row Play icon opens. Required when
-   * `cellComponent: PlayCell`. Mirrors the four Classic shapes:
+   * `cellComponent: PlayCell`. One of four shapes:
    *   - 'stream/channel' / 'stream/service' / 'stream/mux' / 'dvrfile'
    * PlayCell appends `/${row.uuid}` and forwards to `openPlay()`.
    */
   playPath?: string
   /*
    * PlayCell-specific: optional builder for the `?title=` URL
-   * query param. Mirrors Classic's `playLink()` decoration
-   * (`static/app/tvheadend.js:856-861`) — gives the external
-   * media player a human-readable title for the m3u track.
+   * query param — gives the external media player a
+   * human-readable title for the m3u track.
    * When omitted, the URL has no title query param.
    */
   playTitle?: (row: BaseRow) => string

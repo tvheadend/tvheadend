@@ -22,8 +22,7 @@
  * we subscribe to that Comet class on mount. Each notification
  * invalidates the descriptor's cache entry and refetches; the
  * fetched array replaces `fetchedOptions.value`, which propagates
- * to every renderer reading off `options`. Mirrors Classic ExtJS
- * `static/app/idnode.js:48-52`.
+ * to every renderer reading off `options`.
  *
  * Burst behaviour: server-side mux scans emit one Comet message
  * per newly-discovered service, often dozens-to-hundreds in
@@ -83,10 +82,8 @@ export function useEnumOptions(getProp: () => IdnodeProp): UseEnumOptionsResult 
        * config refs, etc.) are entities — the server emits them
        * in `idnode_find_all` insertion order, which has no
        * meaning for the user. Sort alphabetically by display
-       * label for parity with Classic ExtJS
-       * (`static/app/idnode.js:2277-2278` defaults `sortInfo` to
-       * `{ field: 'val', direction: 'ASC' }`). localeCompare for
-       * accent/case-aware ordering. Clone before sort so the
+       * label instead, with localeCompare for accent/case-aware
+       * ordering. Clone before sort so the
        * cached array stays in fetch order — the computed re-runs
        * on each read but never mutates the source. */
       const raw = fetchedOptions.value

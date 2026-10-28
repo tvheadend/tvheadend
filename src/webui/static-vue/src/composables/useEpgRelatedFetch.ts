@@ -14,9 +14,8 @@
  * double-click.
  *
  * One-shot semantics: the dialog is a snapshot at open-time.
- * No Comet subscription. Classic does the same — `epgevent.js`
- * uses a livegrid Store with no incremental update channel.
- * Closing + reopening the dialog refetches.
+ * No Comet subscription. Closing + reopening the dialog
+ * refetches.
  */
 
 import { ref } from 'vue'

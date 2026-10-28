@@ -69,7 +69,7 @@ describe('DvbServicesView Map services action', () => {
 })
 
 describe('DvbServicesView Hide filter', () => {
-  it("labels the default Classic's way and marks None as hiding nothing", () => {
+  it('labels the default "Inactive services" and marks None as hiding nothing', () => {
     mount(DvbServicesView)
     const hide = stubs.gridFilter('hidemode')
     expect(hide?.kind).toBe('select')

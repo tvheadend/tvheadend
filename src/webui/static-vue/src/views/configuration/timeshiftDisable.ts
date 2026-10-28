@@ -2,8 +2,7 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /* Pure helper for the Configuration → Recording → Timeshift
- * conditional-disable predicate. Mirrors the legacy ExtJS
- * onchange handler at `static/app/timeshift.js:3-14`:
+ * conditional-disable predicate:
  *
  *   - max_period disabled when unlimited_period is true.
  *   - max_size  disabled when unlimited_size || ram_only is true.

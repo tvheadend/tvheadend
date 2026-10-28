@@ -6,8 +6,7 @@
 /*
  * Configuration → DVB Inputs → Services.
  *
- * Mirrors the legacy ExtJS Services grid (`static/app/mpegts.js:268-419`,
- * `tvheadend.services`). Backed by the `mpegts_service` idnode class
+ * Backed by the `mpegts_service` idnode class
  * (`src/input/mpegts/mpegts_service.c:99-299`) which inherits the
  * common `service_class` (`src/service.c:159-238`). Server endpoint:
  * `api/mpegts/service/grid`.
@@ -22,8 +21,7 @@
  * a Maintenance submenu grouping two POST `service/removeunseen`
  * variants — `type=pat` drops services not seen in PAT/SDT scans
  * for 7+ days, no-type drops every service whose `last_seen` is
- * more than 7 days old. The submenu mirrors Classic's wrench-
- * iconned `mpegts.js:321-349` group.
+ * more than 7 days old.
  *
  * Per-row Play + Info icons are wired via PlayCell + InfoCell at
  * column position 0 / 1 (synthetic `_play` + `_info` columns).
@@ -66,9 +64,8 @@ function openInfoDialog(row: BaseRow): void {
 }
 
 /* "Hide" filter — three-option dropdown surfaced in the
- * GridSettingsMenu (above View level). Mirrors the legacy ExtJS
- * picklist (`idnode.js:1998-2026`), including its "Inactive
- * services" label, and feeds the server's `hidemode` param
+ * GridSettingsMenu (above View level). Its default option is
+ * labelled "Inactive services", and it feeds the server's `hidemode` param
  * (`api/api_mpegts.c:258-285`). For Services:
  *   - 'default' (server `hide=1`): hides services on disabled
  *     networks or disabled muxes, and unverified services.
@@ -155,12 +152,10 @@ const PREFCAPID_LOCK_OPTIONS = [
  *
  *   .ic_order = "enabled,channel,svcname"
  *
- * Classic's `tvheadend.IdNode` reads that hint at runtime
- * (`idnode.js:547-575`) and pins those three columns to the
- * front of its auto-generated grid; everything else stays in
- * property-table order. Vue grids declare their columns
- * explicitly so there's no auto-pickup hook — we mirror the
- * effective Classic order here by hand. `mpegts_service` is
+ * That hint pins those three columns to the front; everything else
+ * stays in property-table order. Vue grids declare their columns
+ * explicitly so there's no auto-pickup hook — the order is
+ * applied here by hand. `mpegts_service` is
  * the only idnode class in the codebase that sets `ic_order`,
  * so this isn't a generic IdnodeGrid concern.
  *
@@ -186,8 +181,7 @@ const PREFCAPID_LOCK_OPTIONS = [
  * `channel` column is a multi-select (PT_STR | islist) so it
  * stays drawer-only. */
 const cols: ColumnDef[] = [
-  /* Per-row Play icon. Synthetic column — matches Classic's
-   * leftmost Play column on Services (`mpegts.js`).
+  /* Per-row Play icon. Synthetic leftmost column.
    * `hideHeaderLabel` keeps the header icon-only while the
    * column picker / screen reader / hover tooltip see "Play". */
   {
@@ -205,8 +199,7 @@ const cols: ColumnDef[] = [
     },
   },
   /* Per-row Info icon → ServiceStreamsDialog with the per-PID
-   * elementary-stream breakdown. Matches Classic's Details
-   * affordance (`mpegts.js:351-372`). `hideHeaderLabel` keeps
+   * elementary-stream breakdown. `hideHeaderLabel` keeps
    * the header icon-only while the column picker / screen
    * reader / hover tooltip see "Info". */
   {
@@ -408,9 +401,7 @@ const toast = useToastNotify()
  * preselect when one or more services are highlighted in the
  * grid; opened with every service preselected when nothing is
  * selected (the server never loads a saved pick back, so an
- * empty preselect would leave nothing to map). Mirrors Classic's
- * `mpegts.js:295-297` `mapall: service_mapper_all,
- * mapsel: service_mapper_sel`. */
+ * empty preselect would leave nothing to map). */
 const mapperOpen = ref(false)
 const mapperPreselect = ref<Record<string, unknown> | null>(null)
 const mapperAll = ref(false)
@@ -508,8 +499,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
           : t('Open the Service Mapper preselected with every service'),
       onClick: () => onMapServices(selection),
     },
-    /* Maintenance — nested submenu mirroring Classic's
-     * `mpegts.js:321-349` wrench-icon group. Two children:
+    /* Maintenance — nested submenu. Two children:
      * Remove unseen via PAT/SDT (server `service/removeunseen
      * ?type=pat`) and Remove all unseen (`type=` omitted).
      * Grouped under a parent so the maintenance affordances

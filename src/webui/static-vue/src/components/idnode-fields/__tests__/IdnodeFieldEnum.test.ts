@@ -185,7 +185,7 @@ describe('IdnodeFieldEnum — clear-to-null option', () => {
 
   it('does NOT render the empty option when prop.mandatory is true', () => {
     /* Config singletons (language_ui / theme_ui) always carry a
-     * runtime value and have no clearable equivalent in Classic.
+     * runtime value, so offer no clear option.
      * IdnodeConfigForm synthesises `mandatory: true` for them via
      * its `mandatoryFields` allowlist; this test locks the
      * IdnodeFieldEnum side of the contract so it stays in place

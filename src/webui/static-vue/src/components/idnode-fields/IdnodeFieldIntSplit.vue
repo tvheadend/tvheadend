@@ -78,7 +78,7 @@ function isLocallyEditing(local: string, canonical: string): boolean {
 }
 
 /* Mask: only digits + a single dot. Strips invalid characters
- * silently, mirroring ExtJS's `maskRe: /[0-9\.]/`. */
+ * silently. */
 function sanitize(raw: string): string {
   let cleaned = raw.replaceAll(/[^0-9.]/g, '')
   /* At most one dot — drop subsequent dots. */

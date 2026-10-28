@@ -88,9 +88,7 @@ interface Props {
    *     `selection-mode="single"` — the clicked row gets a
    *     highlighted background, no checkbox column. Used by
    *     master-detail layouts so the user sees which row's config
-   *     the right pane is showing. Mirrors legacy
-   *     `idnode_form_grid`'s `singleSelect: true` shape
-   *     (`static/app/idnode.js:2316`).
+   *     the right pane is showing.
    *   - `false`: no selection model, no highlight, no checkbox.
    */
   selectable?: boolean | 'single'
@@ -132,9 +130,7 @@ interface Props {
   /* When true, PrimeVue DataTable's column-header click cycles
    * asc → desc → unsorted; when false (our default) it cycles
    * asc → desc → asc and the grid never lands on an unsorted
-   * state — matches the Classic ExtJS UI's behaviour (verified
-   * via `src/webui/static/app/idnode.js:1773` + Ext.grid 3.x
-   * native column sort). Consumers can flip back to true if a specific
+   * state. Consumers can flip back to true if a specific
    * grid needs the third state, but every IdnodeGrid-backed
    * view inherits the always-defined-sort policy. */
   removableSort?: boolean
@@ -153,9 +149,8 @@ interface Props {
    * never empty (and the `<th>` stays accessible to screen
    * readers).
    *
-   * Wired by IdnodeGrid to bring the column-header hover
-   * tooltips back to parity with the Classic UI, which surfaces
-   * the description on every column header. */
+   * Wired by IdnodeGrid so every column header shows the
+   * property description as a hover tooltip. */
   resolveDescription?: (col: ColumnDef) => string
   renderCell?: (value: unknown, row: Row, col: ColumnDef) => string
   isColumnHidden?: (col: ColumnDef) => boolean
@@ -995,7 +990,7 @@ const entriesForTable = computed(() => {
 
 /* ---- Sort mode coordination with grouping ----------------------
  *
- * Without grouping: classic single-sort. `sortField` + `sortOrder`
+ * Without grouping: plain single-sort. `sortField` + `sortOrder`
  * drive PrimeVue directly.
  *
  * With grouping: switch to PrimeVue's multi-sort. PrimeVue's

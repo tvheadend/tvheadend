@@ -1,1 +1,0 @@
-Ext.namespace('tvheadend');

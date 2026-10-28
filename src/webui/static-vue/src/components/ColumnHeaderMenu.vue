@@ -306,10 +306,9 @@ function clickSortDesc() {
 }
 function clickIndicatorSort() {
   /* Inline ↑/↓ click cycles asc → desc → asc; the grid is
-   * never left in an unsorted state, matching the Classic
-   * ExtJS UI. The `setSort` emit signature still accepts
-   * `null` for type symmetry but no UI path inside this menu
-   * emits it. */
+   * never left in an unsorted state. The `setSort` emit
+   * signature still accepts `null` for type symmetry but no UI
+   * path inside this menu emits it. */
   if (props.sortDir === 'asc') emit('setSort', props.field, 'desc')
   else emit('setSort', props.field, 'asc')
 }

@@ -3,11 +3,11 @@
 
 /*
  * DvbInputsLayout — the L3 tab strip under Configuration → DVB Inputs.
- * Verifies the per-tab gates, which mirror ExtJS:
- *   - `tvadapters` capability gates ONLY the TV adapters tab
- *     (tvheadend.js:1154). Networks / Muxes / Services are input-type-
- *     agnostic (IPTV uses them too) and stay visible regardless.
- *   - Mux Schedulers is Expert-only (mpegts.js:429).
+ * Verifies the per-tab gates:
+ *   - `tvadapters` capability gates ONLY the TV adapters tab.
+ *     Networks / Muxes / Services are input-type-agnostic (IPTV
+ *     uses them too) and stay visible regardless.
+ *   - Mux Schedulers is Expert-only.
  *
  * PageTabs is stubbed so we inspect its `tabs` prop directly.
  */
