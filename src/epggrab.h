@@ -20,6 +20,7 @@
 #define __EPGGRAB_H__
 
 #include "idnode.h"
+#include "epg.h"
 
 /* **************************************************************************
  * Typedefs/Forward decls
@@ -199,6 +200,7 @@ struct epggrab_module_int
   int                           xmltv_scrape_onto_desc; ///< Include scraped actors
     ///< and extra details on to programme description for viewing by legacy clients.
   int                           xmltv_use_category_not_genre; ///< Use category tags and don't map to DVB genres.
+  int                           xmltv_image_types[EPG_IMAGE_TYPE_COUNT]; ///< Typed images to import.
 
   const char                   *xmltv_xpath_category_code; ///< XPath string for extracting a category ETSI code.
   const char                   *xmltv_xpath_unique_id;     ///< XPath string for extracting a unique event ID.

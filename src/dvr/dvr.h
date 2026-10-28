@@ -235,6 +235,7 @@ typedef struct dvr_entry {
   char *de_comment;
   char *de_uri;                 /* Programme unique ID */
   char *de_image;               /* Programme Image */
+  char *de_typed_image[EPG_IMAGE_TYPE_COUNT]; /* Programme typed images */
   char *de_fanart_image;        /* Programme fanart image */
   htsmsg_t *de_files; /* List of all used files */
   char *de_directory; /* Can be set for autorec entries, will override any
@@ -733,6 +734,7 @@ htsmsg_t * dvr_autorec_entry_class_weekdays_get(uint32_t weekdays);
 htsmsg_t * dvr_autorec_entry_class_weekdays_list (void *o, const char *list);
 char * dvr_autorec_entry_class_weekdays_rend(uint32_t weekdays, const char *lang);
 const char *dvr_entry_get_image(const dvr_entry_t *o);
+const char *dvr_entry_get_typed_image(const dvr_entry_t *o, epg_image_type_t type);
 const char *dvr_entry_get_fanart_image(const dvr_entry_t *o);
 
 void dvr_autorec_check_event(epg_broadcast_t *e);
