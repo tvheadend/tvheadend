@@ -238,7 +238,7 @@ headers_complete(globalheaders_t *gh)
        * - maximal timeout is reached without metadata
        */
       if(threshold || (qd[i] <= 0 && qd_max > (MAX_NOPKT_TIME * 90))) {
-	ssc->ssc_disabled = 1;
+	//ssc->ssc_disabled = 1;
         tvhdebug(LS_GLOBALHEADERS, "gh disable stream %d %s%s%s (PID %i) threshold %d qd %"PRId64" qd_max %"PRId64,
              ssc->es_index, streaming_component_type2txt(ssc->es_type),
              ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid,

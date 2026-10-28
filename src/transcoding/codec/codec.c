@@ -78,6 +78,9 @@ extern TVHCodec tvh_codec_nvenc_hevc;
 extern TVHCodec tvh_codec_omx_h264;
 #endif
 
+#if ENABLE_V4L2M2M
+extern TVHCodec tvh_codec_v4l2m2m_h264;
+#endif
 
 /* AVCodec ================================================================== */
 
@@ -327,6 +330,10 @@ tvh_codecs_register()
 
 #if ENABLE_OMX
     tvh_codec_register(&tvh_codec_omx_h264);
+#endif
+
+#if ENABLE_V4L2M2M
+    tvh_codec_register(&tvh_codec_v4l2m2m_h264);
 #endif
 }
 
