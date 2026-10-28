@@ -568,6 +568,7 @@ watch(
   <ServiceMapperDialog
     v-model:visible="mapperOpen"
     :map-all="mapperAll"
+    :level="editorLevel"
     @started="onMappingStarted"
   />
 </template>

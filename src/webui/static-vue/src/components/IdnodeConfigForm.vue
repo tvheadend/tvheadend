@@ -108,6 +108,11 @@ const props = withDefaults(
      * the chooser without committing to a level (which would leave
      * the form blank for users on a lower default level). */
     lockLevel?: UiLevel
+    /* The level to open at in place of the user's level, e.g. the
+     * level of the grid a dialog was opened from. Unlike
+     * `lockLevel` it keeps the `<LevelMenu>`, and a pick there
+     * wins. */
+    defaultLevel?: UiLevel
     /* Optional predicate that synthesises a disabled state for
      * individual fields based on the current values of OTHER
      * fields. Called during render with `(field.id,
@@ -240,6 +245,7 @@ const props = withDefaults(
     reloadFields: () => [],
     accessRefetchFields: () => [],
     lockLevel: undefined,
+    defaultLevel: undefined,
     disabledFor: undefined,
     saveLabel: undefined,
     saveTooltip: undefined,
@@ -285,7 +291,8 @@ const access = useAccessStore()
  *   2. `access.locked` (config.uilevel_nochange) — the admin
  *      pinned the level; the menu's radio is disabled and a local
  *      override is ignored.
- *   3. the local override, else the store's level.
+ *   3. the local override, else `props.defaultLevel`, else the
+ *      store's level.
  *
  * The store is read through on every access rather than
  * snapshotted, because the level can move under a mounted form:
@@ -298,7 +305,7 @@ const currentLevel = computed<UiLevel>({
   get() {
     if (props.lockLevel) return props.lockLevel
     if (access.locked) return access.uilevel
-    return levelOverride.value ?? access.uilevel
+    return levelOverride.value ?? props.defaultLevel ?? access.uilevel
   },
   set(v) {
     if (props.lockLevel || access.locked) return

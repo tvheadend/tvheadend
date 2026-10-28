@@ -31,7 +31,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { onBeforeRouteLeave } from 'vue-router'
-import { HelpCircle, Pencil } from 'lucide-vue-next'
+import { HelpCircle } from 'lucide-vue-next'
 import DataGrid from './DataGrid.vue'
 import SearchInput from './SearchInput.vue'
 import { buildActiveColumnFilterRows } from './columnFilterSummary'
@@ -266,7 +266,7 @@ interface Props {
   editMode?: 'cell'
   /*
    * When true, the grid auto-activates cell-edit mode on mount and
-   * the pencil toggle is hidden — the grid is permanently in edit
+   * the Edit cells toggle is hidden — the grid is permanently in edit
    * mode. Used by single-purpose editing surfaces (e.g. the
    * ChannelManageDrawer, where the user opened a dedicated drawer
    * to mutate; the regular read mode would be pointless there).
@@ -721,11 +721,20 @@ function setLevelOverride(v: UiLevel | null) {
   }
 }
 
+/* The grid's level without the phone clamp below. The views open
+ * their editor drawer at this level (useEditorMode): at phone
+ * width the cards show only their phone fields, but the drawer
+ * lists every field and has its own View level select. */
+const editorLevel = computed<UiLevel>(() => {
+  if (props.lockLevel) return props.lockLevel
+  if (access.locked) return access.uilevel
+  return levelOverride.value ?? access.uilevel
+})
+
 const effectiveLevel = computed<UiLevel>(() => {
   if (props.lockLevel) return props.lockLevel
   if (isPhone.value) return 'basic'
-  if (access.locked) return access.uilevel
-  return levelOverride.value ?? access.uilevel
+  return editorLevel.value
 })
 
 function resetGridPrefs() {
@@ -2333,6 +2342,17 @@ const editGatedColumns = computed<ColumnDef[]>(() =>
   }),
 )
 
+/* Columns whose cells the Edit cells button makes editable. In
+ * read mode a click on a cell only selects the row, so these
+ * cells carry a tooltip that says how to change them (see the
+ * column-pt binding in the template). */
+const editHintFields = computed<ReadonlySet<string>>(() => {
+  if (!inlineEdit || isInEditMode.value || props.alwaysEdit) return new Set()
+  return new Set(
+    decoratedColumns.value.filter((c) => isInlineEditable(c)).map((c) => c.field),
+  )
+})
+
 async function onSaveEdits() {
   if (!inlineEdit) return
   try {
@@ -2689,6 +2709,7 @@ defineExpose({
    * GridSettingsMenu uses. Computed; read as `.value`. */
   isAtDefaults,
   effectiveLevel,
+  editorLevel,
   scrollToUuid,
   /* Exposed for tests + parent views that need direct access
    * to the dirty state (e.g. unsaved-changes warning before
@@ -2823,6 +2844,13 @@ defineExpose({
            * affordance). */
           'data-editable': col.editable ? '' : null,
         },
+        /* `bodyCell` lands on the td only, the header keeps
+         * its own title. */
+        bodyCell: {
+          title: editHintFields.has(col.field)
+            ? t('Click Edit cells to change this value')
+            : undefined,
+        },
       })
     "
     :root-data-attrs="{ 'data-grid-key': storeKey }"
@@ -2880,9 +2908,8 @@ defineExpose({
         (which is hidden via the v-if below). Pattern A:
         Save commits + auto-exits, Cancel discards + auto-
         exits. The Edit cells *toggle* lives in the right
-        cluster as an icon (matches the View options cog —
-        both are grid-behaviour meta-controls, not row
-        operations).
+        cluster next to the View options cog (both are
+        grid-behaviour meta-controls, not row operations).
       -->
       <template v-if="inlineEdit && isInEditMode">
         <button
@@ -2982,10 +3009,13 @@ defineExpose({
           @update:model-value="onToolbarSearchInput"
         />
         <!--
-          Edit cells toggle — pencil icon, sized + styled to
-          match the View options cog beside it. Lives in the
-          right cluster (grid-behaviour meta-controls)
-          alongside search / sort / view options, NOT in the
+          Edit cells toggle — a text button like the row
+          actions on the left. View options and Help beside it
+          stay icon-only, but this one changes what a click on
+          a cell does, and as a bare pencil icon it was easy to
+          miss. Lives in the right cluster (grid-behaviour
+          meta-controls) alongside search / sort / view
+          options, NOT in the
           left cluster with the consumer's row actions
           (Add / Edit / Delete) — they're a different
           conceptual category. Hidden on phone (cell editing
@@ -3018,7 +3048,7 @@ defineExpose({
           :aria-label="t('Edit cells in this grid')"
           @click="toggleEditMode"
         >
-          <Pencil :size="16" :stroke-width="2" />
+          {{ t('Edit cells') }}
         </button>
         <GridSettingsMenu
           :columns="orderedColumns"
@@ -3564,22 +3594,26 @@ defineExpose({
   background: color-mix(in srgb, var(--tvh-primary) 88%, black);
 }
 
-/* Edit cells toggle — pencil icon button in the right
- * cluster. Visual treatment matches `<SettingsPopover>`'s
- * cog button (32×32, transparent bg, neutral border, primary
- * tint on hover) so the two icon controls read as a coherent
- * cluster. Distinct class rather than reusing the popover's
- * scoped class — would couple us to its style internals. */
+/* Edit cells toggle — text button in the right cluster. Same
+ * chrome as `<SettingsPopover>`'s cog button (32 px high,
+ * neutral border, primary tint on hover), with the padding and
+ * font of the toolbar's labelled action buttons
+ * (`.action-menu__btn`), which carry no icon either. Distinct
+ * class rather than reusing the popover's scoped class — would
+ * couple us to its style internals. */
 .idnode-grid__edit-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
   height: 32px;
+  padding: 4px 12px;
   background: var(--tvh-bg-page);
   color: var(--tvh-text);
   border: 1px solid var(--tvh-border);
   border-radius: var(--tvh-radius-sm);
+  font: inherit;
+  font-size: var(--tvh-text-md);
+  white-space: nowrap;
   cursor: pointer;
   flex: 0 0 auto;
   transition: background var(--tvh-transition);
@@ -3603,8 +3637,8 @@ defineExpose({
   cursor: not-allowed;
 }
 
-/* Help button — same 32 px icon-button shape the edit-toggle
- * uses so the two sit symmetrically at the right end of the
+/* Help button — 32 px icon button with the same chrome as the
+ * edit-toggle, so the two sit evenly at the right end of the
  * toolbar. The `aria-pressed` state lights the button with a
  * primary tint when the help dialog is open for this grid. */
 .idnode-grid__help {

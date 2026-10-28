@@ -583,6 +583,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     v-model:visible="mapperOpen"
     :preselect="mapperPreselect"
     :map-all="mapperAll"
+    :level="editorLevel"
     @started="onMappingStarted"
   />
   <ServiceStreamsDialog
