@@ -755,6 +755,9 @@ void dvr_autorec_async_reschedule(void);
 
 /* @return 1 if the event 'e' is matched by the autorec rule 'dae' */
 int dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e);
+
+/* @return 1 if a Record all rule for 'owner' matches event 'e' */
+int dvr_autorec_record_all_matches(epg_broadcast_t *e, const char *owner);
 /* Purge any autorec timers that are obsolete since they no longer match any events. */
 void dvr_autorec_purge_obsolete_timers(void);
 /* @return 1 if entry is an autorec and can be purged since it no longer matches its event. */
