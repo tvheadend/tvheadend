@@ -262,13 +262,21 @@ api_mpegts_service_grid
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
   mpegts_service_t *ms;
-  int hide = 1;
+  int hide = 1, mapped = -1;
   const char *s = htsmsg_get_str(args, "hidemode");
   if (s) {
     if (!strcmp(s, "all"))
       hide = 2;
     else if (!strcmp(s, "none"))
       hide = 0;
+  }
+  /* Only the services without a channel, or only those with one */
+  s = htsmsg_get_str(args, "mapping");
+  if (s) {
+    if (!strcmp(s, "unmapped"))
+      mapped = 0;
+    else if (!strcmp(s, "mapped"))
+      mapped = 1;
   }
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
@@ -278,6 +286,8 @@ api_mpegts_service_grid
       LIST_FOREACH(ms, &mm->mm_services, s_dvb_mux_link) {
         if (hide && !ms->s_verified) continue;
         if (hide == 2 && !ms->s_is_enabled((service_t*)ms, 0)) continue;
+        if (mapped == 0 && LIST_FIRST(&ms->s_channels)) continue;
+        if (mapped == 1 && !LIST_FIRST(&ms->s_channels)) continue;
         idnode_set_add(ins, (idnode_t*)ms, &conf->filter, perm->aa_lang_ui);
       }
     }
