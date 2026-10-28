@@ -66,7 +66,8 @@ enum streaming_component_type {
   SCT_OPUS,
   SCT_FLAC,
   SCT_AC4,
-  SCT_LAST = SCT_AC4
+  SCT_T2MI,    /* T2-MI or TS data piping carrier (TS 102 773 / EN 301 192) */
+  SCT_LAST = SCT_T2MI
 };
 
 #define SCT_MASK(t) (1 << (t))
