@@ -220,6 +220,7 @@ typedef struct htsp_file {
   th_subscription_t *hf_subscription;
 } htsp_file_t;
 
+#define HTSP_CLOCK 90000
 #define HTSP_DEFAULT_QUEUE_DEPTH 500000
 
 /* **************************************************************************
@@ -2640,6 +2641,9 @@ htsp_method_subscribe(htsp_connection_t *htsp, htsmsg_t *in)
 
   if(htsmsg_get_u32(in, "subscriptionId", &sid))
     return htsp_error(htsp, N_("Invalid arguments"));
+  LIST_FOREACH(hs, &htsp->htsp_subscriptions, hs_link)
+    if (hs->hs_sid == sid)
+      return htsp_error(htsp, N_("Invalid arguments"));
 
   if(!htsmsg_get_u32(in, "channelId", &chid)) {
     if((ch = channel_find_by_id(chid)) == NULL)
@@ -2825,6 +2829,12 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   memset(&skip, 0, sizeof(skip));
   if(!htsmsg_get_s64(in, "time", &s64)) {
     skip.type = abs ? SMT_SKIP_ABS_TIME : SMT_SKIP_REL_TIME;
+    if (!hs->hs_90khz &&
+        (s64 > INT64_MAX / HTSP_CLOCK || s64 < INT64_MIN / HTSP_CLOCK))
+      return htsp_error(htsp, N_("Invalid arguments"));
+    if (hs->hs_90khz &&
+        (s64 > INT64_MAX / 1000000 || s64 < INT64_MIN / 1000000))
+      return htsp_error(htsp, N_("Invalid arguments"));
     skip.time = hs->hs_90khz ? s64 : ts_rescale_inv(s64, 1000000);
     tvhtrace(LS_HTSP_SUB, "skip: %s %"PRId64" (%s)", abs ? "abs" : "rel",
              skip.time, hs->hs_90khz ? "90kHz" : "1MHz");
@@ -4175,13 +4185,17 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
-  int qlen = hs->hs_q.hmq_payload;
+  int qlen;
   int video = SCT_ISVIDEO(pkt->pkt_type);
   size_t payloadlen;
 
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
+  qlen = hs->hs_q.hmq_payload;
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
   if (pkt->pkt_err)
     hs->hs_data_errors += pkt->pkt_err;
   if(pkt->pkt_payload == NULL) {
+    pkt_ref_dec(pkt);
     return;
   }
 
@@ -4243,8 +4257,6 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
     m = htsmsg_create_map();
     htsmsg_add_str(m, "method", "queueStatus");
     htsmsg_add_u32(m, "subscriptionId", hs->hs_sid);
-    htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
-    htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
     if (hs->hs_data_errors)
       htsmsg_add_u32(m, "errors", hs->hs_data_errors);
 
@@ -4254,6 +4266,8 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
 
     tvh_mutex_lock(&htsp->htsp_out_mutex);
 
+    htsmsg_add_u32(m, "packets", hs->hs_q.hmq_length);
+    htsmsg_add_u32(m, "bytes", hs->hs_q.hmq_payload);
     int64_t min_dts = PTS_UNSET;
     int64_t max_dts = PTS_UNSET;
     TAILQ_FOREACH(hm, &hs->hs_q.hmq_q, hm_link) {
@@ -4367,7 +4381,7 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     }
 
     if (ssc->ssc_gh)
-      htsmsg_add_bin_ptr(m, "meta", pktbuf_ptr(ssc->ssc_gh),
+      htsmsg_add_bin(m, "meta", pktbuf_ptr(ssc->ssc_gh),
 		         pktbuf_len(ssc->ssc_gh));
 
     htsmsg_add_msg(streams, NULL, c);
