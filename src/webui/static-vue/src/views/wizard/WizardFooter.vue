@@ -18,8 +18,11 @@
  *   - Skip         — rendered when `showSkip` is true (status
  *                    + optional mapping). Emits `skip`.
  *   - Save & Next  — primary action. Label flips to "Finish" on
- *                    the last (channels) step. Disabled while
- *                    `saving` is true. Emits `save`.
+ *                    the last (channels) step. Emits `save`.
+ *
+ * Save, Previous and Cancel are disabled while `saving` is true,
+ * so the step is not left before its save has finished and a
+ * failed save can still show its error there.
  *
  * Cancel-confirmation copy follows ADR 0015 § "no rollback" —
  * the user is told partial config persists on cancel so they
@@ -46,8 +49,8 @@ interface Props {
   /* When true, render the Skip button (status step polling, or
    * mapping if the user opts out of auto-mapping). */
   showSkip?: boolean
-  /* Disables the Save button (e.g. while a save POST is in
-   * flight). */
+  /* Disables Save, Previous and Cancel (e.g. while a save POST
+   * is in flight). */
   saving?: boolean
   /* Markdown page name passed to `useHelp().toggle()` for the
    * Help button. ExtJS wizard uses `firstconfig` for every step
@@ -154,6 +157,7 @@ async function handleCancel(): Promise<void> {
         severity="secondary"
         text
         class="wizard-footer__cancel"
+        :disabled="saving"
         @click="handleCancel"
       />
       <Button
@@ -173,6 +177,7 @@ async function handleCancel(): Promise<void> {
         :label="t('Previous')"
         severity="secondary"
         outlined
+        :disabled="saving"
         @click="emit('previous')"
       />
       <!-- i18n: "Skip" and "Next" are both novel strings.

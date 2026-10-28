@@ -9,16 +9,20 @@
  *     (triggers C-side channels_changed → default-admin-entry
  *     removal, src/wizard.c), then routes to /gui/ (epg). Classic
  *     sends the cancel first too (static/app/wizard.js presave).
- *   - Cancel and Save POSTs run sequentially, in that order, and
- *     the save still runs when the cancel fails.
- *   - Finish navigates even when one of the POSTs throws (user
- *     explicitly chose to finish — we don't trap them). A save
- *     that fails after a successful cancel starts the wizard
- *     again, and only a successful save flags the greeting.
+ *   - Cancel and Save POSTs run sequentially, in that order.
+ *     Any failure keeps the user on the step with one error and
+ *     lets Finish be retried. The error is cleared when the next
+ *     try starts. A failed cancel skips the save. A failed save
+ *     starts the wizard again first, and a failed restart is only
+ *     logged. Only a successful save flags the greeting and
+ *     reloads.
  *   - Footer shape: isFinal=true → Save button labelled
  *     "Finish"; previous goes to mapping; no Skip.
  *   - Saving state passed to the footer while the finish flow
- *     is in flight (Finish button disabled).
+ *     is in flight (Finish, Previous and Cancel disabled). After
+ *     a successful save it stays set until the page reloads.
+ *   - The error sits outside the scroll area, right above the
+ *     footer.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
@@ -66,14 +70,20 @@ const WizardFooterStub = defineComponent({
   },
   emits: ['previous', 'cancel', 'skip', 'save'],
   setup(props, { emit }) {
+    /* Like WizardFooter, `saving` disables Previous and Cancel
+     * too. */
     return () =>
       h('div', { class: 'wizard-footer-stub' }, [
         h(
           'button',
-          { class: 'wf-previous', onClick: () => emit('previous') },
+          { class: 'wf-previous', disabled: !!props.saving, onClick: () => emit('previous') },
           'previous',
         ),
-        h('button', { class: 'wf-cancel', onClick: () => emit('cancel') }, 'cancel'),
+        h(
+          'button',
+          { class: 'wf-cancel', disabled: !!props.saving, onClick: () => emit('cancel') },
+          'cancel'
+        ),
         h(
           'button',
           {
@@ -207,11 +217,13 @@ describe('WizardStepChannels — Finish flow', () => {
     expect(apiCallMock.mock.calls[0][0]).toBe('wizard/channels/save')
     expect(apiCallMock.mock.calls[0][1]).toEqual({ node: '{}' })
     expect(cancelMock).toHaveBeenCalledTimes(1)
+    expect(startMock).not.toHaveBeenCalled()
     /* Finish forces a fresh page load at /gui/ — not a
      * router.push — so the WS reconnects and the now-empty
      * `config.wizard` arrives via the fresh accessUpdate. */
     expect(assignSpy).toHaveBeenCalledWith('/gui/')
     expect(pushMock).not.toHaveBeenCalled()
+    expect(wrapper.find('.wizard-step__error').exists()).toBe(false)
   })
 
   it('flags the Home setup-complete greeting before reloading', async () => {
@@ -251,60 +263,111 @@ describe('WizardStepChannels — Finish flow', () => {
     expect(saveOrder).toBe(2)
   })
 
-  it('reloads even when save throws', async () => {
-    apiCallMock.mockClear()
-    apiCallMock.mockRejectedValue(new Error('save failed'))
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const wrapper = mountChannels()
-    await flushPromises()
-    apiCallMock.mockClear()
-    apiCallMock.mockRejectedValue(new Error('save failed'))
-
-    await wrapper.find('.wf-save').trigger('click')
-    await flushPromises()
-
-    expect(assignSpy).toHaveBeenCalledWith('/gui/')
-    warnSpy.mockRestore()
-  })
-
-  it('starts the wizard again when the save fails after the cancel', async () => {
+  it('restarts the wizard when the save fails and lets Finish be retried', async () => {
     /* Without the save the wide-open default entry stays, so the
-     * wizard must not stay off. */
+     * wizard is started again and Finish can be retried. */
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const wrapper = mountChannels()
     await flushPromises()
     apiCallMock.mockClear()
-    apiCallMock.mockRejectedValue(new Error('save failed'))
+    apiCallMock.mockRejectedValueOnce(new Error('save failed'))
 
     await wrapper.find('.wf-save').trigger('click')
     await flushPromises()
 
     expect(cancelMock).toHaveBeenCalledTimes(1)
+    expect(apiCallMock).toHaveBeenCalledWith('wizard/channels/save', { node: '{}' })
     expect(startMock).toHaveBeenCalledTimes(1)
     expect(markSetupCompleteMock).not.toHaveBeenCalled()
+    expect(assignSpy).not.toHaveBeenCalled()
+    const error = wrapper.find('.wizard-step__error')
+    expect(error.attributes('role')).toBe('alert')
+    expect(error.text()).toBe('Could not finish the setup wizard: save failed')
+    /* Outside the scroll area, so a long description cannot push
+     * it out of view. */
+    expect(wrapper.find('.wizard-step__scroll .wizard-step__error').exists()).toBe(false)
+    expect(wrapper.find('.wf-flags').attributes('data-saving')).toBe('false')
+
+    /* The next click runs cancel and save again and finishes. */
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+
+    expect(cancelMock).toHaveBeenCalledTimes(2)
+    expect(apiCallMock).toHaveBeenCalledTimes(2)
+    expect(startMock).toHaveBeenCalledTimes(1)
+    expect(markSetupCompleteMock).toHaveBeenCalledTimes(1)
     expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    expect(wrapper.find('.wizard-step__error').exists()).toBe(false)
     warnSpy.mockRestore()
   })
 
-  it('does not start the wizard when the cancel failed too', async () => {
-    /* A failed cancel leaves the wizard active on the server. */
+  it('shows the save error and only logs a failed restart', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountChannels()
+    await flushPromises()
+    apiCallMock.mockClear()
+    apiCallMock.mockRejectedValueOnce(new Error('save failed'))
+    startMock.mockRejectedValueOnce(new Error('start failed'))
+
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+
+    expect(cancelMock).toHaveBeenCalledTimes(1)
+    expect(apiCallMock).toHaveBeenCalledWith('wizard/channels/save', { node: '{}' })
+    expect(startMock).toHaveBeenCalledTimes(1)
+    const restartWarning = warnSpy.mock.calls.find(
+      (call) => call[0] === '[wizard] could not restart after a failed save:'
+    )
+    expect(restartWarning?.[1]).toBeInstanceOf(Error)
+    expect((restartWarning?.[1] as Error).message).toBe('start failed')
+    expect(wrapper.find('.wizard-step__error').text()).toBe(
+      'Could not finish the setup wizard: save failed'
+    )
+    expect(markSetupCompleteMock).not.toHaveBeenCalled()
+    expect(assignSpy).not.toHaveBeenCalled()
+    expect(wrapper.find('.wf-flags').attributes('data-saving')).toBe('false')
+    warnSpy.mockRestore()
+  })
+
+  it('stays on the step when the cancel fails and lets Finish be retried', async () => {
+    /* The save removes the default wide-open access entry, so it
+     * must not run when the wizard could not be cancelled. */
     cancelMock.mockRejectedValueOnce(new Error('cancel failed'))
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const wrapper = mountChannels()
     await flushPromises()
     apiCallMock.mockClear()
-    apiCallMock.mockRejectedValue(new Error('save failed'))
 
     await wrapper.find('.wf-save').trigger('click')
     await flushPromises()
 
+    expect(cancelMock).toHaveBeenCalledTimes(1)
+    expect(apiCallMock).not.toHaveBeenCalled()
     expect(startMock).not.toHaveBeenCalled()
     expect(markSetupCompleteMock).not.toHaveBeenCalled()
+    expect(assignSpy).not.toHaveBeenCalled()
+    const error = wrapper.find('.wizard-step__error')
+    expect(error.exists()).toBe(true)
+    expect(error.attributes('role')).toBe('alert')
+    expect(error.text()).toBe('Could not finish the setup wizard: cancel failed')
+    expect(wrapper.find('.wf-flags').attributes('data-saving')).toBe('false')
+
+    /* The next click runs the whole flow again. */
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+
+    expect(cancelMock).toHaveBeenCalledTimes(2)
+    expect(apiCallMock).toHaveBeenCalledTimes(1)
+    expect(apiCallMock).toHaveBeenCalledWith('wizard/channels/save', { node: '{}' })
+    expect(markSetupCompleteMock).toHaveBeenCalledTimes(1)
     expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    expect(wrapper.find('.wizard-step__error').exists()).toBe(false)
     warnSpy.mockRestore()
   })
 
-  it('still saves and reloads when cancel throws', async () => {
+  it('shows the cancel error only until the next try', async () => {
+    /* Cleared when the retry starts, so a cancel that fails again
+     * shows a new alert instead of leaving the old one in place. */
     cancelMock.mockRejectedValueOnce(new Error('cancel failed'))
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const wrapper = mountChannels()
@@ -313,15 +376,32 @@ describe('WizardStepChannels — Finish flow', () => {
 
     await wrapper.find('.wf-save').trigger('click')
     await flushPromises()
+    expect(wrapper.find('.wizard-step__error').text()).toBe(
+      'Could not finish the setup wizard: cancel failed'
+    )
 
-    /* The save is what removes the wide-open default entry, so a
-     * failed cancel must not skip it. */
-    expect(apiCallMock).toHaveBeenCalledWith('wizard/channels/save', { node: '{}' })
-    expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    let rejectCancel: (e: Error) => void = () => {}
+    cancelMock.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectCancel = reject
+        })
+    )
+    await wrapper.find('.wf-save').trigger('click')
+    await nextTick()
+    expect(wrapper.find('.wizard-step__error').exists()).toBe(false)
+
+    rejectCancel(new Error('cancel failed again'))
+    await flushPromises()
+    expect(wrapper.find('.wizard-step__error').text()).toBe(
+      'Could not finish the setup wizard: cancel failed again'
+    )
+    expect(apiCallMock).not.toHaveBeenCalled()
+    expect(assignSpy).not.toHaveBeenCalled()
     warnSpy.mockRestore()
   })
 
-  it('passes saving=true to the footer while the finish flow is in flight', async () => {
+  it('passes saving=true to the footer from the click until the reload', async () => {
     /* Mount + let the on-mount load resolve with the default
      * mock. Then queue a hanging implementation for the next
      * call (the save) so we can observe the in-flight state. */
@@ -342,7 +422,44 @@ describe('WizardStepChannels — Finish flow', () => {
 
     resolveSave()
     await flushPromises()
-    expect(wrapper.find('.wf-flags').attributes('data-saving')).toBe('false')
+    /* Still busy while the new page loads, so Finish cannot send
+     * the cancel and the save a second time. */
+    expect(assignSpy).toHaveBeenCalledWith('/gui/')
+    expect(wrapper.find('.wf-flags').attributes('data-saving')).toBe('true')
+  })
+
+  it('keeps Previous and Cancel disabled while Finish runs, then shows its error', async () => {
+    /* Leaving the step before the save answers would unmount it,
+     * and a failed save would then go unseen. */
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mountChannels()
+    await flushPromises()
+    apiCallMock.mockClear()
+    let rejectSave: (e: Error) => void = () => {}
+    apiCallMock.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectSave = reject
+        })
+    )
+
+    await wrapper.find('.wf-save').trigger('click')
+    await flushPromises()
+    expect(wrapper.find<HTMLButtonElement>('.wf-previous').element.disabled).toBe(true)
+    expect(wrapper.find<HTMLButtonElement>('.wf-cancel').element.disabled).toBe(true)
+    await wrapper.find('.wf-previous').trigger('click')
+    await wrapper.find('.wf-cancel').trigger('click')
+    expect(pushMock).not.toHaveBeenCalled()
+    expect(cancelMock).toHaveBeenCalledTimes(1)
+
+    rejectSave(new Error('save failed'))
+    await flushPromises()
+    expect(wrapper.find('.wizard-step__error').text()).toBe(
+      'Could not finish the setup wizard: save failed'
+    )
+    expect(wrapper.find<HTMLButtonElement>('.wf-previous').element.disabled).toBe(false)
+    expect(wrapper.find<HTMLButtonElement>('.wf-cancel').element.disabled).toBe(false)
+    warnSpy.mockRestore()
   })
 
   it('is idempotent — second click while in-flight is ignored', async () => {
