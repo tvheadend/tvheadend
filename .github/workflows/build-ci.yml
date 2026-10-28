@@ -305,23 +305,28 @@ jobs:
 
   build-rpm-native:
     needs: vue
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     continue-on-error: true
-    name: Build on native fedora:${{ matrix.releasever }}
+    name: Build on native fedora:${{ matrix.releasever }} ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
 
     strategy:
       matrix:
         releasever: ["37", "38", "39", "40", "41", "42", "43", "44", "rawhide"]
+        runner: ["ubuntu-latest"]
+        # the include entries add combinations (their runner value differs
+        # from the base axis), so only recent releases build on aarch64
+        include:
+          - releasever: "43"
+            runner: ubuntu-24.04-arm
+          - releasever: "44"
+            runner: ubuntu-24.04-arm
+          - releasever: "rawhide"
+            runner: ubuntu-24.04-arm
     container:
       image: "fedora:${{ matrix.releasever }}"
     steps:
-      - name: rpmfusion-free
-        run: |
-          dnf install -y "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
-      - name: dependencies
-        run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
-          dnf install -y openssl-devel-engine || true
+      - name: git for checkout, zstd for the cache
+        run: dnf install -y git zstd
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -337,21 +342,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .staticlib
-          key: staticlib-fedora-${{ matrix.releasever }}-${{ github.sha }}
+          key: staticlib-fedora-${{ matrix.releasever }}-${{ matrix.runner }}-${{ github.sha }}
           restore-keys: |
-            staticlib-fedora-${{ matrix.releasever }}-
+            staticlib-fedora-${{ matrix.releasever }}-${{ matrix.runner }}-
       - name: build
-        run: |
-          mkdir -p .staticlib
-          export STATICLIB_CACHE="$PWD/.staticlib"
-          export VUE_FILE_CACHE="$PWD/.vuecache"
-          export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
-          ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc) || (echo "PARALLEL BUILD FAILED, DOING SINGLE THREADED BUILD" && make -C rpm build)
+        run: support/ci-rpm-build.sh ${{ matrix.releasever }}
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-Fedora-${{ matrix.releasever }}
+          name: Tvheadend-Fedora-${{ matrix.releasever }}-${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
           path: tvheadend*.rpm
           if-no-files-found: error
       - name: upload-cloudsmith
@@ -370,15 +370,8 @@ jobs:
     container:
       image: "almalinux:${{ matrix.releasever }}"
     steps:
-      - name: rpmfusion-free
-        run: |
-          dnf install -y dnf-plugins-core
-          dnf config-manager --set-enabled crb
-          dnf install -y "https://download1.rpmfusion.org/free/el/rpmfusion-free-release-${{ matrix.releasever }}.noarch.rpm"
-      - name: dependencies
-        run: |
-          dnf install -y gcc-c++ gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
-          dnf install -y openssl-devel-engine || true
+      - name: git for checkout, zstd for the cache
+        run: dnf install -y git zstd
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -398,12 +391,7 @@ jobs:
           restore-keys: |
             staticlib-el-${{ matrix.releasever }}-${{ matrix.runner }}-
       - name: build
-        run: |
-          mkdir -p .staticlib
-          export STATICLIB_CACHE="$PWD/.staticlib"
-          export VUE_FILE_CACHE="$PWD/.vuecache"
-          export TVH_EXTRA_CONFIGURE="--enable-vue_cache --disable-vue_build"
-          ./configure --disable-dvbscan --disable-libfdkaac_static --disable-ffmpeg_static --disable-hdhomerun_static --disable-libfdkaac_static --disable-libopus_static --disable-libtheora_static --disable-libvorbis_static --disable-libvpx_static --disable-libx264_static --disable-libx265_static --enable-libfdkaac --enable-hdhomerun_client --enable-libsystemd_daemon --python=/usr/bin/python3 $TVH_EXTRA_CONFIGURE && make -C rpm build -j$(nproc)
+        run: support/ci-rpm-build.sh ${{ matrix.releasever }}
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
