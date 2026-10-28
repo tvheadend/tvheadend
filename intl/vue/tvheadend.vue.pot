@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-03 19:54+0000\n"
+"POT-Creation-Date: 2026-10-26 02:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,35 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/webui/static-vue/src/views/AboutView.vue:147
-msgid "(Apache Licence v2.0)"
-msgstr ""
-
-#: src/webui/static-vue/src/components/DataGrid.vue:1702
-#: src/webui/static-vue/src/views/epg/TableView.vue:2265
+#: src/webui/static-vue/src/components/DataGrid.vue:1739
+#: src/webui/static-vue/src/views/epg/TableView.vue:2432
 msgid ", grouped by {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:89
-msgid ", {0} failed"
-msgstr ""
-
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:92
-msgid ", {0} ignored"
-msgstr ""
-
-#: src/webui/static-vue/src/views/home/HealthLine.vue:62
+#: src/webui/static-vue/src/views/home/HealthLine.vue:70
 msgid "1 active subscription"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1949
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1985
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2691
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2839
 msgid "1 row"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2689
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2837
 msgid "1 validation error"
 msgstr ""
 
@@ -53,11 +41,11 @@ msgstr ""
 msgid "16:9"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:493
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:518
 msgid "Abort"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:494
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:519
 msgid "Abort the selected recording"
 msgstr ""
 
@@ -66,12 +54,12 @@ msgstr ""
 msgid "Abort this recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:493
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:518
 msgid "Aborting…"
 msgstr ""
 
 #: src/webui/static-vue/src/components/NavRail.vue:138
-#: src/webui/static-vue/src/views/AboutView.vue:81
+#: src/webui/static-vue/src/views/AboutView.vue:129
 msgid "About"
 msgstr ""
 
@@ -83,17 +71,29 @@ msgstr ""
 msgid "Active"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2082
+#: src/webui/static-vue/src/views/epg/TableView.vue:2230
 msgid ""
 "Active filter can't be saved (multi-genre rules not supported by server)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2074
+#: src/webui/static-vue/src/views/epg/TableView.vue:2222
 msgid "Active filter can't be saved (multi-tag rules not supported by server)"
+msgstr ""
+
+#: src/webui/static-vue/src/views/epg/TableView.vue:2233
+msgid "Active filter can't be saved (not an exact channel name)"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:142
+msgid "Actual transport stream only"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:453
 msgid "Adapter / Frontend"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:145
+msgid "Adaptive"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:146
@@ -104,19 +104,19 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:381
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:386
 msgid "Add Access Entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:173
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:180
 msgid "Add Autorec"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:236
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:254
 msgid "Add Bouquet"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:552
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:561
 msgid "Add Channel"
 msgstr ""
 
@@ -137,8 +137,8 @@ msgstr ""
 msgid "Add IP Blocking Entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:293
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:305
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:348
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:360
 msgid "Add Mux"
 msgstr ""
 
@@ -151,7 +151,7 @@ msgstr ""
 msgid "Add Network"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:156
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:160
 msgid "Add Password"
 msgstr ""
 
@@ -159,7 +159,7 @@ msgstr ""
 msgid "Add Rating Label"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:557
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:582
 msgid "Add Recording"
 msgstr ""
 
@@ -167,7 +167,7 @@ msgstr ""
 msgid "Add Stream Profile"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/TimersView.vue:134
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:141
 msgid "Add Timer"
 msgstr ""
 
@@ -175,19 +175,19 @@ msgstr ""
 msgid "Add a new IP blocking entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:329
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:334
 msgid "Add a new access entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:140
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:147
 msgid "Add a new autorec entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:188
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:206
 msgid "Add a new bouquet"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:392
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:394
 msgid "Add a new channel"
 msgstr ""
 
@@ -195,7 +195,7 @@ msgstr ""
 msgid "Add a new channel tag"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:257
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:312
 msgid "Add a new mux"
 msgstr ""
 
@@ -207,7 +207,7 @@ msgstr ""
 msgid "Add a new network"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:123
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:127
 msgid "Add a new password entry"
 msgstr ""
 
@@ -215,11 +215,11 @@ msgstr ""
 msgid "Add a new rating label"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:482
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:507
 msgid "Add a new recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/TimersView.vue:101
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:108
 msgid "Add a new timer entry"
 msgstr ""
 
@@ -227,7 +227,7 @@ msgstr ""
 msgid "Add a new {0} rule"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:445
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:450
 msgid "Add a tag to every selected channel (preserves existing tags)"
 msgstr ""
 
@@ -240,7 +240,7 @@ msgstr ""
 
 #: src/webui/static-vue/src/components/EditableTagChipCell.vue:260
 #: src/webui/static-vue/src/components/EditableTagChipCell.vue:261
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:443
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:448
 msgid "Add tag"
 msgstr ""
 
@@ -255,16 +255,16 @@ msgstr ""
 #: src/webui/static-vue/src/components/GridSettingsMenu.vue:212
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:851
 #: src/webui/static-vue/src/components/LevelMenu.vue:52
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:176
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:181
 msgid "Advanced"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:518
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:533
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:971
 msgid "Advanced Settings"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:399
+#: src/webui/static-vue/src/views/epg/TableView.vue:405
 msgid "Age"
 msgstr ""
 
@@ -273,13 +273,13 @@ msgid "Age rating"
 msgstr ""
 
 #: src/webui/static-vue/src/components/BandwidthChartBody.vue:75
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:200
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:202
 msgid "Aggregate"
 msgstr ""
 
 #: src/webui/static-vue/src/components/OnlyMultiSelect.vue:142
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:79
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:88
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:86
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:92
 #: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:147
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:123
 msgid "All"
@@ -291,27 +291,27 @@ msgid "All subsystems"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:93
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:514
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:539
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:621
 msgid "Alternative showings"
 msgstr ""
 
+#: src/webui/static-vue/src/components/RailInfoArea.vue:91
+msgid "Anonymous (admin)"
+msgstr ""
+
 #: src/webui/static-vue/src/components/EnumFilterControl.vue:190
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3175
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3211
 #: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:218
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:535
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:561
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:522
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:548
 #: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:62
 #: src/webui/static-vue/src/views/epg/EpgTagFilterSection.vue:81
-#: src/webui/static-vue/src/views/epg/TableView.vue:2340
+#: src/webui/static-vue/src/views/epg/TableView.vue:2514
 msgid "Any"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:261
-msgid "App name"
-msgstr ""
-
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:130
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:136
 msgid "Append to Description"
 msgstr ""
 
@@ -327,15 +327,15 @@ msgstr ""
 msgid "Apply {0} to all selected entries"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2098
+#: src/webui/static-vue/src/views/epg/TableView.vue:2252
 msgid "Are you sure?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:350
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:355
 msgid "As integers (1, 2, 3, …)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:352
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:357
 msgid ""
 "Assign 1 to the first row, 2 to the second, and so on — sub-channel suffixes "
 "(.1) are flattened."
@@ -353,16 +353,20 @@ msgstr ""
 msgid "Audio described"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:115
+#: src/webui/static-vue/src/components/RailInfoArea.vue:89
+msgid "Authentication disabled"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:121
 msgid "Auto check disabled"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:114
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:120
 msgid "Auto check enabled"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:443
-#: src/webui/static-vue/src/views/epg/TableView.vue:2173
+#: src/webui/static-vue/src/views/epg/TableView.vue:2340
 msgid "AutoRec rule created"
 msgstr ""
 
@@ -402,11 +406,11 @@ msgstr ""
 #: src/webui/static-vue/src/components/GridSettingsMenu.vue:211
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:850
 #: src/webui/static-vue/src/components/LevelMenu.vue:51
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:175
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:180
 msgid "Basic"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:516
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:531
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:970
 msgid "Basic Settings"
 msgstr ""
@@ -415,7 +419,7 @@ msgstr ""
 msgid "Between"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:168
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:186
 msgid "Bouquet scan triggered."
 msgstr ""
 
@@ -458,11 +462,12 @@ msgstr ""
 #: src/webui/static-vue/src/commands/autorecSource.ts:208
 #: src/webui/static-vue/src/commands/recordingSource.ts:187
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1840
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1955
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1991
 #: src/webui/static-vue/src/components/IdnodePickClassDialog.vue:179
 #: src/webui/static-vue/src/components/IdnodePickEntityDialog.vue:172
 #: src/webui/static-vue/src/components/PlayProfileDialog.vue:127
-#: src/webui/static-vue/src/views/epg/TableView.vue:2155
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:184
+#: src/webui/static-vue/src/views/epg/TableView.vue:2332
 #: src/webui/static-vue/src/views/wizard/WizardFooter.vue:153
 msgid "Cancel"
 msgstr ""
@@ -481,7 +486,7 @@ msgid ""
 "saved on previous steps will remain. Continue?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:88
+#: src/webui/static-vue/src/views/AboutView.vue:136
 msgid "Capabilities"
 msgstr ""
 
@@ -489,7 +494,7 @@ msgstr ""
 msgid "Categories"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2640
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2676
 msgid ""
 "Cell editing isn't supported at phone width. Save your pending changes, or "
 "tap Discard to drop them and exit edit mode."
@@ -500,18 +505,19 @@ msgid "Changes will be lost when the application next restarts."
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:232
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:261
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:266
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:370
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:283
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:288
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:404
 #: src/webui/static-vue/src/views/epg/EpgTimeline.vue:586
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:372
-#: src/webui/static-vue/src/views/epg/TableView.vue:271
-#: src/webui/static-vue/src/views/epg/TableView.vue:474
-#: src/webui/static-vue/src/views/epg/TableView.vue:489
-#: src/webui/static-vue/src/views/epg/TableView.vue:1248
-#: src/webui/static-vue/src/views/epg/TableView.vue:2090
+#: src/webui/static-vue/src/views/epg/TableView.vue:277
+#: src/webui/static-vue/src/views/epg/TableView.vue:480
+#: src/webui/static-vue/src/views/epg/TableView.vue:495
+#: src/webui/static-vue/src/views/epg/TableView.vue:1346
+#: src/webui/static-vue/src/views/epg/TableView.vue:1347
+#: src/webui/static-vue/src/views/epg/TableView.vue:2245
 #: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:92
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:85
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:91
 msgid "Channel"
 msgstr ""
 
@@ -523,17 +529,17 @@ msgstr ""
 msgid "Channel Tags"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:562
-#: src/webui/static-vue/src/views/epg/TableView.vue:2094
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:549
+#: src/webui/static-vue/src/views/epg/TableView.vue:2249
 msgid "Channel tag"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:251
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:256
 msgid "Channel tags"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/ConfigChannelEpgLayout.vue:43
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:238
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:252
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:133
 msgid "Channels"
 msgstr ""
@@ -542,16 +548,12 @@ msgstr ""
 msgid "Choose a stream profile, then open in your external media player"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2382
+#: src/webui/static-vue/src/views/epg/TableView.vue:2556
 msgid "Choose where to look when searching by title"
 msgstr ""
 
 #: src/webui/static-vue/src/components/NavRail.vue:139
 msgid "Classic UI"
-msgstr ""
-
-#: src/webui/static-vue/src/views/AboutView.vue:128
-msgid "Classic UI built with"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1014
@@ -571,7 +573,7 @@ msgstr ""
 msgid "Clean image cache"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1737
+#: src/webui/static-vue/src/components/DataGrid.vue:1774
 #: src/webui/static-vue/src/components/SearchInput.vue:78
 #: src/webui/static-vue/src/components/SearchInput.vue:79
 #: src/webui/static-vue/src/views/status/LogView.vue:288
@@ -586,10 +588,11 @@ msgstr ""
 msgid "Clear all selections"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:598
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:585
 msgid "Clear duration range"
 msgstr ""
 
+#: src/webui/static-vue/src/views/epg/TableView.vue:2475
 #: src/webui/static-vue/src/views/status/LogView.vue:370
 msgid "Clear filters"
 msgstr ""
@@ -606,7 +609,7 @@ msgstr ""
 msgid "Clear statistics for selected inputs"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:401
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:403
 msgid "Clear the icon URL for the selected channels"
 msgstr ""
 
@@ -614,8 +617,8 @@ msgstr ""
 msgid "Clear the visible log (does not affect server)"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:578
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:641
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:593
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:628
 msgid "Clear {0} filter"
 msgstr ""
 
@@ -623,13 +626,13 @@ msgstr ""
 msgid "Clearing…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:667
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:731
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:682
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:718
 msgid "Click the active row to flip cluster direction."
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:620
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:682
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:635
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:669
 msgid "Click the active row to flip direction."
 msgstr ""
 
@@ -637,7 +640,7 @@ msgstr ""
 msgid "Click to match using a regular expression"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:78
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:84
 msgid "Client / User agent"
 msgstr ""
 
@@ -712,7 +715,7 @@ msgstr ""
 msgid "Collapse sidebar"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:778
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:765
 msgid "Colour by elapsed time"
 msgstr ""
 
@@ -720,12 +723,12 @@ msgstr ""
 msgid "Column actions for {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:566
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:581
 msgid "Column is hidden — show the column to edit its filter"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:703
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:794
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:718
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:781
 msgid "Columns"
 msgstr ""
 
@@ -741,7 +744,7 @@ msgstr ""
 msgid "Compact"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:386
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:420
 msgid "Config"
 msgstr ""
 
@@ -750,11 +753,11 @@ msgstr ""
 msgid "Configuration"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:354
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:369
 msgid "Configuration form misconfigured (no endpoint)"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:731
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:746
 msgid "Configuration form misconfigured (no save endpoint)"
 msgstr ""
 
@@ -766,16 +769,24 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
+#: src/webui/static-vue/src/components/RailInfoArea.vue:87
+msgid "Connecting…"
+msgstr ""
+
 #: src/webui/static-vue/src/views/StatusLayout.vue:26
 msgid "Connections"
 msgstr ""
 
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:220
+msgid "Constellation"
+msgstr ""
+
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1042
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:531
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:536
-#: src/webui/static-vue/src/views/epg/TableView.vue:339
-#: src/webui/static-vue/src/views/epg/TableView.vue:2091
-#: src/webui/static-vue/src/views/epg/TableView.vue:2341
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:518
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:523
+#: src/webui/static-vue/src/views/epg/TableView.vue:345
+#: src/webui/static-vue/src/views/epg/TableView.vue:2246
+#: src/webui/static-vue/src/views/epg/TableView.vue:2515
 msgid "Content type"
 msgstr ""
 
@@ -840,11 +851,11 @@ msgstr ""
 msgid "Could not refresh the TV guide"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/epgEventSource.ts:213
+#: src/webui/static-vue/src/commands/epgEventSource.ts:221
 msgid "Could not schedule recording"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/epgEventSource.ts:239
+#: src/webui/static-vue/src/commands/epgEventSource.ts:247
 msgid "Could not set series recording"
 msgstr ""
 
@@ -874,28 +885,27 @@ msgstr ""
 msgid "Count of objects"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2154
+#: src/webui/static-vue/src/views/epg/TableView.vue:2331
 msgid "Create"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2443
-#: src/webui/static-vue/src/views/epg/TableView.vue:2451
+#: src/webui/static-vue/src/views/epg/TableView.vue:2621
+#: src/webui/static-vue/src/views/epg/TableView.vue:2629
 msgid "Create AutoRec"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:702
-#: src/webui/static-vue/src/views/epg/TableView.vue:2435
+#: src/webui/static-vue/src/views/epg/TableView.vue:2609
 msgid ""
 "Create an automatic recording rule to record all future programs that match "
 "the current query."
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:1977
-#: src/webui/static-vue/src/views/epg/TableView.vue:2170
+#: src/webui/static-vue/src/views/epg/TableView.vue:2120
 msgid "Created from EPG query"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:103
+#: src/webui/static-vue/src/views/AboutView.vue:152
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1084
 msgid "Credits"
 msgstr ""
@@ -904,7 +914,7 @@ msgstr ""
 msgid "Crew"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2096
+#: src/webui/static-vue/src/views/epg/TableView.vue:2238
 msgid "Currently this will match (and record) {0} events."
 msgstr ""
 
@@ -920,7 +930,7 @@ msgstr ""
 msgid "DVR profile"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:234
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:239
 msgid "DVR profiles"
 msgstr ""
 
@@ -932,7 +942,7 @@ msgstr ""
 msgid "Dark channels"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:477
+#: src/webui/static-vue/src/views/epg/TableView.vue:483
 msgid "Date"
 msgstr ""
 
@@ -944,11 +954,15 @@ msgstr ""
 msgid "Debugging"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:174
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:193
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:111
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:179
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:198
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:118
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:130
 msgid "Default"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:140
+msgid "Default (use global setting)"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/autorecSource.ts:207
@@ -957,7 +971,7 @@ msgstr ""
 #: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:201
 #: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:155
 #: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:133
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:480
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:497
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:192
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:150
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:209
@@ -1000,7 +1014,7 @@ msgstr ""
 msgid "Delete the selected entries"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:481
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:498
 msgid "Delete the selected services"
 msgstr ""
 
@@ -1013,7 +1027,7 @@ msgstr ""
 #: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:201
 #: src/webui/static-vue/src/views/configuration/ConfigRecordingDvrProfilesView.vue:155
 #: src/webui/static-vue/src/views/configuration/ConfigStreamProfilesView.vue:133
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:480
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:497
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:192
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:150
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:209
@@ -1025,7 +1039,7 @@ msgstr ""
 msgid "Density"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:101
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:107
 msgid "Descramble"
 msgstr ""
 
@@ -1034,24 +1048,24 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1660
+#: src/webui/static-vue/src/components/DataGrid.vue:1697
 msgid "Deselect all"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1776
-#: src/webui/static-vue/src/components/DataGrid.vue:1930
+#: src/webui/static-vue/src/components/DataGrid.vue:1813
+#: src/webui/static-vue/src/components/DataGrid.vue:1967
 msgid "Deselect row"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:427
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:435
 msgid "Detach from bouquet"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:427
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:435
 msgid "Detaching…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:242
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:264
 msgid "Details"
 msgstr ""
 
@@ -1063,8 +1077,8 @@ msgstr ""
 msgid "Director"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:466
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:153
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:471
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:169
 msgid "Disable"
 msgstr ""
 
@@ -1076,12 +1090,16 @@ msgstr ""
 msgid "Disable debug-level log streaming for this session"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:467
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:472
 msgid "Disable every selected channel"
 msgstr ""
 
 #: src/webui/static-vue/src/components/BooleanCell.vue:29
 msgid "Disabled"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:85
+msgid "Disabled networks"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/autorecSource.ts:182
@@ -1090,20 +1108,20 @@ msgstr ""
 
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1559
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1577
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1954
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2676
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2824
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:237
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1990
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2712
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2860
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:240
 msgid "Discard"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2671
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2819
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2707
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2855
 msgid "Discard pending changes"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2672
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2820
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2708
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2856
 msgid "Discard pending changes and exit edit mode"
 msgstr ""
 
@@ -1112,7 +1130,7 @@ msgstr ""
 msgid "Discard unsaved changes?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:234
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:237
 msgid "Discard unsaved channel changes?"
 msgstr ""
 
@@ -1136,7 +1154,7 @@ msgstr ""
 msgid "Dismiss"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:239
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:264
 #: src/webui/static-vue/src/views/home/RecordingNow.vue:43
 msgid "Do you really want to abort/unschedule the selection?"
 msgstr ""
@@ -1145,7 +1163,7 @@ msgstr ""
 msgid "Do you really want to delete the selected EPG grabber channels?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:145
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:163
 msgid "Do you really want to delete the selected bouquets?"
 msgstr ""
 
@@ -1153,13 +1171,13 @@ msgstr ""
 msgid "Do you really want to delete the selected channel tags?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:283
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:284
 msgid "Do you really want to delete the selected channels?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:289
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:294
 #: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:99
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:111
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:115
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:127
 msgid "Do you really want to delete the selected entries?"
 msgstr ""
@@ -1168,7 +1186,7 @@ msgstr ""
 msgid "Do you really want to delete the selected mux schedulers?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:227
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:282
 msgid "Do you really want to delete the selected muxes?"
 msgstr ""
 
@@ -1181,7 +1199,7 @@ msgid "Do you really want to delete the selected rating labels?"
 msgstr ""
 
 #: src/webui/static-vue/src/views/dvr/RemovedView.vue:81
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:258
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:283
 msgid "Do you really want to delete the selected recordings?"
 msgstr ""
 
@@ -1192,7 +1210,7 @@ msgid ""
 "The associated file will be removed from storage."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:378
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:393
 msgid "Do you really want to delete the selected services?"
 msgstr ""
 
@@ -1212,7 +1230,7 @@ msgstr ""
 msgid "Do you really want to delete this stream profile?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:245
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:270
 msgid "Do you really want to gracefully stop/unschedule the selection?"
 msgstr ""
 
@@ -1220,7 +1238,7 @@ msgstr ""
 msgid "Do you really want to gracefully stop/unschedule this recording?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:116
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:120
 #: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:58
 msgid "Do you really want to remove the selected recordings from storage?"
 msgstr ""
@@ -1229,18 +1247,18 @@ msgstr ""
 msgid "Do you really want to remove this recording?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:252
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:277
 msgid ""
 "Do you really want to toggle the previously recorded state for the selected "
 "recordings?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2029
-#: src/webui/static-vue/src/views/epg/TableView.vue:2064
+#: src/webui/static-vue/src/views/epg/TableView.vue:2172
+#: src/webui/static-vue/src/views/epg/TableView.vue:2212
 msgid "Don't care"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:173
+#: src/webui/static-vue/src/views/AboutView.vue:205
 msgid "Donate via OpenCollective"
 msgstr ""
 
@@ -1255,7 +1273,7 @@ msgid "Download the selected recording"
 msgstr ""
 
 #: src/webui/static-vue/src/components/MasterDetailLayout.vue:205
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:495
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:500
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:883
 msgid "Drag to resize · double-click to reset"
 msgstr ""
@@ -1264,11 +1282,11 @@ msgstr ""
 msgid "Drop"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:515
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:532
 msgid "Drop every service not seen for at least 7 days"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:509
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:526
 msgid "Drop services not seen in PAT/SDT scans for at least 7 days"
 msgstr ""
 
@@ -1284,11 +1302,12 @@ msgstr ""
 msgid "Dropping…"
 msgstr ""
 
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:150
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:976
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:570
-#: src/webui/static-vue/src/views/epg/TableView.vue:369
-#: src/webui/static-vue/src/views/epg/TableView.vue:491
-#: src/webui/static-vue/src/views/epg/TableView.vue:2092
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:557
+#: src/webui/static-vue/src/views/epg/TableView.vue:375
+#: src/webui/static-vue/src/views/epg/TableView.vue:497
+#: src/webui/static-vue/src/views/epg/TableView.vue:2247
 msgid "Duration"
 msgstr ""
 
@@ -1304,8 +1323,12 @@ msgstr ""
 msgid "EPG Grabber Modules"
 msgstr ""
 
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:93
+msgid "EPG Grabber Name"
+msgstr ""
+
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:464
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:460
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:477
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:185
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:143
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:202
@@ -1313,19 +1336,19 @@ msgstr ""
 msgid "Edit"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:381
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:386
 msgid "Edit Access Entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:173
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:180
 msgid "Edit Autorec"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:236
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:254
 msgid "Edit Bouquet"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:552
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:561
 msgid "Edit Channel"
 msgstr ""
 
@@ -1341,7 +1364,7 @@ msgstr ""
 msgid "Edit IP Blocking Entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:305
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:360
 msgid "Edit Mux"
 msgstr ""
 
@@ -1353,7 +1376,7 @@ msgstr ""
 msgid "Edit Network"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:156
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:160
 msgid "Edit Password"
 msgstr ""
 
@@ -1363,22 +1386,22 @@ msgstr ""
 
 #: src/webui/static-vue/src/layouts/AppShell.vue:277
 #: src/webui/static-vue/src/views/dvr/FailedView.vue:164
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:195
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:199
 #: src/webui/static-vue/src/views/dvr/RemovedView.vue:130
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:557
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:582
 msgid "Edit Recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:556
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:573
 msgid "Edit Service"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/TimersView.vue:134
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:141
 msgid "Edit Timer"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2916
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2921
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2952
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2957
 msgid "Edit cells in this grid"
 msgstr ""
 
@@ -1399,7 +1422,7 @@ msgstr ""
 msgid "Edit the selected entry"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:461
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:478
 msgid "Edit the selected service"
 msgstr ""
 
@@ -1408,12 +1431,16 @@ msgstr ""
 msgid "Edit {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:555
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:570
 msgid "Edit {0} filter"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:459
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:154
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:144
+msgid "Either"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:464
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:170
 msgid "Enable"
 msgstr ""
 
@@ -1421,13 +1448,13 @@ msgstr ""
 msgid "Enable debug"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:460
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:465
 msgid "Enable every selected channel"
 msgstr ""
 
 #: src/webui/static-vue/src/components/BooleanCell.vue:24
 #: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:95
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:78
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:82
 msgid "Enabled"
 msgstr ""
 
@@ -1436,7 +1463,7 @@ msgid "Enabled: {0}"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:227
-#: src/webui/static-vue/src/views/epg/TableView.vue:360
+#: src/webui/static-vue/src/views/epg/TableView.vue:366
 msgid "End"
 msgstr ""
 
@@ -1444,13 +1471,17 @@ msgstr ""
 msgid "End Time"
 msgstr ""
 
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:87
+msgid "Ends at {0}"
+msgstr ""
+
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1089
 msgid "Entry not found"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:219
-#: src/webui/static-vue/src/views/epg/TableView.vue:325
-#: src/webui/static-vue/src/views/epg/TableView.vue:1249
+#: src/webui/static-vue/src/views/epg/TableView.vue:331
+#: src/webui/static-vue/src/views/epg/TableView.vue:1348
 msgid "Episode"
 msgstr ""
 
@@ -1458,7 +1489,7 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:102
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:108
 msgid "Errors"
 msgstr ""
 
@@ -1479,11 +1510,11 @@ msgstr ""
 msgid "Event tooltips"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:145
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:170
 msgid "Every day"
 msgstr ""
 
-#: src/webui/static-vue/src/views/home/HealthLine.vue:118
+#: src/webui/static-vue/src/views/home/HealthLine.vue:126
 msgid "Everything's running smoothly"
 msgstr ""
 
@@ -1500,11 +1531,11 @@ msgstr ""
 #: src/webui/static-vue/src/components/GridSettingsMenu.vue:213
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:852
 #: src/webui/static-vue/src/components/LevelMenu.vue:53
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:177
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:182
 msgid "Expert"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:520
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:535
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:972
 msgid "Expert Settings"
 msgstr ""
@@ -1520,16 +1551,16 @@ msgstr ""
 msgid "Extra text"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:124
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:130
 msgid "FHD TV"
 msgstr ""
 
 #: src/webui/static-vue/src/views/DvrLayout.vue:55
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:122
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:126
 msgid "Failed"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:241
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:266
 #: src/webui/static-vue/src/views/home/RecordingNow.vue:45
 msgid "Failed to abort"
 msgstr ""
@@ -1539,26 +1570,26 @@ msgid "Failed to clear statistics: {0}"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:439
-#: src/webui/static-vue/src/views/epg/TableView.vue:2176
+#: src/webui/static-vue/src/views/epg/TableView.vue:2343
 msgid "Failed to create AutoRec rule"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:147
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:165
 #: src/webui/static-vue/src/views/configuration/ChannelTagsView.vue:128
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:285
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:291
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:286
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:296
 #: src/webui/static-vue/src/views/configuration/ConfigUsersIpBlockingView.vue:101
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:113
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:117
 #: src/webui/static-vue/src/views/configuration/DvbMuxSchedView.vue:158
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:229
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:284
 #: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:139
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:380
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:395
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:175
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:129
 #: src/webui/static-vue/src/views/configuration/RatingLabelsView.vue:121
 #: src/webui/static-vue/src/views/dvr/FailedView.vue:98
 #: src/webui/static-vue/src/views/dvr/RemovedView.vue:83
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:260
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:285
 msgid "Failed to delete"
 msgstr ""
 
@@ -1566,7 +1597,7 @@ msgstr ""
 msgid "Failed to delete recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:296
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:297
 msgid "Failed to detach"
 msgstr ""
 
@@ -1574,7 +1605,7 @@ msgstr ""
 msgid "Failed to drop connection(s): {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:360
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:375
 msgid "Failed to load configuration"
 msgstr ""
 
@@ -1582,7 +1613,7 @@ msgstr ""
 msgid "Failed to load contents."
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:863
+#: src/webui/static-vue/src/views/epg/TableView.vue:877
 msgid "Failed to load events for {0}"
 msgstr ""
 
@@ -1591,19 +1622,20 @@ msgid "Failed to load help."
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:164
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2765
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:213
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#: src/webui/static-vue/src/components/ServiceMapperDialog.vue:157
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:235
 #: src/webui/static-vue/src/views/configuration/TvAdaptersView.vue:418
 #: src/webui/static-vue/src/views/epg/MagazineView.vue:211
 #: src/webui/static-vue/src/views/epg/TimelineView.vue:272
 msgid "Failed to load:"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:395
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:410
 msgid "Failed to load: {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:126
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:130
 msgid "Failed to move to failed"
 msgstr ""
 
@@ -1615,25 +1647,27 @@ msgstr ""
 msgid "Failed to move {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:295
-msgid "Failed to play earlier this session"
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:144
+msgid "Failed to play this channel earlier this session"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:118
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:122
 #: src/webui/static-vue/src/views/home/RecentlyRecorded.vue:60
 msgid "Failed to remove"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:441
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:458
 msgid "Failed to remove unseen services: {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:341
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:342
 msgid "Failed to reset icon"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:438
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:467
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:183
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:222
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:463
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:492
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:392
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:479
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:504
@@ -1644,25 +1678,26 @@ msgstr ""
 msgid "Failed to start scan"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:247
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:272
 msgid "Failed to stop"
 msgstr ""
 
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:245
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:405
 msgid "Failed to stop recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:254
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:279
 msgid "Failed to toggle"
 msgstr ""
 
 #: src/webui/static-vue/src/views/dvr/FailedView.vue:102
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:122
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:126
 #: src/webui/static-vue/src/views/dvr/RemovedView.vue:87
 msgid "Failed to toggle re-record"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:174
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:192
 msgid "Failed to trigger scan: {0}"
 msgstr ""
 
@@ -1682,12 +1717,12 @@ msgstr ""
 msgid "Filter visible lines…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3133
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3134
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3149
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3158
-#: src/webui/static-vue/src/views/epg/TableView.vue:2322
-#: src/webui/static-vue/src/views/epg/TableView.vue:2323
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3169
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3170
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3185
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3194
+#: src/webui/static-vue/src/views/epg/TableView.vue:2496
+#: src/webui/static-vue/src/views/epg/TableView.vue:2497
 msgid "Filter {0}"
 msgstr ""
 
@@ -1716,8 +1751,8 @@ msgstr ""
 msgid "Filter: {0} – {1}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:505
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:504
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:520
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:491
 msgid "Filters"
 msgstr ""
 
@@ -1745,16 +1780,24 @@ msgstr ""
 msgid "Flags"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:196
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:214
 #: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:175
 msgid "Force Scan"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/components/RailInfoArea.vue:150
+msgid "Free"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:203
+msgid "Frequency"
+msgstr ""
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Fri"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:1410
+#: src/webui/static-vue/src/views/epg/TableView.vue:1521
 msgid "Full text"
 msgstr ""
 
@@ -1762,13 +1805,13 @@ msgstr ""
 msgid "General"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:512
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:513
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:527
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:500
 msgid "Global"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:626
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:688
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:641
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:675
 msgid "Group by"
 msgstr ""
 
@@ -1784,44 +1827,48 @@ msgstr ""
 msgid "HD"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:123
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:129
 msgid "HD TV"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:251
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:273
 msgid "HbbTV"
 msgstr ""
 
 #: src/webui/static-vue/src/components/HelpPanelInner.vue:115
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:961
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:964
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2970
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2973
-#: src/webui/static-vue/src/components/StatusGrid.vue:321
-#: src/webui/static-vue/src/components/StatusGrid.vue:324
-#: src/webui/static-vue/src/views/epg/TableView.vue:2475
-#: src/webui/static-vue/src/views/epg/TableView.vue:2478
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:72
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:75
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:978
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:981
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3006
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3009
+#: src/webui/static-vue/src/components/StatusGrid.vue:331
+#: src/webui/static-vue/src/components/StatusGrid.vue:334
+#: src/webui/static-vue/src/views/epg/TableView.vue:2653
+#: src/webui/static-vue/src/views/epg/TableView.vue:2656
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:88
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:91
 #: src/webui/static-vue/src/views/wizard/WizardFooter.vue:161
 #: src/webui/static-vue/src/views/wizard/WizardHelpDock.vue:52
 msgid "Help"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:118
+#: src/webui/static-vue/src/views/AboutView.vue:174
+msgid "Help page icons from"
+msgstr ""
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:129
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:135
 msgid "Hidden"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:76
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:85
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:83
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:89
 msgid "Hide"
 msgstr ""
 
 #: src/webui/static-vue/src/views/status/StreamView.vue:223
 #: src/webui/static-vue/src/views/status/StreamView.vue:231
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:175
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:183
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:181
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:189
 msgid "Hide bandwidth chart"
 msgstr ""
 
@@ -1829,7 +1876,7 @@ msgstr ""
 msgid "Hide column"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:113
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:120
 msgid "High"
 msgstr ""
 
@@ -1838,8 +1885,12 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:67
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:73
 msgid "Hostname"
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:72
+msgid "ID"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/ConfigUsersLayout.vue:23
@@ -1854,36 +1905,28 @@ msgstr ""
 msgid "Icon"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:331
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:332
 msgid "Icon reset."
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:130
-msgid "Icons from"
-msgstr ""
-
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:331
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:332
 msgid "Icons reset for {0} channels."
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:66
-msgid "Id"
-msgstr ""
-
 #: src/webui/static-vue/src/views/configuration/CaStatusCell.vue:34
-#: src/webui/static-vue/src/views/home/HealthLine.vue:61
+#: src/webui/static-vue/src/views/home/HealthLine.vue:69
 msgid "Idle"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:85
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:101
 msgid "Idle."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:152
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:168
 msgid "Ignore"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:126
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:130
 msgid "Ignored"
 msgstr ""
 
@@ -1899,15 +1942,15 @@ msgstr ""
 msgid "Image cache cleared."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:112
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:119
 msgid "Important"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:132
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:134
 msgid "In"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:192
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:194
 msgid "In (solid)"
 msgstr ""
 
@@ -1915,7 +1958,11 @@ msgstr ""
 msgid "Inactive"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:537
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:91
+msgid "Inactive services"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:542
 msgid "Include disabled"
 msgstr ""
 
@@ -1923,12 +1970,12 @@ msgstr ""
 msgid "Independent"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:230
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:252
 msgid "Index"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:200
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:473
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:214
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:490
 msgid "Info"
 msgstr ""
 
@@ -1936,12 +1983,12 @@ msgstr ""
 msgid "Input"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:103
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:109
 msgid "Input (kb/s)"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/actionHandlers.ts:152
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:112
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:117
 msgid "Internal EPG grabbers scheduled to re-run."
 msgstr ""
 
@@ -1951,7 +1998,7 @@ msgstr ""
 
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1560
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1578
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:238
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:241
 msgid "Keep editing"
 msgstr ""
 
@@ -1959,31 +2006,47 @@ msgstr ""
 msgid "Keywords"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:237
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:260
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:259
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:282
 msgid "Language"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:87
-msgid "Last run mapped {0} of {1} services"
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:52
+msgid "Last run mapped {0} of {1} services, {2} failed, {3} ignored."
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:54
+msgid "Last run mapped {0} of {1} services, {2} failed."
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:55
+msgid "Last run mapped {0} of {1} services, {2} ignored."
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:56
+msgid "Last run mapped {0} of {1} services."
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:520
 msgid "Layout"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:200
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:202
 msgid "Legend"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:129
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:284
+msgid "Link"
+msgstr ""
+
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:130
 #: src/webui/static-vue/src/views/epg/LiveTvButton.vue:31
 #: src/webui/static-vue/src/views/epg/LiveTvButton.vue:32
 #: src/webui/static-vue/src/views/epg/LiveTvButton.vue:35
 msgid "Live TV"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3198
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3234
 msgid "Load more"
 msgstr ""
 
@@ -1991,7 +2054,7 @@ msgstr ""
 msgid "Loading adapters…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:972
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:989
 msgid "Loading configuration…"
 msgstr ""
 
@@ -2011,15 +2074,16 @@ msgstr ""
 msgid "Loading types…"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2243
+#: src/webui/static-vue/src/views/epg/TableView.vue:2410
 msgid "Loading {0}…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1745
+#: src/webui/static-vue/src/components/DataGrid.vue:1782
 #: src/webui/static-vue/src/components/HelpPanelInner.vue:215
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1650
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3198
-#: src/webui/static-vue/src/views/epg/TableView.vue:2244
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3234
+#: src/webui/static-vue/src/components/ServiceMapperDialog.vue:160
+#: src/webui/static-vue/src/views/epg/TableView.vue:2411
 #: src/webui/static-vue/src/views/home/HomeView.vue:227
 msgid "Loading…"
 msgstr ""
@@ -2030,6 +2094,11 @@ msgstr ""
 
 #: src/webui/static-vue/src/views/status/LogView.vue:123
 msgid "Log is empty — nothing to copy."
+msgstr ""
+
+#: src/webui/static-vue/src/components/RailInfoArea.vue:102
+#: src/webui/static-vue/src/components/RailInfoArea.vue:194
+msgid "Logged in as"
 msgstr ""
 
 #: src/webui/static-vue/src/components/NavRail.vue:502
@@ -2049,7 +2118,7 @@ msgstr ""
 msgid "Logout"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:115
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:122
 msgid "Low"
 msgstr ""
 
@@ -2061,41 +2130,49 @@ msgstr ""
 msgid "Main navigation"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:503
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:520
 msgid "Maintenance"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:504
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:521
 msgid "Maintenance operations"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:447
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:464
 msgid "Map 1 service"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:416
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:446
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:423
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:463
+msgid "Map all services"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:424
+msgid "Map all services to channels"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:418
 msgid "Map services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:421
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:429
 msgid "Map services…"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:447
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:464
 msgid "Map {0} services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:118
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:122
 msgid "Mapped"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:101
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:105
 msgid "Mapping in progress — currently checking"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:380
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:416
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:382
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:433
 msgid "Mapping started. Open Status → Service Mapper to monitor progress."
 msgstr ""
 
@@ -2111,7 +2188,7 @@ msgstr ""
 msgid "Max"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:588
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:575
 msgid "Maximum duration in minutes"
 msgstr ""
 
@@ -2119,7 +2196,7 @@ msgstr ""
 msgid "Memory Information Entries"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:1411
+#: src/webui/static-vue/src/views/epg/TableView.vue:1522
 msgid "Merged text"
 msgstr ""
 
@@ -2127,7 +2204,7 @@ msgstr ""
 msgid "Min"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:577
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:564
 msgid "Minimum duration in minutes"
 msgstr ""
 
@@ -2135,24 +2212,28 @@ msgstr ""
 msgid "Minuscule"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:116
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:122
 msgid "Missing In PAT/SDT"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:95
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:97
 msgid "Mode"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:228
+msgid "Modulation"
+msgstr ""
+
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Mon"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ActionMenu.vue:472
-#: src/webui/static-vue/src/components/ActionMenu.vue:475
+#: src/webui/static-vue/src/components/ActionMenu.vue:638
+#: src/webui/static-vue/src/components/ActionMenu.vue:641
 msgid "More actions"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:341
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:346
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:161
 msgid "Move down"
 msgstr ""
@@ -2165,12 +2246,12 @@ msgstr ""
 msgid "Move selected client up"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:342
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:347
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:162
 msgid "Move selected entries down"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:334
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:339
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:153
 msgid "Move selected entries up"
 msgstr ""
@@ -2183,16 +2264,16 @@ msgstr ""
 msgid "Move to finished"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:333
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:338
 #: src/webui/static-vue/src/views/configuration/EsfilterGridView.vue:152
 msgid "Move up"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:735
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:750
 msgid "Move {0} down"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:726
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:741
 msgid "Move {0} up"
 msgstr ""
 
@@ -2210,6 +2291,7 @@ msgid "Muxes"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EnumNameCell.vue:236
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:283
 #: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:103
 #: src/webui/static-vue/src/views/configuration/CodecProfilesView.vue:166
 #: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:141
@@ -2221,7 +2303,7 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:294
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:349
 msgid "Network"
 msgstr ""
 
@@ -2233,17 +2315,17 @@ msgstr ""
 msgid "Networks"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:614
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:619
-#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:601
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:606
+#: src/webui/static-vue/src/views/epg/TableView.vue:2248
 msgid "New only"
 msgstr ""
 
 #: src/webui/static-vue/src/components/DataGrid.vue:1238
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:950
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3177
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:194
-#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:951
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3213
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:199
+#: src/webui/static-vue/src/views/epg/TableView.vue:2248
 msgid "No"
 msgstr ""
 
@@ -2261,7 +2343,7 @@ msgstr ""
 msgid "No IP blocking entries."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:368
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:373
 msgid ""
 "No access entries. Add one to grant a user (or unauthenticated client "
 "matching a network prefix) access to the server."
@@ -2271,12 +2353,12 @@ msgstr ""
 msgid "No alternative showings."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:160
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:167
 msgid ""
 "No autorec entries. Click Add to schedule recordings against EPG broadcasts."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:222
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:240
 msgid ""
 "No bouquets defined. Add one (or import via an external URL) to map a "
 "network's services into channels en masse."
@@ -2288,14 +2370,18 @@ msgid ""
 "control rules."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:537
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:546
 msgid ""
 "No channels defined. Channels are typically created from a bouquet or "
 "service mapper — adding manually here is rarely needed."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:528
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:533
 msgid "No channels to reorganise yet — create or map some first."
+msgstr ""
+
+#: src/webui/static-vue/src/components/RailInfoArea.vue:108
+msgid "No credentials presented — anonymous wildcard grants admin"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/actionHandlers.ts:59
@@ -2306,8 +2392,9 @@ msgstr ""
 msgid "No entries available."
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1749
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2771
+#: src/webui/static-vue/src/components/DataGrid.vue:1786
+#: src/webui/static-vue/src/components/DataGrid.vue:2154
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2807
 msgid "No entries."
 msgstr ""
 
@@ -2315,7 +2402,7 @@ msgstr ""
 msgid "No failed recordings."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:169
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:173
 msgid "No finished recordings."
 msgstr ""
 
@@ -2337,7 +2424,7 @@ msgid ""
 "expression."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:282
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:337
 msgid ""
 "No muxes defined. Add one against an existing network — or trigger a network "
 "scan from the Networks page to populate them automatically."
@@ -2349,7 +2436,7 @@ msgid ""
 "IPTV / SAT>IP / HDHomeRun input."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:144
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:148
 msgid "No password entries."
 msgstr ""
 
@@ -2357,6 +2444,10 @@ msgstr ""
 msgid ""
 "No rating labels defined. Map an OTA-EPG (country + age) or XMLTV (system + "
 "rating) pair to a display label and icon shown in EPG event details."
+msgstr ""
+
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:139
+msgid "No recording was created."
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:99
@@ -2371,11 +2462,11 @@ msgstr ""
 msgid "No results"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2915
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2951
 msgid "No rows to edit"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:544
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:561
 msgid ""
 "No services discovered yet. Trigger a network scan from the Networks page or "
 "wait for the scheduled scan to populate them."
@@ -2386,11 +2477,11 @@ msgstr ""
 msgid "No stream profiles are available."
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:227
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:249
 msgid "No streams."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/TimersView.vue:121
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:128
 msgid ""
 "No timer entries. Click Add to schedule a recurring time-based recording."
 msgstr ""
@@ -2403,7 +2494,7 @@ msgstr ""
 msgid "No upcoming events match."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:544
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:569
 msgid "No upcoming recordings. Schedule one from the EPG or via autorec rules."
 msgstr ""
 
@@ -2412,17 +2503,22 @@ msgid ""
 "No {0} rules. Add one to filter elementary streams of this type per service."
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:300
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:80
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:89
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:120
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:128
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:431
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:301
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:87
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:93
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:126
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:134
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:141
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:418
 msgid "None"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:114
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:121
 msgid "Normal"
+msgstr ""
+
+#: src/webui/static-vue/src/components/RailInfoArea.vue:93
+msgid "Not logged in"
 msgstr ""
 
 #: src/webui/static-vue/src/views/home/HomeView.vue:286
@@ -2449,24 +2545,24 @@ msgstr ""
 msgid "OTA EPG grabber scheduled."
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:453
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:641
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:134
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:468
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:656
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:148
 #: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:139
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:320
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:353
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:703
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:317
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:350
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:690
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:122
 #: src/webui/static-vue/src/views/epg/EpgViewOptions.vue:282
 msgid "Off"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:781
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:768
 msgid ""
 "Off → single brand colour. On → green → amber → red as the event progresses."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:135
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:149
 msgid "On"
 msgstr ""
 
@@ -2474,17 +2570,17 @@ msgstr ""
 msgid "Only"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:136
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:150
 msgid "Only preferred CA PID"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:96
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:49
 msgid ""
 "Open Configuration → Channel/EPG → Channels or Configuration → DVB Inputs → "
 "Services to start mapping."
 msgstr ""
 
-#: src/webui/static-vue/src/views/home/HealthLine.vue:140
+#: src/webui/static-vue/src/views/home/HealthLine.vue:148
 msgid "Open Subscriptions"
 msgstr ""
 
@@ -2504,19 +2600,19 @@ msgstr ""
 msgid "Open setting"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:490
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:508
+msgid "Open the Service Mapper preselected with every service"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:507
 msgid "Open the Service Mapper preselected with the chosen services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:422
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:430
 msgid "Open the Service Mapper to add channels from services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:491
-msgid "Open the Service Mapper to start a new mapping job"
-msgstr ""
-
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:453
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:461
 msgid ""
 "Open the dedicated reorganise drawer (drag-to-reorder, bulk tag, bulk enable/"
 "disable)"
@@ -2554,34 +2650,33 @@ msgstr ""
 msgid "Other showings"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:140
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:143
+msgid "Other transport stream only"
+msgstr ""
+
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:142
 msgid "Out"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:196
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:198
 msgid "Out (dashed)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:106
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:112
 msgid "Output (kb/s)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:119
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:125
 msgid "Override disabled"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:231
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:253
 msgid "PID"
 msgstr ""
 
 #: src/webui/static-vue/src/views/status/StreamView.vue:87
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:100
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:106
 msgid "PID list"
-msgstr ""
-
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:78
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:87
-msgid "Parent disabled"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:1020
@@ -2608,12 +2703,12 @@ msgstr ""
 msgid "Peak size"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:539
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:628
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:554
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:615
 msgid "Per column"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2431
+#: src/webui/static-vue/src/views/epg/TableView.vue:2605
 msgid ""
 "Pick a single genre and a single tag to create an AutoRec rule — multi-"
 "select filters can’t be saved as a rule."
@@ -2629,9 +2724,9 @@ msgstr ""
 
 #: src/webui/static-vue/src/components/PlayProfileDialog.vue:135
 #: src/webui/static-vue/src/views/configuration/ChannelsView.vue:90
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:131
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:181
-#: src/webui/static-vue/src/views/dvr/FinishedView.vue:87
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:147
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:195
+#: src/webui/static-vue/src/views/dvr/FinishedView.vue:96
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:557
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:593
 msgid "Play"
@@ -2669,17 +2764,21 @@ msgstr ""
 msgid "Play {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:322
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:371
 msgid ""
 "Playback failed. The stream could not be played in the browser using profile "
 "\"{0}\" — try another profile, or use the external player instead."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:131
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:236
+msgid "Polarization"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:137
 msgid "Prepend to Description"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:358
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:363
 msgid "Preserving sub-channels (1, 1.1, 2, …)"
 msgstr ""
 
@@ -2687,11 +2786,11 @@ msgstr ""
 msgid "Previous"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:500
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:525
 msgid "Previously recorded"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:91
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:97
 msgid "Profile"
 msgstr ""
 
@@ -2712,19 +2811,19 @@ msgstr ""
 msgid "Programme poster"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:296
+#: src/webui/static-vue/src/views/epg/TableView.vue:302
 msgid "Progress"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:737
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:724
 msgid "Progress display"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:121
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:127
 msgid "Radio"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:391
+#: src/webui/static-vue/src/views/epg/TableView.vue:397
 msgid "Rating"
 msgstr ""
 
@@ -2732,7 +2831,7 @@ msgstr ""
 msgid "Rating Labels"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:197
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:215
 msgid "Re-fetch and re-apply mapping for the selected bouquets"
 msgstr ""
 
@@ -2745,13 +2844,13 @@ msgstr ""
 msgid "Re-record"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:126
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:131
 #: src/webui/static-vue/src/views/configuration/EpgGrabberView.vue:69
 msgid "Re-run Internal EPG Grabbers"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/actionHandlers.ts:155
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:115
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:120
 msgid "Re-run failed"
 msgstr ""
 
@@ -2763,7 +2862,7 @@ msgstr ""
 msgid "Ready"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:346
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:351
 msgid "Reassign channel numbers across all visible rows"
 msgstr ""
 
@@ -2771,8 +2870,22 @@ msgstr ""
 msgid "Recently recorded"
 msgstr ""
 
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:333
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:193
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:669
 msgid "Record"
+msgstr ""
+
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:253
+msgid "Record current programme"
+msgstr ""
+
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:136
+msgid "Record fixed length"
+msgstr ""
+
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:254
+msgid "Record fixed length…"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:700
@@ -2788,42 +2901,42 @@ msgstr ""
 msgid "Record this program now"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:459
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:484
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:495
 msgid ""
 "Recorded the new airing, but could not cancel the original — both are now "
 "scheduled."
 msgstr ""
 
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:195
 #: src/webui/static-vue/src/views/ConfigurationLayout.vue:82
-#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:47
-#: src/webui/static-vue/src/views/epg/TableView.vue:262
+#: src/webui/static-vue/src/views/epg/TableView.vue:268
 msgid "Recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:49
-msgid "Recording (errors)"
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:121
+msgid "Recording \"{0}\" until {1}"
 msgstr ""
 
 #: src/webui/static-vue/src/views/home/RecordingNow.vue:103
 msgid "Recording now"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:436
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:259
+msgid "Recording options"
+msgstr ""
+
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:461
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:476
 msgid "Recording scheduled"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/epgEventSource.ts:210
+#: src/webui/static-vue/src/commands/epgEventSource.ts:218
 msgid "Recording scheduled: {0}"
 msgstr ""
 
 #: src/webui/static-vue/src/views/home/RecordingNow.vue:111
 msgid "Recording with errors"
-msgstr ""
-
-#: src/webui/static-vue/src/views/epg/DvrOverlayBar.vue:123
-msgid "Recording: {0}"
 msgstr ""
 
 #: src/webui/static-vue/src/components/NavRail.vue:120
@@ -2835,6 +2948,7 @@ msgid "Recordings on {0}"
 msgstr ""
 
 #: src/webui/static-vue/src/commands/actionHandlers.ts:226
+#: src/webui/static-vue/src/components/StatusGrid.vue:345
 msgid "Refresh failed"
 msgstr ""
 
@@ -2847,16 +2961,16 @@ msgid "Regex mode is on — disable to use plain substring"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:93
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:507
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:532
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:615
 msgid "Related broadcasts"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/actionHandlers.ts:315
+#: src/webui/static-vue/src/commands/actionHandlers.ts:317
 msgid "Removal failed"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/actionHandlers.ts:312
+#: src/webui/static-vue/src/commands/actionHandlers.ts:314
 msgid "Removal scheduled."
 msgstr ""
 
@@ -2864,26 +2978,26 @@ msgstr ""
 msgid "Remove"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/actionHandlers.ts:306
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:425
+#: src/webui/static-vue/src/commands/actionHandlers.ts:308
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:442
 msgid "Remove ALL services not seen for at least 7 days?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:453
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:458
 msgid "Remove a tag from every selected channel"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:514
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:531
 msgid "Remove all unseen services (7+ days)"
 msgstr ""
 
-#: src/webui/static-vue/src/commands/actionHandlers.ts:305
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:424
+#: src/webui/static-vue/src/commands/actionHandlers.ts:307
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:441
 msgid "Remove services not seen in PAT/SDT for at least 7 days?"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EditableTagChipCell.vue:247
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:452
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:457
 msgid "Remove tag"
 msgstr ""
 
@@ -2895,7 +3009,7 @@ msgstr ""
 msgid "Remove the active column sort"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:428
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:436
 msgid "Remove the bouquet linkage from the selected channels"
 msgstr ""
 
@@ -2908,7 +3022,7 @@ msgstr ""
 msgid "Remove this recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:508
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:525
 msgid "Remove unseen services (PAT/SDT, 7+ days)"
 msgstr ""
 
@@ -2920,31 +3034,31 @@ msgstr ""
 msgid "Removing…"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:345
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:350
 msgid "Renumber"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:360
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:365
 msgid ""
 "Renumber major channels sequentially while keeping each sub-channel's .N "
 "suffix attached."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:452
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:460
 msgid "Reorganize"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:235
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:500
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:238
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:505
 msgid "Reorganize channels"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:450
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:475
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:487
 msgid "Replace this recording with the selected airing?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:400
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:402
 msgid "Reset Icon"
 msgstr ""
 
@@ -2955,7 +3069,7 @@ msgstr ""
 msgid "Reset history"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:318
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:319
 msgid "Reset icons for {0} channels?"
 msgstr ""
 
@@ -2963,7 +3077,7 @@ msgstr ""
 msgid "Reset sort order"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:317
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:318
 msgid "Reset the icon for the selected channel?"
 msgstr ""
 
@@ -2971,11 +3085,11 @@ msgstr ""
 msgid "Reset to default width"
 msgstr ""
 
-#: src/webui/static-vue/src/components/SettingsPopover.vue:247
+#: src/webui/static-vue/src/components/SettingsPopover.vue:286
 msgid "Reset to defaults"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:400
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:402
 msgid "Resetting…"
 msgstr ""
 
@@ -2983,8 +3097,8 @@ msgstr ""
 msgid "Resize bandwidth chart panel (currently {0} px wide)"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2689
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2837
 msgid "Resolve {0} before saving"
 msgstr ""
 
@@ -2995,11 +3109,15 @@ msgstr ""
 msgid "Resume"
 msgstr ""
 
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:996
+msgid "Retry"
+msgstr ""
+
 #: src/webui/static-vue/src/views/configuration/ConfigGeneralLayout.vue:43
 msgid "SAT>IP Server"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:122
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:128
 msgid "SD TV"
 msgstr ""
 
@@ -3007,14 +3125,14 @@ msgstr ""
 msgid "SNR"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Sat"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:925
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:942
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1898
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2660
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2808
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2696
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2844
 msgid "Save"
 msgstr ""
 
@@ -3022,11 +3140,11 @@ msgstr ""
 msgid "Save & Next"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2691
 msgid "Save changes to {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2839
 msgid "Save changes to {0} and exit edit mode"
 msgstr ""
 
@@ -3034,26 +3152,26 @@ msgstr ""
 msgid "Save failed"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:764
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:779
 msgid "Save failed: {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:129
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:135
 msgid "Save in Description"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2656
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2692
 msgid "Save pending changes"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2804
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2840
 msgid "Save pending changes and exit edit mode"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:925
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:942
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1898
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2660
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2808
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2696
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2844
 msgid "Saving…"
 msgstr ""
 
@@ -3065,19 +3183,16 @@ msgstr ""
 msgid "Scan started on {0} networks."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:169
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:187
 msgid "Scan triggered for {0} bouquets."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:196
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:214
 #: src/webui/static-vue/src/views/configuration/DvbNetworksView.vue:175
 msgid "Scanning…"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/DvrStateCell.vue:51
-msgid "Scheduled for recording"
-msgstr ""
-
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:333
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:669
 msgid "Scheduling…"
 msgstr ""
@@ -3087,8 +3202,8 @@ msgid "Scroll to current time"
 msgstr ""
 
 #: src/webui/static-vue/src/components/CommandPalette.vue:511
-#: src/webui/static-vue/src/views/epg/TableView.vue:2395
-#: src/webui/static-vue/src/views/epg/TableView.vue:2398
+#: src/webui/static-vue/src/views/epg/TableView.vue:2569
+#: src/webui/static-vue/src/views/epg/TableView.vue:2572
 msgid "Search"
 msgstr ""
 
@@ -3101,7 +3216,7 @@ msgstr ""
 msgid "Search anywhere — {0}K"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:271
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:293
 msgid "Search channels…"
 msgstr ""
 
@@ -3117,9 +3232,9 @@ msgstr ""
 msgid "Search the TV guide…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2884
-#: src/webui/static-vue/src/views/epg/TableView.vue:2370
-#: src/webui/static-vue/src/views/epg/TableView.vue:2407
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2920
+#: src/webui/static-vue/src/views/epg/TableView.vue:2544
+#: src/webui/static-vue/src/views/epg/TableView.vue:2581
 msgid "Search {0}"
 msgstr ""
 
@@ -3131,7 +3246,7 @@ msgstr ""
 msgid "Search…"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:259
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:281
 msgid "Section"
 msgstr ""
 
@@ -3146,11 +3261,11 @@ msgstr ""
 msgid "Select a CA client on the left to view and edit its configuration."
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:272
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:294
 msgid "Select a channel"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:318
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:367
 msgid "Select a channel to watch."
 msgstr ""
 
@@ -3158,7 +3273,7 @@ msgstr ""
 msgid "Select a codec profile on the left to view and edit its configuration."
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:172
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:177
 msgid "Select a module on the left to view and edit its configuration."
 msgstr ""
 
@@ -3167,7 +3282,7 @@ msgstr ""
 msgid "Select a profile on the left to view and edit its configuration."
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1660
+#: src/webui/static-vue/src/components/DataGrid.vue:1697
 msgid "Select all visible"
 msgstr ""
 
@@ -3175,16 +3290,20 @@ msgstr ""
 msgid "Select another day"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1776
-#: src/webui/static-vue/src/components/DataGrid.vue:1930
+#: src/webui/static-vue/src/components/DataGrid.vue:1813
+#: src/webui/static-vue/src/components/DataGrid.vue:1967
 msgid "Select row"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:147
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:149
 msgid "Select rows in the grid to chart their bandwidth."
 msgstr ""
 
-#: src/webui/static-vue/src/commands/epgEventSource.ts:236
+#: src/webui/static-vue/src/components/idnode-fields/IdnodeFieldEnumMulti.vue:177
+msgid "Select {0} ..."
+msgstr ""
+
+#: src/webui/static-vue/src/commands/epgEventSource.ts:244
 msgid "Series recording set: {0}"
 msgstr ""
 
@@ -3207,7 +3326,13 @@ msgstr ""
 msgid "Server returned no uuid."
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:90
+#: src/webui/static-vue/src/components/RailInfoArea.vue:105
+msgid ""
+"Server started with --noacl — all access-control checks are bypassed and "
+"every request is treated as admin"
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:96
 msgid "Service"
 msgstr ""
 
@@ -3215,7 +3340,7 @@ msgstr ""
 msgid "Service Mapper"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:57
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:73
 msgid "Service Mapping Status"
 msgstr ""
 
@@ -3227,7 +3352,7 @@ msgstr ""
 msgid "Service details: {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:417
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:419
 msgid "Service-mapping shortcuts"
 msgstr ""
 
@@ -3236,7 +3361,7 @@ msgstr ""
 msgid "Services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2438
+#: src/webui/static-vue/src/views/epg/TableView.vue:2616
 msgid ""
 "Set at least one filter (title, channel, genre, duration, tag, or “New "
 "only”) to create an AutoRec rule."
@@ -3275,11 +3400,11 @@ msgstr ""
 msgid "Short events"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:125
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:127
 msgid "Show"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:508
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:533
 msgid "Show EPG events related to the selected upcoming recording"
 msgstr ""
 
@@ -3287,7 +3412,7 @@ msgstr ""
 msgid "Show EPG events related to this programme"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:515
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:540
 msgid "Show alternative airings of the selected upcoming recording"
 msgstr ""
 
@@ -3297,8 +3422,8 @@ msgstr ""
 
 #: src/webui/static-vue/src/views/status/StreamView.vue:224
 #: src/webui/static-vue/src/views/status/StreamView.vue:232
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:176
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:184
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:182
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:190
 msgid "Show bandwidth chart"
 msgstr ""
 
@@ -3311,7 +3436,7 @@ msgstr ""
 msgid "Show stream details"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:474
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:491
 msgid "Show stream details for the selected service"
 msgstr ""
 
@@ -3319,7 +3444,7 @@ msgstr ""
 msgid "Showing first {0} of {1} matches — refine to narrow."
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:119
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:130
 msgid "Shown (dimmed)"
 msgstr ""
 
@@ -3335,7 +3460,7 @@ msgstr ""
 msgid "Skip to main content"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:116
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:127
 msgid "Skipped reruns"
 msgstr ""
 
@@ -3351,8 +3476,8 @@ msgstr ""
 msgid "Sort alphabetically"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:590
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:652
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:605
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:639
 msgid "Sort by"
 msgstr ""
 
@@ -3380,15 +3505,15 @@ msgstr ""
 msgid "Starring"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:382
+#: src/webui/static-vue/src/views/epg/TableView.vue:388
 msgid "Stars"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:222
-#: src/webui/static-vue/src/views/epg/TableView.vue:351
-#: src/webui/static-vue/src/views/epg/TableView.vue:488
+#: src/webui/static-vue/src/views/epg/TableView.vue:357
+#: src/webui/static-vue/src/views/epg/TableView.vue:494
 #: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:93
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:92
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:98
 msgid "Start"
 msgstr ""
 
@@ -3396,7 +3521,7 @@ msgstr ""
 msgid "Start Time"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:406
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:440
 msgid "Start date"
 msgstr ""
 
@@ -3408,7 +3533,7 @@ msgstr ""
 msgid "Started"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:95
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:101
 msgid "State"
 msgstr ""
 
@@ -3425,30 +3550,36 @@ msgstr ""
 msgid "Sticky titles"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:486
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:66
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:511
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:82
 msgid "Stop"
 msgstr ""
 
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:329
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:640
 msgid "Stop recording"
+msgstr ""
+
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:234
+msgid "Stop recording \"{0}\"?"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:641
 msgid "Stop recording of this program"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:487
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:512
 msgid "Stop the selected recording"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:486
+#: src/webui/static-vue/src/components/PlayerRecordButton.vue:329
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:511
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:640
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:66
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:82
 msgid "Stopping…"
 msgstr ""
 
-#: src/webui/static-vue/src/views/home/HealthLine.vue:118
+#: src/webui/static-vue/src/views/home/HealthLine.vue:126
 msgid "Storage is running low"
 msgstr ""
 
@@ -3468,8 +3599,8 @@ msgstr ""
 
 #: src/webui/static-vue/src/components/PlayProfileDialog.vue:115
 #: src/webui/static-vue/src/components/PlayProfileDialog.vue:119
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:277
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:282
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:299
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:304
 msgid "Stream profile"
 msgstr ""
 
@@ -3509,7 +3640,7 @@ msgstr ""
 msgid "Summary"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Sun"
 msgstr ""
 
@@ -3518,23 +3649,31 @@ msgstr ""
 msgid "Switch this recording to this airing"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1708
-#: src/webui/static-vue/src/views/epg/TableView.vue:2270
+#: src/webui/static-vue/src/components/DataGrid.vue:1745
+#: src/webui/static-vue/src/views/epg/TableView.vue:2437
 msgid "Switch to ascending cluster order"
 msgstr ""
 
-#: src/webui/static-vue/src/components/DataGrid.vue:1709
-#: src/webui/static-vue/src/views/epg/TableView.vue:2271
+#: src/webui/static-vue/src/components/DataGrid.vue:1746
+#: src/webui/static-vue/src/views/epg/TableView.vue:2438
 msgid "Switch to descending cluster order"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:464
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:489
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:499
 msgid "Switched to the selected airing"
 msgstr ""
 
-#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:329
+#: src/webui/static-vue/src/components/VideoPlayerDialog.vue:378
 msgid "Switching…"
+msgstr ""
+
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:212
+msgid "Symbol rate (Sym/s)"
+msgstr ""
+
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:55
+msgid "TCP"
 msgstr ""
 
 #: src/webui/static-vue/src/components/NavRail.vue:117
@@ -3559,7 +3698,7 @@ msgstr ""
 msgid "Table of contents"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:555
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:542
 msgid "Tag"
 msgstr ""
 
@@ -3598,11 +3737,28 @@ msgstr ""
 msgid "Teletext Stream Filters"
 msgstr ""
 
+#: src/webui/static-vue/src/views/epg/TableView.vue:2613
+msgid ""
+"The Channel filter is not an exact channel name, so it can’t be saved as a "
+"rule. Enter the full channel name or set another filter to create an AutoRec "
+"rule."
+msgstr ""
+
+#: src/webui/static-vue/src/components/StatusGrid.vue:346
+msgid "The rows below are from the last successful update."
+msgstr ""
+
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:147
+msgid ""
+"There is no programme information for this channel right now. Choose how "
+"long to record."
+msgstr ""
+
 #: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:123
 msgid "This week's recordings"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2086
+#: src/webui/static-vue/src/views/epg/TableView.vue:2241
 msgid ""
 "This will create an automatic rule that continuously scans the EPG for "
 "programs to record that match this query:"
@@ -3614,16 +3770,16 @@ msgid ""
 "afterwards. Continue?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Thu"
 msgstr ""
 
 #: src/webui/static-vue/src/views/epg/EpgMagazine.vue:596
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:517
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:504
 msgid "Time"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:523
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:510
 msgid "Time window"
 msgstr ""
 
@@ -3640,23 +3796,23 @@ msgid "Timeshift"
 msgstr ""
 
 #: src/webui/static-vue/src/components/EpgRelatedDialog.vue:211
-#: src/webui/static-vue/src/views/epg/TableView.vue:304
-#: src/webui/static-vue/src/views/epg/TableView.vue:490
-#: src/webui/static-vue/src/views/epg/TableView.vue:1247
-#: src/webui/static-vue/src/views/epg/TableView.vue:2089
-#: src/webui/static-vue/src/views/epg/TableView.vue:2370
-#: src/webui/static-vue/src/views/epg/TableView.vue:2407
+#: src/webui/static-vue/src/views/epg/TableView.vue:310
+#: src/webui/static-vue/src/views/epg/TableView.vue:496
+#: src/webui/static-vue/src/views/epg/TableView.vue:1345
+#: src/webui/static-vue/src/views/epg/TableView.vue:2244
+#: src/webui/static-vue/src/views/epg/TableView.vue:2544
+#: src/webui/static-vue/src/views/epg/TableView.vue:2581
 #: src/webui/static-vue/src/views/home/ThisWeekStrip.vue:91
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:71
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:77
 msgid "Title"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:1409
+#: src/webui/static-vue/src/views/epg/TableView.vue:1520
 msgid "Title only"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2387
-#: src/webui/static-vue/src/views/epg/TableView.vue:2415
+#: src/webui/static-vue/src/views/epg/TableView.vue:2561
+#: src/webui/static-vue/src/views/epg/TableView.vue:2589
 msgid "Title search scope"
 msgstr ""
 
@@ -3686,15 +3842,15 @@ msgstr ""
 msgid "Toggle re-record functionality"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:501
-msgid "Toggle the previously recorded state"
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:526
+msgid "Toggle the previously recorded state."
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:348
 msgid "Toggle trace for {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:500
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:525
 #: src/webui/static-vue/src/views/dvr/dvrToolbarHelpers.ts:216
 #: src/webui/static-vue/src/views/dvr/finishedActions.ts:75
 msgid "Toggling…"
@@ -3705,7 +3861,8 @@ msgstr ""
 msgid "Tomorrow"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:130
+#: src/webui/static-vue/src/components/RailInfoArea.vue:152
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:134
 msgid "Total"
 msgstr ""
 
@@ -3729,30 +3886,30 @@ msgstr ""
 msgid "Trigger failed"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Tue"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:157
+#: src/webui/static-vue/src/views/AboutView.vue:189
 msgid "Tvheadend uses APIs from (but is not endorsed or certified by)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:85
+#: src/webui/static-vue/src/views/AboutView.vue:133
 msgid "Tvheadend {0}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:236
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:258
 #: src/webui/static-vue/src/views/configuration/ConfigCasView.vue:264
 #: src/webui/static-vue/src/views/status/ConnectionsView.vue:77
 msgid "Type"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:125
-msgid "UHD TV"
+#: src/webui/static-vue/src/views/status/ConnectionsView.vue:56
+msgid "UDP"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:262
-msgid "URL"
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:131
+msgid "UHD TV"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/ConfigDebuggingConfigView.vue:294
@@ -3763,25 +3920,25 @@ msgstr ""
 msgid "Uncorrected Blocks"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:933
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:950
 msgid "Undo"
 msgstr ""
 
 #: src/webui/static-vue/src/components/ColumnHeaderMenu.vue:439
-#: src/webui/static-vue/src/components/DataGrid.vue:1723
-#: src/webui/static-vue/src/views/epg/TableView.vue:2286
+#: src/webui/static-vue/src/components/DataGrid.vue:1760
+#: src/webui/static-vue/src/views/epg/TableView.vue:2453
 msgid "Ungroup"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:116
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:123
 msgid "Unimportant"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1953
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1989
 msgid "Unsaved changes"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:430
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:447
 msgid "Unseen services removed."
 msgstr ""
 
@@ -3798,12 +3955,16 @@ msgstr ""
 msgid "Upcoming / Current"
 msgstr ""
 
-#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:243
+#: src/webui/static-vue/src/components/ServiceStreamsDialog.vue:265
 msgid "Used"
 msgstr ""
 
+#: src/webui/static-vue/src/components/RailInfoArea.vue:151
+msgid "Used by tvheadend"
+msgstr ""
+
 #: src/webui/static-vue/src/views/status/ConnectionsView.vue:96
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:68
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:74
 msgid "Username"
 msgstr ""
 
@@ -3815,7 +3976,7 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:84
+#: src/webui/static-vue/src/views/AboutView.vue:132
 msgid "Version"
 msgstr ""
 
@@ -3831,7 +3992,7 @@ msgstr ""
 msgid "View DVR entry"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:673
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:688
 #: src/webui/static-vue/src/components/IdnodeEditor.vue:1641
 #: src/webui/static-vue/src/components/LevelMenu.vue:85
 #: src/webui/static-vue/src/components/LevelMenu.vue:88
@@ -3839,7 +4000,7 @@ msgstr ""
 msgid "View level"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:697
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:712
 #: src/webui/static-vue/src/components/LevelMenu.vue:117
 msgid "View level is fixed by the administrator"
 msgstr ""
@@ -3857,11 +4018,11 @@ msgstr ""
 msgid "Watch the live channel here in the browser"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:108
+#: src/webui/static-vue/src/views/AboutView.vue:157
 msgid "Web UI built with"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:150
+#: src/webui/static-vue/src/views/dvr/dvrFieldDefs.ts:175
 msgid "Wed"
 msgstr ""
 
@@ -3869,12 +4030,12 @@ msgstr ""
 msgid "Weight"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:189
+#: src/webui/static-vue/src/views/dvr/UpcomingView.vue:157
 #: src/webui/static-vue/src/views/epg/EpgEventDrawer.vue:930
 msgid "Will be skipped"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:110
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:112
 msgid "Window"
 msgstr ""
 
@@ -3883,23 +4044,28 @@ msgid "Writer"
 msgstr ""
 
 #: src/webui/static-vue/src/components/DataGrid.vue:1238
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:949
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:3176
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:195
-#: src/webui/static-vue/src/views/epg/TableView.vue:2093
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:950
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:3212
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:200
+#: src/webui/static-vue/src/views/epg/TableView.vue:2248
 msgid "Yes"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1951
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1987
 msgid "You have unsaved cell edits across {0}. Discard them?"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:117
-#: src/webui/static-vue/src/views/AboutView.vue:160
+#: src/webui/static-vue/src/views/status/StreamView.vue:49
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:50
+msgid "all"
+msgstr ""
+
+#: src/webui/static-vue/src/views/AboutView.vue:166
+#: src/webui/static-vue/src/views/AboutView.vue:192
 msgid "and"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:139
+#: src/webui/static-vue/src/views/dvr/AutorecsView.vue:146
 msgid "autorec entries"
 msgstr ""
 
@@ -3907,12 +4073,12 @@ msgstr ""
 msgid "because it is a rerun of:"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:215
+#: src/webui/static-vue/src/views/configuration/BouquetsView.vue:233
 msgid "bouquets"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:515
-#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:530
+#: src/webui/static-vue/src/views/configuration/ChannelManageDrawer.vue:520
+#: src/webui/static-vue/src/views/configuration/ChannelsView.vue:539
 #: src/webui/static-vue/src/views/configuration/EpgGrabberChannelsView.vue:212
 msgid "channels"
 msgstr ""
@@ -3929,13 +4095,13 @@ msgstr ""
 msgid "disabled"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1024
-#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1056
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1047
+#: src/webui/static-vue/src/components/IdnodeConfigForm.vue:1079
 msgid "editor support not implemented for this field type"
 msgstr ""
 
 #: src/webui/static-vue/src/views/configuration/ConfigDebuggingMemoryInfoView.vue:107
-#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:361
+#: src/webui/static-vue/src/views/configuration/ConfigUsersAccessEntriesView.vue:366
 msgid "entries"
 msgstr ""
 
@@ -3948,11 +4114,11 @@ msgstr ""
 msgid "filters"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2012
+#: src/webui/static-vue/src/views/epg/TableView.vue:2155
 msgid "full text"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:119
+#: src/webui/static-vue/src/views/AboutView.vue:168
 msgid "icons."
 msgstr ""
 
@@ -3960,21 +4126,25 @@ msgstr ""
 msgid "input"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:587
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:574
 msgid "max"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2013
+#: src/webui/static-vue/src/views/epg/TableView.vue:2156
 msgid "merged text"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:202
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:576
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:593
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:82
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:83
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:204
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:161
+#: src/webui/static-vue/src/components/RecordLengthDialog.vue:177
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:563
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:580
 msgid "min"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:153
+#: src/webui/static-vue/src/views/configuration/EpgGrabberModulesView.vue:158
 msgid "modules"
 msgstr ""
 
@@ -3982,7 +4152,7 @@ msgstr ""
 msgid "more"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:274
+#: src/webui/static-vue/src/views/configuration/DvbMuxesView.vue:329
 msgid "muxes"
 msgstr ""
 
@@ -3990,7 +4160,7 @@ msgstr ""
 msgid "networks"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:201
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:203
 msgid "now"
 msgstr ""
 
@@ -3998,11 +4168,11 @@ msgstr ""
 msgid "of"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:138
+#: src/webui/static-vue/src/views/configuration/ConfigUsersPasswordsView.vue:142
 msgid "passwords"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:203
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:205
 msgid "peak"
 msgstr ""
 
@@ -4023,11 +4193,11 @@ msgstr ""
 msgid "schedulers"
 msgstr ""
 
-#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:536
+#: src/webui/static-vue/src/views/configuration/DvbServicesView.vue:553
 msgid "services"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:200
+#: src/webui/static-vue/src/views/status/SubscriptionsView.vue:206
 msgid "subscription"
 msgstr ""
 
@@ -4035,7 +4205,7 @@ msgstr ""
 msgid "tags"
 msgstr ""
 
-#: src/webui/static-vue/src/views/dvr/TimersView.vue:100
+#: src/webui/static-vue/src/views/dvr/TimersView.vue:107
 msgid "timer entries"
 msgstr ""
 
@@ -4047,16 +4217,16 @@ msgstr ""
 msgid "{0} / {1} line(s)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:112
+#: src/webui/static-vue/src/views/status/ServiceMapperView.vue:116
 msgid "{0} / {1} processed ({2}%)"
 msgstr ""
 
-#: src/webui/static-vue/src/views/home/HealthLine.vue:63
+#: src/webui/static-vue/src/views/home/HealthLine.vue:71
 msgid "{0} active subscriptions"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:294
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:444
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:295
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:431
 msgid "{0} columns"
 msgstr ""
 
@@ -4068,11 +4238,16 @@ msgstr ""
 msgid "{0} failed · last 7 days"
 msgstr ""
 
-#: src/webui/static-vue/src/views/home/HealthLine.vue:126
+#: src/webui/static-vue/src/components/RailInfoArea.vue:159
+msgid "{0} free"
+msgstr ""
+
+#: src/webui/static-vue/src/components/RailInfoArea.vue:131
+#: src/webui/static-vue/src/views/home/HealthLine.vue:134
 msgid "{0} free of {1}"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:443
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:430
 msgid "{0} global"
 msgstr ""
 
@@ -4080,8 +4255,8 @@ msgstr ""
 msgid "{0} line(s)"
 msgstr ""
 
-#: src/webui/static-vue/src/components/GridSettingsMenu.vue:397
-#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:291
+#: src/webui/static-vue/src/components/GridSettingsMenu.vue:398
+#: src/webui/static-vue/src/views/epg/EpgTableOptions.vue:288
 msgid "{0} of {1}"
 msgstr ""
 
@@ -4089,18 +4264,18 @@ msgstr ""
 msgid "{0} recordings on {1}"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:1949
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2655
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2803
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:1985
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2691
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2839
 msgid "{0} rows"
 msgstr ""
 
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2653
-#: src/webui/static-vue/src/components/IdnodeGrid.vue:2801
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2689
+#: src/webui/static-vue/src/components/IdnodeGrid.vue:2837
 msgid "{0} validation errors"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2025
+#: src/webui/static-vue/src/views/epg/TableView.vue:2168
 msgid "{0} – {1} min"
 msgstr ""
 
@@ -4113,31 +4288,31 @@ msgstr ""
 msgid "{0}, +{1} more"
 msgstr ""
 
-#: src/webui/static-vue/src/views/AboutView.vue:71
+#: src/webui/static-vue/src/views/AboutView.vue:119
 msgid "© 2006–{0} Tvheadend Project"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:228
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:230
 msgid "Σ In"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:240
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:242
 msgid "Σ Out"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:283
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:285
 #: src/webui/static-vue/src/components/BandwidthChartView.vue:235
 msgid "Σ Total"
 msgstr ""
 
-#: src/webui/static-vue/src/components/BandwidthChartBody.vue:215
+#: src/webui/static-vue/src/components/BandwidthChartBody.vue:217
 msgid "Σ Total ({0} {1})"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2028
+#: src/webui/static-vue/src/views/epg/TableView.vue:2171
 msgid "≤ {0} min"
 msgstr ""
 
-#: src/webui/static-vue/src/views/epg/TableView.vue:2027
+#: src/webui/static-vue/src/views/epg/TableView.vue:2170
 msgid "≥ {0} min"
 msgstr ""
