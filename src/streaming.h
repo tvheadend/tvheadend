@@ -387,6 +387,8 @@ struct source_info {
   int   si_type;
   uint16_t si_tsid;
   uint16_t si_onid;
+  uint8_t  si_tsid_valid;
+  uint8_t  si_onid_valid;
 };
 
 /**
