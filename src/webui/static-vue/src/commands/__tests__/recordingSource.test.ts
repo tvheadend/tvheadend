@@ -31,6 +31,7 @@ const fakeToast = {
  * override to reject (false) to verify the "user said no" branch. */
 const fakeConfirm = {
   ask: vi.fn().mockResolvedValue(true),
+  askWithDetail: vi.fn().mockResolvedValue(true),
 }
 
 const deps: RecordingSourceDeps = {
