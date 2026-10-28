@@ -53,7 +53,7 @@ typedef struct th_pkt {
   int64_t pkt_dts;
   int64_t pkt_pts;
   int64_t pkt_pcr;
-  int pkt_duration;
+  int64_t pkt_duration;
   int pkt_refcount;
 
   uint8_t pkt_type;
@@ -68,6 +68,9 @@ typedef struct th_pkt {
 
       uint16_t pkt_aspect_num;
       uint16_t pkt_aspect_den;
+#if ENABLE_LIBAV
+      AVRational pkt_sample_aspect_ratio;
+#endif
     } v;
     struct {
       uint8_t pkt_keyframe;

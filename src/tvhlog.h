@@ -225,7 +225,9 @@ enum {
     LST_LIBX26X,
     LST_NVENC,
     LST_OMX,
+    LST_V4l2M2M,
     LST_VAAPI,
+    LST_QSV,
     LST_VAINFO,
     LST_LAST     /* keep this last */
 };
