@@ -78,7 +78,7 @@
 #include "memoryinfo.h"
 #include "watchdog.h"
 #include "tprofile.h"
-#if CONFIG_LINUXDVB_CA
+#if ENABLE_LINUXDVB_CA
 #include "input/mpegts/en50221/en50221.h"
 #endif
 
@@ -1289,7 +1289,7 @@ main(int argc, char **argv)
   tvh_thread_create(&mtimer_tid, NULL, mtimer_thread, NULL, "mtimer");
   tvh_thread_create(&tasklet_tid, NULL, tasklet_thread, NULL, "tasklet");
 
-#if CONFIG_LINUXDVB_CA
+#if ENABLE_LINUXDVB_CA
   en50221_register_apps();
 #endif
 
