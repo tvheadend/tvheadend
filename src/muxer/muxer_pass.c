@@ -28,9 +28,11 @@
 #include "service.h"
 #include "input/mpegts/dvb.h"
 #include "muxer_pass.h"
+#include "muxer_pass_timeline.h"
 #include "spawn.h"
 
 #define PASS_PID_COUNT 8192
+#define PASS_NULL_PID 0x1fff
 
 typedef struct pass_muxer {
   muxer_t;
@@ -54,6 +56,9 @@ typedef struct pass_muxer {
   uint8_t           *pm_pid_buf;
   size_t             pm_pid_buf_size;
   uint8_t            pm_pid_active;
+  pass_timeline_t   *pm_timeline;
+  uint8_t            pm_timeline_failed;
+  uint8_t            pm_timeline_prereq_logged;
 
   /* TS muxing */
   uint8_t  pm_rewrite_sdt;
@@ -79,6 +84,9 @@ typedef struct pass_muxer {
 
 static void
 pass_muxer_write(muxer_t *m, const void *data, size_t size);
+
+static int
+pass_muxer_write_output(void *opaque, const void *data, size_t size);
 
 static uint16_t
 pass_muxer_map_pid(const pass_muxer_t *pm, uint16_t pid)
@@ -704,6 +712,12 @@ pass_muxer_mime(muxer_t* m, const struct streaming_start *ss)
 }
 
 
+static int
+pass_muxer_has_pcr_pid(const streaming_start_t *ss)
+{
+  return ss && ss->ss_pcr_pid > 0 && ss->ss_pcr_pid < PASS_NULL_PID;
+}
+
 /**
  * Generate the pmt and pat from a streaming start message
  */
@@ -713,6 +727,7 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pass_muxer_t *pm = (pass_muxer_t*)m;
   const streaming_start_component_t *ssc;
   int i;
+  int timeline_ready;
 
   pm->pm_src_sid     = ss->ss_service_id;
   pm->pm_src_tsid    = ss->ss_si.si_tsid;
@@ -732,6 +747,24 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_rewrite_eit = !!pm->m_config.u.pass.m_rewrite_eit;
 
   pass_muxer_update_pid_map(pm, ss);
+
+  timeline_ready = pm->pm_seekable && pm->m_config.m_type == MC_PASS &&
+                   pm->m_config.u.pass.m_rewrite_pmt && pass_muxer_has_pcr_pid(ss);
+  if (pm->m_config.u.pass.m_continuous_timeline && !timeline_ready &&
+      pm->pm_seekable && pm->m_config.m_type == MC_PASS &&
+      !pm->pm_timeline_prereq_logged) {
+    tvhinfo(LS_PASS, "%s: continuous timeline needs Rewrite PMT and a PCR PID, keeping original timestamps",
+            pm->pm_filename ?: "Pass muxer");
+    pm->pm_timeline_prereq_logged = 1;
+  }
+  if (pm->m_config.u.pass.m_continuous_timeline && timeline_ready &&
+      !pm->pm_timeline_failed && !pm->pm_timeline) {
+    pm->pm_timeline = pass_timeline_create(pm->pm_filename, pass_muxer_write_output, pm);
+    pm->pm_timeline_failed = pm->pm_timeline == NULL;
+    if (pm->pm_timeline_failed)
+      tvhwarn(LS_PASS, "%s: continuous timeline disabled (%s), keeping original timestamps for the rest of the recording",
+              pm->pm_filename ?: "Pass muxer", "allocation failed");
+  }
 
   for(i=0; i < ss->ss_num_components; i++) {
     ssc = &ss->ss_components[i];
@@ -834,6 +867,13 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
   tvhtrace(LS_PASS, "Creating file \"%s\" with file permissions \"%o\"", filename, pm->m_config.m_file_permissions);
+
+  /* A restarted recording reuses the muxer, finish the previous file's timeline */
+  pass_timeline_drain(pm->pm_timeline);
+  pass_timeline_destroy(pm->pm_timeline);
+  pm->pm_timeline = NULL;
+  pm->pm_timeline_failed = 0;
+  pm->pm_timeline_prereq_logged = 0;
  
   fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, pm->m_config.m_file_permissions);
 
@@ -862,15 +902,16 @@ pass_muxer_open_file(muxer_t *m, const char *filename)
 /**
  * Write data to the file descriptor
  */
-static void
-pass_muxer_write(muxer_t *m, const void *data, size_t size)
+static int
+pass_muxer_write_output(void *opaque, const void *data, size_t size)
 {
+  muxer_t *m = opaque;
   pass_muxer_t *pm = (pass_muxer_t*)m;
   int ret;
 
   if(pm->pm_error) {
     pm->m_errors++;
-    return;
+    return pm->pm_error;
   } 
   
   if (pm->m_config.m_output_chunk > 0) {
@@ -897,6 +938,19 @@ pass_muxer_write(muxer_t *m, const void *data, size_t size)
       muxer_cache_update(m, pm->pm_fd, pm->pm_off, 0);
     pm->pm_off += size;
   }
+  return pm->pm_error;
+}
+
+static void
+pass_muxer_write(muxer_t *m, const void *data, size_t size)
+{
+  pass_muxer_t *pm = (pass_muxer_t *)m;
+  if (pm->pm_timeline)
+    pass_timeline_write(pm->pm_timeline, data, size,
+                        pass_muxer_has_pcr_pid(pm->pm_ss) ?
+                        pass_muxer_map_pid(pm, pm->pm_ss->ss_pcr_pid) : PASS_TIMELINE_NO_PCR);
+  else
+    pass_muxer_write_output(m, data, size);
 }
 
 
@@ -1073,6 +1127,8 @@ pass_muxer_close(muxer_t *m)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
 
+  pass_timeline_drain(pm->pm_timeline);
+
   if(pm->pm_spawn_pid > 0)
     spawn_kill(pm->pm_spawn_pid, tvh_kill_to_sig(pm->m_config.u.pass.m_killsig),
                pm->m_config.u.pass.m_killtimeout);
@@ -1095,6 +1151,8 @@ static void
 pass_muxer_destroy(muxer_t *m)
 {
   pass_muxer_t *pm = (pass_muxer_t*)m;
+
+  pass_timeline_destroy(pm->pm_timeline);
 
   if(pm->pm_filename)
     free(pm->pm_filename);
