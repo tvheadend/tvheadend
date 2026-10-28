@@ -242,6 +242,16 @@ to reauthenticate."));
   return 0;
 }
 
+/*
+ * Content types of the static files that are not text. The text
+ * types carry a charset and are set in page_static_file_maxage().
+ */
+static const char *page_static_types[][2] = {
+  { "png", "image/png" },
+  { "jpg", "image/jpeg" },
+  { "gif", "image/gif" },
+};
+
 /**
  * Static download of a file from the filesystem
  *
@@ -261,7 +271,7 @@ page_static_file_maxage(http_connection_t *hc, const char *_remain,
   const char *content = NULL;
   char buf[4096];
   const char *gzip = NULL;
-  int nogzip = 0;
+  int nogzip = 0, i;
 
   if(_remain == NULL)
     return HTTP_STATUS_NOT_FOUND;
@@ -298,11 +308,14 @@ page_static_file_maxage(http_connection_t *hc, const char *_remain,
         maxage = 60 * 60;
     }
   }
+  for (i = 0; postfix != NULL && i < ARRAY_SIZE(page_static_types); i++)
+    if(content == NULL && !strcmp(postfix, page_static_types[i][0]))
+      content = page_static_types[i][1];
 
   fb_file *fp = fb_open(path, 0, (nogzip || gzip) ? 0 : 1);
   if (!fp) {
     tvherror(LS_WEBUI, "failed to open %s", path);
-    return HTTP_STATUS_INTERNAL;
+    return HTTP_STATUS_NOT_FOUND;
   }
   size = fb_size(fp);
   if (!gzip && fb_gzipped(fp))

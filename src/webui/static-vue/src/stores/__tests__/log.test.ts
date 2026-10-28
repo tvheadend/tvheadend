@@ -253,6 +253,23 @@ describe('useLogStore — debug toggle', () => {
     expect(log.debugEnabled).toBe(false)
   })
 
+  it('reports Disable as done when the server has dropped the mailbox', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('ok', { status: 200 })) as typeof fetch
+    const log = useLogStore()
+    await log.toggleDebug()
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('', { status: 404 })) as typeof fetch
+    /* Comet has not seen the new mailbox yet, the boxid is still BOX123. */
+    expect(await log.toggleDebug()).toBe(true)
+    expect(log.debugEnabled).toBe(false)
+  })
+
+  it('fails Enable when the server has dropped the mailbox', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('', { status: 404 })) as typeof fetch
+    const log = useLogStore()
+    expect(await log.toggleDebug()).toBe(false)
+    expect(log.debugEnabled).toBe(false)
+  })
+
   it('returns false when no boxid is available yet', async () => {
     lastBoxId = undefined
     const log = useLogStore()
