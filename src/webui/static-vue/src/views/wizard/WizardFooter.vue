@@ -32,7 +32,7 @@
  */
 import { computed } from 'vue'
 import Button from 'primevue/button'
-import { useI18n } from '@/composables/useI18n'
+import { N_, useI18n } from '@/composables/useI18n'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useHelp } from '@/composables/useHelp'
 
@@ -68,8 +68,9 @@ interface Props {
   /* Label for the Skip button. Defaults to 'Skip'; the status
    * step swaps to 'Next' once the scan reaches 100 % so the
    * button reads as a continuation rather than an opt-out.
-   * Caller passes the English string; the footer t()s it for
-   * i18n consistency with the other labels here. */
+   * Caller passes the English string marked with `N_()`; the
+   * footer t()s it for i18n consistency with the other labels
+   * here. */
   skipLabel?: string
   /* When true, the Skip button promotes from outlined-secondary
    * to the primary filled style (same look as Save & Next /
@@ -87,7 +88,7 @@ const props = withDefaults(defineProps<Props>(), {
   saving: false,
   helpPage: 'firstconfig',
   hideSave: false,
-  skipLabel: 'Skip',
+  skipLabel: N_('Skip'),
   skipEmphasized: false,
 })
 
@@ -181,7 +182,7 @@ async function handleCancel(): Promise<void> {
            stuck waiting through the polling interval; the
            status step flips the label to "Next" at 100 % so the
            button reads as a continuation. Both go through t(skipLabel),
-           which make intl cannot extract yet, so they stay English. -->
+           so the callers mark them with N_() for make intl. -->
       <Button
         v-if="showSkip"
         :label="t(skipLabel)"

@@ -716,7 +716,7 @@ defineExpose({
 
       <!-- Empty state. -->
       <p v-if="!loading && channels.length === 0" class="epg-timeline__empty">
-        No channels available.
+        {{ t('No channels available.') }}
       </p>
     </div>
   </div>

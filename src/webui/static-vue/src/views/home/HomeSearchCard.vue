@@ -34,7 +34,7 @@ import { useEpgTitleSearch } from '@/composables/useEpgTitleSearch'
 import { useStickyBottom } from '@/composables/useStickyBottom'
 import { fmtDate } from '@/utils/formatTime'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const { query, events, totalCount, loading, error } = useEpgTitleSearch()
 
 /* Local drawer state — same shape every EPG view uses. Click a
@@ -103,8 +103,10 @@ const MIN_QUERY_LENGTH = 3
           class="home-search__overflow"
         >
           {{
-            t(
+            tn(
+              'Showing first {0} of {1} match — refine to narrow.',
               'Showing first {0} of {1} matches — refine to narrow.',
+              totalCount,
               events.length,
               totalCount,
             )

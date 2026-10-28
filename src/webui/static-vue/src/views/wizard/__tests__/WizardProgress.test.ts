@@ -11,7 +11,8 @@
  *   - When the route isn't a wizard route (or name is missing),
  *     the first pill is treated as current and the rest pending
  *     — defensive handling for renders outside the wizard flow.
- *   - The phone strip renders "Step N of 7 — <label>" text.
+ *   - The phone strip renders "Step N of 7 — <label>" text, also
+ *     outside a wizard route (the first step's label).
  *   - Driven by the route name (`wizard-<step>`); changing the
  *     mocked route's name flips the pills reactively.
  *
@@ -33,11 +34,6 @@ vi.mock('vue-router', () => ({
       return mockRouteName.value
     },
   }),
-}))
-
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (s: string) => s, currentLang: () => '' }),
-  t: (s: string) => s,
 }))
 
 import WizardProgress from '../WizardProgress.vue'
@@ -120,5 +116,11 @@ describe('WizardProgress — phone compact label', () => {
      * login (canonical index 1). */
     expect(text).toContain('Step 2 of 7')
     expect(text).toContain('Access Control')
+  })
+
+  it('names the first step when the route is not a wizard step', () => {
+    const wrapper = mountProgress()
+    const text = wrapper.find('.wizard-progress--phone .wizard-progress__phone-text').text()
+    expect(text).toBe('Step 1 of 7 — Welcome')
   })
 })

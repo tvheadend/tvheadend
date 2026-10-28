@@ -37,6 +37,7 @@
  */
 
 import type { IdnodeProp } from '@/types/idnode'
+import { t } from '@/composables/useI18n'
 
 const INT_TYPES = new Set(['int', 'u16', 'u32', 's64', 'dyn_int'])
 const FLOAT_TYPES = new Set(['dbl'])
@@ -44,7 +45,8 @@ const FLOAT_TYPES = new Set(['dbl'])
 /* Validators return `string | null` — the message to display, or
  * null when the value is acceptable. The intent (this is an error
  * message, not just any string) is carried in function comments
- * rather than a nominally-identical wrapper type.
+ * rather than a nominally-identical wrapper type. Messages are
+ * translated when the validator runs.
  *
  * `IdnodeProp.value`/default/etc. are typed as `unknown` because
  * the shape varies by type tag. Each validator destructures as
@@ -95,13 +97,13 @@ function validateStringFamily(prop: IdnodeProp, value: unknown): string | null {
 function validateInteger(prop: IdnodeProp, value: unknown): string | null {
   if (value === '') return null
   const num = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(num)) return 'Must be a number'
-  if (!Number.isInteger(num)) return 'Must be a whole number'
+  if (!Number.isFinite(num)) return t('Must be a number')
+  if (!Number.isInteger(num)) return t('Must be a whole number')
   if (typeof prop.intmin === 'number' && num < prop.intmin) {
-    return `Must be at least ${prop.intmin}`
+    return t('Must be at least {0}', prop.intmin)
   }
   if (typeof prop.intmax === 'number' && num > prop.intmax) {
-    return `Must be at most ${prop.intmax}`
+    return t('Must be at most {0}', prop.intmax)
   }
   return null
 }
@@ -110,12 +112,12 @@ function validateInteger(prop: IdnodeProp, value: unknown): string | null {
 function validateFloat(prop: IdnodeProp, value: unknown): string | null {
   if (value === '') return null
   const num = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(num)) return 'Must be a number'
+  if (!Number.isFinite(num)) return t('Must be a number')
   if (typeof prop.intmin === 'number' && num < prop.intmin) {
-    return `Must be at least ${prop.intmin}`
+    return t('Must be at least {0}', prop.intmin)
   }
   if (typeof prop.intmax === 'number' && num > prop.intmax) {
-    return `Must be at most ${prop.intmax}`
+    return t('Must be at most {0}', prop.intmax)
   }
   return null
 }
@@ -126,7 +128,7 @@ function validateHex(value: unknown): string | null {
   if (typeof value !== 'string') return null
   if (value === '') return null
   const stripped = value.startsWith('0x') || value.startsWith('0X') ? value.slice(2) : value
-  if (!/^[0-9a-fA-F]+$/.test(stripped)) return 'Must be a hexadecimal value'
+  if (!/^[0-9a-fA-F]+$/.test(stripped)) return t('Must be a hexadecimal value')
   return null
 }
 
@@ -138,7 +140,7 @@ function validateHex(value: unknown): string | null {
 function validateIntsplit(_prop: IdnodeProp, value: unknown): string | null {
   if (typeof value !== 'string') return null
   if (value === '') return null
-  if (!/^\d+(\.\d+)*$/.test(value)) return 'Must be dot-separated numbers'
+  if (!/^\d+(\.\d+)*$/.test(value)) return t('Must be dot-separated numbers')
   return null
 }
 
@@ -150,11 +152,11 @@ function validateIntsplit(_prop: IdnodeProp, value: unknown): string | null {
 function validateNumericIntsplit(value: unknown): string | null {
   if (value === null || value === undefined || value === '') return null
   if (typeof value === 'number') {
-    if (!Number.isFinite(value)) return 'Must be a number'
+    if (!Number.isFinite(value)) return t('Must be a number')
     return null
   }
   if (typeof value !== 'string') return null
-  if (!/^\d+(\.\d+)?$/.test(value)) return 'Must be a number, optionally with a decimal'
+  if (!/^\d+(\.\d+)?$/.test(value)) return t('Must be a number, optionally with a decimal')
   return null
 }
 
@@ -170,17 +172,17 @@ function validateNumericHex(prop: IdnodeProp, value: unknown): string | null {
     n = value
   } else if (typeof value === 'string') {
     const m = /^(?:0[xX])?([0-9a-fA-F]+)$/.exec(value)
-    if (!m) return 'Must be a hexadecimal value (e.g. 0x500)'
+    if (!m) return t('Must be a hexadecimal value (e.g. 0x500)')
     n = Number.parseInt(m[1], 16)
   } else {
     return null
   }
-  if (!Number.isFinite(n)) return 'Must be a hexadecimal value (e.g. 0x500)'
+  if (!Number.isFinite(n)) return t('Must be a hexadecimal value (e.g. 0x500)')
   if (typeof prop.intmin === 'number' && n < prop.intmin) {
-    return `Must be at least 0x${prop.intmin.toString(16).toUpperCase()}`
+    return t('Must be at least 0x{0}', prop.intmin.toString(16).toUpperCase())
   }
   if (typeof prop.intmax === 'number' && n > prop.intmax) {
-    return `Must be at most 0x${prop.intmax.toString(16).toUpperCase()}`
+    return t('Must be at most 0x{0}', prop.intmax.toString(16).toUpperCase())
   }
   return null
 }
@@ -192,10 +194,10 @@ function validateNumericHex(prop: IdnodeProp, value: unknown): string | null {
 function validateLangStr(value: unknown): string | null {
   if (value === null || value === undefined) return null
   if (typeof value !== 'object' || Array.isArray(value)) {
-    return 'Invalid multilingual value'
+    return t('Invalid multilingual value')
   }
   for (const v of Object.values(value as Record<string, unknown>)) {
-    if (typeof v !== 'string') return 'Invalid multilingual value'
+    if (typeof v !== 'string') return t('Invalid multilingual value')
   }
   return null
 }
@@ -206,7 +208,7 @@ function validateLangStr(value: unknown): string | null {
  * text input or paste from CLI output. Empty handled separately. */
 function validatePerm(value: unknown): string | null {
   if (typeof value !== 'string' || value === '') return null
-  if (!/^0?[0-7]{3,4}$/.test(value)) return 'Use octal notation, e.g. 0664'
+  if (!/^0?[0-7]{3,4}$/.test(value)) return t('Use octal notation, e.g. 0664')
   return null
 }
 
@@ -247,6 +249,6 @@ function validateEnumMembership(prop: IdnodeProp, value: unknown): string | null
       typeof o === 'string' || typeof o === 'number' ? String(o) : String(o.key)
     )
   )
-  if (!allowed.has(String(value))) return 'Value not in allowed list'
+  if (!allowed.has(String(value))) return t('Value not in allowed list')
   return null
 }

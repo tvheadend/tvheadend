@@ -17,11 +17,6 @@ import { fmtPassword } from '@/utils/formatPassword'
 import ConfigUsersPasswordsView from '../ConfigUsersPasswordsView.vue'
 import ConfigUsersAccessEntriesView from '../ConfigUsersAccessEntriesView.vue'
 
-vi.mock('@/composables/useI18n', () => ({
-  t: (s: string) => s,
-  useI18n: () => ({ t: (s: string) => s }),
-}))
-
 vi.mock('@/composables/useEditorMode', async () => {
   const { ref } = await import('vue')
   return {

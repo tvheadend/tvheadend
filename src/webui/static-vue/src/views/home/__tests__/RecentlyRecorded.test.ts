@@ -11,28 +11,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils'
 import RecentlyRecorded from '../RecentlyRecorded.vue'
 
-vi.mock('@/composables/useI18n', () => ({
-  /* Positional substitution mirrors the real useI18n's `{0}`-style
-   * placeholder replacement so the failure-count chip text comes
-   * out as the user sees it ('3 failed · last 7 days') rather than
-   * leaving the placeholder verbatim. The args[i] value is run
-   * through a typeof-safe stringifier so an accidental object
-   * argument renders as JSON rather than '[object Object]'. */
-  useI18n: () => ({
-    t: (s: string, ...args: unknown[]) =>
-      s.replace(/\{(\d+)\}/g, (_, i) => stringifyArg(args[Number(i)])),
-  }),
-}))
-
-function stringifyArg(v: unknown): string {
-  if (v === null || v === undefined) return ''
-  if (typeof v === 'string') return v
-  if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') {
-    return String(v)
-  }
-  return JSON.stringify(v)
-}
-
 const apiMock = vi.fn()
 vi.mock('@/api/client', () => ({
   apiCall: (...args: unknown[]) => apiMock(...args),
