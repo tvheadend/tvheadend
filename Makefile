@@ -557,6 +557,7 @@ DEPS-LIBAV = \
 	src/tvhlog.c
 SRCS-LIBAV = \
 	src/libav.c \
+	src/dvr/dvr_playback.c \
 	src/muxer/muxer_libav.c \
 	src/api/api_codec.c
 ifeq ($(CONFIG_IPTV),yes)

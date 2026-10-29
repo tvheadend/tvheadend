@@ -174,6 +174,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #endif
 #if ENABLE_LIBAV
   { "libav",     NULL },
+  { "dvr_streaming", NULL },
 #endif
   { NULL, NULL }
 };
