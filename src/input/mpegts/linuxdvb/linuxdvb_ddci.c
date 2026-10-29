@@ -388,7 +388,6 @@ linuxdvb_ddci_release_ctx_maps ( linuxdvb_ddci_t *lddci, int ctx_id )
  * dvbcam.c's CA-PMT rewriting (see dvb_ca_descriptors_foreach() in
  * linuxdvb_private.h). Returns 0 on success, -1 if a descriptor's
  * claimed length would run past the buffer (malformed input). */
-typedef void (*dvb_cadesc_pid_cb_t)(uint8_t *pid_hi, uint8_t *pid_lo, void *aux);
 
 int
 dvb_ca_descriptors_foreach ( uint8_t *buf, int len, dvb_cadesc_pid_cb_t cb, void *aux )
