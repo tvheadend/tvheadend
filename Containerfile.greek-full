@@ -1,0 +1,50 @@
+# TVHeadend Greek Full — Intel/VA-API build
+# Source: Camthalion77/tvheadend feature/greek-localization
+# Build with: sudo docker build --progress=plain -f Containerfile.greek-full -t tvheadend:greek-full-36f8f1b --cpus=2 --memory=6g .
+FROM alpine:3.21 AS builder
+
+# Custom TVHeadend version for the Greek build
+ARG TVH_CUSTOM_VERSION=4.3-Greek-1.0
+ENV TVH_CUSTOM_VERSION=${TVH_CUSTOM_VERSION}
+WORKDIR /src
+RUN apk add --no-cache \
+    bash build-base linux-headers bsd-compat-headers cmake coreutils \
+    findutils gettext-dev git python3 py3-requests wget curl \
+    openssl-dev zlib-dev pcre2-dev uriparser-dev avahi-dev dbus-dev \
+    libdvbcsa-dev libhdhomerun-dev ffmpeg-dev libva-dev x264-dev x265-dev libvpx-dev opus-dev \
+    nodejs npm pkgconf
+COPY . /src/
+RUN git config --global --add safe.directory /src/data/dvb-scan && \
+    ./configure \
+       --prefix=/usr/local \
+       --python=python3 \
+       --disable-execinfo \
+       --enable-bundle \
+       --enable-vue_build --disable-vue_cache \
+       --disable-ffmpeg_static --enable-libav --enable-vaapi \
+       --enable-dvbscan --enable-linuxdvb \
+       --enable-satip_client --enable-satip_server \
+       --enable-iptv --enable-timeshift \
+       --enable-hdhomerun_client --disable-hdhomerun_static \
+       --enable-dvbcsa \
+    && grep -E '^(CONFIG_(LIBAV|VAAPI|VUE_BUILD|DVBSCAN|DVBCSA|SATIP_CLIENT|SATIP_SERVER|IPTV|TIMESHIFT))' .config.mk || true
+RUN make -j2 DESTDIR=/tvheadend install
+
+FROM alpine:3.21 AS runner
+RUN apk add --no-cache \
+    tini ca-certificates tzdata bash \
+    avahi dbus-libs openssl zlib pcre2 liburiparser \
+    libdvbcsa libhdhomerun-libs ffmpeg libva intel-media-driver \
+    python3 perl xmltv \
+    && addgroup -S tvheadend \
+    && adduser -S -D -G tvheadend -h /var/lib/tvheadend tvheadend \
+    && addgroup tvheadend video \
+    && install -d -o tvheadend -g tvheadend /var/lib/tvheadend /var/lib/tvheadend/recordings
+COPY --from=builder /tvheadend/ /
+COPY support/container-entrypoint.sh /init
+RUN chmod +x /init
+ENV TZ=Europe/Athens LIBVA_DRIVER_NAME=iHD
+WORKDIR /var/lib/tvheadend
+USER tvheadend
+EXPOSE 9981 9982
+ENTRYPOINT ["/sbin/tini","--","/init"]

@@ -398,6 +398,20 @@ def convert(fn, outdir):
     scan_vue(src, fn, found)
   else:
     scan_script(src, fn, 1, found)
+  # Home cards are translated at render time with t(card.title) and
+  # t(card.description). Extract their static source strings too.
+  if fn.endswith('/views/home/homeCards.ts'):
+    import ast
+    import re
+    pattern = re.compile(r"""(?m)^[ \t]*(?:title|description):[ \t]*(['"])((?:\\.|(?!\1)[^\n])*)\1[ \t]*,?[ \t]*$""")
+    for match in pattern.finditer(src):
+      literal = match.group(1) + match.group(2) + match.group(1)
+      try:
+        msgid = ast.literal_eval(literal)
+      except (SyntaxError, ValueError):
+        raise ValueError('Unrecognized home card literal at line %d' % (src.count('\n', 0, match.start()) + 1))
+      if msgid:
+        found.append((src.count('\n', 0, match.start()) + 1, msgid))
   lines = {}
   for line, msgid in found:
     lines.setdefault(line, []).append('_(%s);' % jsstr(msgid))
