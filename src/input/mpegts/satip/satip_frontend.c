@@ -2283,6 +2283,9 @@ satip_frontend_hacks( satip_frontend_t *lfe )
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
+  } else if (sd->sd_dummy_play) {
+    /* Telestar Digibit Twin: full tuning parameters in the first PLAY */
+    lfe->sf_play2 = 1;
   }
 }
 
