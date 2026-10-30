@@ -161,6 +161,8 @@ typedef struct linuxdvb_ddci_cat_reasm
   int      cache_valid;
   int      cache_version;
   int      cache_npkts;
+  int      cache_seclen;
+  uint8_t  cache_section[LDDCI_CAT_MAX_SECTION];
   uint8_t  cache_pkts[LDDCI_CAT_MAX_PACKETS][LDDCI_TS_SIZE];
 } linuxdvb_ddci_cat_reasm_t;
 
@@ -798,11 +800,13 @@ linuxdvb_ddci_cat_process ( linuxdvb_ddci_t *lddci, int ctx_id,
     n = r->npkts;
     if (n > 0 && n <= LDDCI_CAT_MAX_PACKETS) {
       int ci;
-      r->cache_valid = 1;
       r->cache_version = (r->section[5] >> 1) & 0x1F;
       r->cache_npkts = n;
+      r->cache_seclen = r->seclen;
+      memcpy(r->cache_section, r->section, r->seclen);
       for (ci = 0; ci < n; ci++)
         memcpy(r->cache_pkts[ci], out_pkts[ci], LDDCI_TS_SIZE);
+      r->cache_valid = 1;
     }
     r->npkts = 0;
     return n;
@@ -841,7 +845,7 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
 
   /* Keep the syntax/header identity from the current owner, but version and
    * CRC are ours because the descriptor loop below is a synthesized union. */
-  memcpy(sec, lddci->lddci_mux_ctx[owner_idx].ctx_cat.section, 8);
+  memcpy(sec, lddci->lddci_mux_ctx[owner_idx].ctx_cat.cache_section, 8);
   sec[6] = 0; /* section_number */
   sec[7] = 0; /* last_section_number */
 
@@ -857,11 +861,11 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
     if (ctx_idx < 0)
       continue;
     r = &lddci->lddci_mux_ctx[ctx_idx].ctx_cat;
-    if (!r->cache_valid || r->seclen < 12)
+    if (!r->cache_valid || r->cache_seclen < 12)
       continue;
-    end = r->seclen - 4; /* exclude CRC */
+    end = r->cache_seclen - 4; /* exclude CRC */
     for (pos = 8; pos + 1 < end; ) {
-      int dlen = r->section[pos + 1];
+      int dlen = r->cache_section[pos + 1];
       int dsz = dlen + 2;
       int duplicate = 0;
       if (pos + dsz > end)
@@ -874,7 +878,7 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
           int ksz = sec[k + 1] + 2;
           if (ksz <= 1 || k + ksz > n)
             break;
-          if (ksz == dsz && !memcmp(sec + k, r->section + pos, dsz)) {
+          if (ksz == dsz && !memcmp(sec + k, r->cache_section + pos, dsz)) {
             duplicate = 1;
             break;
           }
@@ -888,7 +892,7 @@ linuxdvb_ddci_cat_union_build_locked ( linuxdvb_ddci_t *lddci,
                    lddci->lddci_id, LDDCI_CAT_MAX_SECTION);
           return 0;
         }
-        memcpy(sec + n, r->section + pos, dsz);
+        memcpy(sec + n, r->cache_section + pos, dsz);
         n += dsz;
       }
       pos += dsz;
@@ -1137,8 +1141,8 @@ retry:
         }
       }
       if (chosen >= 0) {
-        if (chosen != cur)
-          ddci_snd_buf->lddci_send_rr_burst = 0;
+        /* New quantum, even if the same lane is selected again. */
+        ddci_snd_buf->lddci_send_rr_burst = 0;
         ddci_snd_buf->lddci_send_rr_lane = chosen;
       }
     }
