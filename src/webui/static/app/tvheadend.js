@@ -91,6 +91,13 @@ tvheadend.fromCSV = function(s) {
 // words for categories, presumably for compatibility with
 // mapping to a genre.
 var catmap_major = {
+  "ειδήσεις" : "newspaper",
+  "ταινία" : "clapper_board",
+  "ταινίες" : "clapper_board",
+  "σειρά" : "television",
+  "σειρές" : "television",
+  "αθλητικά" : "sports_medal",
+
   "movie" : "clapper_board",
   "news" : "newspaper",
   "radio" : "radio",
@@ -99,6 +106,15 @@ var catmap_major = {
 };
 
 var catmap_minor = {
+  "κωμωδία" : "face_with_tears_of_joy",
+  "μαγειρική" : "cooking",
+  "παιδικά" : "baby",
+  "περιπέτεια" : "bow_and_arrow",
+  "κινούμενα σχέδια" : "pencil",
+  "τέχνη" : "artist_pallette",
+  "εκπαιδευτικό" : "graduation_cap",
+  "εκπαιδευτική" : "graduation_cap",
+
   // These are taken from the frequent categories in SD and then
   // sorted by name.
   "action" : "collision_symbol",
@@ -247,6 +263,93 @@ tvheadend.applyHighResIconPath = function(arr) {
   return ret;
 }
 
+// XMLTV multilingual category aliases
+var categoryAliases = {
+  "aktuálne záležitosti": "news",
+  "børnefilm": "children",
+  "cestovanie": "adventure",
+  "fakta": "educational",
+  "film": "movie",
+  "fritid": "community",
+  "hudba a umenie": "art",
+  "kultur": "art",
+  "kultur og natur": "animals",
+  "novinky": "news",
+  "nyheder": "news",
+  "podnikanie a financie": "bus./financial",
+  "serier": "series",
+  "sport, holdsport": "sports",
+  "sport, vandsport": "sports",
+  "talent show": "series",
+  "talk show": "series",
+  "underholdning": "series",
+  "wellbeing": "educational",
+  "šport": "sports",
+  "άλλο άθλημα": "sports",
+  "αθλητές": "sports",
+  "αθλητική": "sports",
+  "αθλητισμός": "sports",
+  "αισθηματική": "series",
+  "αληθινές ιστορίες": "educational",
+  "αμερικάνικο ποδόσφαιρο": "sports",
+  "ανασκόπηση": "news",
+  "ανθρωπολογία": "educational",
+  "αστυνομική": "crime drama",
+  "αστυνομικό θρίλερ": "crime drama",
+  "βιογραφία": "educational",
+  "βόλεϊ": "sports",
+  "γουέστερν": "movie",
+  "διάφορα σπορ": "sports",
+  "δράσης": "action",
+  "δραματική": "series",
+  "δραματική κομεντί": "comedy",
+  "εγκληματολογία": "crime drama",
+  "επιστ. φαντασίας": "fantasy",
+  "επιστήμη": "educational",
+  "εποχής": "series",
+  "θέατρο": "art",
+  "θρίλερ": "crime drama",
+  "θρησκευτικό": "community",
+  "ιστορικό": "educational",
+  "κατασκοπείας": "crime drama",
+  "κιν. σχεδίων": "animated",
+  "κοινωνική": "series",
+  "κοινωνικό": "community",
+  "κομεντί": "comedy",
+  "μαύρη κωμωδία": "comedy",
+  "μηχανική": "educational",
+  "μηχανοκίνητα": "auto racing",
+  "μουσική": "music",
+  "μπάσκετ": "basketball",
+  "μυστηρίου": "crime drama",
+  "ντοκιμαντέρ": "educational",
+  "παιδική": "children",
+  "παρουσίαση": "series",
+  "ποδόσφαιρο": "sports",
+  "ποδόσφαιρο σάλας": "sports",
+  "πολεμική": "action",
+  "πολεμικό": "action",
+  "πολιτικό": "news",
+  "πολιτισμός": "art",
+  "ριάλιτι": "series",
+  "ρομαντική κομεντί": "comedy",
+  "σειρά ντοκιμαντέρ": "educational",
+  "συνέντευξη": "news",
+  "σόου": "series",
+  "τέχνες": "art",
+  "ταινία": "movie",
+  "ταξίδια": "adventure",
+  "τηλεαγορές": "bus./financial",
+  "τηλεπαιχνίδι": "series",
+  "τουριστικά": "adventure",
+  "τρόμου": "fantasy",
+  "υγεία": "educational",
+  "φύση": "animals",
+  "χάντμπολ": "sports",
+  "ψυχαγωγική εκπομπή": "series",
+  "ψυχολογικό δράμα": "series",
+  "όπερα": "art",
+};
 tvheadend.getContentTypeIcons = function(rec, style) {
   var ret_major = [];
   var ret_minor = [];
@@ -256,6 +359,7 @@ tvheadend.getContentTypeIcons = function(rec, style) {
     for ( var i = 0 ; i < cat.length ; ++i ) {
       var v = cat[i];
       v = v.toLowerCase();
+      v = categoryAliases[v] || v;
       var l = catmap_major[v];
       if (l) ret_major.push(l);
       l = catmap_minor[v];
