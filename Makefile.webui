@@ -131,6 +131,7 @@ JAVASCRIPT += $(ROOTPATH)/app/acleditor.js
 CACLIENT-$(CONFIG_CWC) = yes
 CACLIENT-$(CONFIG_CCCAM) = yes
 CACLIENT-$(CONFIG_CAPMT) = yes
+CACLIENT-$(CONFIG_LINUXDVB_CA) = yes
 
 ifeq ($(CACLIENT-yes), yes)
 JAVASCRIPT += $(ROOTPATH)/app/caclient.js
