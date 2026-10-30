@@ -474,7 +474,8 @@ linuxdvb_ddci_put ( linuxdvb_ddci_t *lddci, const service_t *t,
                     const uint8_t *tsb, int len );
 /* Returns 0 on success, -1 if the service cannot be assigned. */
 int
-linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit );
+linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
+                       int svc_limit );
 void
 linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t );
 /* return 0, if ddci can be assigned to the given service */

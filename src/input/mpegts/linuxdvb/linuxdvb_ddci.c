@@ -226,6 +226,10 @@ struct linuxdvb_ddci
   linuxdvb_ddci_svc_ctx_t    *lddci_svc_ctx;
   int                         lddci_svc_ctx_count;
   int                         lddci_svc_ctx_alloc;
+  /* -1: not selected; 0: native DDCI; 1: virtual MTD.  Remains pinned
+   * across idle sessions until the physical DDCI is closed, so delayed
+   * CAM packets cannot be reinterpreted under a different PID scheme. */
+  int                         lddci_mtd_mode;
 
   /* Reverse PID mapping and ownership indexed by CAM-visible PID. */
   uint16_t                    lddci_pid_u2r[LDDCI_MTD_PID_SPACE];
@@ -1613,7 +1617,7 @@ linuxdvb_ddci_read_thread ( void *arg )
     if (sb.sb_ptr > 0) {
       int len;
       int skip;
-      const uint8_t *tsb;
+      uint8_t *tsb;
 
       len = sb.sb_ptr;
       if (len < LDDCI_MIN_TS_PKT)
@@ -1657,12 +1661,20 @@ linuxdvb_ddci_read_thread ( void *arg )
         int ctx_slot;
       };
       struct ddci_ctx_snapshot *ctx_snapshot = NULL;
+      mpegts_mux_t *native_mux = NULL;
+      mpegts_input_t *native_input = NULL;
       int ctx_count;
+      int mode;
       int i;
 
       tvh_mutex_lock(&lddci->lddci_mux_lock);
+      mode = lddci->lddci_mtd_mode;
       ctx_count = lddci->lddci_mux_ctx_count;
-      if (ctx_count > 0)
+      if (mode == 0 && ctx_count == 1) {
+        native_mux = lddci->lddci_mux_ctx[0].ctx_mux;
+        native_input = lddci->lddci_mux_ctx[0].ctx_input;
+      }
+      if (mode == 1 && ctx_count > 0)
         ctx_snapshot = malloc(ctx_count * sizeof(*ctx_snapshot));
       if (ctx_snapshot != NULL)
         for (i = 0; i < ctx_count; i++) {
@@ -1673,10 +1685,14 @@ linuxdvb_ddci_read_thread ( void *arg )
         }
       tvh_mutex_unlock(&lddci->lddci_mux_lock);
 
-      if (ctx_count > 0 && ctx_snapshot == NULL) {
+      if (mode == 0) {
+        /* Native return packets already carry their on-air PIDs. */
+        if (native_mux && native_input)
+          mpegts_input_postdemux(native_input, native_mux, tsb, len);
+      } else if (mode == 1 && ctx_count > 0 && ctx_snapshot == NULL) {
         tvherror(LS_DDCI, "CAM %s: out of memory snapshotting %d MTD contexts",
                  lddci->lddci_id, ctx_count);
-      } else {
+      } else if (mode == 1) {
         uint8_t stackbuf[LDDCI_TS_SIZE * 64];
 
         for (i = 0; i < ctx_count; i++) {
@@ -1794,6 +1810,8 @@ linuxdvb_ddci_create ( linuxdvb_transport_t *lcat, const char *ci_path)
   linuxdvb_ddci_wr_thread_init(lddci);
   linuxdvb_ddci_rd_thread_init(lddci);
   tvh_mutex_init(&lddci->lddci_mux_lock, NULL);
+  lddci->lddci_mtd_mode = -1;
+  lddci->lddci_prev_ctx_id = -1;
 
   tvhtrace(LS_DDCI, "created %s %s", lddci->lddci_id, lddci->lddci_path);
 
@@ -1832,8 +1850,15 @@ linuxdvb_ddci_close ( linuxdvb_ddci_t *lddci )
     lddci->lddci_fdR = -1;
     closed = 1;
   }
-  if (closed)
+  if (closed) {
+    /* Threads are stopped and the writer queue is drained.  A new CAM
+     * session may now select a different PID namespace if it is idle. */
+    tvh_mutex_lock(&lddci->lddci_mux_lock);
+    if (lddci->lddci_svc_ctx_count == 0)
+      lddci->lddci_mtd_mode = -1;
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
     tvhtrace(LS_DDCI, "CAM %s closed", lddci->lddci_id);
+  }
 }
 
 int
@@ -1886,7 +1911,8 @@ linuxdvb_ddci_mtd_ctx_for_service ( linuxdvb_ddci_t *lddci, const service_t *t )
     return -1;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
-  svc_idx = linuxdvb_ddci_find_svc_ctx(lddci, t);
+  svc_idx = lddci->lddci_mtd_mode == 1 ?
+            linuxdvb_ddci_find_svc_ctx(lddci, t) : -1;
   ctx_id = svc_idx >= 0 ? lddci->lddci_svc_ctx[svc_idx].svc_ctx_id : -1;
   tvh_mutex_unlock(&lddci->lddci_mux_lock);
 
@@ -1901,7 +1927,8 @@ linuxdvb_ddci_mtd_arm_eit ( linuxdvb_ddci_t *lddci, const service_t *t,
   if (lddci == NULL || t == NULL)
     return;
   tvh_mutex_lock(&lddci->lddci_mux_lock);
-  svc_idx = linuxdvb_ddci_find_svc_ctx(lddci, t);
+  svc_idx = lddci->lddci_mtd_mode == 1 ?
+            linuxdvb_ddci_find_svc_ctx(lddci, t) : -1;
   if (svc_idx >= 0 && list_management != 0x05) { /* not DELETE */
     linuxdvb_ddci_svc_ctx_t *svc = &lddci->lddci_svc_ctx[svc_idx];
     svc->svc_mtd_eit_sid = mapped_sid;
@@ -1926,7 +1953,8 @@ linuxdvb_ddci_mtd_map_pid ( linuxdvb_ddci_t *lddci, const service_t *t,
     return 0;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
-  svc_idx = linuxdvb_ddci_find_svc_ctx(lddci, t);
+  svc_idx = lddci->lddci_mtd_mode == 1 ?
+            linuxdvb_ddci_find_svc_ctx(lddci, t) : -1;
   r = svc_idx >= 0 ?
       linuxdvb_ddci_map_pid_for_service_locked(lddci, svc_idx, real_pid) : 0;
   if (svc_idx >= 0 && r <= LDDCI_MTD_PID_LAST)
@@ -1946,7 +1974,8 @@ linuxdvb_ddci_mtd_map_sid ( linuxdvb_ddci_t *lddci, int ctx_id, uint16_t real_si
     return 0xffff;
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
-  r = linuxdvb_ddci_map_sid(lddci, ctx_id, real_sid);
+  r = lddci->lddci_mtd_mode == 1 ?
+      linuxdvb_ddci_map_sid(lddci, ctx_id, real_sid) : 0xffff;
   tvh_mutex_unlock(&lddci->lddci_mux_lock);
 
   return r;
@@ -2074,6 +2103,17 @@ linuxdvb_ddci_put
 
   /* A missing MTD assignment must never forward native PIDs to the shared CAM. */
   if (svc_idx < 0 || ctx_id < 0) {
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    return;
+  }
+
+  if (lddci->lddci_mtd_mode == 0) {
+    /* Native DDCI: retain all original TS PIDs and PSI/SI tables. */
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    linuxdvb_ddci_wr_thread_buffer_put(&lddci->lddci_wr_thread, tsb, len);
+    return;
+  }
+  if (lddci->lddci_mtd_mode != 1) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
     return;
   }
@@ -2211,7 +2251,8 @@ linuxdvb_ddci_put
 }
 
 int
-linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
+linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int multi,
+                       int svc_limit )
 {
   mpegts_service_t *s = (mpegts_service_t *)t;
   int ctx_idx;
@@ -2225,6 +2266,19 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
   if (linuxdvb_ddci_find_svc_ctx(lddci, t) >= 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
     return 0;
+  }
+
+  /* The PID namespace cannot switch while this DDCI device is open:
+   * queued/late CAM packets still belong to the prior session. */
+  if (lddci->lddci_mtd_mode >= 0 && lddci->lddci_mtd_mode != !!multi) {
+    tvhwarn(LS_DDCI, "CAM %s: native/MTD mode changed; restart the DDCI device before assigning another service",
+            lddci->lddci_id);
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    return -1;
+  }
+  if (!multi && lddci->lddci_svc_ctx_count > 0) {
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    return -1;
   }
 
   /* Defensive duplicate of dvbcam admission control: the user-configured
@@ -2255,7 +2309,7 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
       return -1;
     }
     {
-      int slot = linuxdvb_ddci_alloc_mux_slot_locked(lddci);
+      int slot = multi ? linuxdvb_ddci_alloc_mux_slot_locked(lddci) : 0;
       if (slot < 0) {
         tvherror(LS_DDCI,
                  "CAM %s: all %d VDR-style MTD PID slots are active; refusing mux \"%s\"",
@@ -2287,6 +2341,8 @@ linuxdvb_ddci_assign ( linuxdvb_ddci_t *lddci, service_t *t, int svc_limit )
   lddci->lddci_svc_ctx[svc_idx].svc_t = t;
   lddci->lddci_svc_ctx[svc_idx].svc_ctx_id = ctx_id;
   lddci->lddci_mux_ctx[ctx_idx].ctx_refcount++;
+  if (lddci->lddci_mtd_mode < 0)
+    lddci->lddci_mtd_mode = !!multi;
 
   tvhnotice(LS_DDCI,
             "CAM %s: assigned %p to mux context #%d slot %d \"%s\" "
@@ -2372,6 +2428,10 @@ linuxdvb_ddci_unassign ( linuxdvb_ddci_t *lddci, service_t *t )
     lddci->lddci_mtd_cat_union_cc = 0;
     memset(lddci->lddci_pid_owner, 0, sizeof(lddci->lddci_pid_owner));
     memset(lddci->lddci_pid_u2r, 0, sizeof(lddci->lddci_pid_u2r));
+    lddci->lddci_prev_tsb = NULL;
+    lddci->lddci_prev_ctx_id = -1;
+    /* Mode remains pinned while open: late CAM packets still belong to
+     * the previous session's PID namespace. */
   }
 
   tvh_mutex_unlock(&lddci->lddci_mux_lock);
@@ -2388,8 +2448,13 @@ linuxdvb_ddci_do_not_assign ( linuxdvb_ddci_t *lddci, const service_t *t, int mu
 
   tvh_mutex_lock(&lddci->lddci_mux_lock);
 
-  /* An available service slot does not imply a free mux namespace slot. */
-  if (linuxdvb_ddci_find_mux_ctx(lddci, s->s_dvb_mux) < 0 &&
+  if (lddci->lddci_mtd_mode >= 0 && lddci->lddci_mtd_mode != !!multi) {
+    tvh_mutex_unlock(&lddci->lddci_mux_lock);
+    return 1;
+  }
+
+  /* Only virtual MTD needs a free PID namespace slot. */
+  if (multi && linuxdvb_ddci_find_mux_ctx(lddci, s->s_dvb_mux) < 0 &&
       linuxdvb_ddci_alloc_mux_slot_locked(lddci) < 0) {
     tvh_mutex_unlock(&lddci->lddci_mux_lock);
     return 1;

@@ -202,8 +202,8 @@ ts_recv_packet1
 
   /* PAT/PMT packets are signalling, not scrambled elementary-stream data.
    * Keep them on the service MPEG-TS path while the service is descrambled. */
-  if (dvbcam_is_ddci((service_t *)t) &&
-      (pid == DVB_PAT_PID || pid == t->s_components.set_pmt_pid)) {
+  if ((pid == DVB_PAT_PID || pid == t->s_components.set_pmt_pid) &&
+      dvbcam_is_mtd((service_t *)t)) {
     ts_recv_packet0(t, st, tsb, len);
     tvh_mutex_unlock(&t->s_stream_mutex);
     return 1;

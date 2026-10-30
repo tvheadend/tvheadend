@@ -159,6 +159,18 @@ dvbcam_is_ddci(struct service *t)
   }
   return ret;
 }
+
+int
+dvbcam_is_mtd(struct service *t)
+{
+  th_descrambler_runtime_t *dr = t->s_descramble;
+  if (dr && dr->dr_descrambler) {
+    dvbcam_active_service_t *as = (dvbcam_active_service_t *)dr->dr_descrambler;
+    if (as->ac && as->lddci)
+      return linuxdvb_ddci_mtd_ctx_for_service(as->lddci, t) >= 0;
+  }
+  return 0;
+}
 #endif
 
 /*
@@ -370,7 +382,9 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
      * announced once with ADD, including the first one.  Existing active
      * programs are left untouched; replaying the whole set on every
      * lifecycle change can disturb a CAM's established ECM/CW state. */
-    if (ac->ca && ac->ca->lca_transport && ac->ca->lca_transport->lddci) {
+    if (ac->ca && ac->ca->lca_transport && ac->ca->lca_transport->lddci &&
+        linuxdvb_ddci_mtd_ctx_for_service(ac->ca->lca_transport->lddci,
+                                          (service_t *)s) >= 0) {
       bcmd = EN50221_CAPMT_BUILD_ADD;
     } else
 #endif
@@ -404,7 +418,7 @@ dvbcam_pmt_data(mpegts_service_t *s, const uint8_t *ptr, int len)
                             ac->caids, ac->caids_count,
                             as->last_pmt, as->last_pmt_len,
                             &capmt, &capmt_len,
-                            pmap, smap, &remap_ctx);
+                            pmap, smap, pmap ? &remap_ctx : NULL);
   }
 #else
   r = en50221_capmt_build(s, bcmd,
@@ -468,7 +482,7 @@ dvbcam_service_destroy(th_descrambler_t *td)
                                 ac->caids, ac->caids_count,
                                 as->last_pmt, as->last_pmt_len,
                                 &capmt, &capmt_len,
-                                pmap, smap, &remap_ctx);
+                                pmap, smap, pmap ? &remap_ctx : NULL);
       }
 #else
       r = en50221_capmt_build(s, EN50221_CAPMT_BUILD_DELETE,
@@ -675,7 +689,8 @@ end_of_search_for_cam:
 
 #if ENABLE_DDCI
   lcat = ac->ca->lca_transport;
-  if (lcat->lddci && linuxdvb_ddci_assign(lcat->lddci, t, dc->limit) < 0) {
+  if (lcat->lddci && linuxdvb_ddci_assign(lcat->lddci, t, dc->multi,
+                                         dc->limit) < 0) {
     free(as);
     goto end;
   }
