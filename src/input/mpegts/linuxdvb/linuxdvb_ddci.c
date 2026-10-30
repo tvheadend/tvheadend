@@ -269,14 +269,16 @@ linuxdvb_ddci_find_mux_ctx_id ( const linuxdvb_ddci_t *lddci, int ctx_id )
   return -1;
 }
 
-/* Physical CAT clock owner.  Only this context's recurring CAT cadence is used
- * to emit the synthesized physical CAT; CAT descriptors from every active MTD
- * context are merged into that one stream below.  The oldest surviving array
- * entry supplies the cadence, and another context takes over automatically if
- * it disappears. */
+/* Physical CAT clock owner.  Prefer the first context with a valid CAT
+ * cache so an uninitialized context cannot suppress the synthesized union.
+ * The selected context supplies the recurring CAT emission cadence. */
 static int
 linuxdvb_ddci_cat_emm_owner_ctx_locked ( const linuxdvb_ddci_t *lddci )
 {
+  int i;
+  for (i = 0; i < lddci->lddci_mux_ctx_count; i++)
+    if (lddci->lddci_mux_ctx[i].ctx_cat.cache_valid)
+      return lddci->lddci_mux_ctx[i].ctx_id;
   return lddci->lddci_mux_ctx_count > 0 ? lddci->lddci_mux_ctx[0].ctx_id : -1;
 }
 
