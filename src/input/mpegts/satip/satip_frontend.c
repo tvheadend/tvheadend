@@ -1598,7 +1598,7 @@ satip_frontend_input_thread ( void *aux )
   size_t c;
   tvhpoll_event_t ev[3];
   tvhpoll_t *efd;
-  int changing, ms, fatal, running, play2, exit_flag;
+  int changing, ms, fatal, running, play2, exit_flag, dummy_play;
   int rtsp_flags, position, reply;
   uint32_t seq, unc;
   udp_multirecv_t um;
@@ -1723,6 +1723,7 @@ new_tune:
   seq         = -1;
   lfe->sf_seq = -1;
   play2       = 1;
+  dummy_play  = 0;
   rtsp_flags  = satip_frontend_rtsp_flags(lfe);
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
@@ -2014,6 +2015,16 @@ new_tune:
             tvhdebug(LS_SATIP, "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
+            if (lfe->sf_device->sd_dummy_play && dummy_play == 0) {
+              /* bare PLAY first (answer is awaited but ignored) */
+              dummy_play = 1;
+              if (satip_rtsp_play_bare(rtsp) >= 0) {
+                reply = 1;
+                continue;
+              }
+              dummy_play = 2; /* send failed: carry on as usual */
+            }
+post_setup:
             if (lfe->sf_play2) {
               r = -12345678;
               tvh_mutex_lock(&lfe->sf_dvr_lock);
@@ -2043,6 +2054,11 @@ new_tune:
         case RTSP_CMD_PLAY:
           if (!running)
             break;
+          if (dummy_play == 1) {
+            /* answer to the bare PLAY: code and content ignored */
+            dummy_play = 2;
+            goto post_setup;
+          }
           satip_frontend_wake_other_waiting(lfe, tr);
           if (rtsp->hc_code == 200 && play2) {
             play2 = 0;
@@ -2267,6 +2283,9 @@ satip_frontend_hacks( satip_frontend_t *lfe )
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
+  } else if (sd->sd_dummy_play) {
+    /* Telestar Digibit Twin: full tuning parameters in the first PLAY */
+    lfe->sf_play2 = 1;
   }
 }
 
