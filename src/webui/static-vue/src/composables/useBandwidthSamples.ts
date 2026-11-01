@@ -12,11 +12,11 @@
  * Chart.js redraws on every change.
  *
  * Why not subscribe to Comet directly: `useStatusStore` already
- * does. Each Comet `input_status` / `subscriptions` notification
- * triggers a silent refetch that mutates the entries array in
- * place via `mergeByKey`, preserving row identity. We just react
- * to those mutations — no parallel subscription, no duplicate
- * fetches.
+ * does. It applies each Comet `input_status` update to its row in
+ * place, and a `subscriptions` notification triggers a silent
+ * refetch that `mergeByKey` merges into the existing rows. Both
+ * preserve row identity. We just react to those mutations — no
+ * parallel subscription, no duplicate fetches.
  *
  * Sampling cadence is the server's natural 1 Hz tick. We dedupe
  * by timestamp inside a 500 ms gate so multiple back-to-back
@@ -138,7 +138,7 @@ export function useBandwidthSamples<Row extends Record<string, unknown>>(
   }
 
   /* Re-sample on every entries change. The store mutates rows in
-   * place via Object.assign (mergeByKey), so a deep watcher fires
+   * place (applyUpdate or mergeByKey), so a deep watcher fires
    * on each cell update. */
   watch(opts.rows, sample, { deep: true, immediate: true })
   /* React to window changes — shrinking the window must drop

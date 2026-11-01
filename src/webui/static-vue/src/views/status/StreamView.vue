@@ -7,9 +7,11 @@
  * StreamView — Status > Stream tab. Live view of tvheadend's tuner /
  * input adapters: signal, BER, errors, bandwidth.
  *
- * Backing endpoint api/status/inputs (ACCESS_ADMIN). Comet
- * notification class 'input_status' triggers refetch on any
- * server-side change (signal level updates, new subscription, etc.).
+ * Backing endpoint api/status/inputs (ACCESS_ADMIN). Once a second
+ * the server pushes each active mux's row as an 'input_status'
+ * update, which the store applies in place. A refetch would reset
+ * the server's bandwidth counter. A mux start or stop sends a
+ * reload, which refetches the list.
  *
  * Toolbar actions:
  *   - Show bandwidth — opens the live BandwidthChartDrawer with
