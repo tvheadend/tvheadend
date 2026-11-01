@@ -1344,7 +1344,7 @@ satip_frontend_extra_shutdown
   int r, nfds;
   char b[32];
 
-  if (session[0] == '\0' || stream_id <= 0)
+  if (session[0] == '\0' || stream_id < 0)
     return;
 
   efd = tvhpoll_create(1);
