@@ -2079,12 +2079,18 @@ new_tune:
         if (post_setup) {
           /* SETUP done (and bare PLAY answered, if requested): go on */
           post_setup = 0;
-          if (lfe->sf_device->sd_dummy_play && dummy_play == 0 &&
-              satip_rtsp_play_bare(rtsp) >= 0) {
-            /* bare PLAY sent: wait for its answer, but not forever */
-            dummy_play = 1;
-            dummy_deadline = mclk() + sec2mono(SATIP_DUMMY_PLAY_TIMEOUT);
-            reply = 1;
+          if (lfe->sf_device->sd_dummy_play && dummy_play == 0) {
+            if (satip_rtsp_play_bare(rtsp) < 0) {
+              /* do not go on with the parameterized PLAY without it */
+              tvherror(LS_SATIP, "%s - failed to send the bare PLAY", buf);
+              satip_frontend_tuning_error(lfe, tr);
+              fatal = 1;
+            } else {
+              /* bare PLAY sent: wait for its answer, but not forever */
+              dummy_play = 1;
+              dummy_deadline = mclk() + sec2mono(SATIP_DUMMY_PLAY_TIMEOUT);
+              reply = 1;
+            }
           } else if (lfe->sf_play2) {
             r = -12345678;
             tvh_mutex_lock(&lfe->sf_dvr_lock);
