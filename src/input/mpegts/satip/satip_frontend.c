@@ -1924,6 +1924,16 @@ new_tune:
       tvherror(LS_SATIP, "%s - no answer to the bare PLAY, restarting RTSP", buf);
       satip_frontend_tuning_error(lfe, tr);
       fatal = 1;
+      if (!exit_flag) {
+        /* The unanswered PLAY would block the next SETUP on this connection
+         * (new_tune may reuse it): release the stale session through a
+         * fresh connection and drop this one, new_tune will reconnect.
+         * On shutdown the normal exit path does the cleanup. */
+        satip_frontend_extra_shutdown(lfe, session, stream_id);
+        session[0] = '\0';
+        http_client_close(rtsp);
+        rtsp = NULL;
+      }
       continue;
     }
 
