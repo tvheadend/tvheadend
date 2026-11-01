@@ -28,6 +28,7 @@
 #include "satip.h"
 
 #define SATIP_BUF_SIZE    (4000*188)
+#define SATIP_DUMMY_PLAY_TIMEOUT 5 /* seconds to wait for the bare PLAY answer */
 
 #define SATIP_DEFAULT_ROLLOFF_AUTO	0
 #define SATIP_DEFAULT_ROLLOFF_35	1

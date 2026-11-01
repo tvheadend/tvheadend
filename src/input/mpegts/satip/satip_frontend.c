@@ -1603,6 +1603,7 @@ satip_frontend_input_thread ( void *aux )
   uint32_t seq, unc;
   udp_multirecv_t um;
   uint64_t u64, u64_2, fatal_timeout;
+  int64_t dummy_deadline;
   long stream_id;
 
   /* If set - the thread will be cancelled */
@@ -1724,6 +1725,7 @@ new_tune:
   lfe->sf_seq = -1;
   play2       = 1;
   dummy_play  = 0;
+  dummy_deadline = 0;
   rtsp_flags  = satip_frontend_rtsp_flags(lfe);
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
@@ -1916,6 +1918,15 @@ new_tune:
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
+    /* The bare PLAY has its own deadline: RTP/RTCP activity must not
+     * extend it and a pending answer must not block a mux stop. */
+    if (dummy_play == 1 && mclk() > dummy_deadline) {
+      tvherror(LS_SATIP, "%s - no answer to the bare PLAY, restarting RTSP", buf);
+      satip_frontend_tuning_error(lfe, tr);
+      fatal = 1;
+      continue;
+    }
+
     if (!tvheadend_is_running() || exit_flag) {
       exit_flag = 1;
       running = 0;
@@ -2018,6 +2029,7 @@ new_tune:
             if (lfe->sf_device->sd_dummy_play && dummy_play == 0) {
               /* bare PLAY first (answer is awaited but ignored) */
               dummy_play = 1;
+              dummy_deadline = mclk() + sec2mono(SATIP_DUMMY_PLAY_TIMEOUT);
               if (satip_rtsp_play_bare(rtsp) >= 0) {
                 reply = 1;
                 continue;
