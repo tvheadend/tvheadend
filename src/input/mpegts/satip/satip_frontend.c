@@ -1933,6 +1933,12 @@ new_tune:
         session[0] = '\0';
         http_client_close(rtsp);
         rtsp = NULL;
+        /* same release as the wake: label in satip_frontend_shutdown() */
+        tvh_mutex_lock(&lfe->sf_dvr_lock);
+        satip_frontend_wake_other_waiting(lfe, tr);
+        satip_frontend_request_cleanup(lfe, tr);
+        tvh_mutex_unlock(&lfe->sf_dvr_lock);
+        tr = NULL;
       }
       continue;
     }
