@@ -17,10 +17,12 @@
 process.env.TZ = 'Europe/Berlin'
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent } from 'vue'
+import { defineComponent, reactive } from 'vue'
 import { flushPromises, mount, type VueWrapper } from '@vue/test-utils'
 import {
   useEpgViewState,
+  type ChannelRow,
+  type ChannelTag,
   type UseEpgViewState,
   type UseEpgViewStateOpts,
 } from '../useEpgViewState'
@@ -60,9 +62,15 @@ vi.mock('@/stores/access', () => ({
   }),
 }))
 
+/* Reactive, so a test can change the entries as a 'dvrentry'
+ * notification does. */
 const dvrEnsure = vi.fn()
+const dvrStore = reactive({
+  entries: [] as { uuid: string; sched_status: string }[],
+  ensure: dvrEnsure,
+})
 vi.mock('@/stores/dvrEntries', () => ({
-  useDvrEntriesStore: () => ({ entries: [], ensure: dvrEnsure }),
+  useDvrEntriesStore: () => dvrStore,
 }))
 
 vi.mock('../useIsPhone', async () => {
@@ -84,14 +92,23 @@ interface GridCall {
 }
 
 /* Default API behaviour: empty grids everywhere. Tests override
- * `epg/events/grid` per scenario. */
+ * `epg/events/grid` per scenario, and other endpoints in `others`. */
 function answerWith(
   eventsImpl: (params: Record<string, unknown>) => unknown,
+  others: Record<string, () => unknown> = {},
 ): void {
   apiMock.mockImplementation((endpoint: string, params: Record<string, unknown>) => {
     if (endpoint === 'epg/events/grid') return Promise.resolve(eventsImpl(params))
-    return Promise.resolve({ entries: [], total: 0, totalCount: 0 })
+    return Promise.resolve(others[endpoint]?.() ?? { entries: [], total: 0, totalCount: 0 })
   })
+}
+
+/* A lost Comet connection coming back. The client always goes
+ * through connecting in between. */
+function reconnect(): void {
+  cometStateListener?.('disconnected')
+  cometStateListener?.('connecting')
+  cometStateListener?.('connected')
 }
 
 function eventsGridCalls(): GridCall[] {
@@ -134,6 +151,7 @@ beforeEach(() => {
   cometStateListener = null
   hasDvrAccess = false
   dvrEnsure.mockReset()
+  dvrStore.entries = []
   apiMock.mockReset()
   answerWith(() => ({ entries: [], total: 0, totalCount: 0 }))
 })
@@ -179,6 +197,9 @@ describe('useEpgViewState — channel-tag change (per-day mode)', () => {
     const oldFetches = pending.splice(0)
     expect(oldFetches.length).toBe(2)
 
+    /* A refetch for the old tag, asked for while they are in flight,
+     * is dropped with them. */
+    reconnect()
     setTag(state, 'tag-1')
     await flushPromises()
     /* New-tag fetches for the same viewport days dispatched. */
@@ -197,6 +218,7 @@ describe('useEpgViewState — channel-tag change (per-day mode)', () => {
     await flushPromises()
     expect(state.events.value.map((e) => e.eventId)).toEqual([200])
     expect(state.loadedDays.value.size).toBe(2)
+    expect(pending).toHaveLength(0)
   })
 
   it('reloads the last-known viewport days without waiting for a scroll', async () => {
@@ -258,8 +280,7 @@ describe('useEpgViewState — lazy table full refresh', () => {
       entries: [row(1, { dvrState: 'scheduled' }), row(2)],
       totalCount: 5,
     }))
-    cometStateListener?.('disconnected')
-    cometStateListener?.('connected')
+    reconnect()
     await flushPromises()
 
     const calls = eventsGridCalls()
@@ -274,6 +295,182 @@ describe('useEpgViewState — lazy table full refresh', () => {
     /* Fresh rows merged in place. */
     expect(state.events.value.map((e) => e.eventId)).toEqual([1, 2])
     expect(state.events.value[0].dvrState).toBe('scheduled')
+  })
+})
+
+describe('useEpgViewState — refetch of the loaded days', () => {
+  /* What the server holds. Tests change it while the connection is
+   * lost or while a day fetch is on the way. */
+  let events: ReturnType<typeof row>[]
+  let channels: ChannelRow[]
+  let tags: ChannelTag[]
+  /* Day fetches wait in `held` while `holdReplies` is set. */
+  let holdReplies: boolean
+  let held: { params: Record<string, unknown>; resolve: (reply: unknown) => void }[]
+
+  /* A day fetch gets the events that overlap its day. The server's
+   * comparators are inclusive (`_eq_comp_num` in src/epg.c). */
+  function dayReply(params: Record<string, unknown>) {
+    const filter = JSON.parse(String(params.filter ?? '[]')) as {
+      field: string
+      value: number
+    }[]
+    const dayEnd = filter.find((f) => f.field === 'start')?.value ?? Infinity
+    const dayStart = filter.find((f) => f.field === 'stop')?.value ?? -Infinity
+    const entries = events.filter((e) => e.start <= dayEnd && e.stop >= dayStart)
+    return { entries, totalCount: entries.length }
+  }
+
+  /* The server reads the day of a held fetch now. Its reply arrives
+   * when the returned function is called. */
+  function read(fetch: (typeof held)[number]): () => void {
+    const reply = dayReply(fetch.params)
+    return () => fetch.resolve(reply)
+  }
+
+  /* A DVR change as the 'dvrentry' notification brings it. The DVR
+   * store refetches its entries and the EPG its days 500 ms later. */
+  async function dvrChange(): Promise<void> {
+    dvrStore.entries = [{ uuid: 'dvr-1', sched_status: 'scheduled' }]
+    await flushPromises()
+    await vi.advanceTimersByTimeAsync(500)
+  }
+
+  /* Pinned now: 2026-11-10 12:00 local, so the composable loads
+   * November 10 and 11 on mount. Date and the debounce timers are
+   * faked, flushPromises keeps using setImmediate. */
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date', 'setTimeout', 'clearTimeout'] })
+    vi.setSystemTime(new Date(2026, 10, 10, 12, 0, 0))
+    events = []
+    channels = []
+    tags = []
+    holdReplies = false
+    held = []
+    const reply = (params: Record<string, unknown>) =>
+      holdReplies ? new Promise((resolve) => held.push({ params, resolve })) : dayReply(params)
+    answerWith(reply, {
+      'channel/grid': () => ({ entries: channels }),
+      'channeltag/grid': () => ({ entries: tags }),
+      'epg/events/load': () => ({ entries: events }),
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  /* Epoch of a local time on November 10 (day 0) or 11 (day 1). */
+  const at = (day: number, hour: number, minute = 0) =>
+    Math.floor(new Date(2026, 10, 10 + day, hour, minute).getTime() / 1000)
+
+  async function mountLoaded(): Promise<UseEpgViewState> {
+    const { state, wrapper } = mountState()
+    wrappers.push(wrapper)
+    await flushPromises()
+    return state
+  }
+
+  it('drops the events deleted during the outage and keeps each event once', async () => {
+    const crossesMidnight = row(3, { start: at(0, 23, 30), stop: at(1, 0, 30) })
+    events = [
+      row(1, { start: at(0, 14), stop: at(0, 15) }),
+      row(2, { start: at(0, 16), stop: at(0, 17) }),
+      crossesMidnight,
+      row(4, { start: at(1, 10), stop: at(1, 11) }),
+    ]
+    const state = await mountLoaded()
+    /* Both day replies list the event across midnight. */
+    expect(state.events.value.map((e) => e.eventId)).toEqual([1, 2, 3, 4])
+
+    /* Event 2 deleted, event 4 moved to the evening before. */
+    events = [events[0], row(4, { start: at(0, 20), stop: at(0, 21) }), crossesMidnight]
+    reconnect()
+    await flushPromises()
+
+    expect(state.events.value.map((e) => e.eventId)).toEqual([1, 4, 3])
+    expect(state.events.value[1].start).toBe(at(0, 20))
+  })
+
+  it('shows the channel and tag names changed during the outage', async () => {
+    channels = [{ uuid: 'ch-1', name: 'One', number: 1, tags: ['tag-1'] }]
+    tags = [{ uuid: 'tag-1', name: 'Sport' }]
+    const state = await mountLoaded()
+    expect(state.channels.value[0].name).toBe('One')
+    expect(state.tags.value[0].name).toBe('Sport')
+
+    channels = [{ ...channels[0], name: 'One HD' }]
+    tags = [{ uuid: 'tag-1', name: 'Sports' }]
+    reconnect()
+    await flushPromises()
+
+    expect(state.channels.value[0].name).toBe('One HD')
+    expect(state.tags.value[0].name).toBe('Sports')
+  })
+
+  it('fetches a day again when a change comes in while its first reply is on the way', async () => {
+    const crossesMidnight = { start: at(0, 23, 30), stop: at(1, 0, 30) }
+    events = [row(3, { ...crossesMidnight, dvrState: '' })]
+    holdReplies = true
+    const state = await mountLoaded()
+    const [today, tomorrow] = held.splice(0)
+
+    /* The server reads today, the programme across midnight is
+     * scheduled, the server reads tomorrow. Tomorrow's reply and its
+     * refetch arrive before the old reply of today. */
+    const oldToday = read(today)
+    events = [row(3, { ...crossesMidnight, dvrState: 'scheduled', dvrUuid: 'dvr-1' })]
+    read(tomorrow)()
+    await dvrChange()
+    held.splice(0).forEach((f) => read(f)())
+    await flushPromises()
+    oldToday()
+    await flushPromises()
+    held.splice(0).forEach((f) => read(f)())
+    await flushPromises()
+
+    expect(state.events.value.map((e) => e.dvrState)).toEqual(['scheduled'])
+    expect(eventsGridCalls()).toHaveLength(4)
+  })
+
+  it('fetches a day in flight once more, however many refetches ask for it', async () => {
+    const afternoon = { start: at(0, 14), stop: at(0, 15) }
+    events = [row(1, { ...afternoon, dvrState: '' })]
+    const state = await mountLoaded()
+    holdReplies = true
+    reconnect()
+    await flushPromises()
+    /* The server reads both days, then the programme is scheduled. */
+    const oldReplies = held.splice(0).map(read)
+    events = [row(1, { ...afternoon, dvrState: 'scheduled', dvrUuid: 'dvr-1' })]
+    await dvrChange()
+    reconnect()
+    await flushPromises()
+    expect(held).toHaveLength(0)
+
+    oldReplies.forEach((deliver) => deliver())
+    await flushPromises()
+    expect(held).toHaveLength(2)
+    held.splice(0).forEach((f) => read(f)())
+    await flushPromises()
+
+    expect(state.events.value.map((e) => e.dvrState)).toEqual(['scheduled'])
+  })
+
+  it('keeps a programme created while the day is on the way', async () => {
+    holdReplies = true
+    const state = await mountLoaded()
+    const oldReplies = held.splice(0).map(read)
+    events = [row(5, { start: at(0, 14), stop: at(0, 15) })]
+    cometHandlers.get('epg')?.({ create: ['5'] })
+    await vi.advanceTimersByTimeAsync(500)
+
+    oldReplies.forEach((deliver) => deliver())
+    await flushPromises()
+    held.splice(0).forEach((f) => read(f)())
+    await flushPromises()
+
+    expect(state.events.value.map((e) => e.eventId)).toEqual([5])
   })
 })
 

@@ -13,12 +13,13 @@ import DvbServicesView from '../DvbServicesView.vue'
 import EnumNameCell from '@/components/EnumNameCell.vue'
 
 /* The grid stub renders the toolbar slot with `captured.selection`,
- * ActionMenu captures the actions built for it and ServiceMapperDialog
- * the props it was opened with. */
+ * ActionMenu captures the actions built for it, IdnodeEditor the rows
+ * it was opened for and ServiceMapperDialog the props it was opened
+ * with. */
 const stubs = await vi.hoisted(() => import('@/test/__helpers__/gridViewTestUtils'))
 vi.mock('@/components/IdnodeGrid.vue', () => stubs.idnodeGridWithToolbar)
 vi.mock('@/components/ActionMenu.vue', () => stubs.actionMenu)
-vi.mock('@/components/IdnodeEditor.vue', () => stubs.emptyComponent)
+vi.mock('@/components/IdnodeEditor.vue', () => stubs.idnodeEditor)
 vi.mock('@/components/ServiceMapperDialog.vue', () => stubs.serviceMapperDialog)
 vi.mock('@/components/ServiceStreamsDialog.vue', () => stubs.emptyComponent)
 vi.mock('vue-router', () => stubs.vueRouter)
@@ -41,6 +42,14 @@ describe('DvbServicesView columns', () => {
     /* Keys of mpegts_service_eit_processing_list (mpegts_service.c). */
     const keys = (col?.enumSource as Array<{ key: number }>).map((o) => o.key)
     expect(keys).toEqual([0, 1, 2, 3, 4, 5])
+  })
+
+  it('gives the Channel column the channel event so its names refresh', () => {
+    mount(DvbServicesView)
+    expect(stubs.gridColumn('channel')?.enumSource).toMatchObject({
+      uri: 'channel/list',
+      event: 'channel',
+    })
   })
 })
 
@@ -77,5 +86,19 @@ describe('DvbServicesView Hide filter', () => {
     expect(hide.current).toBe('default')
     expect(hide.options[0]).toEqual({ value: 'default', label: 'Inactive services' })
     expect(hide.inactiveValue).toBe('none')
+  })
+})
+
+describe('DvbServicesView Edit action', () => {
+  stubs.runEditActionTests(DvbServicesView, [
+    'Edit the selected service',
+    'Edit the selected services',
+  ])
+})
+
+describe('DvbServicesView Info action', () => {
+  it('keeps Info to one service', () => {
+    stubs.mountSelected(DvbServicesView, ['s1', 's2'])
+    expect(stubs.toolbarAction('info').disabled).toBe(true)
   })
 })

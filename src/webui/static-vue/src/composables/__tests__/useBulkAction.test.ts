@@ -29,6 +29,7 @@ vi.mock('@/api/client', () => ({
 
 const askMock = vi.fn(async () => true)
 const errorToastMock = vi.fn()
+const successToastMock = vi.fn()
 
 vi.mock('@/composables/useConfirmDialog', () => ({
   useConfirmDialog: () => ({ ask: askMock }),
@@ -38,7 +39,7 @@ vi.mock('@/composables/useToastNotify', () => ({
   useToastNotify: () => ({
     error: errorToastMock,
     warn: vi.fn(),
-    success: vi.fn(),
+    success: successToastMock,
     info: vi.fn(),
   }),
 }))
@@ -48,6 +49,7 @@ beforeEach(() => {
   askMock.mockReset()
   askMock.mockResolvedValue(true)
   errorToastMock.mockReset()
+  successToastMock.mockReset()
 })
 
 afterEach(() => {
@@ -241,5 +243,38 @@ describe('useBulkAction', () => {
     await a.run([{ uuid: 'r' }], () => {})
     expect(a.inflight.value).toBe(false)
     expect(b.inflight.value).toBe(false)
+  })
+
+  describe('successText', () => {
+    it('toasts the text for the number of submitted rows on success', async () => {
+      apiCallMock.mockResolvedValueOnce({})
+      const action = useBulkAction({
+        endpoint: 'mpegts/network/scan',
+        failPrefix: 'Failed to start scan',
+        successText: (n) => `Scan started on ${n} networks.`,
+      })
+      await action.run([{ uuid: 'a' }, { uuid: 'b' }, {}] as MockRow[], vi.fn())
+      expect(successToastMock).toHaveBeenCalledOnce()
+      expect(successToastMock).toHaveBeenCalledWith('Scan started on 2 networks.')
+    })
+
+    it('does not toast success when the request fails', async () => {
+      apiCallMock.mockRejectedValueOnce(new Error('nope'))
+      const action = useBulkAction({
+        endpoint: 'mpegts/network/scan',
+        failPrefix: 'Failed to start scan',
+        successText: () => 'Scan started.',
+      })
+      await action.run([{ uuid: 'a' }] as MockRow[], vi.fn())
+      expect(successToastMock).not.toHaveBeenCalled()
+      expect(errorToastMock).toHaveBeenCalledOnce()
+    })
+
+    it('stays silent on success without successText', async () => {
+      apiCallMock.mockResolvedValueOnce({})
+      const action = useBulkAction({ endpoint: 'idnode/delete', failPrefix: 'Failed' })
+      await action.run([{ uuid: 'a' }] as MockRow[], vi.fn())
+      expect(successToastMock).not.toHaveBeenCalled()
+    })
   })
 })

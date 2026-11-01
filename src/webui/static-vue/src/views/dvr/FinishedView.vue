@@ -24,7 +24,8 @@
  * only, not all rows. See predicates.ts and finishedActions.ts.
  *
  * The per-row Play icon (lcol in the legacy UI) follows the leading
- * state icon from `dvrEntryColumns`.
+ * state icon, both from `dvrEntryColumns`. Play is shared with
+ * Failed via `dvrEntryColumns({ play: true })`.
  */
 import IdnodeGrid from '@/components/IdnodeGrid.vue'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -34,8 +35,6 @@ import { serverUrl } from '@/utils/base'
 import { useAccessStore } from '@/stores/access'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useDvrListView } from '@/composables/useDvrListView'
-import PlayCell from '@/components/PlayCell.vue'
-import type { ColumnDef } from '@/types/column'
 import { computed } from 'vue'
 import { buildFinishedActions } from './finishedActions'
 import { DVR_GROUPABLE_FIELDS } from './dvrFieldDefs'
@@ -63,15 +62,6 @@ const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, cl
   urlSync: true,
 })
 
-/* dvrEntryColumns leads with the recording state icon. Play goes
- * right after it, Classic's lcol order. */
-const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
-  filesize: true,
-  playcount: true,
-  filename: true,
-  phoneFields: ['filesize', 'duration'],
-})
-
 /* Column set from dvr.js:792-794 — the entry-list baseline plus
  * the per-row state and Play icons and filesize / playcount /
  * filename. No `status` column on Finished
@@ -82,32 +72,17 @@ const [stateCol, ...entryCols] = dvrEntryColumns(kodiFmt, {
  * + duration are the at-a-glance "can I delete this to free
  * space?" inputs. The shared phoneOrder defaults in DVR_FIELDS
  * place them on the second secondary row beside title, channel,
- * recorded-on. */
-const cols: ColumnDef[] = [
-  stateCol,
-  /* Per-row Play icon. Synthetic column — matches Classic's
-   * Play column on DVR Finished (`dvr.js`). Disabled
-   * for rows with no on-disk file (rerecord / cleanup case),
-   * mirroring the toolbar Play's prior filesize gate.
-   * `hideHeaderLabel` keeps the header icon-only while the
-   * column picker / screen reader / hover tooltip see "Play". */
-  {
-    field: '_play',
-    label: t('Play'),
-    hideHeaderLabel: true,
-    width: 40,
-    sortable: false,
-    cellComponent: PlayCell,
-    playPath: 'dvrfile',
-    playTitle: (r) => {
-      const title = String(r.disp_title ?? '')
-      const ep = String(r.episode_disp ?? '')
-      return ep ? `${title} / ${ep}` : title
-    },
-    playEnabled: (r) => typeof r.filesize === 'number' && r.filesize > 0,
-  },
-  ...entryCols,
-]
+ * recorded-on.
+ *
+ * dvrEntryColumns leads with the recording state icon. Play goes
+ * right after it, Classic's lcol order. */
+const cols = dvrEntryColumns(kodiFmt, {
+  play: true,
+  filesize: true,
+  playcount: true,
+  filename: true,
+  phoneFields: ['filesize', 'duration'],
+})
 
 /* Bulk-action handles — see useBulkAction.ts for the shared
  * apiCall + confirm + try/catch + inflight boilerplate. Confirmation
@@ -149,8 +124,8 @@ function downloadSelection(selected: BaseRow[]) {
 }
 
 /* Play moved from a toolbar `ActionDef` to a per-row icon in
- * the column array above (see the synthetic `_play` column).
- * The PlayCell-internal handler builds the same
+ * the column array above (see `dvrPlayColumn` in
+ * dvrEntryColumns.ts). The PlayCell-internal handler builds the same
  * `/play/ticket/dvrfile/<uuid>` URL and applies the same
  * filesize > 0 gate the toolbar Play used to. */
 </script>

@@ -306,6 +306,11 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: var(--tvh-space-1);
   max-width: 100%;
+  /* Grid cells have no vertical padding (DataGrid takes the row
+   * height from --tvh-row-height), so chips that wrap onto a second
+   * line would touch the row borders without this. One line of
+   * chips still fits a 36 px row. */
+  padding-block: var(--tvh-space-1);
 }
 
 .tag-chip-cell__chip {

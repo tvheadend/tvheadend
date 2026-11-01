@@ -18,7 +18,7 @@
  * On any matching Comet message we refetch the whole list, but with
  * two anti-flicker measures:
  *
- *   1. **Silent refetch** — Comet-driven refetches don't toggle the
+ *   1. **Silent refetch** — Comet-driven refetches never set the
  *      `loading` flag. PrimeVue's DataTable shows a mask + spinner
  *      overlay whenever `loading=true` (DataTable.vue:5-10), so a
  *      flag that flips true→false every ~2 seconds (subscription
@@ -80,7 +80,7 @@ export interface UseStatusStore<Row extends StatusEntry = StatusEntry> {
   error: Error | null
   isEmpty: boolean
   /*
-   * `silent: true` skips the loading-flag toggle. The Comet refresh
+   * `silent: true` never sets the loading flag. The Comet refresh
    * path passes it so the table doesn't flash the spinner overlay
    * every notification. Default (silent: false) is for initial
    * mount and any user-initiated retry.
@@ -185,7 +185,10 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
            * and they do not come back with the rows. */
           if (!options.silent) entries.value = []
         } finally {
-          if (myReqId === reqId && !options.silent) loading.value = false
+          /* A silent refetch that a notification starts during the
+           * first fetch supersedes it, so the latest request clears
+           * loading, silent or not. A silent fetch never sets it. */
+          if (myReqId === reqId) loading.value = false
         }
       }
 

@@ -129,6 +129,7 @@ describe('esfilterColumns — enum wiring', () => {
       expect(svc?.enumSource).toMatchObject({
         type: 'api',
         uri: 'service/list',
+        event: 'service',
         params: { enum: 1 },
       })
     }

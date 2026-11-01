@@ -145,6 +145,11 @@ const scan = useBulkAction({
    * pass on each selected network's tuners). Matches ExtJS
    * (`mpegts.js:30-57`, no AjaxConfirm wrapping the scan call). */
   failPrefix: t('Failed to start scan'),
+  /* The request only queues the scan; the grid shows nothing
+   * until the muxes report back. Same wording as the command
+   * palette's Scan for channels (`commands/actionHandlers.ts`). */
+  successText: (n) =>
+    n === 1 ? t('Scan started on 1 network.') : t('Scan started on {0} networks.', n),
 })
 
 /* Add-class picker dialog state. Open when the user clicks Add;
@@ -172,7 +177,9 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     }),
     {
       id: 'scan',
-      label: scan.inflight.value ? t('Scanning…') : t('Force Scan'),
+      /* Static label: the request returns as soon as the scan is
+       * queued, so "Scanning…" would only flash for that moment. */
+      label: t('Force Scan'),
       tooltip: t('Trigger a scan pass on the selected networks'),
       icon: Radar,
       disabled: selection.length === 0 || scan.inflight.value,

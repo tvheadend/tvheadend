@@ -81,6 +81,8 @@ const ACCESS_REFETCH_FIELDS: readonly string[] = [
   'dvr_show_seconds',
   'date_mask',
   'default_tab',
+  /* The page title carries it (usePageTitle). */
+  'server_name',
 ]
 
 /* Str-typed enum singletons that always carry a runtime value —

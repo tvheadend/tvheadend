@@ -114,6 +114,22 @@ api_serverinfo
   if (tvheadend_webroot)
     htsmsg_add_str(*resp, "webroot",      tvheadend_webroot);
   htsmsg_add_msg(*resp, "capabilities", tvheadend_capabilities_list(1));
+  /* The build date, which the classic about.html page also shows to
+   * web interface users. */
+  if (!access_verify2(perm, ACCESS_WEB_INTERFACE))
+    htsmsg_add_str(*resp, "build_timestamp", build_timestamp);
+  return 0;
+}
+
+/* The configure output, which the classic about.html page shows to
+ * admins. It has a call of its own, so serverinfo stays small.
+ * API version 20. */
+static int
+api_serverinfo_build
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  *resp = htsmsg_create_map();
+  htsmsg_add_str(*resp, "build_config", build_config_str);
   return 0;
 }
 
@@ -133,6 +149,7 @@ void api_init ( void )
 {
   static api_hook_t h[] = {
     { "serverinfo", ACCESS_ANONYMOUS, api_serverinfo, NULL },
+    { "serverinfo/build", ACCESS_ADMIN, api_serverinfo_build, NULL },
     { "pathlist", ACCESS_ANONYMOUS, api_pathlist, NULL },
     { NULL, 0, NULL, NULL }
   };

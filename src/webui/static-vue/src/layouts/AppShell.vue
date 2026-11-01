@@ -12,6 +12,7 @@ import HelpDialog from '@/components/HelpDialog.vue'
 import VideoPlayerDialog from '@/components/VideoPlayerDialog.vue'
 import ErrorDialog from '@/components/ErrorDialog.vue'
 import CommandPalette from '@/components/CommandPalette.vue'
+import ConnectionStatusStrip from '@/components/ConnectionStatusStrip.vue'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Toast from 'primevue/toast'
 import { HelpCircle } from 'lucide-vue-next'
@@ -208,6 +209,9 @@ function skipToMain(): void {
   }}</a>
   <div class="app-shell">
     <TopBar @toggle-rail="toggleRail" />
+    <!-- Full width above rail and content, so one strip serves both
+         the desktop layout and the phone TopBar. -->
+    <ConnectionStatusStrip />
     <div class="app-shell__body">
       <NavRail :open="railOpen" :compact="compactRail" @navigate="closeRail" />
       <main

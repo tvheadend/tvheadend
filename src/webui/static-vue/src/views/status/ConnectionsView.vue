@@ -18,7 +18,7 @@
  * users. ExtJS itself uses "Drop all connections" for the bulk
  * variant, so the verb has translation precedent.
  *
- * Columns mirror status.js:681-738. Server addresses / ports are
+ * Columns mirror status.js:681-755. Server addresses / ports are
  * coalesced into one "Server" cell to save columns; same for client.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
@@ -29,9 +29,13 @@ import type { StatusEntry } from '@/stores/status'
 import { apiCall } from '@/api/client'
 import { fmtDate } from '@/utils/formatTime'
 import { ref } from 'vue'
+import { useConfirmDialog } from '@/composables/useConfirmDialog'
+import { useToastNotify } from '@/composables/useToastNotify'
 import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
+const confirmDialog = useConfirmDialog()
+const toast = useToastNotify()
 
 const fmtClient = (_v: unknown, row: StatusEntry) => {
   const peer = row.peer ?? ''
@@ -114,6 +118,16 @@ const cols: ColumnDef[] = [
     phoneOrder: 4,
   },
   { field: 'server', label: t('Server'), sortable: true, minVisible: 'desktop', width: 200, format: fmtServer },
+  /* The reverse proxy's own address. The server sends it only when
+   * the proxy option is on and X-Forwarded-For replaced the peer
+   * with the real client (src/http.c), so it starts hidden. */
+  {
+    field: 'proxy',
+    label: t('Proxy Address'),
+    sortable: true,
+    minVisible: 'desktop',
+    hiddenByDefault: true,
+  },
 ]
 
 const dropping = ref(false)
@@ -123,7 +137,11 @@ async function dropSelection(selected: StatusEntry[], clear: () => void) {
     .map((r) => r.id)
     .filter((i): i is number => typeof i === 'number')
   if (ids.length === 0) return
-  if (!globalThis.confirm(t('Drop the selected connection(s)?'))) return
+  const ok = await confirmDialog.ask(t('Drop the selected connection(s)?'), {
+    header: t('Drop Connections'),
+    severity: 'danger',
+  })
+  if (!ok) return
   dropping.value = true
   try {
     /* api/connections/cancel takes either a single id, the literal
@@ -132,7 +150,7 @@ async function dropSelection(selected: StatusEntry[], clear: () => void) {
     await apiCall('connections/cancel', { id: JSON.stringify(ids) })
     clear()
   } catch (err) {
-    globalThis.alert(
+    toast.error(
       t('Failed to drop connection(s): {0}', err instanceof Error ? err.message : String(err)),
     )
   } finally {

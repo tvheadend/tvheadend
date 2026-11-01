@@ -14,7 +14,7 @@
  *
  *   - `editingUuid: Ref<string | null>`         which row is being edited
  *   - `creatingBase: Ref<string | null>`        non-null = create mode against this base
- *   - `gridRef: Ref<{ effectiveLevel } | null>` template-ref into IdnodeGrid for level pull-through
+ *   - `gridRef: Ref<{ editorLevel } | null>`    template-ref into IdnodeGrid for level pull-through
  *   - `editorLevel: ComputedRef<UiLevel>`       current level (grid → editor)
  *   - `editorList: ComputedRef<string>`         active field-list (edit vs create)
  *   - `openEditor / openCreate / closeEditor`   the three state-mutators
@@ -121,11 +121,12 @@ export interface EditorModeHandle {
   } | null>
   /**
    * Template ref to bind on the IdnodeGrid: `<IdnodeGrid ref="gridRef" />`.
-   * The grid's exposed `effectiveLevel` flows to the editor's `level`
+   * The grid's exposed `editorLevel` flows to the editor's `level`
    * prop via `editorLevel` below — single source of truth so the
-   * editor renders the same view-level the grid is filtered to.
+   * editor renders the same view-level the grid is filtered to. At
+   * phone width the grid itself shows Basic, the editor does not.
    */
-  gridRef: Ref<{ effectiveLevel: UiLevel } | null>
+  gridRef: Ref<{ editorLevel: UiLevel } | null>
   editorLevel: ComputedRef<UiLevel>
   /**
    * Active field-list — switches between createList (in create mode)
@@ -193,9 +194,9 @@ export function useEditorMode(opts: EditorModeOptions): EditorModeHandle {
     createEndpoint: string
     params: Record<string, unknown>
   } | null>(null)
-  const gridRef = ref<{ effectiveLevel: UiLevel } | null>(null)
+  const gridRef = ref<{ editorLevel: UiLevel } | null>(null)
 
-  const editorLevel = computed<UiLevel>(() => gridRef.value?.effectiveLevel ?? 'basic')
+  const editorLevel = computed<UiLevel>(() => gridRef.value?.editorLevel ?? 'basic')
 
   const editorList = computed(() => {
     if (creatingBase.value && opts.createList) return opts.createList

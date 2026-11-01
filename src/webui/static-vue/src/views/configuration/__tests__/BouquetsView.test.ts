@@ -5,6 +5,9 @@
  * BouquetsView — the mapping-option columns. The grid endpoint
  * returns `mapopt` / `chtag` as arrays of internal option ids; the
  * labels come from the `bouquet` class metadata.
+ *
+ * Also the Force Scan toolbar action, which goes through
+ * useBulkAction like Force Scan on Networks.
  */
 import { describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
@@ -14,11 +17,13 @@ import type { BaseRow } from '@/types/grid'
 import type { IdnodeClassMeta } from '@/types/idnode'
 
 const stubs = await vi.hoisted(() => import('@/test/__helpers__/gridViewTestUtils'))
-vi.mock('@/components/IdnodeGrid.vue', () => stubs.idnodeGrid)
+vi.mock('@/components/IdnodeGrid.vue', () => stubs.idnodeGridWithToolbar)
+vi.mock('@/components/ActionMenu.vue', () => stubs.actionMenu)
 vi.mock('@/components/IdnodeEditor.vue', () => stubs.emptyComponent)
 vi.mock('vue-router', () => stubs.vueRouter)
 vi.mock('@/composables/useConfirmDialog', () => stubs.confirmDialog)
 vi.mock('@/composables/useToastNotify', () => stubs.toastNotify)
+vi.mock('@/api/client', () => stubs.apiClient)
 
 stubs.resetEachTest()
 
@@ -75,5 +80,15 @@ describe('BouquetsView mapping option columns', () => {
   it('renders an empty option list as an empty cell', () => {
     mount(BouquetsView)
     expect(column('mapopt')?.format?.([], ROW)).toBe('')
+  })
+})
+
+describe('BouquetsView Force Scan', () => {
+  stubs.runForceScanTests({
+    view: BouquetsView,
+    actionId: 'force-scan',
+    endpoint: 'bouquet/scan',
+    toasts: ['Bouquet scan triggered.', 'Scan triggered for 2 bouquets.'],
+    failPrefix: 'Failed to trigger scan',
   })
 })

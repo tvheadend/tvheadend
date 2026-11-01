@@ -235,13 +235,15 @@ const cols: ColumnDef[] = [
      * only consulted for sort / filter, not grid serialisation.
      * EnumNameCell auto-detects the array shape and joins
      * resolved names from the deferred fetch. Multi-select →
-     * isInlineEditable strips at runtime. */
+     * isInlineEditable strips at runtime. The `channel` event
+     * (as in `channel_class_get_list`) refetches the names when
+     * Map services creates a channel. */
     field: 'channel',
     sortable: true,
     filterType: 'string',
     width: 220,
     cellComponent: EnumNameCell,
-    enumSource: { type: 'api', uri: 'channel/list', params: { all: 1 } },
+    enumSource: { type: 'api', uri: 'channel/list', event: 'channel', params: { all: 1 } },
     editable: true,
     /* Drill-down: 1 mapped channel → chevron opens that
      * channel's admin (the common case for mapped services);
@@ -472,11 +474,15 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
    * surface; ActionMenu auto-collapses extras into a `…` menu
    * on narrow widths. */
   return [
+    /* Edit — one row opens the plain editor, two or more open the
+     * multi-edit drawer (useEditorMode), like Classic
+     * (`idnode.js:1809-1810`). */
     {
       id: 'edit',
       label: t('Edit'),
-      tooltip: t('Edit the selected service'),
-      disabled: selection.length !== 1,
+      tooltip:
+        selection.length > 1 ? t('Edit the selected services') : t('Edit the selected service'),
+      disabled: selection.length === 0,
       onClick: () => openEditor(selection),
     },
     /* Info — opens the per-PID stream details dialog. Same
@@ -577,6 +583,7 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     v-model:visible="mapperOpen"
     :preselect="mapperPreselect"
     :map-all="mapperAll"
+    :level="editorLevel"
     @started="onMappingStarted"
   />
   <ServiceStreamsDialog

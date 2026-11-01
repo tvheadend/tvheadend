@@ -122,6 +122,7 @@ const cols = computed<ColumnDef[]>(() => [
     enumSource: {
       type: 'api',
       uri: 'channeltag/list',
+      event: 'channeltag',
       params: { all: 1 },
     },
     editable: true,

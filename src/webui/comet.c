@@ -203,6 +203,7 @@ comet_access_info_build(struct access *aa, const char *peer_ipstr)
 
   }
   htsmsg_add_str(m, "theme", access_get_theme(aa));
+  htsmsg_add_str(m, "server_name", config_get_server_name());
   htsmsg_add_u32(m, "page_size", config.page_size_ui);
   htsmsg_add_u32(m, "quicktips", config.ui_quicktips);
   htsmsg_add_u32(m, "chname_num", config.chname_num);

@@ -241,11 +241,24 @@
  * shrunk title with a `…` tail so the filter stays visible.
  * The hover tooltip injected via DataGrid's `headerCell.title`
  * passthrough lets the user read the full label when ellipsised.
+ *
+ * A label of several words takes a second line when it needs one,
+ * so "Automatic checking" reads in full instead of "Automatic
+ * checki…". The resizable table puts `white-space: nowrap` on the
+ * th, hence the reset. Words are never split: a single word that
+ * does not fit still ends in `…` (the clamp keeps the ellipsis).
+ * A tighter line height keeps a two-line header row near 50 px.
  */
 .p-datatable-column-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.25;
 }
 
 /*
@@ -297,6 +310,9 @@
    * (centred ~12 px in from the kebab's right edge) which is
    * outside the resizer overlap. */
   padding-inline-end: var(--tvh-space-1);
+  /* A one-line header keeps the height of a body row. The tighter
+   * line height of the two-line titles would otherwise shrink it. */
+  height: var(--tvh-row-height);
 }
 
 .p-datatable-thead > tr > th

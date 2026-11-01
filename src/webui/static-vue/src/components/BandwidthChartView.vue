@@ -162,6 +162,34 @@ function startDrag(ev: PointerEvent): void {
   globalThis.window.addEventListener('pointerup', onUp)
 }
 
+/* Keyboard resize for the focused splitter (the WAI-ARIA window
+ * splitter pattern). The panel sits on the right, so ArrowLeft
+ * moves the splitter left and widens the panel. */
+const PANEL_KEY_STEP_PX = 20
+
+function onSplitterKeydown(ev: KeyboardEvent): void {
+  let next: number
+  switch (ev.key) {
+    case 'ArrowLeft':
+      next = panelWidth.value + PANEL_KEY_STEP_PX
+      break
+    case 'ArrowRight':
+      next = panelWidth.value - PANEL_KEY_STEP_PX
+      break
+    case 'Home':
+      next = PANEL_MIN_PX
+      break
+    case 'End':
+      next = PANEL_MAX_PX
+      break
+    default:
+      return
+  }
+  ev.preventDefault()
+  panelWidth.value = Math.min(Math.max(next, PANEL_MIN_PX), PANEL_MAX_PX)
+  persistPanelWidth()
+}
+
 const isSubscriptions = computed(() => props.metrics.includes('in'))
 
 /* When only one row is selected, mode-collapse: Independent and
@@ -429,15 +457,22 @@ const headerTitle = computed(() => {
     class="bandwidth-dock"
     :style="{ width: `${panelWidth}px` }"
   >
-    <!-- Draggable resize handle. A button is the simplest
-         inherently-interactive element that Sonar's accessibility
-         rules accept; aria-label conveys the resize intent to
-         assistive tech without role overrides. -->
-    <button
-      type="button"
+    <!-- Resize handle: drag with the pointer, or focus it and use
+         the arrow keys, Home and End. A focusable separator is the
+         WAI-ARIA window splitter pattern, and unlike a button it
+         carries the current width as its value. -->
+    <div
+      role="separator"
+      tabindex="0"
+      aria-orientation="vertical"
       class="bandwidth-dock__splitter"
-      :aria-label="t('Resize bandwidth chart panel (currently {0} px wide)', String(panelWidth))"
+      :aria-label="t('Resize bandwidth chart panel')"
+      :aria-valuenow="panelWidth"
+      :aria-valuetext="`${panelWidth} px`"
+      :aria-valuemin="PANEL_MIN_PX"
+      :aria-valuemax="PANEL_MAX_PX"
       @pointerdown="startDrag"
+      @keydown="onSplitterKeydown"
     />
     <div class="bandwidth-dock__inner">
       <header class="bandwidth-chart__header bandwidth-dock__header">

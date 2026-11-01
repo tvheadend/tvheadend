@@ -81,18 +81,21 @@ const LANGUAGE_ENUM = {
 const PROFILE_ENUM = {
   type: 'api' as const,
   uri: 'profile/list',
+  event: 'profile',
   params: { all: 1 },
 }
 
 const DVR_CONFIG_ENUM = {
   type: 'api' as const,
   uri: 'idnode/load',
+  event: 'dvrconfig',
   params: { enum: 1, class: 'dvrconfig' },
 }
 
 const CHANNEL_TAG_ENUM = {
   type: 'api' as const,
   uri: 'channeltag/list',
+  event: 'channeltag',
   params: { all: 1 },
 }
 
@@ -263,7 +266,7 @@ const cols: ColumnDef[] = [
  * useEditorMode's createList equals editList. */
 const ACCESS_LIST =
   'enabled,username,password,prefix,change,' +
-  'lang,webui,themeui,langui,uilevel,uilevel_nochange,admin,' +
+  'lang,webui,themeui,langui,default_tab,uilevel,uilevel_nochange,admin,' +
   'streaming,profile,conn_limit_type,conn_limit,' +
   'dvr,htsp_anonymize,dvr_config,' +
   'channel_min,channel_max,channel_tag_exclude,' +

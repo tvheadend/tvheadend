@@ -1157,20 +1157,44 @@ wizard_page_t *wizard_mapping(const char *lang)
  * Discovered channels
  */
 
+/*
+ * Does the admin added by the wizard have credentials? A "*" admin needs
+ * no password. A named admin needs an enabled password entry that has a
+ * password, because access_get() drops a username that passwd_verify()
+ * does not accept. This checks the configured credentials only, not
+ * whether the allowed network lets the admin in from a given address.
+ */
+static int wizard_admin_has_credentials(void)
+{
+  access_entry_t *ae;
+  passwd_entry_t *pw;
+
+  TAILQ_FOREACH(ae, &access_entries, ae_link) {
+    if (!ae->ae_enabled || !ae->ae_admin || !ae->ae_wizard)
+      continue;
+    if (ae->ae_username[0] == '*')
+      return 1;
+    TAILQ_FOREACH(pw, &passwd_entries, pw_link)
+      if (pw->pw_enabled && pw->pw_username && !strempty(pw->pw_password) &&
+          strcmp(pw->pw_username, ae->ae_username) == 0)
+        return 1;
+  }
+  return 0;
+}
+
 static void channels_changed(idnode_t *in)
 {
   access_entry_t *ae, *ae_next;
 
-  /* check, if we have another admin account */
-  TAILQ_FOREACH(ae, &access_entries, ae_link)
-    if (ae->ae_admin && ae->ae_wizard) break;
-  if (ae == NULL)
-    return;
-  /* remove the default access entry */
+  /* remove the default access entry only if the wizard admin has credentials */
   for (ae = TAILQ_FIRST(&access_entries); ae; ae = ae_next) {
     ae_next = TAILQ_NEXT(ae, ae_link);
     if (strcmp(ae->ae_comment, ACCESS_DEFAULT_COMMENT) == 0) {
-      access_entry_destroy(ae, 1);
+      if (wizard_admin_has_credentials())
+        access_entry_destroy(ae, 1);
+      else
+        tvhwarn(LS_ACCESS, "no wizard admin with a password, "
+                           "keeping the default access entry");
       break;
     }
   }
@@ -1197,15 +1221,12 @@ wizard_page_t *wizard_channels(const char *lang)
   };
   wizard_page_t *page = page_init("channels", "wizard_channels", N_("Finished"));
   idclass_t *ic = (idclass_t *)page->idnode.in_class;
-  access_entry_t *ae;
 
   ic->ic_properties = props;
   ic->ic_flags |= IDCLASS_ALWAYS_SAVE;
   ic->ic_changed = channels_changed;
-  /* do we have an admin created by wizard? */
-  TAILQ_FOREACH(ae, &access_entries, ae_link)
-    if (ae->ae_admin && ae->ae_wizard) break;
-  if (ae == NULL)
+  /* will channels_changed() remove the default access entry? */
+  if (!wizard_admin_has_credentials())
     ic->ic_properties = props2;
   return page;
 }

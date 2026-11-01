@@ -37,6 +37,10 @@ export interface Access {
   uilevel_nochange?: number
 
   theme?: string
+  /* `config_get_server_name()`: the configured server name, or
+   * "Tvheadend" when none is set. Sent to every user, as the classic
+   * UI shows it in its window title. */
+  server_name?: string
   page_size?: number
   quicktips?: number
   chname_num?: number

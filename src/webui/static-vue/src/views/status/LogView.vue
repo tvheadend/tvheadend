@@ -302,7 +302,9 @@ function clearFilters(): void {
         {{ tailEnabled ? t('Tail (on)') : t('Tail (paused)') }}
       </Button>
       <span class="log-view__spacer" aria-hidden="true" />
-      <span class="log-view__count" aria-live="polite">
+      <!-- No aria-live: the count changes with every log line, and
+           a screen reader would announce it each time. -->
+      <span class="log-view__count">
         {{ countLabel }}
       </span>
     </header>
@@ -331,6 +333,7 @@ function clearFilters(): void {
         type="button"
         class="log-view__regex-toggle"
         :class="{ 'log-view__regex-toggle--on': filterIsRegex }"
+        :aria-label="t('Regular expression')"
         :aria-pressed="filterIsRegex"
         @click="filterIsRegex = !filterIsRegex"
       >

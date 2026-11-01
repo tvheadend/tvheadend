@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, type PropType } from 'vue'
 import { useEnumOptions } from '../useEnumOptions'
+import { __resetDeferredEnumForTests } from '../deferredEnum'
 import type { IdnodeProp } from '@/types/idnode'
 
 const apiMock = vi.fn()
@@ -48,6 +49,27 @@ function fireComet(klass: string) {
   for (const l of set) l({ notificationClass: klass })
 }
 
+/* A field showing the service list, which `service` refreshes. */
+const SERVICES_PROP = {
+  id: 'services',
+  type: 'str',
+  list: true,
+  enum: { type: 'api', uri: 'service/list', event: 'service' },
+} as IdnodeProp
+
+/* Service B appears server-side: queue the refetch answer, fire
+ * the notification and let the debounced refetch (250 ms) run. */
+async function addServiceB() {
+  apiMock.mockResolvedValueOnce({
+    entries: [
+      { key: 'a', val: 'Service A' },
+      { key: 'b', val: 'Service B' },
+    ],
+  })
+  fireComet('service')
+  await vi.advanceTimersByTimeAsync(260)
+}
+
 /* Minimal harness: a component that mounts the composable and
  * exposes the resolved option labels via its rendered text so
  * test assertions can read state without poking internals. */
@@ -67,6 +89,8 @@ const Harness = defineComponent({
 })
 
 beforeEach(() => {
+  /* The cache and its Comet subscriptions are module state. */
+  __resetDeferredEnumForTests()
   apiMock.mockReset()
   cometListeners.clear()
   vi.useFakeTimers()
@@ -101,21 +125,28 @@ describe('useEnumOptions — Comet-driven refresh', () => {
       expect(w.find('.opts').text()).toBe('Service A')
     })
 
-    /* New service appears server-side; queue the refetch
-     * response, then fire the Comet notification. */
-    apiMock.mockResolvedValueOnce({
-      entries: [
-        { key: 'a', val: 'Service A' },
-        { key: 'b', val: 'Service B' },
-      ],
-    })
-    fireComet('service')
-
-    /* Debounced refetch fires after REFETCH_DEBOUNCE_MS (250). */
-    await vi.advanceTimersByTimeAsync(260)
+    await addServiceB()
     expect(apiMock).toHaveBeenCalledTimes(2)
     await vi.waitFor(() => {
       expect(w.find('.opts').text()).toBe('Service A,Service B')
+    })
+  })
+
+  it('shares one refetch between the fields showing the same list', async () => {
+    apiMock.mockResolvedValueOnce({ entries: [{ key: 'a', val: 'Service A' }] })
+    const props = { prop: SERVICES_PROP }
+    const fields = [mount(Harness, { props }), mount(Harness, { props })]
+    await vi.waitFor(() => {
+      expect(fields[1].find('.opts').text()).toBe('Service A')
+    })
+
+    await addServiceB()
+    expect(apiMock).toHaveBeenCalledTimes(2)
+    await vi.waitFor(() => {
+      expect(fields.map((f) => f.find('.opts').text())).toEqual([
+        'Service A,Service B',
+        'Service A,Service B',
+      ])
     })
   })
 
@@ -145,7 +176,7 @@ describe('useEnumOptions — Comet-driven refresh', () => {
     expect(apiMock).toHaveBeenCalledTimes(1)
   })
 
-  it('unsubscribes on unmount so events fired later do not refetch', async () => {
+  it('makes no request for events fired after unmount', async () => {
     apiMock.mockResolvedValueOnce({ entries: [] })
 
     const w = mount(Harness, {
@@ -165,10 +196,50 @@ describe('useEnumOptions — Comet-driven refresh', () => {
 
     w.unmount()
 
-    /* Post-unmount Comet event must not trigger another fetch. */
+    /* Post-unmount Comet event must not trigger another fetch.
+     * The shared subscription stays, and with no field showing
+     * the list it only drops the cached fetch. */
     fireComet('service')
     vi.advanceTimersByTime(500)
     expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('releases a field that unmounts while its list is still loading', async () => {
+    let land: (res: unknown) => void = () => {}
+    apiMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        land = resolve
+      })
+    )
+    mount(Harness, { props: { prop: SERVICES_PROP } }).unmount()
+    land({ entries: [{ key: 'a', val: 'Service A' }] })
+    await vi.advanceTimersByTimeAsync(0)
+
+    /* No field shows the list, so a notification only drops the
+     * cached fetch. */
+    fireComet('service')
+    await vi.advanceTimersByTimeAsync(260)
+    expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the last options when fetching the list again on mount fails', async () => {
+    apiMock.mockResolvedValueOnce({ entries: [{ key: 'a', val: 'Service A' }] })
+    const props = { prop: SERVICES_PROP }
+    const first = mount(Harness, { props })
+    await vi.waitFor(() => {
+      expect(first.find('.opts').text()).toBe('Service A')
+    })
+    first.unmount()
+    /* The list changes while no field shows it, so the next field
+     * fetches it again, and that fetch fails. */
+    fireComet('service')
+    await vi.advanceTimersByTimeAsync(260)
+    apiMock.mockRejectedValueOnce(new Error('offline'))
+
+    const w = mount(Harness, { props })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(apiMock).toHaveBeenCalledTimes(2)
+    expect(w.find('.opts').text()).toBe('Service A')
   })
 })
 
