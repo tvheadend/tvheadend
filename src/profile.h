@@ -115,6 +115,9 @@ typedef struct profile {
 
   int pro_sflags;
   int pro_enabled;
+#if ENABLE_LIBAV
+  int pro_dvr_streaming;
+#endif
   int pro_shield;
   char *pro_name;
   char *pro_comment;
