@@ -761,6 +761,72 @@ api_epg_load
   return 0;
 }
 
+/*
+ * Raw matcher-eye view of one event, for the web UI's inspector.
+ *
+ * Returns only the delta the normal api_epg_entry payload cannot
+ * provide: the originating grabber module and the full
+ * multi-language variants of the text fields (api_epg_entry
+ * resolves a single language; the autorec matcher iterates the
+ * whole lang_str tree).  The episode-link URI rides along so the
+ * inspector renders from a single payload; internal tvh:// URIs
+ * are suppressed exactly as in api_epg_entry, since every
+ * consumer (DVR dedup included) treats them as no URI at all.
+ */
+static const struct {
+  const char *name;
+  size_t      offset;
+} api_epg_raw_texts[] = {
+  { "title",       offsetof(epg_broadcast_t, title) },
+  { "subtitle",    offsetof(epg_broadcast_t, subtitle) },
+  { "summary",     offsetof(epg_broadcast_t, summary) },
+  { "description", offsetof(epg_broadcast_t, description) },
+};
+
+static int
+api_epg_raw
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  uint32_t id;
+  epg_broadcast_t *e;
+  htsmsg_t *m, *texts;
+  lang_str_t *ls;
+  int i;
+
+  if (htsmsg_get_u32(args, "eventId", &id))
+    return EINVAL;
+
+  m = htsmsg_create_map();
+
+  /* Main Job */
+  tvh_mutex_lock(&global_lock);
+  e = epg_broadcast_find_by_id(id);
+  if (e == NULL) {
+    tvh_mutex_unlock(&global_lock);
+    htsmsg_destroy(m);
+    return ENOENT;
+  }
+  htsmsg_add_u32(m, "eventId", id);
+  if (e->grabber) {
+    htsmsg_add_str(m, "grabberId", e->grabber->id);
+    if (e->grabber->name)
+      htsmsg_add_str(m, "grabberName", e->grabber->name);
+  }
+  if (e->episodelink && strncasecmp(e->episodelink->uri, "tvh://", 6))
+    htsmsg_add_str(m, "episodeUri", e->episodelink->uri);
+  texts = htsmsg_create_map();
+  for (i = 0; i < ARRAY_SIZE(api_epg_raw_texts); i++) {
+    ls = *(lang_str_t **)((char *)e + api_epg_raw_texts[i].offset);
+    if (ls)
+      htsmsg_add_msg(texts, api_epg_raw_texts[i].name, lang_str_serialize_map(ls));
+  }
+  htsmsg_add_msg(m, "texts", texts);
+  tvh_mutex_unlock(&global_lock);
+
+  *resp = m;
+  return 0;
+}
+
 static int
 api_epg_content_type_list(access_t *perm, void *opaque, const char *op,
                           htsmsg_t *args, htsmsg_t **resp)
@@ -783,6 +849,7 @@ void api_epg_init ( void )
     { "epg/events/alternative", ACCESS_ANONYMOUS, api_epg_alternative, NULL },
     { "epg/events/related",     ACCESS_ANONYMOUS, api_epg_related, NULL },
     { "epg/events/load",        ACCESS_ANONYMOUS, api_epg_load, NULL },
+    { "epg/events/raw",         ACCESS_ANONYMOUS, api_epg_raw, NULL },
     { "epg/content_type/list",  ACCESS_ANONYMOUS, api_epg_content_type_list, NULL },
 
     { NULL },
