@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <fcntl.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/ca.h>
@@ -218,15 +218,17 @@ linuxdvb_adapter_new(const char *path, int a, const char *name,
                      const char *display_name, htsmsg_t **conf, int *save)
 {
   linuxdvb_adapter_t *la;
-  SHA_CTX sha1;
+  EVP_MD_CTX *sha1;
   uint8_t uuidbin[20];
   char uhex[UUID_HEX_SIZE];
 
   /* Create hash for adapter */
-  SHA1_Init(&sha1);
-  SHA1_Update(&sha1, (void*)path,     strlen(path));
-  SHA1_Update(&sha1, (void*)name,     strlen(name));
-  SHA1_Final(uuidbin, &sha1);
+  sha1 = EVP_MD_CTX_new();
+  EVP_DigestInit_ex(sha1, EVP_sha1(), NULL);
+  EVP_DigestUpdate(sha1, (void*)path, strlen(path));
+  EVP_DigestUpdate(sha1, (void*)name, strlen(name));
+  EVP_DigestFinal_ex(sha1, uuidbin, NULL);
+  EVP_MD_CTX_free(sha1);
 
   bin2hex(uhex, sizeof(uhex), uuidbin, sizeof(uuidbin));
 
