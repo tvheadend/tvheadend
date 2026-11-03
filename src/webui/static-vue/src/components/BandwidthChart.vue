@@ -24,6 +24,7 @@ import { Chart, registerables, type ChartConfiguration } from 'chart.js'
 import type { ChartTheme } from '@/composables/useChartTheme'
 import type { Sample } from '@/composables/useBandwidthSamples'
 import { formatBitrate } from '@/utils/formatBitrate'
+import { useI18n } from '@/composables/useI18n'
 
 Chart.register(...registerables)
 
@@ -55,6 +56,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   minHeight: 220,
 })
+
+const { t } = useI18n()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let chart: Chart<'line'> | null = null
@@ -100,8 +103,8 @@ const config = computed<ChartConfiguration<'line'>>(() => ({
           autoSkipPadding: 24,
           callback: (val) => {
             const diff = Math.round((Number(val) - Date.now()) / 1000)
-            if (diff === 0) return 'now'
-            return `${diff}s`
+            if (diff === 0) return t('now')
+            return t('{0}s', diff)
           },
         },
       },
@@ -127,7 +130,7 @@ const config = computed<ChartConfiguration<'line'>>(() => ({
           title: (items) => {
             if (items.length === 0) return ''
             const diff = Math.round((Number(items[0].parsed.x) - Date.now()) / 1000)
-            return diff === 0 ? 'now' : `${diff}s`
+            return diff === 0 ? t('now') : t('{0}s', diff)
           },
         },
       },

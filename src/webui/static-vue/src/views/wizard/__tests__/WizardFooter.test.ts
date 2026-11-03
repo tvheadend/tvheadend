@@ -19,11 +19,6 @@ vi.mock('@/composables/useConfirmDialog', () => ({
   useConfirmDialog: () => ({ ask: confirmAsk }),
 }))
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (s: string) => s, currentLang: () => '' }),
-  t: (s: string) => s,
-}))
-
 /* Mock the help-dock composable so the Help button's toggle
  * fires against a controllable spy. The active-state assertions
  * flip `isOpen` to verify the footer reflects open-state; the

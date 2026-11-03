@@ -13,7 +13,7 @@
  * Magazine) share this mapping so every surface names a state the
  * same way.
  */
-import { t } from '@/composables/useI18n'
+import { t as translate } from '@/composables/useI18n'
 
 export type DvrStateKind =
   | 'scheduled'
@@ -45,28 +45,29 @@ export function dvrStateKind(value: unknown): DvrStateKind | null {
  * overlay). The DVR grids name the icon with the row's `status`
  * instead, which says why (see DvrStateCell).
  *
- * `tr` is the translator. A component passes `useI18n().t` so its
+ * `t` is the translator. A component passes `useI18n().t` so its
  * computed label follows a runtime language change, which the
- * static `t` doesn't track. */
+ * static `t` doesn't track. The parameter is called `t` because
+ * `make intl` extracts the literals of `t('…')` calls. */
 export function dvrStateLabel(
   kind: DvrStateKind | null,
-  tr: (englishText: string) => string = t,
+  t: (englishText: string) => string = translate,
 ): string {
   switch (kind) {
     case 'scheduled':
-      return tr('Scheduled for recording')
+      return t('Scheduled for recording')
     case 'recording':
-      return tr('Recording')
+      return t('Recording')
     case 'recordingError':
-      return tr('Recording (errors)')
+      return t('Recording (errors)')
     case 'completed':
-      return tr('Completed OK')
+      return t('Completed OK')
     case 'completedError':
-      return tr('Failed')
+      return t('Failed')
     case 'completedWarning':
-      return tr('Time missed')
+      return t('Time missed')
     case 'completedRerecord':
-      return tr('Re-record')
+      return t('Re-record')
     default:
       return ''
   }

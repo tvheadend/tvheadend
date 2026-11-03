@@ -55,6 +55,7 @@ import { __resetChannelSourceForTests } from '@/commands/channelSource'
 import { __resetEpgEventSourceForTests } from '@/commands/epgEventSource'
 import { __resetRecordingSourceForTests } from '@/commands/recordingSource'
 import { __resetAutorecSourceForTests } from '@/commands/autorecSource'
+import { clearLocale, switchLocale } from '@/test/__helpers__/switchLocale'
 
 /* Dialog stub renders the default slot inline (skipping the
  * teleport) and emits `@show` synchronously when its `visible`
@@ -189,6 +190,7 @@ describe('CommandPalette', () => {
     __resetEpgEventSourceForTests()
     __resetRecordingSourceForTests()
     __resetAutorecSourceForTests()
+    clearLocale()
   })
 
   it('is hidden when palette.isOpen is false', async () => {
@@ -834,6 +836,22 @@ describe('CommandPalette', () => {
       const suggestedIdx = headers.indexOf('Suggested')
       expect(recentIdx).toBeGreaterThanOrEqual(0)
       expect(suggestedIdx).toBeGreaterThan(recentIdx)
+    })
+
+    it('translates the headers and page names after a language change', async () => {
+      const { wrapper } = await mountPalette()
+      useCommandPalette().open()
+      await flushPromises()
+      expect(labelsOf(wrapper)).toContain('About')
+
+      await switchLocale({ Suggested: 'Doporučené', About: 'O programu' })
+      await flushPromises()
+      const headers = wrapper
+        .findAll('.command-palette__group-header')
+        .map((el) => el.text())
+      expect(headers).toContain('Doporučené')
+      expect(headers).not.toContain('Suggested')
+      expect(labelsOf(wrapper)).toContain('O programu')
     })
 
     it('a single result still produces a single group with header', async () => {

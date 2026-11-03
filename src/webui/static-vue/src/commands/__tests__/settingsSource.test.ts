@@ -13,10 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const apiMock = vi.hoisted(() => vi.fn())
 vi.mock('@/api/client', () => ({ apiCall: apiMock }))
 
-vi.mock('@/composables/useI18n', () => ({
-  t: (s: string) => s,
-}))
-
 import {
   __resetSettingsSourceForTests,
   ensureSettingsLoaded,
@@ -77,6 +73,7 @@ describe('settingsSource', () => {
 
   afterEach(() => {
     __resetSettingsSourceForTests()
+    vi.unstubAllGlobals()
   })
 
   it('no-ops and returns no commands for a non-admin user', async () => {
@@ -245,6 +242,25 @@ describe('settingsSource', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('re-fetches inside the 60 s window when the language has changed', async () => {
+    pinApi({
+      'config/load': fakeLoadResponse([{ id: 'hostname', caption: 'Server name' }]),
+    })
+    await ensureSettingsLoaded(baseDeps)
+    /* The server answers in the language of the request, so the
+     * captions come back in the new language too. */
+    pinApi({
+      'config/load': fakeLoadResponse([{ id: 'hostname', caption: 'Název serveru' }]),
+    })
+    vi.stubGlobal('tvh_locale', { General: 'Obecné', Base: 'Základ' })
+    vi.stubGlobal('tvh_locale_lang', 'cs')
+    await ensureSettingsLoaded(baseDeps)
+    expect(apiMock).toHaveBeenCalledTimes(12) /* six pages, twice */
+    const cmd = getSettingsCommands().value[0]
+    expect(cmd.label).toBe('Název serveru')
+    expect(cmd.description).toBe('Obecné — Základ')
   })
 
   it('a single page erroring leaves the other five contributing', async () => {

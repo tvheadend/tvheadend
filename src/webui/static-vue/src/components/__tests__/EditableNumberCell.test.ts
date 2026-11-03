@@ -7,18 +7,11 @@
  * the duplicate badge tracks the injected reactive count map.
  */
 
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { mount, type VueWrapper } from '@vue/test-utils'
 import { ref } from 'vue'
 import EditableNumberCell from '../EditableNumberCell.vue'
 import type { ColumnDef } from '@/types/column'
-
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (s: string, ...args: Array<string | number>) =>
-      s.replace(/\{(\d+)\}/g, (_m, i) => String(args[Number(i)] ?? _m)),
-  }),
-}))
 
 const COL: ColumnDef = { field: 'number' }
 

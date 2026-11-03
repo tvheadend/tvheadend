@@ -143,7 +143,7 @@ const {
   createBase: 'dvr/autorec',
   editList,
   createList: EDITOR_LIST_BASE,
-  entityNoun: t('autorec entries'),
+  confirmText: t('Do you really want to delete the selected autorec entries?'),
   addTooltip: t('Add a new autorec entry'),
 })
 </script>
@@ -157,7 +157,7 @@ const {
     store-key="dvr-autorec"
     :default-sort="{ key: 'name', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
-    count-label="autorecs"
+    :count-label="t('Autorecs')"
     edit-mode="cell"
     class="autorec__grid"
     @row-dblclick="(row) => openEditor([row])"

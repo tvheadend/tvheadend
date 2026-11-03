@@ -6,12 +6,13 @@
  * required, cross-field, and minLength checks the prop_t metadata
  * can't express.
  */
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   applyClassRules,
   isFieldRequired,
   isEmptyValue,
 } from '../idnode-fields/validationRules'
+import { clearLocale } from '@/test/__helpers__/switchLocale'
 
 describe('isEmptyValue', () => {
   it('null and undefined are empty', () => {
@@ -238,6 +239,25 @@ describe('applyClassRules — dvrtimerec', () => {
   it('passes when both required filled', () => {
     const errors = applyClassRules('dvrtimerec', { name: 'r', channel: 'ch1' })
     expect(errors.size).toBe(0)
+  })
+})
+
+describe('applyClassRules — translated messages', () => {
+  afterEach(() => {
+    clearLocale()
+  })
+
+  it('translates the required and cross-field messages', () => {
+    ;(globalThis as unknown as { tvh_locale?: Record<string, string> }).tvh_locale = {
+      'This field is required': 'Toto pole je povinné',
+      'Stop time must be after start time': 'Konec musí být po začátku',
+    }
+    expect(applyClassRules('dvrentry', { stop: 200, channel: 'ch1' }).get('start')).toBe(
+      'Toto pole je povinné',
+    )
+    expect(
+      applyClassRules('dvrentry', { start: 200, stop: 100, channel: 'ch1' }).get('stop'),
+    ).toBe('Konec musí být po začátku')
   })
 })
 

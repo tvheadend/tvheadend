@@ -53,6 +53,7 @@ describe('autorecSource', () => {
 
   afterEach(() => {
     __resetAutorecSourceForTests()
+    vi.unstubAllGlobals()
   })
 
   it('fetches dvr/autorec/grid on first ensureAutorecsLoaded call', async () => {
@@ -257,6 +258,18 @@ describe('autorecSource', () => {
       await ensureAutorecsLoaded(deps)
       await ensureAutorecsLoaded(deps)
       expect(apiMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('refetches inside the 60s window once the language has changed', async () => {
+      apiMock.mockResolvedValue({ entries: [{ uuid: 'a-1', name: 'News', enabled: false }] })
+      await ensureAutorecsLoaded(deps)
+      vi.stubGlobal('tvh_locale', { Enable: 'Povolit', disabled: 'zakázáno' })
+      vi.stubGlobal('tvh_locale_lang', 'cs')
+      await ensureAutorecsLoaded(deps)
+      expect(apiMock).toHaveBeenCalledTimes(2)
+      const cmd = getAutorecCommands().value[0]
+      expect(cmd.secondaryAction?.label).toBe('Povolit')
+      expect(cmd.description).toBe('zakázáno')
     })
 
     it('coalesces concurrent in-flight calls into a single fetch', async () => {

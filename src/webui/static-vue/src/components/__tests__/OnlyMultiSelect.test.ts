@@ -11,15 +11,10 @@
  * PrimeVue's interactive dropdown machinery.
  */
 
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'
 import OnlyMultiSelect from '../OnlyMultiSelect.vue'
-
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (s: string) => s }),
-  t: (s: string) => s,
-}))
 
 /* Stub: render every option through the `option` slot at
  * mount time so the template's icon + label + Only button are
@@ -190,11 +185,9 @@ describe('OnlyMultiSelect — value slot compression', () => {
   it('shows "First, +N more" when 2+ values are selected (but not all)', () => {
     /* Selection is 3-of-4 → "+N more" branch (the all-
      * selected branch only fires when length === options
-     * length, see the test below). Browsers collapse
-     * whitespace visually so the precise spacing between
-     * the leading label, the comma, and the "+N more"
-     * suffix doesn't matter in render — assert the
-     * substrings rather than tying to whitespace layout. */
+     * length, see the test below). The text is one message,
+     * so the whole of it is pinned, with no space before the
+     * comma. The other selected labels are compressed away. */
     const w = mountWith({
       modelValue: ['a', 'b', 'c'],
       options: [
@@ -204,10 +197,7 @@ describe('OnlyMultiSelect — value slot compression', () => {
         { value: 'd', label: 'Delta' },
       ],
     })
-    const txt = w.find('.ms-stub__value').text()
-    expect(txt).toContain('Alpha')
-    expect(txt).toContain('+2 more')
-    expect(txt).not.toContain('Beta') /* Compressed away */
+    expect(w.find('.ms-stub__value').text()).toBe('Alpha, +2 more')
   })
 
   it('shows "All" when every option is selected (no-narrowing shorthand)', () => {

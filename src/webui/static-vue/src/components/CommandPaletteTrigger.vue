@@ -63,7 +63,7 @@ const isMac = computed<boolean>(() => {
   return /Mac|iPhone|iPad|iPod/i.test(p)
 })
 
-const modifierLabel = computed<string>(() => (isMac.value ? '⌘' : 'Ctrl'))
+const modifierLabel = computed<string>(() => (isMac.value ? '⌘' : t('Ctrl')))
 
 function onClick(): void {
   palette.toggle()

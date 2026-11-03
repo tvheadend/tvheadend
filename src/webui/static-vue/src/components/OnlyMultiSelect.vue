@@ -78,7 +78,7 @@ const emit = defineEmits<{
   only: [value: T]
 }>()
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const onlyText = computed(() => onlyLabel ?? t('Only'))
 
 /* Build a value → label map once per options change so the
@@ -99,6 +99,14 @@ function selectionTitle(values: readonly T[]): string {
 function firstLabel(values: readonly T[]): string {
   if (values.length === 0) return ''
   return labelByValue.value.get(values[0]) ?? String(values[0])
+}
+/* "First, +N more" for two or more values, the first label alone
+ * otherwise. One message, so "more" can agree with the count. */
+function selectionLabel(values: readonly T[]): string {
+  const first = firstLabel(values)
+  const rest = values.length - 1
+  if (rest < 1) return first
+  return tn('{0}, +{1} more', '{0}, +{1} more', rest, first, rest)
 }
 /* True when every option is in the current selection — the
  * "no narrowing" state. Trigger renders `t('All')` instead of
@@ -142,9 +150,7 @@ function isAllSelected(values: readonly T[]): boolean {
         {{ t('All') }}
       </span>
       <span v-else :title="selectionTitle(slotProps.value as T[])">
-        {{ firstLabel(slotProps.value as T[])
-        }}<template v-if="(slotProps.value as T[]).length > 1">
-          , +{{ (slotProps.value as T[]).length - 1 }} {{ t('more') }}</template>
+        {{ selectionLabel(slotProps.value as T[]) }}
       </span>
     </template>
 

@@ -5,17 +5,25 @@
  * useI18n — minimal gettext-style i18n surface for the Vue UI.
  *
  * **How it works**: the Vue UI has its own catalog. `make intl`
- * extracts every `t('…')` and `i18n.t('…')` call with a string
- * literal from `static-vue/src` into `intl/vue/tvheadend.vue.pot`
- * (see `support/vue_xgettext.py`). The translations live in
- * `intl/vue/tvheadend.vue.<lang>.po` (Transifex), the build turns
- * each into `static/intl/tvh-vue.<lang>.js.gz`, and
+ * extracts every `t('…')`, `tn('…', '…')` and `N_('…')` call with
+ * string literals from `static-vue/src` into
+ * `intl/vue/tvheadend.vue.pot` (see `support/vue_xgettext.py`).
+ * The translations live in `intl/vue/tvheadend.vue.<lang>.po`
+ * (Transifex), the build turns each into
+ * `static/intl/tvh-vue.<lang>.js.gz` (`support/pojs.py`), and
  * `/redir/locale-vue.js` redirects to the one for the user's
  * language (`http_redir_locale()` in `webui.c`). The catalog
- * declares two globals on `globalThis`:
+ * declares these globals on `globalThis`:
  *
- *   tvh_locale       — flat dict {"English literal": "Translation"}
- *   tvh_locale_lang  — language code string (e.g. 'de', 'fr', '')
+ *   tvh_locale        — dict {"English literal": "Translation"}. A
+ *                       plural entry is an array with one
+ *                       translation per plural form of the
+ *                       language, stored under the English singular
+ *   tvh_locale_plural — function (n) returning the index of the
+ *                       plural form for n, built from the po file's
+ *                       Plural-Forms. Only a catalog with a plural
+ *                       entry defines it
+ *   tvh_locale_lang   — language code string (e.g. 'de', 'fr', '')
  *
  * The ExtJS UI keeps its own catalog from `intl/js` at
  * `/redir/locale.js`, so removing it leaves this one untouched.
@@ -27,7 +35,12 @@
  *
  * **Only literals are extracted**: `t(label)` with a variable
  * works at runtime, but the string reaches translators only when
- * it also appears as a literal in a `t('…')` call.
+ * it also appears as a literal in a `t('…')` call. A text kept in
+ * a variable (a table of labels) is marked with `N_('…')` where it
+ * is written and translated with `t(label)` where it is shown.
+ *
+ * **Counts** use `tn('{0} row', '{0} rows', n)` with the whole
+ * sentence, so each language picks its own plural form.
  */
 import { ref } from 'vue'
 import { serverUrl } from '@/utils/base'
@@ -42,7 +55,8 @@ import { serverUrl } from '@/utils/base'
 const localeBump = ref(0)
 
 interface TvhLocaleGlobals {
-  tvh_locale?: Record<string, string>
+  tvh_locale?: Record<string, string | string[]>
+  tvh_locale_plural?: (n: number) => number
   tvh_locale_lang?: string
 }
 
@@ -62,13 +76,51 @@ interface TvhLocaleGlobals {
  * `tvh_locale['Move {0} up'] === 'Schiebe {0} nach oben'`
  * yields German with the placeholder in the right position.
  * Missing-from-catalog falls back to substituting the English
- * literal directly.
+ * literal directly. So does a plural entry (an array), which only
+ * `tn()` reads.
  */
 export function t(englishText: string, ...args: unknown[]): string {
   const g = globalThis as unknown as TvhLocaleGlobals
-  const dict = g.tvh_locale
-  const resolved = dict?.[englishText] ?? englishText
+  const entry = g.tvh_locale?.[englishText]
+  const resolved = typeof entry === 'string' ? entry : englishText
   return args.length === 0 ? resolved : substitute(resolved, args)
+}
+
+/*
+ * Static plural lookup. `singular` and `plural` are the English
+ * forms, both literals so `make intl` extracts them as msgid and
+ * msgid_plural. English takes the singular when |n| is 1 and the
+ * plural otherwise. A catalog holds the language's forms under the
+ * singular and picks one with `tvh_locale_plural(|n|)`. A missing
+ * entry, rule or form, or an n that is not finite, gives the
+ * English text.
+ *
+ * Without `args`, `{0}` is n: `tn('{0} row', '{0} rows', rows)`.
+ * With `args`, they are substituted as given, so a sentence can
+ * hold more values: `tn('{0} ({1} entry)', '{0} ({1} entries)',
+ * count, title, count)`. The form always follows n.
+ */
+export function tn(singular: string, plural: string, n: number, ...args: unknown[]): string {
+  const g = globalThis as unknown as TvhLocaleGlobals
+  const count = Math.abs(n)
+  let text = count === 1 ? singular : plural
+  const forms = g.tvh_locale?.[singular]
+  const rule = g.tvh_locale_plural
+  if (Array.isArray(forms) && typeof rule === 'function' && Number.isFinite(count)) {
+    const form = forms[rule(count)]
+    if (typeof form === 'string') text = form
+  }
+  return substitute(text, args.length === 0 ? [n] : args)
+}
+
+/*
+ * Marks a text that is kept in a variable (a table of step or card
+ * labels) so `make intl` extracts it, and returns it unchanged.
+ * The text is translated where it is shown, with `t(label)`, which
+ * also runs after the catalog has loaded.
+ */
+export function N_<T extends string>(text: T): T {
+  return text
 }
 
 /*
@@ -108,7 +160,7 @@ export function currentLang(): string {
  * The composable touches `localeBump.value` so any template
  * call site is tracked as a reactive dependency on it; bumping
  * the ref triggers re-render. Non-reactive call sites can
- * import `t` directly.
+ * import `t` and `tn` directly.
  */
 export function useI18n() {
   return {
@@ -122,6 +174,11 @@ export function useI18n() {
       const bump = localeBump.value
       if (bump < 0) return englishText
       return t(englishText, ...args)
+    },
+    tn: (singular: string, plural: string, n: number, ...args: unknown[]): string => {
+      const bump = localeBump.value
+      if (bump < 0) return plural
+      return tn(singular, plural, n, ...args)
     },
     currentLang: (): string => {
       const bump = localeBump.value

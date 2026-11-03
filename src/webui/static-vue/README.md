@@ -83,10 +83,10 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
 - **i18n.** Server-defined strings (column captions, field labels,
   enum options) localise automatically via the server metadata.
   UI-chrome strings use a `t(…)` composable backed by the Vue UI's
-  own catalog: `make intl` extracts the `t('…')` calls into
-  `intl/vue/tvheadend.vue.pot`, translators work on
-  `intl/vue/tvheadend.vue.<lang>.po`, and the server serves the
-  result at `/redir/locale-vue.js`.
+  own catalog: `make intl` extracts the `t('…')`, `tn('…', '…')`
+  and `N_('…')` calls into `intl/vue/tvheadend.vue.pot`,
+  translators work on `intl/vue/tvheadend.vue.<lang>.po`, and the
+  server serves the result at `/redir/locale-vue.js`.
 - **Themes.** Four themes (Blue / Grey / Dark / Access) are
   server-driven via the access object and applied through CSS custom
   properties. Blue and Grey are light; Dark is the low-glare night
@@ -138,6 +138,11 @@ Bootstrap entry points: `index.html` → `src/main.ts` → `src/App.vue`.
   `composables/useI18n`) and pass the English text as a literal, so
   `make intl` can extract it. Reuse the wording the ExtJS UI already
   uses where it matches, so translators can reuse its translation.
+  For a count, pass the whole sentence to
+  `tn('{0} row', '{0} rows', n)` so each language picks its own
+  plural form. A text kept in a variable (a table of labels) is
+  marked with `N_('…')` and translated with `t(label)` where it is
+  shown.
 - **Permissions** — gate admin-only UI on `access.has('admin')` (or
   `'dvr'`) and set `meta.permission` on routes; the router guard
   enforces it. Anonymous / limited users must not trigger admin-only

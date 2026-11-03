@@ -49,10 +49,12 @@
  * against-Y" into `crossField`.
  */
 
+import { t, tn } from '@/composables/useI18n'
+
 /* Validation messages are plain `string`. A type alias would be
  * nominally identical to `string` (no nominal-typing in TS), so the
  * intent is carried in function comments rather than a wrapper
- * type. */
+ * type. They are translated when the rules run. */
 
 interface ClassRules {
   /** Field IDs to mark required (bold caption + empty-check). */
@@ -108,7 +110,7 @@ function applyRequired(
   errors: Map<string, string>
 ): void {
   for (const id of required) {
-    if (isEmptyValue(values[id])) errors.set(id, 'This field is required')
+    if (isEmptyValue(values[id])) errors.set(id, t('This field is required'))
   }
 }
 
@@ -120,7 +122,7 @@ function applyMinLength(
   for (const [id, min] of Object.entries(minLength)) {
     const v = values[id]
     if (typeof v === 'string' && v.length > 0 && v.length < min && !errors.has(id)) {
-      errors.set(id, `Must be at least ${min} characters`)
+      errors.set(id, tn('Must be at least {0} character', 'Must be at least {0} characters', min))
     }
   }
 }
@@ -193,7 +195,7 @@ function checkAutorecTimePair(values: Record<string, unknown>, errors: Map<strin
   if (startSet === windowSet) return
   errors.set(
     startSet ? 'start_window' : 'start',
-    'Start After and Start Before must both be set, or both empty'
+    t('Start After and Start Before must both be set, or both empty')
   )
 }
 
@@ -203,17 +205,17 @@ function dvrautorecCrossField(values: Record<string, unknown>): Map<string, stri
     values,
     'minduration',
     'maxduration',
-    'Maximum duration must be ≥ minimum duration',
+    t('Maximum duration must be ≥ minimum duration'),
     errors
   )
   checkMinMaxPair(
     values,
     'minseason',
     'maxseason',
-    'Maximum season must be ≥ minimum season',
+    t('Maximum season must be ≥ minimum season'),
     errors
   )
-  checkMinMaxPair(values, 'minyear', 'maxyear', 'Maximum year must be ≥ minimum year', errors)
+  checkMinMaxPair(values, 'minyear', 'maxyear', t('Maximum year must be ≥ minimum year'), errors)
   checkAutorecTimePair(values, errors)
   return errors
 }
@@ -303,7 +305,7 @@ const CLASS_RULES: Record<string, ClassRules> = {
       const start = values.start
       const stop = values.stop
       if (typeof start === 'number' && typeof stop === 'number' && start >= stop) {
-        errors.set('stop', 'Stop time must be after start time')
+        errors.set('stop', t('Stop time must be after start time'))
       }
       return errors
     },

@@ -48,6 +48,7 @@ describe('channelSource', () => {
 
   afterEach(() => {
     __resetChannelSourceForTests()
+    vi.unstubAllGlobals()
   })
 
   it('fetches channel/list on first ensureChannelsLoaded call', async () => {
@@ -194,6 +195,26 @@ describe('channelSource', () => {
     await ensureChannelsLoaded(deps)
     await ensureChannelsLoaded(deps)
     expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('builds the commands again when the language changed inside the 60s window', async () => {
+    apiMock.mockResolvedValue({
+      entries: [{ key: 'ch-a', val: 'Alpha' }],
+    })
+    await ensureChannelsLoaded(deps)
+    /* The setup wizard loads the new catalog without a page reload. */
+    vi.stubGlobal('tvh_locale', {
+      'Open in EPG': 'Otevřít v EPG',
+      'Watch in external player': 'Sledovat v externím přehrávači',
+      'Edit channel': 'Upravit kanál',
+    })
+    vi.stubGlobal('tvh_locale_lang', 'cs')
+    await ensureChannelsLoaded(deps)
+    expect(apiMock).toHaveBeenCalledTimes(2)
+    const cmd = getChannelCommands().value[0]
+    expect(cmd.actionLabel).toBe('Otevřít v EPG')
+    expect(cmd.secondaryAction?.label).toBe('Sledovat v externím přehrávači')
+    expect(cmd.tertiaryAction?.label).toBe('Upravit kanál')
   })
 
   it('coalesces concurrent in-flight calls into a single fetch', async () => {

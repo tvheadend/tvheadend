@@ -64,7 +64,7 @@ const props = defineProps<{
 
 const access = useAccessStore()
 const entityEditor = useEntityEditor()
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 /* Provided by IdnodeGrid when the grid is in inline-edit
  * mode. The chevron hides during edit so the user isn't
@@ -198,8 +198,9 @@ const cellRender = computed<{ display: string; full?: string }>(() => {
     }
     const labels = items.map((it) => it.label)
     if (labels.length === 1) return { display: labels[0] }
+    const rest = labels.length - 1
     return {
-      display: t('{0}, +{1} more', labels[0], labels.length - 1),
+      display: tn('{0}, +{1} more', '{0}, +{1} more', rest, labels[0], rest),
       full: labels.join(', '),
     }
   }

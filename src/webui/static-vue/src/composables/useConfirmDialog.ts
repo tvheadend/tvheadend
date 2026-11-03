@@ -29,6 +29,7 @@
  * Discard unsaved changes) so the accept button renders red.
  */
 import { useConfirm } from 'primevue/useconfirm'
+import { t } from '@/composables/useI18n'
 
 export interface ConfirmDialogOptions {
   /** Header text (defaults to "Confirm"). */
@@ -67,9 +68,9 @@ export function useConfirmDialog() {
       window.addEventListener('keydown', onEscape, true)
       confirm.require({
         message,
-        header: opts.header ?? 'Confirm',
-        acceptLabel: opts.acceptLabel ?? 'Yes',
-        rejectLabel: opts.rejectLabel ?? 'No',
+        header: opts.header ?? t('Confirm'),
+        acceptLabel: opts.acceptLabel ?? t('Yes'),
+        rejectLabel: opts.rejectLabel ?? t('No'),
         acceptProps: opts.severity === 'danger' ? { severity: 'danger' } : undefined,
         accept: () => settle(true),
         reject: () => settle(false),

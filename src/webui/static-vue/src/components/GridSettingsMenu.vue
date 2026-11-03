@@ -41,7 +41,7 @@ import type { GroupableFieldDef, GlobalFilterSpec } from '@/types/grid'
 import type { UiLevel } from '@/types/access'
 import { useI18n } from '@/composables/useI18n'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 
 const props = defineProps<{
   /* The parent grid's column definitions, in declaration order. */
@@ -292,7 +292,7 @@ const filtersAggregateSummary = computed(() => {
     bits.push(filterSummary(f))
   }
   const cols = props.perColumnFilters?.length ?? 0
-  if (cols > 0) bits.push(t('{0} columns', cols))
+  if (cols > 0) bits.push(tn('{0} column', '{0} columns', cols))
   /* Nothing narrowing → render "None" rather than
    * letting the chip disappear (`v-if="summary"` in
    * CollapsibleSection). Always-present chip + the muted colour
