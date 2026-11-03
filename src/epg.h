@@ -283,6 +283,7 @@ struct epg_broadcast
   uint8_t                    is_repeat;        ///< Repeat screening
   uint8_t                    running;          ///< EPG running flag
   uint8_t                    update_running;   ///< new EPG running flag
+  time_t                     running_updated;  ///< last time the stream reported the running flag
 
   /* Broadcast level text */
   lang_str_t                *title;            ///< Title
