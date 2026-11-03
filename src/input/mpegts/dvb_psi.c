@@ -1808,7 +1808,30 @@ dvb_sdt_callback
 /*
  * ATSC VCT processing
  */
-  /* Done */
+
+/*
+ * Find the mux a VCT channel entry belongs to. The mux carrying the VCT
+ * wins when its TSID matches. Other muxes are only used when the TSID is
+ * unique in the network - some cable operators (e.g. Korean 8VSB cable)
+ * reuse the same TSID on every transport stream and the same program
+ * numbers, so matching all of them would cross-assign channel names.
+ */
+static mpegts_mux_t *
+atsc_vct_find_mux(mpegts_mux_t *mm_orig, uint16_t tsid)
+{
+  mpegts_mux_t *mm, *found = NULL;
+
+  if (mm_orig->mm_tsid == tsid)
+    return mm_orig;
+  LIST_FOREACH(mm, &mm_orig->mm_network->mn_muxes, mm_network_link)
+    if (mm->mm_tsid == tsid) {
+      if (found)
+        return NULL;
+      found = mm;
+    }
+  return found && mpegts_mux_alive(found) ? found : NULL;
+}
+
 int
 atsc_vct_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
@@ -1819,7 +1842,7 @@ atsc_vct_callback
   uint16_t srcid;
   char chname[256];
   const char *x;
-  mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm;
+  mpegts_mux_t     *mm = mt->mt_mux, *mm_orig = mm, *mm_vct;
   mpegts_network_t *mn = mm->mm_network;
   mpegts_service_t *s;
   mpegts_psi_table_state_t *st  = NULL;
@@ -1865,7 +1888,13 @@ atsc_vct_callback
     /* Extract fields */
     atsc_utf16_to_utf8(ptr, 7, chname, sizeof(chname));
     maj  = (ptr[14] & 0xF) << 6 | ptr[15] >> 2;
-    min  = (ptr[15] & 0x3) << 2 | ptr[16];
+    min  = (ptr[15] & 0x3) << 8 | ptr[16];
+    /* A/65 one-part channel number (major 1008..1023) */
+    if ((maj & 0x3F0) == 0x3F0) {
+      min = (maj & 0xF) << 10 | min;
+      maj = min;
+      min = 0;
+    }
     tsid = extract_tsid(ptr + 22);
     sid  = extract_svcid(ptr + 24);
     type = ptr[27] & 0x3f;
@@ -1883,8 +1912,12 @@ atsc_vct_callback
       goto next;
 
     /* Find mux */
+    mm_vct = atsc_vct_find_mux(mm_orig, tsid);
+    if (mm_vct == NULL)
+      tvhdebug(mt->mt_subsys, "%s: tsid %04X (%d) is ambiguous or unknown, skipping",
+               mt->mt_name, tsid, tsid);
     LIST_FOREACH(mm, &mn->mn_muxes, mm_network_link)
-      if (mm->mm_tsid == tsid && (mm == mm_orig || mpegts_mux_alive(mm))) {
+      if (mm == mm_vct) {
         /* Find the service */
         save = 0;
         if (!(s = mpegts_service_find(mm, sid, 0, 1, &save)))
