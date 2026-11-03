@@ -7,6 +7,9 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+env:
+  SECCOMP: ''
+
 jobs:
   vue:
     # Build the Vue UI once; every package job below depends on this and
@@ -16,7 +19,7 @@ jobs:
 
   build-raspberry:
     needs: vue
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
     env:
@@ -52,7 +55,7 @@ jobs:
       with:
         name: ${{ needs.vue.outputs.artifact_name }}
         path: .vuecache
-    - uses: pguyot/arm-runner-action@v2
+    - uses: pguyot/arm-runner-action@45f370abd7eed1b20397277e5ec0cb0a31adb026
       with:
         base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}
@@ -62,9 +65,8 @@ jobs:
         import_github_env: true
         commands: |
           sudo apt-get update -y
-          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
-          DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
-          VUE_FILE_CACHE="$PWD/.vuecache" AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -p raspios
+          sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross libpcre2-dev
+          VUE_FILE_CACHE="$PWD/.vuecache" AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -p raspios -a '${{ matrix.arch }}'
           support/cloudsmith.sh -p raspios -f '../tvheadend*.deb'
     - uses: actions/upload-artifact@v4
       with:
@@ -74,7 +76,7 @@ jobs:
 
   build-crosscompile:
     # The host should always be linux
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04-arm
     needs: vue
     continue-on-error: true
     name: Build on ${{ matrix.distro }} ${{ matrix.arch }}
@@ -84,7 +86,8 @@ jobs:
        # aarch64 is not emulated here: it builds natively on arm64
        # runners in build-deb-native below.
        arch: [ armv7 ]
-       distro: [ stretch, buster, bullseye, bookworm, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
+       # Add ubuntu26.04 after https://github.com/uraimo/run-on-arch-action/pull/177
+       distro: [ stretch, buster, bullseye, bookworm, trixie, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
        include:
          - arch: armv6
            distro: stretch
@@ -92,6 +95,8 @@ jobs:
            distro: buster
          - arch: armv6
            distro: bullseye
+         - arch: armv6
+           distro: bookworm
 
     steps:
       - uses: actions/checkout@v3
@@ -149,7 +154,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             case "${{ matrix.distro }}" in
-              jessie|stretch|buster)
+              stretch|buster)
                 sed -i 's/archive.raspbian.org/legacy.raspbian.org/g' /etc/apt/sources.list
                 sed -i 's/deb.debian.org/archive.debian.org/g' /etc/apt/sources.list
                 sed -i 's/security.debian.org/archive.debian.org/g' /etc/apt/sources.list
@@ -163,10 +168,9 @@ jobs:
                 ;;
             esac
             case "${{ matrix.distro }}" in
-              ubuntu*|jessie|stretch|buster|bullseye|bookworm|trixie)
+              ubuntu*|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross libpcre2-dev
                 ;;
               fedora*)
                 dnf -y update
@@ -182,7 +186,7 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             export VUE_FILE_CACHE=/artifacts/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh
+            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -a '${{ matrix.arch }}l'
             cp ../tvheadend*.deb /artifacts/
             if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -f '../tvheadend*.deb'
@@ -193,7 +197,7 @@ jobs:
           if-no-files-found: error
 
   build-deb-native:
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ startsWith(matrix.container[0], 'arm') && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
     needs: vue
     continue-on-error: true
     name: Build on ${{ matrix.container[2] || format('native {0}', matrix.container[1]) }}
@@ -201,44 +205,51 @@ jobs:
       PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
     strategy:
       matrix:
-        runner: ["ubuntu-latest"]
-        container: [["i386/ubuntu:trusty", "i386-ubuntu-trusty"], ["ubuntu:trusty", "ubuntu-trusty"], ["i386/ubuntu:xenial", "i386-ubuntu-xenial"], ["ubuntu:xenial", "ubuntu-xenial"], ["ubuntu:bionic", "ubuntu-bionic"], ["ubuntu:focal", "ubuntu-focal"], ["ubuntu:jammy", "ubuntu-jammy"], ["ubuntu:noble", "ubuntu-noble"], ["ubuntu:plucky", "ubuntu-plucky"], ["ubuntu:questing", "ubuntu-questing"], ["ubuntu:resolute", "ubuntu-resolute"], ["i386/debian:stretch", "i386-debian-stretch"], ["debian:stretch", "debian-stretch"], ["i386/debian:buster", "i386-debian-buster"], ["debian:buster", "debian-buster"], ["i386/debian:bullseye", "i386-debian-bullseye"], ["debian:bullseye", "debian-bullseye"], ["i386/debian:bookworm", "i386-debian-bookworm"], ["debian:bookworm", "debian-bookworm"], ["i386/debian:trixie", "i386-debian-trixie"], ["debian:trixie", "debian-trixie"], ["i386/debian:sid", "i386-debian-sid"], ["debian:sid", "debian-sid"]]
-        # aarch64 legs on GitHub's arm64 runners, replacing the QEMU-emulated
-        # aarch64 builds formerly in build-crosscompile:
-        # uraimo/run-on-arch-action cannot run on arm64 hosts (its QEMU
-        # helper image is amd64-only, uraimo/run-on-arch-action#161).
-        # Each include entry overrides both matrix axes, so it is added as
-        # its own combination instead of cross-multiplying with the
-        # ubuntu-latest legs above.
         # The third container element is the display name: these legs keep
         # the job names of the QEMU builds they replace, so the required
         # status checks on master keep matching by name.
-        include:
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/debian:stretch", "arm64-debian-stretch", "stretch aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/debian:buster", "arm64-debian-buster", "buster aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/debian:bullseye", "arm64-debian-bullseye", "bullseye aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/debian:bookworm", "arm64-debian-bookworm", "bookworm aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial", "ubuntu16.04 aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic", "ubuntu18.04 aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:focal", "arm64-ubuntu-focal", "ubuntu20.04 aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:jammy", "arm64-ubuntu-jammy", "ubuntu22.04 aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:noble", "arm64-ubuntu-noble", "ubuntu24.04 aarch64"]
-          - runner: ubuntu-24.04-arm
-            container: ["arm64v8/ubuntu:latest", "arm64-ubuntu-latest", "ubuntu_latest aarch64"]
+        container:
+          - ["i386/ubuntu:xenial", "i386-ubuntu-xenial"]
+          - ["ubuntu:xenial", "ubuntu-xenial"]
+          - ["ubuntu:bionic", "ubuntu-bionic"]
+          - ["ubuntu:focal", "ubuntu-focal"]
+          - ["ubuntu:jammy", "ubuntu-jammy"]
+          - ["ubuntu:noble", "ubuntu-noble"]
+          - ["ubuntu:plucky", "ubuntu-plucky"]
+          - ["ubuntu:questing", "ubuntu-questing"]
+          - ["ubuntu:resolute", "ubuntu-resolute"]
+          - ["i386/debian:stretch", "i386-debian-stretch"]
+          - ["debian:stretch", "debian-stretch"]
+          - ["i386/debian:buster", "i386-debian-buster"]
+          - ["debian:buster", "debian-buster"]
+          - ["i386/debian:bullseye", "i386-debian-bullseye"]
+          - ["debian:bullseye", "debian-bullseye"]
+          - ["i386/debian:bookworm", "i386-debian-bookworm"]
+          - ["debian:bookworm", "debian-bookworm"]
+          - ["i386/debian:trixie", "i386-debian-trixie"]
+          - ["debian:trixie", "debian-trixie"]
+          - ["i386/debian:sid", "i386-debian-sid"]
+          - ["debian:sid", "debian-sid"]
+          - ["arm64v8/debian:stretch", "arm64-debian-stretch", "stretch aarch64"]
+          - ["arm64v8/debian:buster", "arm64-debian-buster", "buster aarch64"]
+          - ["arm64v8/debian:bullseye", "arm64-debian-bullseye", "bullseye aarch64"]
+          - ["arm64v8/debian:bookworm", "arm64-debian-bookworm", "bookworm aarch64"]
+          - ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial", "ubuntu16.04 aarch64"]
+          - ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic", "ubuntu18.04 aarch64"]
+          - ["arm64v8/ubuntu:focal", "arm64-ubuntu-focal", "ubuntu20.04 aarch64"]
+          - ["arm64v8/ubuntu:jammy", "arm64-ubuntu-jammy", "ubuntu22.04 aarch64"]
+          - ["arm64v8/ubuntu:noble", "arm64-ubuntu-noble", "ubuntu24.04 aarch64"]
+          - ["arm64v8/ubuntu:latest", "arm64-ubuntu-latest", "ubuntu_latest aarch64"]
     steps:
+      - name: Workaround for for Docker CVE-2026-31431 mitigation breaking i386
+        if: startsWith(matrix.container[0], 'i386')
+        run: |  # https://docs.docker.com/engine/release-notes/29/#known-issues
+          sudo curl -sSfo /etc/docker/seccomp-profile-v0.2.1.json 'https://raw.githubusercontent.com/moby/profiles/seccomp/v0.2.1/seccomp/default.json'
+          echo 'SECCOMP=--security-opt seccomp=/etc/docker/seccomp-profile-v0.2.1.json' >> $GITHUB_ENV
       - name: Setup container
         run: |
           docker pull ${{ matrix.container[0] }}
-          docker run --name build-container -d -e GITHUB_ACTIONS=true -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
+          docker run $SECCOMP --name build-container -d -e GITHUB_ACTIONS=true -v ${{ github.workspace }}:/workspace ${{ matrix.container[0] }} tail -f /dev/null
       - name: Fix old debian apt
         if: endsWith(matrix.container[0], 'debian:stretch') || endsWith(matrix.container[0], 'debian:buster') || endsWith(matrix.container[0], 'debian:bullseye')
         env:
@@ -261,12 +272,7 @@ jobs:
         env:
           SCRIPT: |
             apt-get update -y
-            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release
-        run: docker exec build-container bash -c "$SCRIPT"
-      - name: pcre-dependency
-        env:
-          SCRIPT: |
-            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre3-dev || DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y libpcre2-dev
+            DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libpcre2-dev
         run: docker exec build-container bash -c "$SCRIPT"
       - uses: actions/checkout@v3
         with:
@@ -320,7 +326,7 @@ jobs:
 
   build-rpm-native:
     needs: vue
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     continue-on-error: true
     name: Build on native fedora:${{ matrix.releasever }}
     env:
@@ -381,11 +387,11 @@ jobs:
   build-el-rpm-native:
     needs: vue
     continue-on-error: true
-    name: Build on native almalinux:${{ matrix.releasever }} ${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+    name: Build on native almalinux:${{ matrix.releasever }} ${{ matrix.runner == 'ubuntu-26.04' && 'x86_64' || 'aarch64' }}
     strategy:
       matrix:
         releasever: ["9", "10"]
-        runner: ["ubuntu-latest", "ubuntu-24.04-arm"]
+        runner: ["ubuntu-26.04", "ubuntu-26.04-arm"]
     runs-on: ${{ matrix.runner }}
     env:
       PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
@@ -430,7 +436,7 @@ jobs:
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
         with:
-          name: Tvheadend-el-${{ matrix.releasever }}-${{ matrix.runner == 'ubuntu-latest' && 'x86_64' || 'aarch64' }}
+          name: Tvheadend-el-${{ matrix.releasever }}-${{ matrix.runner == 'ubuntu-26.04' && 'x86_64' || 'aarch64' }}
           path: tvheadend*.rpm
           if-no-files-found: error
       - name: upload-cloudsmith
