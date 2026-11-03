@@ -417,6 +417,31 @@ dvr_autorec_cmp(dvr_autorec_entry_t *dae, epg_broadcast_t *e)
 /**
  *
  */
+int
+dvr_autorec_record_all_matches(epg_broadcast_t *e, const char *owner)
+{
+  dvr_autorec_entry_t *dae;
+  int record;
+
+  if (!e || !e->channel || !e->channel->ch_enabled)
+    return 0;
+
+  /* Check all rules: a shared timer may belong to a deduplicating rule. */
+  TAILQ_FOREACH(dae, &autorec_entries, dae_link) {
+    if (strcmp(dae->dae_owner ?: "", owner ?: ""))
+      continue;
+    record = dae->dae_record;
+    if (record == DVR_AUTOREC_RECORD_DVR_PROFILE && dae->dae_config)
+      record = dae->dae_config->dvr_autorec_dedup;
+    if (record == DVR_AUTOREC_RECORD_ALL && dvr_autorec_cmp(dae, e))
+      return 1;
+  }
+  return 0;
+}
+
+/**
+ *
+ */
 dvr_autorec_entry_t *
 dvr_autorec_create(const char *uuid, htsmsg_t *conf)
 {
