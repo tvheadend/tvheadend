@@ -2242,6 +2242,38 @@ capmt_update_elementary_stream(capmt_service_t *ct, int *_i,
   return 0;
 }
 
+/*
+ * A forced CA id the PMT has no ECM PID for (BISS, an emulator):
+ * capmt_service_start() gives it the pseudo ECM PID 8191. Keep that entry
+ * while no ECM PID of the PMT carries the CA id, set it up again when the
+ * PMT lost the one it had (returns 1), and let it go once the PMT has one
+ * (the caller then removes the entries still marked).
+ */
+static int
+capmt_caid_forced(capmt_service_t *ct, mpegts_service_t *t)
+{
+  capmt_caid_ecm_t *cce;
+  capmt_caid_ecm_t *pseudo = NULL;
+  caid_t sca;
+
+  LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link) {
+    if (cce->cce_caid != t->s_dvb_forcecaid)
+      continue;
+    if (!cce->cce_delete_me)
+      return 0;                 /* an ECM PID of the PMT carries it */
+    if (cce->cce_ecmpid == 8191)
+      pseudo = cce;
+  }
+  if (pseudo) {
+    pseudo->cce_delete_me = 0;
+    return 0;
+  }
+  memset(&sca, 0, sizeof(sca));
+  sca.caid = t->s_dvb_forcecaid;
+  capmt_caid_add(ct, t, 8191, &sca);
+  return 1;
+}
+
 static void
 capmt_caid_change(th_descrambler_t *td)
 {
@@ -2267,12 +2299,16 @@ capmt_caid_change(th_descrambler_t *td)
         t->s_dvb_prefcapid != st->es_pid)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
+      /* a forced CA id: only that one, as at the service start - otherwise
+       * a PMT update adds the others and the CA client sets the service up
+       * anew (stop, new CA PMT) */
+      if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid)
+        continue;
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
         if (c->use && cce->cce_caid == c->caid &&
             cce->cce_providerid == c->providerid &&
-            st->es_pid == cce->cce_ecmpid &&
-            (!t->s_dvb_forcecaid || t->s_dvb_forcecaid == cce->cce_caid))
+            st->es_pid == cce->cce_ecmpid)
           break;
       if (!cce) {
         capmt_caid_add(ct, t, st->es_pid, c);
@@ -2302,13 +2338,17 @@ capmt_caid_change(th_descrambler_t *td)
         if (c) break;
       }
     }
-    if (!st) {
-      change = 3;
-      cce->cce_delete_me = 1;
-    } else {
-      cce->cce_delete_me = 0;
-    }
+    cce->cce_delete_me = st == NULL;
   }
+
+  /* the forced CA id stays in the CA PMT, if need be with the pseudo
+   * ECM PID of the service start */
+  if (t->s_dvb_forcecaid && capmt_caid_forced(ct, t))
+    change |= 1;
+
+  LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
+    if (cce->cce_delete_me)
+      change = 3;
 
   if (change & 2) {
     /* remove marked ECM PIDs */
