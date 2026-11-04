@@ -2200,12 +2200,16 @@ capmt_caid_change(th_descrambler_t *td)
         t->s_dvb_prefcapid != st->es_pid)
       continue;
     LIST_FOREACH(c, &st->es_caids, link) {
+      /* a forced CA id: only that one, as at the service start - otherwise
+       * a PMT update adds the others and the CA client sets the service up
+       * anew (stop, new CA PMT) */
+      if (t->s_dvb_forcecaid && t->s_dvb_forcecaid != c->caid)
+        continue;
       /* search ecmpid in list */
       LIST_FOREACH(cce, &ct->ct_caid_ecm, cce_link)
         if (c->use && cce->cce_caid == c->caid &&
             cce->cce_providerid == c->providerid &&
-            st->es_pid == cce->cce_ecmpid &&
-            (!t->s_dvb_forcecaid || t->s_dvb_forcecaid == cce->cce_caid))
+            st->es_pid == cce->cce_ecmpid)
           break;
       if (!cce) {
         capmt_caid_add(ct, t, st->es_pid, c);
