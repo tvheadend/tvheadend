@@ -52,6 +52,7 @@ extern struct th_subscription_list subscriptions;
 #define SUBSCRIPTION_PRIO_SCAN_INIT   5 ///< Initial scan
 #define SUBSCRIPTION_PRIO_SCAN_USER   6 ///< User defined scan
 #define SUBSCRIPTION_PRIO_MAPPER      7 ///< Channel mapper
+#define SUBSCRIPTION_PRIO_CACHE_WARMUP 8 ///< Scheduled timeshift cache warmup
 #define SUBSCRIPTION_PRIO_MIN        10 ///< User defined / Normal levels
 
 /* Unsubscribe flags */
@@ -110,6 +111,14 @@ typedef struct th_subscription {
 
   streaming_target_t *ths_output;
   streaming_target_t *ths_parser;
+  streaming_target_t *ths_gate;      ///< Replays the channel cache first
+  time_t ths_backfill_from;          ///< Join from this time if cached
+  time_t ths_backfill_to;            ///< Stop there; 0 means catch up to live
+  int ths_backfill_all;              ///< Start at oldest available cache block
+  int ths_replaying;                 ///< Fed from the channel cache, not live
+  time_t ths_backfill_start;         ///< Where the replayed data begins
+
+  int ths_cache_keepalive;       ///< Internal shared-cache tuner hold
 
   int ths_flags;
   int ths_timeout;

@@ -413,6 +413,9 @@ struct streaming_start {
   uint16_t ss_pmt_pid;
   uint16_t ss_service_id;
 
+#define STREAMING_START_CACHE_REPLAY  (1U << 0)
+  uint16_t ss_flags;
+
   streaming_start_component_t ss_components[0];
 
 };
