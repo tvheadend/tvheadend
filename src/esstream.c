@@ -221,6 +221,18 @@ elementary_set_filter_print
 }
 
 /**
+ * The language of a filter rule and that of a stream: the rule "q??" is
+ * for every code for local use (qaa..qtz), any other one for itself
+ */
+static int
+esfilter_language_match(const char *rule, const char *lang)
+{
+  if (!strcmp(rule, LANG_CODE_LOCAL_ANY))
+    return lang_code_local(lang);
+  return strncmp(rule, lang, 4) == 0;
+}
+
+/**
  *
  */
 void
@@ -291,7 +303,7 @@ filter:
         if (esf->esf_type && (esf->esf_type & SCT_MASK(st->es_type)) == 0)
           continue;
         if (esf->esf_language[0] &&
-            strncmp(esf->esf_language, st->es_lang, 4))
+            !esfilter_language_match(esf->esf_language, st->es_lang))
           continue;
         if (esf->esf_service[0]) {
           if (strcmp(esf->esf_service, service_ubuf))
