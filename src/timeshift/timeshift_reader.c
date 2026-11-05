@@ -402,7 +402,7 @@ static int _timeshift_skip
           tsf = timeshift_filemgr_next(tsf, &end, 0);
       }
       if (!tsf)
-        tsf = tsf_last;
+        tsf = timeshift_file_get(tsf_last);
       end = -1;
     } else {
       tsf = tsf_last = timeshift_filemgr_newest(ts);
@@ -413,7 +413,7 @@ static int _timeshift_skip
           tsf = timeshift_filemgr_prev(tsf, &end, 0);
       }
       if (!tsf)
-        tsf = tsf_last;
+        tsf = timeshift_file_get(tsf_last);
       end = 1;
     }
   }
