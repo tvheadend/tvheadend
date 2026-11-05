@@ -70,6 +70,37 @@ const idclass_t t2mi_input_class = {
   }
 };
 
+/* Number of other source transponders that the carriers already started on
+ * this input still wait to get a real tuner for (their source is not tuned
+ * yet), counting only those at least as important as 'weight'.  Carriers of
+ * the same transponder share one tuner, so each transponder counts once. */
+static int
+t2mi_input_pending_sources
+  ( mpegts_input_t *mi, mpegts_mux_t *mm, mpegts_mux_t *src, int weight )
+{
+  mpegts_mux_instance_t *mmi;
+  t2mi_mux_t *other;
+  mpegts_mux_t *osrc, *seen[16];
+  int i, n = 0;
+
+  LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
+    other = (t2mi_mux_t *)mmi->mmi_mux;
+    if ((mpegts_mux_t *)other == mm || other->tm_sub == NULL ||
+        other->tm_sub->ths_weight < weight ||
+        other->mm_t2mi_src_mux == NULL)
+      continue;
+    osrc = mpegts_mux_find(other->mm_t2mi_src_mux);
+    if (osrc == NULL || osrc == src || osrc->mm_active)
+      continue;
+    for (i = 0; i < n; i++)
+      if (seen[i] == osrc)
+        break;
+    if (i == n && n < (int)ARRAY_SIZE(seen))
+      seen[n++] = osrc;
+  }
+  return n;
+}
+
 static int
 t2mi_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
@@ -100,7 +131,7 @@ t2mi_input_is_enabled
    * live viewing over a scan) still preempts as usual. */
   if (src->mm_active || weight <= 0)
     return MI_IS_ENABLED_OK;
-  int any = 0;
+  int any = 0, nfree = 0;
   LIST_FOREACH(mmi, &src->mm_instances, mmi_mux_link) {
     si = mmi->mmi_input;
     r = si->mi_is_enabled(si, src, flags, weight);
@@ -109,11 +140,22 @@ t2mi_input_is_enabled
     any = 1;
     if (r == MI_IS_ENABLED_OK &&
         si->mi_get_weight(si, src, flags, weight) < weight)
-      return MI_IS_ENABLED_OK;
+      nfree++;
   }
-  /* some tuner could serve the source but all are busy -> wait; none can
-   * ever serve it -> do not block, let the normal path report it */
-  return any ? MI_IS_ENABLED_RETRY : MI_IS_ENABLED_OK;
+  /* none can ever serve the source: do not block, let the normal path
+   * report it */
+  if (!any)
+    return MI_IS_ENABLED_OK;
+  /* A tuner that is free now may already be spoken for: a carrier that
+   * started earlier has created its source subscription, but the real
+   * tuner only takes it a moment later.  A scan of every carrier starts
+   * them all in one go, so without this each of them would see the same
+   * free tuner.  Take the transponders those carriers are waiting for
+   * out of the free tuners. */
+  if (nfree > t2mi_input_pending_sources(mi, mm, src, weight))
+    return MI_IS_ENABLED_OK;
+  /* some tuner could serve the source but all are busy -> wait */
+  return MI_IS_ENABLED_RETRY;
 }
 
 static int
