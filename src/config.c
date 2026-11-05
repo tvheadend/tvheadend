@@ -1515,6 +1515,35 @@ config_migrate_v25 ( void )
 }
 
 /*
+ * v25 -> v26 : the language codes for local use (qaa..qtz) were all taken
+ *              for "qaa", so a stream filter rule for "qaa" was one for
+ *              every one of them. They are codes of their own now: such
+ *              a rule becomes one for "q??", which is all of them.
+ */
+static void
+config_migrate_v26 ( void )
+{
+  htsmsg_t *c;
+  htsmsg_t *e;
+  htsmsg_field_t *f;
+  const char *s;
+
+  /* The rules are loaded later, so rewrite them on disk. */
+  c = hts_settings_load("esfilter");
+  if (c == NULL)
+    return;
+  HTSMSG_FOREACH(f, c) {
+    e = htsmsg_field_get_map(f);
+    if (e == NULL) continue;
+    s = htsmsg_get_str(e, "language");
+    if (s == NULL || strcmp(s, "qaa")) continue;
+    htsmsg_set_str(e, "language", "q??");
+    hts_settings_save(e, "esfilter/%s", htsmsg_field_name(f));
+  }
+  htsmsg_destroy(c);
+}
+
+/*
  * Perform backup
  */
 static void
@@ -1640,7 +1669,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v22,
   config_migrate_v23,
   config_migrate_v24,
-  config_migrate_v25
+  config_migrate_v25,
+  config_migrate_v26
 };
 
 /*

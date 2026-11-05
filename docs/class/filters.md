@@ -54,6 +54,17 @@ Here we're removing the Bulgarian language audio from the
 input (first rule). However, if Bulgarian is the only language 
 available add it back in as a last resort (second rule).
 
+### Languages for Local Use
+
+The language codes *qaa* to *qtz* are reserved for local use: a 
+broadcaster tags streams with them that have no code of their own, 
+for example the original language of a programme (*qaa*) or an audio 
+description (*qad*). Each of them is a language of its own in the 
+*Language* list, and a rule matches the one code it names.
+
+To match all of them with one rule, select the entry 
+*Any code for local use*, which the list shows with the code *q??*.
+
 ### Ignoring Unknown Streams
 
 If you'd like to ignore unknown elementary streams, add a rule to the 
