@@ -4344,6 +4344,10 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
         htsmsg_add_u32(c, "subtitling_type", ssc->es_subtitle_type);
     }
 
+    /* the full teletext: its initial page (e.g. 100) */
+    if(ssc->es_type == SCT_TELETEXT && ssc->es_teletext_initial_page)
+      htsmsg_add_u32(c, "teletext_initial_page", ssc->es_teletext_initial_page);
+
     /* teletext subtitles: the page (e.g. 777) and the teletext type
      * (2 subtitle page, 5 for the hearing impaired) */
     if(ssc->es_type == SCT_TEXTSUB) {

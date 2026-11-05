@@ -85,6 +85,9 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
       htsmsg_add_u32(e, "subtitle_type", es->es_subtitle_type);
     if (es->es_type == SCT_TEXTSUB && es->es_pid >= DVB_TELETEXT_BASE)
       htsmsg_add_u32(e, "teletext_page", es->es_pid - DVB_TELETEXT_BASE);
+  } else if (es->es_type == SCT_TELETEXT) {
+    if (es->es_teletext_initial_page)
+      htsmsg_add_u32(e, "teletext_initial_page", es->es_teletext_initial_page);
   } else if (SCT_ISAUDIO(es->es_type)) {
     htsmsg_add_u32(e, "audio_type",     es->es_audio_type);
     if (es->es_audio_version)

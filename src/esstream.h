@@ -116,6 +116,8 @@ struct elementary_info {
                                 hard of hearing); TEXTSUB: teletext_type of
                                 the teletext descriptor (2 subtitle page,
                                 5 for the hearing impaired); 0 unknown */
+  uint16_t es_teletext_initial_page; /* TELETEXT: initial page of the
+                                        teletext descriptor (e.g. 100) */
 
   uint16_t es_parent_pid;    /* For subtitle streams originating from
 				a teletext stream. this is the pid

@@ -174,7 +174,7 @@ psi_desc_ca
  */
 static int
 psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
-                  int parent_pid, int *position)
+                  int parent_pid, int *position, int *initial_page)
 {
   int r = 0;
   int first;
@@ -184,6 +184,11 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
   while(size >= 5) {
     int page = (ptr[3] & 0x7 ?: 8) * 100 + (ptr[4] >> 4) * 10 + (ptr[4] & 0xf);
     int type = ptr[3] >> 3;
+
+    /* 1 = initial page (the first one, if one per language); the page
+     * number 0xff is reserved (no page) */
+    if(type == 1 && page > 0 && ptr[4] != 0xff && *initial_page == 0)
+      *initial_page = page;
 
     if(page > 0 && (type == 2 || type == 5)) {
       // 2 = subtitle page, 5 = subtitle page [hearing impaired]
@@ -287,6 +292,7 @@ dvb_psi_parse_pmt
   int version;
   int position;
   int tt_position;
+  int tt_initial_page;
   int video_stream;
   int rds_uecp;
   int ac4;
@@ -358,6 +364,7 @@ dvb_psi_parse_pmt
     rds_uecp = 0;
     ac4 = 0;
     tt_position = 1000;
+    tt_initial_page = 0;
     lang = NULL;
     supp_lang = NULL;
     audio_type = 0;
@@ -455,7 +462,8 @@ dvb_psi_parse_pmt
       case DVB_DESC_TELETEXT:
         if(estype == 0x06) {
           hts_stream_type = SCT_TELETEXT;
-          update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position);
+          update |= psi_desc_teletext(set, ptr, dlen, pid, &tt_position,
+                                      &tt_initial_page);
         }
         break;
 
@@ -586,6 +594,12 @@ dvb_psi_parse_pmt
         update |= PMT_UPDATE_SUBTITLE_TYPE;
       }
 
+      if(st->es_type == SCT_TELETEXT &&
+         st->es_teletext_initial_page != tt_initial_page) {
+        st->es_teletext_initial_page = tt_initial_page;
+        update |= PMT_UPDATE_TELETEXT_PAGE;
+      }
+
       if(st->es_rds_uecp != rds_uecp) {
         st->es_rds_uecp = rds_uecp;
         update |= PMT_UPDATE_RDS_UECP;
@@ -629,7 +643,7 @@ dvb_psi_parse_pmt
 
   if (update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      nicename, version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -649,6 +663,7 @@ dvb_psi_parse_pmt
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_UPDATE_RDS_UECP          ? ", RDS UECP flag changed":"",
      update&PMT_UPDATE_SUBTITLE_TYPE     ? ", Subtitle type changed":"",
+     update&PMT_UPDATE_TELETEXT_PAGE     ? ", Teletext initial page changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
   }
 
