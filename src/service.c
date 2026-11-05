@@ -1661,6 +1661,10 @@ void service_save ( service_t *t, htsmsg_t *m )
     if(st->es_component_tag_set)
       htsmsg_add_u32(sub, "componenttag", st->es_component_tag);
 
+    if((st->es_type == SCT_DVBSUB || st->es_type == SCT_TEXTSUB) &&
+       st->es_subtitle_type)
+      htsmsg_add_u32(sub, "subtitletype", st->es_subtitle_type);
+
     if(SCT_ISVIDEO(st->es_type)) {
       if(st->es_width)
 	      htsmsg_add_u32(sub, "width", st->es_width);
@@ -1853,6 +1857,10 @@ void service_load ( service_t *t, htsmsg_t *c )
         st->es_component_tag = u32;
         st->es_component_tag_set = 1;
       }
+
+      if((type == SCT_DVBSUB || type == SCT_TEXTSUB) &&
+         !htsmsg_get_u32(c, "subtitletype", &u32))
+        st->es_subtitle_type = u32;
 
       if(SCT_ISVIDEO(type)) {
         if(!htsmsg_get_u32(c, "width", &u32))
