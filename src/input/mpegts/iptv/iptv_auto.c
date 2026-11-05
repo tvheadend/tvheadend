@@ -88,7 +88,7 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
   int64_t chnum2, vlcprog;
   const char *url, *url2, *name, *logo, *epgid, *tags;
   char *s;
-  char custom[512], name2[128], buf[32], *moduleid, *n;
+  char custom[512], name2[512], buf[32], *moduleid, *n;
 
   url = htsmsg_get_str(item, "m3u-url");
 
@@ -213,7 +213,10 @@ iptv_auto_network_process_m3u_item(iptv_network_t *in,
 skip_url:
   if (last_url) {
     if (name[0])
-      snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
+      {
+        snprintf(n = name2, sizeof(name2), "%s - %s", last_url, name);
+        utf8_validate_inplace(name2);
+      }
     else
       n = (char *)last_url;
   } else {
