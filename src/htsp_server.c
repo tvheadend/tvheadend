@@ -38,6 +38,7 @@
 #include "htsmsg_json.h"
 #include "string_list.h"
 #include "lang_codes.h"
+#include "input/mpegts/dvb.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -51,7 +52,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 44
+#define HTSP_PROTO_VERSION 45
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -4338,6 +4339,18 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     if(ssc->es_type == SCT_DVBSUB) {
       htsmsg_add_u32(c, "composition_id", ssc->es_composition_id);
       htsmsg_add_u32(c, "ancillary_id", ssc->es_ancillary_id);
+      /* subtitling descriptor: 0x10.. normal, 0x20.. hard of hearing */
+      if(ssc->es_subtitle_type)
+        htsmsg_add_u32(c, "subtitling_type", ssc->es_subtitle_type);
+    }
+
+    /* teletext subtitles: the page (e.g. 777) and the teletext type
+     * (2 subtitle page, 5 for the hearing impaired) */
+    if(ssc->es_type == SCT_TEXTSUB) {
+      if(ssc->es_pid >= DVB_TELETEXT_BASE)
+        htsmsg_add_u32(c, "teletext_page", ssc->es_pid - DVB_TELETEXT_BASE);
+      if(ssc->es_subtitle_type)
+        htsmsg_add_u32(c, "teletext_type", ssc->es_subtitle_type);
     }
 
     if(SCT_ISVIDEO(ssc->es_type)) {

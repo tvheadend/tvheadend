@@ -169,6 +169,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_TIMESHIFT
   { "timeshift", (uint32_t *)&timeshift_conf.enabled },
 #endif
+  { "subtitleinfo", NULL }, /* HTSP: subtitle page and type of the streams */
 #if ENABLE_TRACE
   { "trace",     NULL },
 #endif
