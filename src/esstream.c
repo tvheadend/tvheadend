@@ -192,6 +192,32 @@ elementary_set_filter_build_add
 }
 
 /**
+ * "Use once": another stream of the class in use already, of the language
+ * of the rule (as st) when the rule has one
+ */
+static elementary_stream_t *
+elementary_set_filter_used_other
+  (const elementary_set_t *set, const elementary_stream_t *st,
+   const esfilter_t *esf, uint32_t mask)
+{
+  elementary_stream_t *st2;
+
+  TAILQ_FOREACH(st2, &set->set_all, es_link) {
+    if (st == st2)
+      continue;
+    if ((st2->es_filter & ESFM_USED) == 0)
+      continue;
+    if ((mask & SCT_MASK(st2->es_type)) == 0)
+      continue;
+    if (esf->esf_language[0] != '\0' &&
+        !lang_code_match(esf->esf_language, st2->es_lang))
+      continue;
+    break;
+  }
+  return st2;
+}
+
+/**
  *
  */
 static void
@@ -291,7 +317,7 @@ filter:
         if (esf->esf_type && (esf->esf_type & SCT_MASK(st->es_type)) == 0)
           continue;
         if (esf->esf_language[0] &&
-            strncmp(esf->esf_language, st->es_lang, 4))
+            !lang_code_match(esf->esf_language, st->es_lang))
           continue;
         if (esf->esf_service[0]) {
           if (strcmp(esf->esf_service, service_ubuf))
@@ -383,17 +409,7 @@ ignore:
             st->es_filter |= ESFM_IGNORE;
             break;
           case ESFA_ONE_TIME:
-            TAILQ_FOREACH(st2, &set->set_all, es_link) {
-              if (st == st2)
-                continue;
-              if ((st2->es_filter & ESFM_USED) == 0)
-                continue;
-              if ((mask & SCT_MASK(st2->es_type)) == 0)
-                continue;
-              if (esf->esf_language[0] != '\0' && strcmp(st2->es_lang, st->es_lang))
-                continue;
-              break;
-            }
+            st2 = elementary_set_filter_used_other(set, st, esf, mask);
             if (st2 != NULL) goto ignore;
             /* fall through */
           case ESFA_USE:
