@@ -7,15 +7,16 @@
 # euca01, 2026
 # PY RENAUT <pyrenaut@gmail.com>, 2026
 # Christian Hewitt, 2026
+# slim Kheli, 2026
 # 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-21 02:16+0000\n"
+"POT-Creation-Date: 2026-09-28 02:21+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
-"Last-Translator: Christian Hewitt, 2026\n"
+"Last-Translator: slim Kheli, 2026\n"
 "Language-Team: French (https://app.transifex.com/tvheadend/teams/43381/fr/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2954,7 +2955,7 @@ msgstr "Activé"
 
 #: src/docs_inc.c:2744
 msgid "End"
-msgstr ""
+msgstr "Fin"
 
 #: src/docs_inc.c:2149
 msgid "Enigma2"
