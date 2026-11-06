@@ -67,6 +67,8 @@ typedef struct pass_muxer {
   uint16_t pm_dst_tsid;
   uint16_t pm_src_onid;
   uint16_t pm_dst_onid;
+  uint8_t  pm_src_tsid_valid;
+  uint8_t  pm_src_onid_valid;
 
   mpegts_psi_table_t pm_pat;
   mpegts_psi_table_t pm_pmt;
@@ -620,20 +622,31 @@ static void
 pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   pass_muxer_t *pm;
-  uint16_t sid;
+  uint16_t sid, tsid, onid;
   uint8_t *sbuf, *out;
   int olen;
 
-  /* filter out wrong tables */
-  if (buf[0] < 0x4e || buf[0] > 0x6f || len < 14)
+  /* A single-service pass stream should carry the selected service's EIT
+   * actual tables, not EIT for other services or transport streams. Rewriting
+   * unrelated EIT sections to one SID/TSID/ONID creates version collisions. */
+  if (len < 14 ||
+      (buf[0] != 0x4e && (buf[0] < 0x50 || buf[0] > 0x5f)))
     return;
 
   pm = (pass_muxer_t*)mt->mt_opaque;
-  sid = (buf[3] << 8) | buf[4];
+  sid  = (buf[3] << 8) | buf[4];
+  tsid = (buf[8] << 8) | buf[9];
+  onid = (buf[10] << 8) | buf[11];
+  if (sid != pm->pm_src_sid ||
+      (pm->pm_src_tsid_valid && tsid != pm->pm_src_tsid) ||
+      (pm->pm_src_onid_valid && onid != pm->pm_src_onid))
+    return;
 
   /* TODO: set free_CA_mode bit to zero */
 
   sbuf = malloc(len + 4);
+  if (sbuf == NULL)
+    return;
   memcpy(sbuf, buf, len);
   sbuf[3] = pm->pm_dst_sid >> 8;
   sbuf[4] = pm->pm_dst_sid;
@@ -641,13 +654,6 @@ pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   sbuf[9] = pm->pm_dst_tsid;
   sbuf[10] = pm->pm_dst_onid >> 8;
   sbuf[11] = pm->pm_dst_onid;
-
-  if (sid != pm->pm_src_sid) {
-    len = 14; /* no events, just keep the SI tables consistent */
-    sbuf[1] &= 0xf0;
-    sbuf[1] |= ((len - 3 + 4) >> 8) & 0x0f;
-    sbuf[2] = (len - 3 + 4) & 0xff;
-  }
 
   len = dvb_table_append_crc32(sbuf, len, len + 4);
   if (len > 0 && (olen = dvb_table_remux(mt, sbuf, len, &out)) > 0) {
@@ -717,6 +723,8 @@ pass_muxer_reconfigure(muxer_t* m, const struct streaming_start *ss)
   pm->pm_src_sid     = ss->ss_service_id;
   pm->pm_src_tsid    = ss->ss_si.si_tsid;
   pm->pm_src_onid    = ss->ss_si.si_onid;
+  pm->pm_src_tsid_valid = ss->ss_si.si_tsid_valid;
+  pm->pm_src_onid_valid = ss->ss_si.si_onid_valid;
   if (pm->m_config.u.pass.m_rewrite_sid > 0) {
     pm->pm_dst_sid   = pm->m_config.u.pass.m_rewrite_sid;
     pm->pm_dst_tsid  = 1;
