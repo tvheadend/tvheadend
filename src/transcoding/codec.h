@@ -131,10 +131,7 @@ void
 tvh_codec_profile_video_destroy(TVHCodecProfile *_self);
 
 int
-tvh_codec_profile_video_get_hwaccel(TVHCodecProfile *self);
-
-int
-tvh_codec_profile_video_get_hwaccel_details(TVHCodecProfile *self);
+tvh_codec_profile_video_get_decoder_hwaccel_type(TVHCodecProfile *self);
 
 const enum AVPixelFormat *
 tvh_codec_profile_video_get_pix_fmts(TVHCodecProfile *self);
