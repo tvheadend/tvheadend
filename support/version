@@ -29,6 +29,11 @@ else
   esac
 fi
 
+# Optional custom version for Greek builds
+if [ -n "$TVH_CUSTOM_VERSION" ]; then
+  VER="$TVH_CUSTOM_VERSION"
+fi
+
 # Output
 if [ -z "$FILE" ]; then
   echo $VER

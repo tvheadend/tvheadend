@@ -1,0 +1,2475 @@
+# Greek (el) localization for Tvheadend.
+# Original translation by @Camthalion77 with ChatGPT assistance.
+# Distributed under the Tvheadend project license (GPL-3.0-or-later).
+msgid ""
+msgstr ""
+"Project-Id-Version: Tvheadend VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-28 02:21+0000\n"
+"PO-Revision-Date: 2026-10-15 00:00+0000\n"
+"Last-Translator: Camthalion77 (AI-assisted Greek localization)\n"
+"Language: el\n"
+"Language-Team: Greek\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#. /finished recordings to autorecs.
+#: src/webui/static/app/epg.js:1558
+msgid " - "
+msgstr " - "
+
+#: src/webui/static/app/i18n-post.js:137
+msgid "&#160;OK&#160;"
+msgstr "&#160;Εντάξει&#160;"
+
+#: src/webui/static/app/i18n-post.js:106
+msgid "(?:st|nd|rd|th)#parseCodes.S.s"
+msgstr "(?:st|nd|rd|th)#parseCodes.S.s"
+
+#: src/webui/static/app/chconf.js:10 src/webui/static/app/chconf.js:31
+#: src/webui/static/app/epg.js:3 src/webui/static/app/epg.js:93
+#: src/webui/static/app/epg.js:147
+msgid "(Clear filter)"
+msgstr "(Απαλοιφή φίλτρου)"
+
+#: src/webui/static/app/i18n-post.js:210
+msgid "(None)"
+msgstr "(Κανένα)"
+
+#: src/webui/static/app/epg.js:415
+msgid "(default DVR Profile)"
+msgstr "(προεπιλεγμένο προφίλ DVR)"
+
+#: src/webui/static/app/tvheadend.js:622
+msgid ""
+"**You'll also see this page if you try and view documentation (for a "
+"feature) not included with your version of Tvheadend.**\n"
+"\n"
+"\n"
+"\n"
+msgstr ""
+"**Η σελίδα αυτή εμφανίζεται επίσης όταν προσπαθείτε να δείτε τεκμηρίωση για "
+"κάποια δυνατότητα που δεν περιλαμβάνεται στην έκδοση του Tvheadend που "
+"χρησιμοποιείτε.**\n"
+"\n"
+"\n"
+"\n"
+
+#: src/webui/static/app/i18n-post.js:59
+msgid "0 #monthNumber"
+msgstr "0 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:224
+msgid "0,000.00#NumberColumn"
+msgstr "0,000.00#NumberColumn"
+
+#: src/webui/static/app/epg.js:148
+msgid "00:00:00 - 00:15:00"
+msgstr "00:00:00 - 00:15:00"
+
+#: src/webui/static/app/epg.js:149
+msgid "00:15:00 - 00:30:00"
+msgstr "00:15:00 - 00:30:00"
+
+#: src/webui/static/app/epg.js:150
+msgid "00:30:00 - 01:00:00"
+msgstr "00:30:00 - 01:00:00"
+
+#: src/webui/static/app/epg.js:151
+msgid "01:00:00 - 01:30:00"
+msgstr "01:00:00 - 01:30:00"
+
+#: src/webui/static/app/epg.js:152
+msgid "01:30:00 - 03:00:00"
+msgstr "01:30:00 - 03:00:00"
+
+#: src/webui/static/app/epg.js:153
+msgid "03:00:00 - No maximum"
+msgstr "03:00:00 - Χωρίς ανώτατο όριο"
+
+#: src/webui/static/app/i18n-post.js:60
+msgid "1 #monthNumber"
+msgstr "1 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:69
+msgid "10 #monthNumber"
+msgstr "10 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:70
+msgid "11 #monthNumber"
+msgstr "11 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:61
+msgid "2 #monthNumber"
+msgstr "2 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:62
+msgid "3 #monthNumber"
+msgstr "3 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:63
+msgid "4 #monthNumber"
+msgstr "4 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:64
+msgid "5 #monthNumber"
+msgstr "5 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:65
+msgid "6 #monthNumber"
+msgstr "6 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:66
+msgid "7 #monthNumber"
+msgstr "7 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:67
+msgid "8 #monthNumber"
+msgstr "8 #monthNumber"
+
+#: src/webui/static/app/i18n-post.js:68
+msgid "9 #monthNumber"
+msgstr "9 #monthNumber"
+
+#: src/webui/static/app/dvr.js:534
+msgid "Abort"
+msgstr "Ματαίωση"
+
+#: src/webui/static/app/dvr.js:532
+msgid "Abort the selected recording"
+msgstr "Ματαίωση της επιλεγμένης εγγραφής"
+
+#: src/webui/static/app/tvheadend.js:1269
+msgid "About"
+msgstr "Πληροφορίες"
+
+#: src/webui/static/app/acleditor.js:24
+msgid "Access Entries"
+msgstr "Καταχωρίσεις πρόσβασης"
+
+#: src/webui/static/app/acleditor.js:23
+msgid "Access Entry"
+msgstr "Καταχώριση πρόσβασης"
+
+#: src/webui/static/app/epg.js:605 src/webui/static/app/epg.js:606
+msgid "Actions"
+msgstr "Ενέργειες"
+
+#: src/webui/static/app/servicemapper.js:22
+msgid "Active"
+msgstr "Ενεργό"
+
+#: src/webui/static/app/idnode.js:1861 src/webui/static/app/idnode.js:2371
+msgid "Add"
+msgstr "Προσθήκη"
+
+#: src/webui/static/app/idnode.js:1859 src/webui/static/app/idnode.js:2369
+msgid "Add a new entry"
+msgstr "Προσθήκη νέας καταχώρισης"
+
+#: src/webui/static/app/idnode.js:1404 src/webui/static/app/idnode.js:1606
+#, python-brace-format
+msgid "Add {0}"
+msgstr "Προσθήκη {0}"
+
+#: src/webui/static/app/idnode.js:608 src/webui/static/app/idnode.js:624
+msgid "Advanced"
+msgstr "Για προχωρημένους"
+
+#: src/webui/static/app/idnode.js:1060
+msgid "Advanced Settings"
+msgstr "Σύνθετες ρυθμίσεις"
+
+#: src/webui/static/app/i18n-post.js:279
+msgid "After"
+msgstr "Μετά"
+
+#: src/webui/static/app/mpegts.js:216
+msgid "After filtering and reordering (without PCR and PMT)"
+msgstr "Μετά το φιλτράρισμα και την αναδιάταξη (χωρίς PCR και PMT)"
+
+#: src/webui/static/app/epg.js:880 src/webui/static/app/epg.js:881
+msgid "Age"
+msgstr "Ηλικία"
+
+#: src/webui/static/app/dvr.js:124 src/webui/static/app/epg.js:275
+msgid "Age Rating"
+msgstr "Ηλικιακή καταλληλότητα"
+
+#: src/webui/static/app/epg.js:935 src/webui/static/app/idnode.js:2008
+#: src/webui/static/app/idnode.js:2047
+msgid "All"
+msgstr "Όλα"
+
+#: src/webui/static/app/tvhlog.js:78
+msgid "All subsystems"
+msgstr "Όλα τα υποσυστήματα"
+
+#: src/webui/static/app/epgevent.js:146
+msgid "Alternative Showings"
+msgstr "Εναλλακτικές μεταδόσεις"
+
+#: src/webui/static/app/epgevent.js:207
+msgid "Alternative showings"
+msgstr "Εναλλακτικές μεταδόσεις"
+
+#: src/webui/static/app/idnode.js:1191 src/webui/static/app/idnode.js:1204
+#: src/webui/static/app/idnode.js:1213 src/webui/static/app/idnode.js:1530
+#: src/webui/static/app/idnode.js:1548 src/webui/static/app/idnode.js:1558
+msgid "Apply"
+msgstr "Εφαρμογή"
+
+#: src/webui/static/app/tvhlog.js:370
+msgid "Apply any changes made below to the run-time configuration."
+msgstr "Εφαρμογή των παρακάτω αλλαγών στις ρυθμίσεις της τρέχουσας συνεδρίας."
+
+#: src/webui/static/app/tvhlog.js:369
+msgid "Apply configuration (run-time only)"
+msgstr "Εφαρμογή ρυθμίσεων (μόνο μέχρι την επανεκκίνηση)"
+
+#: src/webui/static/app/idnode.js:1529
+msgid "Apply settings"
+msgstr "Εφαρμογή ρυθμίσεων"
+
+#: src/webui/static/app/i18n-post.js:38
+msgid "Apr"
+msgstr "Απρ"
+
+#: src/webui/static/app/i18n-post.js:23
+msgid "April"
+msgstr "Απρίλιος"
+
+#: src/webui/static/app/epg.js:305
+msgid "Aspect"
+msgstr "Αναλογία εικόνας"
+
+#: src/webui/static/app/chconf.js:178
+msgid "Assign Number"
+msgstr "Απόδοση αριθμού"
+
+#: src/webui/static/app/chconf.js:176
+msgid "Assign lowest free channel number"
+msgstr "Απόδοση του μικρότερου ελεύθερου αριθμού καναλιού"
+
+#: src/webui/static/app/esfilter.js:43
+msgid "Audio Stream Filter"
+msgstr "Φίλτρο ροής ήχου (Audio Stream)"
+
+#: src/webui/static/app/esfilter.js:44
+msgid "Audio Stream Filters"
+msgstr "Φίλτρα ροών ήχου (Audio Stream)"
+
+#: src/webui/static/app/epg.js:313
+msgid "Audio description#EPG"
+msgstr "Ακουστική περιγραφή#EPG"
+
+#: src/webui/static/app/i18n-post.js:42
+msgid "Aug"
+msgstr "Αυγ"
+
+#: src/webui/static/app/i18n-post.js:27
+msgid "August"
+msgstr "Αύγουστος"
+
+#: src/webui/static/app/epg.js:1529
+msgid "Auto Recorder"
+msgstr "Αυτόματη εγγραφή (AutoRec)"
+
+#: src/webui/static/app/tvheadend.js:742
+msgid "Auto-refresh"
+msgstr "Αυτόματη ανανέωση"
+
+#: src/webui/static/app/dvr.js:136 src/webui/static/app/dvr.js:1054
+#: src/webui/static/app/epg.js:434
+msgid "Autorec"
+msgstr "Αυτόματη εγγραφή (AutoRec)"
+
+#: src/webui/static/app/dvr.js:1055
+msgid "Autorecs"
+msgstr "Κανόνες αυτόματης εγγραφής (AutoRec)"
+
+#: src/webui/static/app/idnode.js:462 src/webui/static/app/idnode.js:705
+msgid "Available"
+msgstr "Διαθέσιμο"
+
+#: src/webui/static/app/status.js:451
+msgid "BER"
+msgstr "Ποσοστό σφαλμάτων bit (BER)"
+
+#: src/webui/static/app/tvheadend.js:555 src/webui/static/app/tvheadend.js:556
+msgid "Back to top"
+msgstr "Επιστροφή στην κορυφή"
+
+#: src/webui/static/app/status.js:443
+msgid "Bandwidth (kb/s)"
+msgstr "Εύρος ζώνης (kb/s)"
+
+#: src/webui/static/app/status.js:881 src/webui/static/app/status.js:972
+msgid "Bandwidth monitor"
+msgstr "Παρακολούθηση εύρους ζώνης"
+
+#: src/webui/static/app/config.js:29
+msgid "Base"
+msgstr "Βασικό"
+
+#: src/webui/static/app/idnode.js:606 src/webui/static/app/idnode.js:618
+msgid "Basic"
+msgstr "Βασικό"
+
+#: src/webui/static/app/idnode.js:1058
+msgid "Basic Settings"
+msgstr "Βασικές ρυθμίσεις"
+
+#: src/webui/static/app/i18n-post.js:280
+msgid "Before"
+msgstr "Πριν"
+
+#: src/webui/static/app/cteditor.js:73
+msgid "Bouquet"
+msgstr "Πακέτο καναλιών (Bouquet)"
+
+#: src/webui/static/app/cteditor.js:74
+msgid "Bouquets"
+msgstr "Πακέτα καναλιών (Bouquets)"
+
+#: src/webui/static/app/epg.js:201
+msgid "Broadcast Details"
+msgstr "Λεπτομέρειες μετάδοσης"
+
+#: src/webui/static/app/epg.js:29
+msgid "Broadcast details"
+msgstr "Λεπτομέρειες μετάδοσης"
+
+#: src/webui/static/app/epg.js:1305 src/webui/static/app/epgevent.js:79
+msgid "Buffering. Please wait…"
+msgstr "Γίνεται προσωρινή αποθήκευση ροής. Περιμένετε…"
+
+#: src/webui/static/app/caclient.js:33
+msgid "CA"
+msgstr "Πρόσβαση υπό όρους (CA)"
+
+#: src/webui/static/app/esfilter.js:94
+msgid "CA Stream Filter"
+msgstr "Φίλτρο ροής CA"
+
+#: src/webui/static/app/esfilter.js:95
+msgid "CA Stream Filters"
+msgstr "Φίλτρα ροών CA"
+
+#: src/webui/static/app/mpegts.js:192
+msgid "CAIDS: "
+msgstr "CAID: "
+
+#: src/webui/static/app/caclient.js:34
+msgid "CAs"
+msgstr "Συστήματα πρόσβασης υπό όρους (CA)"
+
+#: src/webui/static/app/i18n-post.js:111 src/webui/static/app/i18n-post.js:138
+#: src/webui/static/app/idnode.js:1146 src/webui/static/app/idnode.js:1569
+msgid "Cancel"
+msgstr "Ακύρωση"
+
+#: src/webui/static/app/status.js:629
+msgid "Cancel Connection"
+msgstr "Ακύρωση σύνδεσης"
+
+#: src/webui/static/app/idnode.js:1568
+msgid "Cancel operation"
+msgstr "Ακύρωση ενέργειας"
+
+#: src/webui/static/app/status.js:630
+msgid "Cancel the selected connection?"
+msgstr "Να ακυρωθεί η επιλεγμένη σύνδεση;"
+
+#: src/webui/static/app/status.js:626
+msgid "Cancel this connection"
+msgstr "Ακύρωση αυτής της σύνδεσης"
+
+#: src/webui/static/app/idnode.js:1213 src/webui/static/app/idnode.js:1558
+msgid "Cannot apply"
+msgstr "Δεν είναι δυνατή η εφαρμογή"
+
+#: src/webui/static/app/dvr.js:120 src/webui/static/app/epg.js:267
+msgid "Categories"
+msgstr "Κατηγορίες"
+
+#: src/webui/static/app/epg.js:1523 src/webui/static/app/epg.js:1525
+#: src/webui/static/app/epg.js:1527
+msgid "Category"
+msgstr "Κατηγορία"
+
+#: src/webui/static/app/idnode.js:636
+msgid "Change the user interface level (basic, advanced, expert)"
+msgstr "Αλλαγή επιπέδου περιβάλλοντος (βασικό, προχωρημένο, ειδικό)"
+
+#: src/webui/static/app/idnode.js:1205 src/webui/static/app/idnode.js:1549
+msgid "Changes were applied!"
+msgstr "Οι αλλαγές εφαρμόστηκαν!"
+
+#: src/webui/static/app/chconf.js:232 src/webui/static/app/epg.js:850
+#: src/webui/static/app/epg.js:851 src/webui/static/app/epg.js:1533
+#: src/webui/static/app/epgevent.js:134 src/webui/static/app/epgevent.js:135
+#: src/webui/static/app/status.js:123
+msgid "Channel"
+msgstr "Κανάλι"
+
+#: src/webui/static/app/tvheadend.js:1168
+msgid "Channel / EPG"
+msgstr "Κανάλια / EPG"
+
+#: src/webui/static/app/cteditor.js:10
+msgid "Channel Tag"
+msgstr "Ετικέτα καναλιού"
+
+#: src/webui/static/app/cteditor.js:11
+msgid "Channel Tags"
+msgstr "Ετικέτες καναλιών"
+
+#: src/webui/static/app/chconf.js:199
+msgid "Channel number operations"
+msgstr "Λειτουργίες αρίθμησης καναλιών"
+
+#: src/webui/static/app/chconf.js:233
+msgid "Channels"
+msgstr "Κανάλια"
+
+#: src/webui/static/app/i18n-post.js:134
+msgid "Choose a month (Control+Up/Down to move years)"
+msgstr "Επιλέξτε μήνα (Control+Πάνω/Κάτω για αλλαγή έτους)"
+
+#: src/webui/static/app/config.js:78
+msgid "Clean image (icon) cache"
+msgstr "Εκκαθάριση προσωρινής μνήμης εικόνων (εικονιδίων)"
+
+#: src/webui/static/app/config.js:76
+msgid "Clean image cache on storage"
+msgstr "Εκκαθάριση προσωρινής μνήμης εικόνων στον αποθηκευτικό χώρο"
+
+#: src/webui/static/app/tvhlog.js:101
+msgid "Clear Debug"
+msgstr "Απαλοιφή αποσφαλμάτωσης"
+
+#: src/webui/static/app/tvhlog.js:109
+msgid "Clear Trace"
+msgstr "Απαλοιφή ιχνών"
+
+#: src/webui/static/app/tvhlog.js:102
+msgid "Clear all debug subsystems."
+msgstr "Απαλοιφή όλων των υποσυστημάτων αποσφαλμάτωσης"
+
+#: src/webui/static/app/status.js:534
+msgid "Clear all statistics"
+msgstr "Μηδενισμός όλων των στατιστικών"
+
+#: src/webui/static/app/tvhlog.js:110
+msgid "Clear all trace subsystems."
+msgstr "Απαλοιφή όλων των υποσυστημάτων ανίχνευσης"
+
+#: src/webui/static/app/status.js:318 src/webui/static/app/status.js:321
+msgid "Clear statistics"
+msgstr "Μηδενισμός στατιστικών"
+
+#: src/webui/static/app/status.js:322
+msgid "Clear statistics for selected input?"
+msgstr "Να μηδενιστούν τα στατιστικά για την επιλεγμένη είσοδο;"
+
+#: src/webui/static/app/status.js:116
+msgid "Client / User agent"
+msgstr "Πελάτης / User-Agent"
+
+#: src/webui/static/app/status.js:692
+msgid "Client Address"
+msgstr "Διεύθυνση πελάτη"
+
+#: src/webui/static/app/status.js:704
+msgid "Client Data Ports"
+msgstr "Θύρες δεδομένων πελάτη"
+
+#: src/webui/static/app/caclient.js:35
+msgid "Client Name"
+msgstr "Όνομα πελάτη"
+
+#: src/webui/static/app/status.js:698
+msgid "Client Port"
+msgstr "Θύρα πελάτη"
+
+#: src/webui/static/app/idnode.js:1477 src/webui/static/app/idnode.js:2384
+msgid "Clone"
+msgstr "Κλωνοποίηση"
+
+#: src/webui/static/app/idnode.js:2382
+msgid "Clone a new entry"
+msgstr "Κλωνοποίηση νέας καταχώρισης"
+
+#: src/webui/static/app/epg.js:466
+msgid "Close"
+msgstr "Κλείσιμο"
+
+#: src/webui/static/app/i18n-post.js:205
+msgid "Columns"
+msgstr "Στήλες"
+
+#: src/webui/static/app/comet.js:43
+msgid "Comet failure"
+msgstr "Σφάλμα σύνδεσης Comet"
+
+#: src/webui/static/app/dvr.js:134
+msgid "Comment"
+msgstr "Σχόλιο"
+
+#: src/webui/static/app/status.js:928
+msgid "Compression ratio"
+msgstr "Λόγος συμπίεσης"
+
+#: src/webui/static/app/caclient.js:47
+msgid "Conditional Access Client"
+msgstr "Πελάτης πρόσβασης υπό όρους (CA)"
+
+#: src/webui/static/app/tvheadend.js:1107 src/webui/static/app/tvhlog.js:361
+msgid "Configuration"
+msgstr "Ρύθμιση παραμέτρων"
+
+#: src/webui/static/app/status.js:816
+msgid "Connections"
+msgstr "Συνδέσεις"
+
+#: src/webui/static/app/tvheadend.js:344 src/webui/static/app/tvheadend.js:345
+msgid "Content Icons"
+msgstr "Εικονίδια περιεχομένου"
+
+#: src/webui/static/app/epg.js:289 src/webui/static/app/epg.js:887
+#: src/webui/static/app/epg.js:888
+msgid "Content Type"
+msgstr "Τύπος περιεχομένου"
+
+#: src/webui/static/app/status.js:477
+msgid "Continuity Errors"
+msgstr "Σφάλματα συνέχειας (Continuity Errors)"
+
+#: src/webui/static/app/idnode.js:1503
+msgid "Create"
+msgstr "Δημιουργία"
+
+#: src/webui/static/app/epg.js:1318
+msgid "Create AutoRec"
+msgstr "Δημιουργία AutoRec"
+
+#: src/webui/static/app/epg.js:433 src/webui/static/app/epg.js:1320
+msgid ""
+"Create an automatic recording rule to record all future programs that match "
+"the current query."
+msgstr ""
+"Δημιουργία κανόνα αυτόματης εγγραφής για όλες τις μελλοντικές εκπομπές που "
+"ταιριάζουν με την τρέχουσα αναζήτηση."
+
+#: src/webui/static/app/idnode.js:1502
+msgid "Create new entry"
+msgstr "Δημιουργία νέας καταχώρισης"
+
+#: src/webui/static/app/epg.js:1552
+msgid "Created from EPG query"
+msgstr "Δημιουργήθηκε από αναζήτηση EPG"
+
+#: src/webui/static/app/tvheadend.js:405
+msgid "Crew"
+msgstr "Συντελεστές παραγωγής"
+
+#: src/webui/static/app/epg.js:1539
+#, javascript-format, python-format
+msgid "Currently this will match (and record) %d events."
+msgstr "Προς το παρόν αντιστοιχούν (και θα εγγραφούν) %d εκπομπές."
+
+#: src/webui/static/app/tvheadend.js:1149
+msgid "DVB Inputs"
+msgstr "Είσοδοι DVB"
+
+#: src/webui/static/app/epg.js:587
+msgid "DVR"
+msgstr "DVR"
+
+#: src/webui/static/app/epg.js:309
+msgid "Deaf signed#EPG"
+msgstr "Με διερμηνεία νοηματικής#EPG"
+
+#: src/webui/static/app/tvhlog.js:158
+msgid "Debug"
+msgstr "Αποσφαλμάτωση"
+
+#: src/webui/static/app/tvheadend.js:1223
+msgid "Debugging"
+msgstr "Αποσφαλμάτωση"
+
+#: src/webui/static/app/i18n-post.js:46
+msgid "Dec"
+msgstr "Δεκ"
+
+#: src/webui/static/app/i18n-post.js:31
+msgid "December"
+msgstr "Δεκέμβριος"
+
+#: src/webui/static/app/idnode.js:1875 src/webui/static/app/idnode.js:2397
+msgid "Delete"
+msgstr "Διαγραφή"
+
+#: src/webui/static/app/epg.js:403
+msgid "Delete recording"
+msgstr "Διαγραφή εγγραφής"
+
+#: src/webui/static/app/epg.js:402
+msgid "Delete scheduled recording of this program"
+msgstr "Ακύρωση της προγραμματισμένης εγγραφής αυτής της εκπομπής"
+
+#: src/webui/static/app/idnode.js:1873 src/webui/static/app/idnode.js:2395
+msgid "Delete selected entries"
+msgstr "Διαγραφή επιλεγμένων καταχωρίσεων"
+
+#: src/webui/static/app/status.js:179
+msgid "Descramble"
+msgstr "Αποκρυπτογράφηση (Descramble)"
+
+#: src/webui/static/app/tvhlog.js:175
+msgid "Description"
+msgstr "Περιγραφή"
+
+#: src/webui/static/app/chconf.js:151
+msgid "Detach from bouquet"
+msgstr "Αποσύνδεση από πακέτο καναλιών (Bouquet)"
+
+#: src/webui/static/app/chconf.js:153
+msgid "Detach selected channels from bouquet"
+msgstr "Αποσύνδεση επιλεγμένων καναλιών από το πακέτο"
+
+#: src/webui/static/app/mpegts.js:356
+msgid "Detailed stream info"
+msgstr "Αναλυτικά στοιχεία ροής"
+
+#: src/webui/static/app/dvr.js:355 src/webui/static/app/dvr.js:356
+#: src/webui/static/app/epg.js:15 src/webui/static/app/epg.js:16
+#: src/webui/static/app/mpegts.js:169 src/webui/static/app/mpegts.js:352
+msgid "Details"
+msgstr "Λεπτομέρειες"
+
+#: src/webui/static/app/dvr.js:1194
+msgid "Digital Video Recorder"
+msgstr "Ψηφιακή εγγραφή βίντεο (DVR)"
+
+#: src/webui/static/app/dvr.js:1024
+msgid "Digital Video Recorder Profile"
+msgstr "Προφίλ ψηφιακής εγγραφής (DVR)"
+
+#: src/webui/static/app/dvr.js:1025
+msgid "Digital Video Recorder Profiles"
+msgstr "Προφίλ ψηφιακής εγγραφής (DVR)"
+
+#: src/webui/static/app/tvheadend.js:403
+msgid "Director"
+msgstr "Σκηνοθέτης"
+
+#: src/webui/static/app/dvr.js:724
+msgid "Disable grouping"
+msgstr "Κατάργηση ομαδοποίησης"
+
+#: src/webui/static/app/i18n-post.js:185 src/webui/static/app/i18n-post.js:186
+msgid "Disabled"
+msgstr "Απενεργοποιημένο"
+
+#: src/webui/static/app/config.js:135
+msgid "Discover SAT>IP servers"
+msgstr "Αναζήτηση διακομιστών SAT>IP"
+
+#: src/webui/static/app/epgevent.js:190
+msgid "Display dialog of related broadcasts"
+msgstr "Εμφάνιση παραθύρου με συναφείς μεταδόσεις"
+
+#: src/webui/static/app/epgevent.js:205
+msgid "Display dialog showing alternative broadcasts"
+msgstr "Εμφάνιση παραθύρου με εναλλακτικές μεταδόσεις"
+
+#: src/webui/static/app/i18n-post.js:151
+#, python-brace-format
+msgid "Displaying {0} - {1} of {2}"
+msgstr "Εμφάνιση {0}–{1} από {2}"
+
+#: src/webui/static/app/dvr.js:540
+msgid "Do you really want to abort/unschedule the selection?"
+msgstr ""
+"Θέλετε πράγματι να ματαιώσετε ή να ακυρώσετε τον προγραμματισμό των "
+"επιλεγμένων;"
+
+#: src/webui/static/app/dvr.js:910
+msgid "Do you really want to delete the selected recordings?"
+msgstr "Θέλετε πράγματι να διαγράψετε τις επιλεγμένες εγγραφές;"
+
+#: src/webui/static/app/tvheadend.js:701
+msgid "Do you really want to delete the selection?"
+msgstr "Θέλετε πράγματι να διαγράψετε την επιλογή;"
+
+#: src/webui/static/app/dvr.js:524
+msgid "Do you really want to gracefully stop/unschedule the selection?"
+msgstr ""
+"Θέλετε πράγματι να διακόψετε ομαλά ή να ακυρώσετε τον προγραμματισμό των "
+"επιλεγμένων;"
+
+#: src/webui/static/app/epg.js:559
+msgid "Do you really want to gracefully stop/unschedule this recording?"
+msgstr ""
+"Θέλετε πράγματι να διακόψετε ομαλά ή να ακυρώσετε τον προγραμματισμό αυτής "
+"της εγγραφής;"
+
+#: src/webui/static/app/dvr.js:719
+msgid "Do you really want to remove the selected recordings from storage?"
+msgstr ""
+"Θέλετε πράγματι να αφαιρέσετε τις επιλεγμένες εγγραφές από τον αποθηκευτικό "
+"χώρο;"
+
+#: src/webui/static/app/epg.js:572
+msgid "Do you really want to remove this recording?"
+msgstr "Θέλετε πράγματι να αφαιρέσετε αυτή την εγγραφή;"
+
+#: src/webui/static/app/dvr.js:556
+msgid ""
+"Do you really want to toggle the previously recorded state for the selected "
+"recordings?"
+msgstr ""
+"Θέλετε πράγματι να εναλλάξετε την κατάσταση «Έχει ήδη εγγραφεί» για τις "
+"επιλεγμένες εγγραφές;"
+
+#: src/webui/static/app/epg.js:1500 src/webui/static/app/epg.js:1512
+#: src/webui/static/app/epg.js:1515 src/webui/static/app/epg.js:1518
+#: src/webui/static/app/epg.js:1521
+msgid "Don't care"
+msgstr "Δεν έχει σημασία"
+
+#: src/webui/static/app/dvr.js:664 src/webui/static/app/dvr.js:849
+msgid "Download"
+msgstr "Λήψη"
+
+#: src/webui/static/app/dvr.js:662 src/webui/static/app/dvr.js:847
+msgid "Download the selected recording"
+msgstr "Λήψη της επιλεγμένης εγγραφής"
+
+#: src/webui/static/app/status.js:761
+msgid "Drop (current) connections to Tvheadend."
+msgstr "Διακοπή των τρεχουσών συνδέσεων με το Tvheadend."
+
+#: src/webui/static/app/status.js:764
+msgid "Drop Connections"
+msgstr "Διακοπή συνδέσεων"
+
+#: src/webui/static/app/status.js:760
+msgid "Drop all connections"
+msgstr "Διακοπή όλων των συνδέσεων"
+
+#: src/webui/static/app/status.js:765
+msgid "Drop all current connections?"
+msgstr "Να διακοπούν όλες οι ενεργές συνδέσεις;"
+
+#: src/webui/static/app/dvr.js:94 src/webui/static/app/epg.js:246
+#: src/webui/static/app/epg.js:833 src/webui/static/app/epg.js:834
+#: src/webui/static/app/epg.js:1536
+msgid "Duration"
+msgstr "Διάρκεια"
+
+#: src/webui/static/app/epggrab.js:41
+msgid "EPG Grabber"
+msgstr "Συλλέκτης EPG (EPG Grabber)"
+
+#: src/webui/static/app/epggrab.js:57
+msgid "EPG Grabber Channel"
+msgstr "Κανάλι συλλέκτη EPG"
+
+#: src/webui/static/app/epggrab.js:58
+msgid "EPG Grabber Channels"
+msgstr "Κανάλια συλλέκτη EPG"
+
+#: src/webui/static/app/epggrab.js:88
+msgid "EPG Grabber Module"
+msgstr "Άρθρωμα συλλέκτη EPG"
+
+#: src/webui/static/app/epggrab.js:89
+msgid "EPG Grabber Modules"
+msgstr "Αρθρώματα συλλέκτη EPG"
+
+#: src/webui/static/app/epggrab.js:90
+msgid "EPG Grabber Name"
+msgstr "Όνομα συλλέκτη EPG"
+
+#: src/webui/static/app/epg.js:76
+msgid "EPG Update"
+msgstr "Ενημέρωση EPG"
+
+#: src/webui/static/app/idnode.js:1324 src/webui/static/app/idnode.js:1962
+msgid "Edit"
+msgstr "Επεξεργασία"
+
+#: src/webui/static/app/idnode.js:1960
+msgid "Edit selected entry"
+msgstr "Επεξεργασία επιλεγμένης καταχώρισης"
+
+#: src/webui/static/app/idnode.js:1361 src/webui/static/app/idnode.js:1976
+#, python-brace-format
+msgid "Edit {0}"
+msgstr "Επεξεργασία {0}"
+
+#: src/webui/static/app/idnode.js:1358
+#, python-brace-format
+msgid "Edit {0} ({1} entries)"
+msgstr "Επεξεργασία {0} ({1} καταχωρίσεις)"
+
+#: src/webui/static/app/epg.js:1366
+msgid "Electronic Program Guide"
+msgstr "Ηλεκτρονικός οδηγός προγράμματος (EPG)"
+
+#: src/webui/static/app/tvheadend.js:1540
+msgid "Enable debug output"
+msgstr "Ενεργοποίηση εξόδου αποσφαλμάτωσης"
+
+#: src/webui/static/app/dvr.js:724 src/webui/static/app/dvr.js:733
+msgid "Enable grouping"
+msgstr "Ενεργοποίηση ομαδοποίησης"
+
+#: src/webui/static/app/epg.js:242 src/webui/static/app/epg.js:825
+#: src/webui/static/app/epg.js:826 src/webui/static/app/epgevent.js:126
+#: src/webui/static/app/epgevent.js:127
+msgid "End Time"
+msgstr "Ώρα λήξης"
+
+#: src/webui/static/app/i18n-post.js:264 src/webui/static/app/i18n-post.js:270
+msgid "Enter Filter Text..."
+msgstr "Πληκτρολογήστε κείμενο φίλτρου…"
+
+#: src/webui/static/app/epg.js:808 src/webui/static/app/epg.js:809
+#: src/webui/static/app/epgevent.js:111 src/webui/static/app/epgevent.js:112
+msgid "Episode"
+msgstr "Επεισόδιο"
+
+#: src/webui/static/app/tvheadend.js:611
+msgid "Error"
+msgstr "Σφάλμα"
+
+#: src/webui/static/app/status.js:186
+msgid "Errors"
+msgstr "Σφάλματα"
+
+#: src/webui/static/app/epg.js:1373 src/webui/static/app/epgevent.js:156
+msgid "Events"
+msgstr "Συμβάντα"
+
+#: src/webui/static/app/dvr.js:394
+msgid "Every day"
+msgstr "Κάθε ημέρα"
+
+#: src/webui/static/app/idnode.js:609 src/webui/static/app/idnode.js:630
+msgid "Expert"
+msgstr "Ειδικός"
+
+#: src/webui/static/app/idnode.js:1062
+msgid "Expert Settings"
+msgstr "Ρυθμίσεις ειδικών"
+
+#: src/webui/static/app/epg.js:800 src/webui/static/app/epgevent.js:103
+msgid "Extra text"
+msgstr "Πρόσθετο κείμενο"
+
+#: src/webui/static/app/epg.js:801 src/webui/static/app/epgevent.js:104
+msgid "Extra text: subtitle or summary or description"
+msgstr "Πρόσθετο κείμενο: υπότιτλος, σύνοψη ή περιγραφή"
+
+#: src/webui/static/app/epg.js:295
+msgid "FHDTV"
+msgstr "FHDTV"
+
+#: src/webui/static/app/servicemapper.js:13
+msgid "Failed"
+msgstr "Απέτυχε"
+
+#: src/webui/static/app/dvr.js:904
+msgid "Failed Recording"
+msgstr "Αποτυχημένη εγγραφή"
+
+#: src/webui/static/app/dvr.js:905
+msgid "Failed Recordings"
+msgstr "Αποτυχημένες εγγραφές"
+
+#: src/webui/static/app/i18n-post.js:36
+msgid "Feb"
+msgstr "Φεβ"
+
+#: src/webui/static/app/i18n-post.js:21
+msgid "February"
+msgstr "Φεβρουάριος"
+
+#: src/webui/static/app/dvr.js:132
+msgid "File name"
+msgstr "Όνομα αρχείου"
+
+#: src/webui/static/app/dvr.js:130
+msgid "File size"
+msgstr "Μέγεθος αρχείου"
+
+#: src/webui/static/app/epg.js:1053
+msgid "Filter category…"
+msgstr "Φιλτράρισμα κατηγορίας…"
+
+#: src/webui/static/app/epg.js:978
+msgid "Filter channel…"
+msgstr "Φιλτράρισμα καναλιού…"
+
+#: src/webui/static/app/epg.js:1104
+msgid "Filter content type…"
+msgstr "Φιλτράρισμα τύπου περιεχομένου…"
+
+#: src/webui/static/app/epg.js:1125
+msgid "Filter duration…"
+msgstr "Φιλτράρισμα διάρκειας…"
+
+#: src/webui/static/app/epg.js:1013
+msgid "Filter tag…"
+msgstr "Φιλτράρισμα ετικέτας…"
+
+#: src/webui/static/app/i18n-post.js:253
+msgid "Filters"
+msgstr "Φίλτρα"
+
+#: src/webui/static/app/dvr.js:185 src/webui/static/app/epg.js:441
+msgid "Find alternative showings for the DVR entry."
+msgstr "Εύρεση εναλλακτικών μεταδόσεων για την καταχώριση DVR."
+
+#: src/webui/static/app/dvr.js:190 src/webui/static/app/epg.js:446
+msgid "Find related showings for the DVR entry."
+msgstr "Εύρεση συναφών μεταδόσεων για την καταχώριση DVR."
+
+#: src/webui/static/app/wizard.js:160
+msgid "Finish"
+msgstr "Ολοκλήρωση"
+
+#: src/webui/static/app/dvr.js:781
+msgid "Finished Recording"
+msgstr "Ολοκληρωμένη εγγραφή"
+
+#: src/webui/static/app/dvr.js:782
+msgid "Finished Recordings"
+msgstr "Ολοκληρωμένες εγγραφές"
+
+#: src/webui/static/app/dvr.js:92 src/webui/static/app/epg.js:244
+msgid "First Aired"
+msgstr "Πρώτη μετάδοση"
+
+#: src/webui/static/app/i18n-post.js:146
+msgid "First Page"
+msgstr "Πρώτη σελίδα"
+
+#: src/webui/static/app/cteditor.js:44 src/webui/static/app/mpegts.js:36
+msgid "Force Scan"
+msgstr "Εξαναγκασμός σάρωσης"
+
+#: src/webui/static/app/mpegts.js:34
+msgid "Force new scan (all muxes) for selected networks"
+msgstr "Εξαναγκασμός νέας σάρωσης (όλων των Mux) για τα επιλεγμένα δίκτυα"
+
+#: src/webui/static/app/tvheadend.js:1425
+msgid "Free"
+msgstr "Ελεύθερο"
+
+#: src/webui/static/app/i18n-post.js:98
+msgid "Fri"
+msgstr "Παρ"
+
+#: src/webui/static/app/i18n-post.js:88
+msgid "Friday"
+msgstr "Παρασκευή"
+
+#: src/webui/static/app/tvheadend.js:986
+msgid "Fullscreen"
+msgstr "Πλήρης οθόνη"
+
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1502
+msgid "Fulltext"
+msgstr "Πλήρες κείμενο"
+
+#: src/webui/static/app/tvheadend.js:1117
+msgid "General"
+msgstr "Γενικά"
+
+#: src/webui/static/app/epg.js:1535
+msgid "Genre"
+msgstr "Είδος"
+
+#: src/webui/static/app/tvheadend.js:1415
+msgid "GiB"
+msgstr "GiB"
+
+#: src/webui/static/app/epg.js:998
+msgid "Go to next channel"
+msgstr "Μετάβαση στο επόμενο κανάλι"
+
+#: src/webui/static/app/dvr.js:203 src/webui/static/app/epg.js:459
+msgid "Go to next event"
+msgstr "Μετάβαση στο επόμενο συμβάν"
+
+#: src/webui/static/app/epg.js:992
+msgid "Go to previous channel"
+msgstr "Μετάβαση στο προηγούμενο κανάλι"
+
+#: src/webui/static/app/dvr.js:197 src/webui/static/app/epg.js:453
+msgid "Go to previous event"
+msgstr "Μετάβαση στο προηγούμενο συμβάν"
+
+#: src/webui/static/app/idnode.js:1682
+msgid "Grid Update"
+msgstr "Ενημέρωση πίνακα"
+
+#: src/webui/static/app/i18n-post.js:211
+msgid "Group By This Field"
+msgstr "Ομαδοποίηση κατά αυτό το πεδίο"
+
+#: src/webui/static/app/epg.js:297
+msgid "HDTV"
+msgstr "HDTV"
+
+#: src/webui/static/app/mpegts.js:227
+msgid "HbbTv"
+msgstr "HbbTV"
+
+#: src/webui/static/app/epg.js:1350 src/webui/static/app/idnode.js:1248
+#: src/webui/static/app/idnode.js:2121 src/webui/static/app/idnode.js:2528
+#: src/webui/static/app/idnode.js:2974 src/webui/static/app/servicemapper.js:53
+#: src/webui/static/app/status.js:220 src/webui/static/app/status.js:555
+#: src/webui/static/app/status.js:778
+msgid "Help"
+msgstr "Βοήθεια"
+
+#: src/webui/static/app/idnode.js:2024
+msgid "Hide"
+msgstr "Απόκρυψη"
+
+#: src/webui/static/app/idnode.js:2472
+msgid "Hide passwords"
+msgstr "Απόκρυψη κωδικών πρόσβασης"
+
+#: src/webui/static/app/status.js:95
+msgid "Hostname"
+msgstr "Όνομα κεντρικού υπολογιστή"
+
+#: src/webui/static/app/status.js:84
+msgid "ID"
+msgstr "Αναγνωριστικό"
+
+#: src/webui/static/app/acleditor.js:108
+msgid "IP Blocking Record"
+msgstr "Καταχώριση αποκλεισμού IP"
+
+#: src/webui/static/app/acleditor.js:109
+msgid "IP Blocking Records"
+msgstr "Καταχωρίσεις αποκλεισμού IP"
+
+#: src/webui/static/app/servicemapper.js:17
+msgid "Ignored"
+msgstr "Αγνοήθηκε"
+
+#: src/webui/static/app/config.js:108
+msgid "Image Cache"
+msgstr "Προσωρινή μνήμη εικόνων"
+
+#: src/webui/static/app/status.js:926
+msgid "In"
+msgstr "Είσοδος"
+
+#: src/webui/static/app/idnode.js:2007
+msgid "Inactive services"
+msgstr "Ανενεργές υπηρεσίες"
+
+#: src/webui/static/app/mpegts.js:165
+msgid "Index"
+msgstr "Ευρετήριο"
+
+#: src/webui/static/app/status.js:402 src/webui/static/app/status.js:1014
+msgid "Input"
+msgstr "είσοδος"
+
+#: src/webui/static/app/status.js:193
+msgid "Input (kb/s)"
+msgstr "Είσοδος (kb/s)"
+
+#: src/webui/static/app/comet.js:48
+msgid "Invalid JSON from comet"
+msgstr "Μη έγκυρο JSON από το Comet"
+
+#: src/webui/static/app/idnode.js:2143
+msgid "Item"
+msgstr "Στοιχείο"
+
+#: src/webui/static/app/idnode.js:2143
+msgid "Items"
+msgstr "Στοιχεία"
+
+#: src/webui/static/app/i18n-post.js:35
+msgid "Jan"
+msgstr "Ιαν"
+
+#: src/webui/static/app/i18n-post.js:20
+msgid "January"
+msgstr "Ιανουάριος"
+
+#: src/webui/static/app/i18n-post.js:41
+msgid "Jul"
+msgstr "Ιουλ"
+
+#: src/webui/static/app/i18n-post.js:26
+msgid "July"
+msgstr "Ιούλιος"
+
+#: src/webui/static/app/i18n-post.js:40
+msgid "Jun"
+msgstr "Ιουν"
+
+#: src/webui/static/app/i18n-post.js:25
+msgid "June"
+msgstr "Ιούνιος"
+
+#: src/webui/static/app/dvr.js:118 src/webui/static/app/epg.js:265
+msgid "Keywords"
+msgstr "Λέξεις-κλειδιά"
+
+#: src/webui/static/app/tvheadend.js:1419
+msgid "KiB"
+msgstr "KiB"
+
+#: src/webui/static/app/mpegts.js:168 src/webui/static/app/mpegts.js:231
+msgid "Language"
+msgstr "Γλώσσα"
+
+#: src/webui/static/app/tvheadend.js:491
+msgid "Last Help Pages"
+msgstr "Πρόσφατες σελίδες βοήθειας"
+
+#: src/webui/static/app/i18n-post.js:149
+msgid "Last Page"
+msgstr "Τελευταία σελίδα"
+
+#: src/webui/static/app/epg.js:307
+msgid "Lines"
+msgstr "Γραμμές"
+
+#: src/webui/static/app/mpegts.js:233
+msgid "Link"
+msgstr "Σύνδεσμος"
+
+#: src/webui/static/app/tvhlog.js:349
+msgid "Listing Subsystems"
+msgstr "Λίστα υποσυστημάτων"
+
+#: src/webui/static/app/tvheadend.js:942
+msgid "Live TV Player"
+msgstr "Αναπαραγωγέας ζωντανής τηλεόρασης"
+
+#: src/webui/static/app/tvheadend.js:724
+msgid "Loading, please wait..."
+msgstr "Φόρτωση, παρακαλώ περιμένετε..."
+
+#: src/webui/static/app/i18n-post.js:5 src/webui/static/app/i18n-post.js:17
+#: src/webui/static/app/i18n-post.js:197 src/webui/static/app/tvheadend.js:879
+#: src/webui/static/app/tvheadend.js:918
+msgid "Loading..."
+msgstr "Φόρτωση..."
+
+#: src/webui/static/app/epg.js:969 src/webui/static/app/epg.js:1004
+#: src/webui/static/app/epg.js:1044 src/webui/static/app/epg.js:1095
+#: src/webui/static/app/epg.js:1116
+msgid "Loading…"
+msgstr "Φόρτωση…"
+
+#: src/webui/static/app/tvheadend.js:1396
+msgid "Logged in as"
+msgstr "Συνδεδεμένος ως"
+
+#: src/webui/static/app/config.js:133
+msgid "Look for new SAT>IP servers"
+msgstr "Αναζήτηση νέων διακομιστών SAT>IP"
+
+#: src/webui/static/app/mpegts.js:340
+msgid "Maintenance"
+msgstr "Συντήρηση"
+
+#: src/webui/static/app/mpegts.js:338
+msgid "Maintenance operations"
+msgstr "Εργασίες συντήρησης"
+
+#: src/webui/static/app/mpegts.js:306
+msgid "Map All"
+msgstr "Αντιστοίχιση όλων"
+
+#: src/webui/static/app/mpegts.js:304
+msgid "Map Selected"
+msgstr "Αντιστοίχιση επιλεγμένων"
+
+#: src/webui/static/app/chconf.js:147 src/webui/static/app/mpegts.js:285
+msgid "Map all services"
+msgstr "Αντιστοίχιση όλων των υπηρεσιών"
+
+#: src/webui/static/app/chconf.js:145 src/webui/static/app/mpegts.js:283
+msgid "Map all services to channels"
+msgstr "Αντιστοίχιση όλων των υπηρεσιών σε κανάλια"
+
+#: src/webui/static/app/chconf.js:141 src/webui/static/app/mpegts.js:279
+msgid "Map selected services"
+msgstr "Αντιστοίχιση επιλεγμένων υπηρεσιών"
+
+#: src/webui/static/app/chconf.js:139 src/webui/static/app/mpegts.js:277
+msgid "Map selected services to channels"
+msgstr "Αντιστοίχιση επιλεγμένων υπηρεσιών σε κανάλια"
+
+#: src/webui/static/app/chconf.js:158 src/webui/static/app/mpegts.js:290
+#: src/webui/static/app/servicemapper.js:120
+#: src/webui/static/app/servicemapper.js:136
+msgid "Map services"
+msgstr "Αντιστοίχιση υπηρεσιών"
+
+#: src/webui/static/app/chconf.js:156 src/webui/static/app/mpegts.js:288
+#: src/webui/static/app/servicemapper.js:117
+#: src/webui/static/app/servicemapper.js:133
+msgid "Map services to channels"
+msgstr "Αντιστοίχιση υπηρεσιών σε κανάλια"
+
+#: src/webui/static/app/servicemapper.js:9
+msgid "Mapped"
+msgstr "Αντιστοιχισμένο"
+
+#: src/webui/static/app/i18n-post.js:37
+msgid "Mar"
+msgstr "Μαρ"
+
+#: src/webui/static/app/i18n-post.js:22
+msgid "March"
+msgstr "Μάρτιος"
+
+#: src/webui/static/app/dvr.js:696
+msgid "Mark the selected recording as failed"
+msgstr "Σήμανση της επιλεγμένης εγγραφής ως αποτυχημένης"
+
+#: src/webui/static/app/dvr.js:881
+msgid "Mark the selected recording as finished"
+msgstr "Σήμανση της επιλεγμένης εγγραφής ως ολοκληρωμένης"
+
+#: src/webui/static/app/i18n-post.js:24
+msgid "May"
+msgstr "Μάιος"
+
+#: src/webui/static/app/i18n-post.js:39
+msgid "May#ShortNameForMay"
+msgstr "Μάι#ShortNameForMay"
+
+#: src/webui/static/app/tvhlog.js:381
+msgid "Memory Information Entries"
+msgstr "Καταχωρίσεις πληροφοριών μνήμης"
+
+#: src/webui/static/app/tvhlog.js:380
+msgid "Memory Information Entry"
+msgstr "Καταχώριση πληροφοριών μνήμης"
+
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1505
+msgid "Mergetext"
+msgstr "Συγχωνευμένο κείμενο"
+
+#: src/webui/static/app/tvheadend.js:700
+msgid "Message"
+msgstr "Μήνυμα"
+
+#: src/webui/static/app/tvheadend.js:1417
+msgid "MiB"
+msgstr "MiB"
+
+#: src/webui/static/app/i18n-post.js:94
+msgid "Mon"
+msgstr "Δευ"
+
+#: src/webui/static/app/i18n-post.js:84
+msgid "Monday"
+msgstr "Δευτέρα"
+
+#: src/webui/static/app/idnode.js:1931 src/webui/static/app/idnode.js:2444
+msgid "Move Down"
+msgstr "Μετακίνηση κάτω"
+
+#: src/webui/static/app/idnode.js:1906 src/webui/static/app/idnode.js:2423
+msgid "Move Up"
+msgstr "Μετακίνηση πάνω"
+
+#: src/webui/static/app/chconf.js:188
+msgid "Move channel one number down"
+msgstr "Μετακίνηση καναλιού κατά έναν αριθμό κάτω"
+
+#: src/webui/static/app/chconf.js:182
+msgid "Move channel one number up"
+msgstr "Μετακίνηση καναλιού κατά έναν αριθμό πάνω"
+
+#: src/webui/static/app/idnode.js:1929
+msgid "Move selected entries down"
+msgstr "Μετακίνηση επιλεγμένων καταχωρίσεων κάτω"
+
+#: src/webui/static/app/idnode.js:1904
+msgid "Move selected entries up"
+msgstr "Μετακίνηση επιλεγμένων καταχωρίσεων πάνω"
+
+#: src/webui/static/app/idnode.js:2442
+msgid "Move selected entry down"
+msgstr "Μετακίνηση επιλεγμένης καταχώρισης κάτω"
+
+#: src/webui/static/app/idnode.js:2421
+msgid "Move selected entry up"
+msgstr "Μετακίνηση επιλεγμένης καταχώρισης πάνω"
+
+#: src/webui/static/app/dvr.js:698
+msgid "Move to failed"
+msgstr "Μεταφορά στις αποτυχημένες"
+
+#: src/webui/static/app/dvr.js:883
+msgid "Move to finished"
+msgstr "Μεταφορά στις ολοκληρωμένες"
+
+#: src/webui/static/app/mpegts.js:97 src/webui/static/app/mpegts.js:103
+msgid "Mux"
+msgstr "Πολυπλέκτης (Mux)"
+
+#: src/webui/static/app/mpegts.js:425 src/webui/static/app/mpegts.js:433
+msgid "Mux Scheduler"
+msgstr "Προγραμματιστής πολυπλεκτών (Mux)"
+
+#: src/webui/static/app/mpegts.js:426
+msgid "Mux Schedulers"
+msgstr "Προγραμματιστές πολυπλεκτών (Mux)"
+
+#: src/webui/static/app/mpegts.js:98
+msgid "Muxes"
+msgstr "πολυπλέκτες (Mux)"
+
+#: src/webui/static/app/mpegts.js:232
+msgid "Name"
+msgstr "Όνομα"
+
+#: src/webui/static/app/mpegts.js:66 src/webui/static/app/mpegts.js:72
+#: src/webui/static/app/mpegts.js:105
+msgid "Network"
+msgstr "Δίκτυο"
+
+#: src/webui/static/app/mpegts.js:67
+msgid "Networks"
+msgstr "Δίκτυα"
+
+#: src/webui/static/app/epg.js:1326 src/webui/static/app/epg.js:1508
+msgid "New only"
+msgstr "Μόνο νέα"
+
+#: src/webui/static/app/epg.js:299
+msgid "New#EPG"
+msgstr "Νέο#EPG"
+
+#: src/webui/static/app/i18n-post.js:132
+msgid "Next Month (Control+Right)"
+msgstr "Επόμενος μήνας (Control+Δεξιά)"
+
+#: src/webui/static/app/i18n-post.js:148
+msgid "Next Page"
+msgstr "Επόμενη σελίδα"
+
+#: src/webui/static/app/i18n-post.js:113 src/webui/static/app/i18n-post.js:259
+msgid "No"
+msgstr "Όχι"
+
+#: src/webui/static/app/i18n-post.js:152
+msgid "No data to display"
+msgstr "Δεν υπάρχουν δεδομένα για εμφάνιση"
+
+#: src/webui/static/app/dvr.js:396
+msgid "No days"
+msgstr "Καμία ημέρα"
+
+#: src/webui/static/app/tvheadend.js:1399
+msgid "No verified access"
+msgstr "Μη επαληθευμένη πρόσβαση"
+
+#. / {0} title (lowercase), {1} title
+#: src/webui/static/app/tvheadend.js:737
+#, python-brace-format
+msgid "No {0} to display"
+msgstr "Δεν υπάρχουν {0} για εμφάνιση"
+
+#: src/webui/static/app/idnode.js:2009 src/webui/static/app/mpegts.js:213
+#: src/webui/static/app/mpegts.js:223
+msgid "None"
+msgstr "Κανένα"
+
+#: src/webui/static/app/tvheadend.js:620
+msgid "Not Available"
+msgstr "Μη διαθέσιμο"
+
+#: src/webui/static/app/idnode.js:373
+msgid "Not set"
+msgstr "Δεν έχει οριστεί"
+
+#: src/webui/static/app/i18n-post.js:45
+msgid "Nov"
+msgstr "Νοε"
+
+#: src/webui/static/app/i18n-post.js:30
+msgid "November"
+msgstr "Νοέμβριος"
+
+#: src/webui/static/app/epg.js:936
+msgid "Now"
+msgstr "Τώρα"
+
+#: src/webui/static/app/epg.js:841 src/webui/static/app/epg.js:842
+msgid "Number"
+msgstr "Αριθμός"
+
+#: src/webui/static/app/chconf.js:190
+msgid "Number Down"
+msgstr "Μείωση αριθμού"
+
+#: src/webui/static/app/chconf.js:184
+msgid "Number Up"
+msgstr "Αύξηση αριθμού"
+
+#: src/webui/static/app/chconf.js:201
+msgid "Number operations"
+msgstr "Λειτουργίες αρίθμησης"
+
+#: src/webui/static/app/i18n-post.js:110
+msgid "OK"
+msgstr "Εντάξει"
+
+#: src/webui/static/app/i18n-post.js:44
+msgid "Oct"
+msgstr "Οκτ"
+
+#: src/webui/static/app/i18n-post.js:29
+msgid "October"
+msgstr "Οκτώβριος"
+
+#: src/webui/static/app/i18n-post.js:281
+msgid "On#DateFilter"
+msgstr "Στις#DateFilter"
+
+#: src/webui/static/app/esfilter.js:110
+msgid "Other Stream Filter"
+msgstr "Άλλο φίλτρο ροής"
+
+#: src/webui/static/app/esfilter.js:111
+msgid "Other Stream Filters"
+msgstr "Άλλα φίλτρα ροών"
+
+#: src/webui/static/app/status.js:927
+msgid "Out"
+msgstr "Έξοδος"
+
+#: src/webui/static/app/status.js:202
+msgid "Output (kb/s)"
+msgstr "Έξοδος (kb/s)"
+
+#: src/webui/static/app/status.js:458
+msgid "PER"
+msgstr "Ποσοστό σφαλμάτων πακέτων (PER)"
+
+#: src/webui/static/app/mpegts.js:166
+msgid "PID"
+msgstr "PID"
+
+#: src/webui/static/app/status.js:162 src/webui/static/app/status.js:427
+msgid "PID list"
+msgstr "Λίστα PID"
+
+#: src/webui/static/app/i18n-post.js:144
+msgid "Page"
+msgstr "Σελίδα"
+
+#: src/webui/static/app/epg.js:315 src/webui/static/app/idnode.js:2559
+#: src/webui/static/app/idnode.js:2745
+msgid "Parameters"
+msgstr "Παράμετροι"
+
+#: src/webui/static/app/dvr.js:126 src/webui/static/app/epg.js:277
+#: src/webui/static/app/epg.js:873
+msgid "Parental Rating"
+msgstr "Γονική καταλληλότητα"
+
+#: src/webui/static/app/acleditor.js:70
+msgid "Password"
+msgstr "Κωδικός πρόσβασης"
+
+#: src/webui/static/app/acleditor.js:71
+msgid "Passwords"
+msgstr "Κωδικοί πρόσβασης"
+
+#: src/webui/static/app/tvheadend.js:971
+msgid "Pause"
+msgstr "Παύση"
+
+#: src/webui/static/app/tvheadend.js:748
+msgid "Per page"
+msgstr "Ανά σελίδα"
+
+#: src/webui/static/app/chconf.js:245 src/webui/static/app/chconf.js:246
+#: src/webui/static/app/dvr.js:816 src/webui/static/app/dvr.js:817
+#: src/webui/static/app/dvr.js:936 src/webui/static/app/dvr.js:937
+#: src/webui/static/app/epg.js:367 src/webui/static/app/mpegts.js:121
+#: src/webui/static/app/mpegts.js:122 src/webui/static/app/mpegts.js:397
+#: src/webui/static/app/mpegts.js:398 src/webui/static/app/tvheadend.js:860
+#: src/webui/static/app/tvheadend.js:954
+msgid "Play"
+msgstr "Αναπαραγωγή"
+
+#: src/webui/static/tv.js:468
+msgid "Play Selected Channel"
+msgstr "Αναπαραγωγή επιλεγμένου καναλιού"
+
+#: src/webui/static/app/epg.js:366
+msgid "Play this program"
+msgstr "Αναπαραγωγή αυτής της εκπομπής"
+
+#: src/webui/static/app/tvheadend.js:860
+msgid "Play this stream"
+msgstr "Αναπαραγωγή αυτής της ροής"
+
+#: src/webui/static/app/i18n-post.js:161
+msgid "Please Wait..."
+msgstr "Παρακαλώ περιμένετε…"
+
+#: src/webui/static/app/tvheadend.js:613
+msgid "Please check Tvheadend is running and try again."
+msgstr "Ελέγξτε ότι το Tvheadend λειτουργεί και δοκιμάστε ξανά."
+
+#: src/webui/static/app/tvheadend.js:623
+msgid ""
+"Please take a look at the other Help pages (Table of Contents), if you still"
+" can't find what you're "
+msgstr ""
+"Δείτε και τις υπόλοιπες σελίδες βοήθειας (Πίνακας περιεχομένων), αν ακόμη "
+"δεν βρίσκετε αυτό που"
+
+#: src/webui/static/app/tvheadend.js:827
+msgid "Premiere"
+msgstr "Πρεμιέρα"
+
+#: src/webui/static/app/wizard.js:66
+msgid "Previous"
+msgstr "Προηγούμενο"
+
+#: src/webui/static/app/i18n-post.js:133
+msgid "Previous Month (Control+Left)"
+msgstr "Προηγούμενος μήνας (Control+Αριστερά)"
+
+#: src/webui/static/app/i18n-post.js:147
+msgid "Previous Page"
+msgstr "Προηγούμενη σελίδα"
+
+#: src/webui/static/app/tvheadend.js:845
+msgid "Previous day"
+msgstr "Προηγούμενη ημέρα"
+
+#: src/webui/static/app/dvr.js:550
+msgid "Previously recorded"
+msgstr "Έχει ήδη εγγραφεί"
+
+#: src/webui/static/app/status.js:137
+msgid "Profile"
+msgstr "Προφίλ"
+
+#: src/webui/static/app/dvr.js:1026
+msgid "Profile Name"
+msgstr "Όνομα προφίλ"
+
+#: src/webui/static/app/epg.js:761 src/webui/static/app/epg.js:762
+msgid "Progress"
+msgstr "Πρόοδος"
+
+#: src/webui/static/app/status.js:752
+msgid "Proxy Address"
+msgstr "Διεύθυνση διακομιστή μεσολάβησης (Proxy)"
+
+#: src/webui/static/app/epg.js:872
+msgid "Rating"
+msgstr "Αξιολόγηση"
+
+#: src/webui/static/app/ratinglabels.js:6
+msgid "Rating Label"
+msgstr "Ετικέτα καταλληλότητας"
+
+#: src/webui/static/app/ratinglabels.js:7
+msgid "Rating Labels"
+msgstr "ετικέτες καταλληλότητας"
+
+#: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
+msgid "Re-fetch images"
+msgstr "Νέα λήψη εικόνων"
+
+#: src/webui/static/app/dvr.js:683 src/webui/static/app/dvr.js:868
+#: src/webui/static/app/dvr.js:966
+msgid "Re-record"
+msgstr "Επανεγγραφή"
+
+#: src/webui/static/app/epggrab.js:6
+msgid "Re-run Internal EPG Grabbers"
+msgstr "Επανεκτέλεση εσωτερικών συλλεκτών EPG"
+
+#: src/webui/static/app/epggrab.js:7
+msgid "Re-run all internal EPG grabbers to import EPG data now"
+msgstr "Εκτέλεση όλων των εσωτερικών συλλεκτών EPG για άμεση εισαγωγή δεδομένων"
+
+#: src/webui/static/app/idnode.js:1064
+msgid "Read-only Info"
+msgstr "Πληροφορίες μόνο για ανάγνωση"
+
+#: src/webui/static/app/comet.js:24
+msgid "Reconnected to Tvheadend"
+msgstr "Η σύνδεση με το Tvheadend αποκαταστάθηκε"
+
+#: src/webui/static/app/comet.js:19
+msgid "Reconnecting to Tvheadend..."
+msgstr "Επανασύνδεση με το Tvheadend…"
+
+#: src/webui/static/app/epg.js:427
+msgid "Record"
+msgstr "Εγγραφή"
+
+#: src/webui/static/app/epg.js:434
+msgid "Record series"
+msgstr "Εγγραφή σειράς"
+
+#: src/webui/static/app/epg.js:426
+msgid "Record this program now"
+msgstr "Εγγραφή αυτής της εκπομπής τώρα"
+
+#: src/webui/static/app/dvr.js:829 src/webui/static/app/tvheadend.js:1203
+msgid "Recording"
+msgstr "Εγγραφή"
+
+#: src/webui/static/app/dvr.js:364
+msgid "Recording details"
+msgstr "Λεπτομέρειες εγγραφής"
+
+#: src/webui/static/app/dvr.js:829
+msgid "Recordings"
+msgstr "Εγγραφές"
+
+#: src/webui/static/app/i18n-post.js:150 src/webui/static/app/i18n-post.js:157
+msgid "Refresh"
+msgstr "Ανανέωση"
+
+#: src/webui/static/app/epgevent.js:146
+msgid "Related Showings"
+msgstr "Συναφείς μεταδόσεις"
+
+#: src/webui/static/app/epgevent.js:192
+msgid "Related broadcasts"
+msgstr "Συναφείς μεταδόσεις"
+
+#: src/webui/static/app/dvr.js:713
+msgid "Remove"
+msgstr "Αφαίρεση"
+
+#: src/webui/static/app/mpegts.js:335
+msgid "Remove all unseen services (7 days+)"
+msgstr "Αφαίρεση όλων των μη εντοπισμένων υπηρεσιών (7+ ημέρες)"
+
+#: src/webui/static/app/mpegts.js:327
+msgid ""
+"Remove old services marked as missing in PAT/SDT which were not detected "
+"more than 7 days (last seen column)"
+msgstr ""
+"Αφαίρεση παλιών υπηρεσιών που επισημαίνονται ως απούσες σε PAT/SDT και δεν "
+"εντοπίστηκαν για πάνω από 7 ημέρες (στήλη τελευταίας εμφάνισης)"
+
+#: src/webui/static/app/mpegts.js:333
+msgid ""
+"Remove old services which were not detected more than 7 days (last seen "
+"column)"
+msgstr ""
+"Αφαίρεση παλιών υπηρεσιών που δεν εντοπίστηκαν για πάνω από 7 ημέρες (στήλη "
+"τελευταίας εμφάνισης)"
+
+#: src/webui/static/app/dvr.js:711
+msgid "Remove the selected recording from storage"
+msgstr "Αφαίρεση επιλεγμένης εγγραφής από τον αποθηκευτικό χώρο"
+
+#: src/webui/static/app/mpegts.js:329
+msgid "Remove unseen services (PAT/SDT) (7 days+)"
+msgstr "Αφαίρεση μη εντοπισμένων υπηρεσιών (PAT/SDT, 7+ ημέρες)"
+
+#: src/webui/static/app/dvr.js:984
+msgid "Removed Recording"
+msgstr "Αφαιρεμένη εγγραφή"
+
+#: src/webui/static/app/dvr.js:985
+msgid "Removed Recordings"
+msgstr "Αφαιρεμένες εγγραφές"
+
+#: src/webui/static/app/epg.js:301
+msgid "Repeat#EPG"
+msgstr "Επανάληψη#EPG"
+
+#: src/webui/static/app/cteditor.js:42
+msgid "Rescan the mux for changes to the bouquet."
+msgstr "Νέα σάρωση του Mux για αλλαγές στο πακέτο καναλιών."
+
+#: src/webui/static/app/chconf.js:218
+msgid "Reset (clear) the selected icon URLs"
+msgstr "Επαναφορά (απαλοιφή) επιλεγμένων URL εικονιδίων"
+
+#: src/webui/static/app/epg.js:1332
+msgid "Reset All"
+msgstr "Επαναφορά όλων"
+
+#: src/webui/static/app/chconf.js:220
+msgid "Reset Icon"
+msgstr "Επαναφορά εικονιδίου"
+
+#: src/webui/static/app/epg.js:1334
+msgid "Reset all filters (show all)"
+msgstr "Επαναφορά όλων των φίλτρων (εμφάνιση όλων)"
+
+#: src/webui/static/app/tvhlog.js:117
+msgid "Restore Debug"
+msgstr "Επαναφορά αποσφαλμάτωσης"
+
+#: src/webui/static/app/tvhlog.js:125
+msgid "Restore Trace"
+msgstr "Επαναφορά ανίχνευσης"
+
+#: src/webui/static/app/tvhlog.js:118
+msgid "Restore the debug subsystems to their initial state."
+msgstr "Επαναφορά αρχικής κατάστασης υποσυστημάτων αποσφαλμάτωσης."
+
+#: src/webui/static/app/tvhlog.js:126
+msgid "Restore the trace subsystems to their initial state."
+msgstr "Επαναφορά αρχικής κατάστασης υποσυστημάτων ανίχνευσης."
+
+#: src/webui/static/app/idnode.js:1845 src/webui/static/app/idnode.js:2356
+#: src/webui/static/app/idnode.js:2903
+msgid "Revert pending changes (marked with red border)"
+msgstr "Αναίρεση εκκρεμών αλλαγών (με κόκκινο περίγραμμα)"
+
+#: src/webui/static/app/config.js:148
+msgid "SAT>IP Server"
+msgstr "Διακομιστής SAT>IP"
+
+#: src/webui/static/app/status.js:492
+msgid "SNR"
+msgstr "Λόγος σήματος προς θόρυβο (SNR)"
+
+#: src/webui/static/app/tvheadend.js:829
+msgid "Same day"
+msgstr "Ίδια ημέρα"
+
+#: src/webui/static/app/i18n-post.js:99
+msgid "Sat"
+msgstr "Σάβ"
+
+#: src/webui/static/app/i18n-post.js:89
+msgid "Saturday"
+msgstr "Σάββατο"
+
+#: src/webui/static/app/idnode.js:1156 src/webui/static/app/idnode.js:1820
+#: src/webui/static/app/idnode.js:2336 src/webui/static/app/idnode.js:2884
+msgid "Save"
+msgstr "Αποθήκευση"
+
+#: src/webui/static/app/wizard.js:160
+msgid "Save & Next"
+msgstr "Αποθήκευση και συνέχεια"
+
+#: src/webui/static/app/idnode.js:1818 src/webui/static/app/idnode.js:2334
+#: src/webui/static/app/idnode.js:2882
+msgid "Save pending changes (marked with red border)"
+msgstr "Αποθήκευση εκκρεμών αλλαγών (με κόκκινο περίγραμμα)"
+
+#: src/webui/static/app/dvr.js:87
+msgid "Scheduled Start Time"
+msgstr "Προγραμματισμένη ώρα έναρξης"
+
+#: src/webui/static/app/dvr.js:89
+msgid "Scheduled Stop Time"
+msgstr "Προγραμματισμένη ώρα λήξης"
+
+#: src/webui/static/app/epg.js:950
+msgid "Search title…"
+msgstr "Αναζήτηση τίτλου…"
+
+#: src/webui/static/app/mpegts.js:230
+msgid "Section"
+msgstr "Ενότητα"
+
+#: src/webui/static/app/tvhlog.js:34 src/webui/static/app/tvhlog.js:332
+msgid "Select Subsystems"
+msgstr "Επιλογή υποσυστημάτων"
+
+#: src/webui/static/app/tvheadend.js:886
+msgid "Select channel..."
+msgstr "Επιλέξτε κανάλι…"
+
+#: src/webui/static/app/tvheadend.js:924
+msgid "Select stream profile..."
+msgstr "Επιλέξτε προφίλ ροής…"
+
+#: src/webui/static/app/tvhlog.js:32
+msgid "Select trace/debug options from a list of subsystems."
+msgstr ""
+"Επιλέξτε τις ρυθμίσεις ανίχνευσης και αποσφαλμάτωσης από τη λίστα "
+"υποσυστημάτων."
+
+#: src/webui/static/app/idnode.js:478 src/webui/static/app/idnode.js:729
+#, python-brace-format
+msgid "Select {0} ..."
+msgstr "Επιλέξτε {0} …"
+
+#: src/webui/static/app/idnode.js:461 src/webui/static/app/idnode.js:704
+msgid "Selected"
+msgstr "Επιλεγμένο"
+
+#: src/webui/static/app/i18n-post.js:43
+msgid "Sep"
+msgstr "Σεπ"
+
+#: src/webui/static/app/i18n-post.js:28
+msgid "September"
+msgstr "Σεπτέμβριος"
+
+#: src/webui/static/app/status.js:740
+msgid "Server Address"
+msgstr "Διεύθυνση διακομιστή"
+
+#: src/webui/static/app/status.js:746
+msgid "Server Port"
+msgstr "Θύρα διακομιστή"
+
+#: src/webui/static/app/mpegts.js:387 src/webui/static/app/status.js:130
+msgid "Service"
+msgstr "Υπηρεσία"
+
+#: src/webui/static/app/servicemapper.js:33
+#: src/webui/static/app/servicemapper.js:49
+msgid "Service Mapper"
+msgstr "Αντιστοίχιση υπηρεσιών (Service Mapper)"
+
+#: src/webui/static/app/mpegts.js:254
+msgid "Service details for"
+msgstr "Λεπτομέρειες υπηρεσίας για"
+
+#: src/webui/static/app/mpegts.js:388
+msgid "Services"
+msgstr "Υπηρεσίες"
+
+#: src/webui/static/app/idnode.js:1008
+msgid "Settings"
+msgstr "Ρυθμίσεις"
+
+#: src/webui/static/app/i18n-post.js:212
+msgid "Show in Groups"
+msgstr "Εμφάνιση σε ομάδες"
+
+#: src/webui/static/app/idnode.js:2466
+msgid "Show or hide passwords"
+msgstr "Εμφάνιση ή απόκρυψη κωδικών πρόσβασης"
+
+#: src/webui/static/app/idnode.js:2468 src/webui/static/app/idnode.js:2472
+msgid "Show passwords"
+msgstr "Εμφάνιση κωδικών πρόσβασης"
+
+#: src/webui/static/app/status.js:512
+msgid "Signal Strength"
+msgstr "Ισχύς σήματος"
+
+#: src/webui/static/app/i18n-post.js:203
+msgid "Sort Ascending"
+msgstr "Αύξουσα ταξινόμηση"
+
+#: src/webui/static/app/i18n-post.js:204
+msgid "Sort Descending"
+msgstr "Φθίνουσα ταξινόμηση"
+
+#: src/webui/static/app/epg.js:269
+msgid "Star Rating"
+msgstr "Αξιολόγηση με αστέρια"
+
+#: src/webui/static/app/tvheadend.js:402
+msgid "Starring"
+msgstr "Πρωταγωνιστούν"
+
+#: src/webui/static/app/epg.js:864 src/webui/static/app/epg.js:865
+msgid "Stars"
+msgstr "Αστέρια"
+
+#: src/webui/static/app/status.js:144
+msgid "Start"
+msgstr "Έναρξη"
+
+#: src/webui/static/app/epg.js:240 src/webui/static/app/epg.js:816
+#: src/webui/static/app/epg.js:817 src/webui/static/app/epgevent.js:118
+#: src/webui/static/app/epgevent.js:119
+msgid "Start Time"
+msgstr "Ώρα έναρξης"
+
+#: src/webui/static/app/config.js:11
+msgid "Start initial configuration wizard"
+msgstr "Εκκίνηση οδηγού αρχικής ρύθμισης"
+
+#: src/webui/static/app/config.js:13
+msgid "Start wizard"
+msgstr "Εκκίνηση οδηγού"
+
+#: src/webui/static/app/status.js:727
+msgid "Started"
+msgstr "Ξεκίνησε"
+
+#: src/webui/static/app/status.js:155
+msgid "State"
+msgstr "Κατάσταση"
+
+#: src/webui/static/app/dvr.js:128 src/webui/static/app/status.js:826
+msgid "Status"
+msgstr "Κατάσταση"
+
+#: src/webui/static/app/dvr.js:518 src/webui/static/app/tvheadend.js:978
+msgid "Stop"
+msgstr "Διακοπή"
+
+#: src/webui/static/app/epg.js:394
+msgid "Stop recording"
+msgstr "Διακοπή εγγραφής"
+
+#: src/webui/static/app/epg.js:393
+msgid "Stop recording of this program"
+msgstr "Διακοπή εγγραφής αυτής της εκπομπής"
+
+#: src/webui/static/app/dvr.js:516
+msgid "Stop the selected recording"
+msgstr "Διακοπή επιλεγμένης εγγραφής"
+
+#: src/webui/static/app/tvheadend.js:1422
+msgid "Storage space"
+msgstr "Αποθηκευτικός χώρος"
+
+#: src/webui/static/app/status.js:408 src/webui/static/app/status.js:595
+#: src/webui/static/app/tvheadend.js:1187
+msgid "Stream"
+msgstr "Ροή (Stream)"
+
+#: src/webui/static/app/esfilter.js:11
+msgid "Stream Filters"
+msgstr "Φίλτρα ροών (Stream)"
+
+#: src/webui/static/app/profile.js:55 src/webui/static/app/profile.js:62
+msgid "Stream Profile"
+msgstr "Προφίλ ροής (Stream)"
+
+#: src/webui/static/app/profile.js:57
+msgid "Stream Profile Name"
+msgstr "Όνομα προφίλ ροής"
+
+#: src/webui/static/app/profile.js:56
+msgid "Stream Profiles"
+msgstr "Προφίλ ροών (Stream)"
+
+#: src/webui/static/app/status.js:734
+msgid "Streaming"
+msgstr "Ροή μετάδοσης (Streaming)"
+
+#: src/webui/static/app/status.js:414
+msgid "Subs No."
+msgstr "Αριθ. συνδρομών"
+
+#: src/webui/static/app/status.js:258
+msgid "Subscriptions"
+msgstr "Συνδρομές"
+
+#: src/webui/static/app/tvhlog.js:170
+msgid "Subsystem"
+msgstr "Υποσύστημα"
+
+#: src/webui/static/app/esfilter.js:77
+msgid "Subtitle Stream Filter"
+msgstr "Φίλτρο ροής υποτίτλων"
+
+#: src/webui/static/app/esfilter.js:78
+msgid "Subtitle Stream Filters"
+msgstr "Φίλτρα ροών υποτίτλων"
+
+#: src/webui/static/app/epg.js:311
+msgid "Subtitled#EPG"
+msgstr "Με υπότιτλους#EPG"
+
+#: src/webui/static/app/i18n-post.js:93
+msgid "Sun"
+msgstr "Κυρ"
+
+#: src/webui/static/app/i18n-post.js:83
+msgid "Sunday"
+msgstr "Κυριακή"
+
+#: src/webui/static/app/chconf.js:196
+msgid "Swap Numbers"
+msgstr "Ανταλλαγή αριθμών"
+
+#: src/webui/static/app/chconf.js:194
+msgid "Swap the numbers for the two selected channels"
+msgstr "Ανταλλαγή αριθμών των δύο επιλεγμένων καναλιών"
+
+#: src/webui/static/app/status.js:711
+msgid "TCP"
+msgstr "TCP"
+
+#: src/webui/static/app/tvadapters.js:6
+msgid "TV adapters"
+msgstr "Προσαρμογείς τηλεόρασης"
+
+#: src/webui/static/app/epg.js:1534
+msgid "Tag"
+msgstr "Ετικέτα"
+
+#: src/webui/static/app/esfilter.js:60
+msgid "Teletext Stream Filter"
+msgstr "Φίλτρο ροής Teletext"
+
+#: src/webui/static/app/esfilter.js:61
+msgid "Teletext Stream Filters"
+msgstr "Φίλτρα ροών Teletext"
+
+#: src/webui/static/app/dvr.js:911
+msgid "The associated file will be removed from storage."
+msgstr "Το σχετικό αρχείο θα διαγραφεί από τον αποθηκευτικό χώρο."
+
+#: src/webui/static/app/i18n-post.js:187
+#, python-brace-format
+msgid "The date in this field must be after {0}"
+msgstr "Η ημερομηνία αυτού του πεδίου πρέπει να είναι μετά τις {0}"
+
+#: src/webui/static/app/i18n-post.js:188
+#, python-brace-format
+msgid "The date in this field must be before {0}"
+msgstr "Η ημερομηνία αυτού του πεδίου πρέπει να είναι πριν από τις {0}"
+
+#: src/webui/static/app/i18n-post.js:169
+#, python-brace-format
+msgid "The maximum length for this field is {0}"
+msgstr "Το μέγιστο μήκος αυτού του πεδίου είναι {0}"
+
+#: src/webui/static/app/i18n-post.js:179
+#, python-brace-format
+msgid "The maximum value for this field is {0}"
+msgstr "Η μέγιστη τιμή αυτού του πεδίου είναι {0}"
+
+#: src/webui/static/app/i18n-post.js:168
+#, python-brace-format
+msgid "The minimum length for this field is {0}"
+msgstr "Το ελάχιστο μήκος αυτού του πεδίου είναι {0}"
+
+#: src/webui/static/app/idnode.js:1477
+msgid "The selected entry is the original!"
+msgstr "Η επιλεγμένη καταχώριση είναι η αρχική!"
+
+#: src/webui/static/app/i18n-post.js:234
+#, python-brace-format
+msgid "The time in this field must be equal to or after {0}"
+msgstr "Η ώρα σε αυτό το πεδίο πρέπει να είναι ίση ή μεταγενέστερη από {0}"
+
+#: src/webui/static/app/i18n-post.js:235
+#, python-brace-format
+msgid "The time in this field must be equal to or before {0}"
+msgstr "Η ώρα σε αυτό το πεδίο πρέπει να είναι ίση ή προγενέστερη από {0}"
+
+#: src/webui/static/app/i18n-post.js:164
+msgid "The value in this field is invalid"
+msgstr "Η τιμή αυτού του πεδίου δεν είναι έγκυρη"
+
+#: src/webui/static/app/comet.js:12
+msgid ""
+"There seems to be a problem with the live update feed from Tvheadend. Trying"
+" to reconnect..."
+msgstr ""
+"Φαίνεται ότι υπάρχει πρόβλημα με τη ροή ζωντανών ενημερώσεων από το "
+"Tvheadend. Γίνεται προσπάθεια επανασύνδεσης…"
+
+#: src/webui/static/app/tvheadend.js:612
+msgid "There was a problem displaying the Help!"
+msgstr "Παρουσιάστηκε πρόβλημα στην εμφάνιση της βοήθειας!"
+
+#: src/webui/static/app/tvheadend.js:621
+msgid ""
+"There's no documentation available, or there was a problem loading the page."
+"\n"
+"\n"
+msgstr ""
+"Δεν υπάρχει διαθέσιμη τεκμηρίωση ή παρουσιάστηκε πρόβλημα κατά τη φόρτωση "
+"της σελίδας.\n"
+"\n"
+
+#: src/webui/static/app/tvhlog.js:371
+msgid "They will be lost when the application next restarts."
+msgstr "Οι αλλαγές θα χαθούν στην επόμενη επανεκκίνηση της εφαρμογής."
+
+#: src/webui/static/app/i18n-post.js:127
+msgid "This date is after the maximum date"
+msgstr "Η ημερομηνία είναι μεταγενέστερη της μέγιστης επιτρεπτής"
+
+#: src/webui/static/app/i18n-post.js:126
+msgid "This date is before the minimum date"
+msgstr "Η ημερομηνία είναι προγενέστερη της ελάχιστης επιτρεπτής"
+
+#: src/webui/static/app/i18n-post.js:170
+msgid "This field is required"
+msgstr "Αυτό το πεδίο είναι υποχρεωτικό"
+
+#: src/webui/static/app/epg.js:1529
+msgid ""
+"This will create an automatic rule that continuously scans the EPG for "
+"programs to record that match this query"
+msgstr ""
+"Θα δημιουργηθεί αυτόματος κανόνας που ελέγχει συνεχώς τον EPG και εγγράφει "
+"τις εκπομπές που ταιριάζουν με αυτή την αναζήτηση"
+
+#: src/webui/static/app/i18n-post.js:97
+msgid "Thu"
+msgstr "Πέμ"
+
+#: src/webui/static/app/i18n-post.js:87
+msgid "Thursday"
+msgstr "Πέμπτη"
+
+#: src/webui/static/app/dvr.js:138
+msgid "Time Scheduler"
+msgstr "Προγραμματιστής χρονικών εγγραφών"
+
+#: src/webui/static/app/dvr.js:1139
+msgid "Timer"
+msgstr "Χρονοδιακόπτης"
+
+#: src/webui/static/app/dvr.js:1140
+msgid "Timers"
+msgstr "Χρονοδιακόπτες"
+
+#: src/webui/static/app/timeshift.js:18
+msgid "Timeshift"
+msgstr "Χρονική μετατόπιση (Timeshift)"
+
+#: src/webui/static/app/epg.js:785 src/webui/static/app/epg.js:786
+#: src/webui/static/app/epg.js:1532 src/webui/static/app/epgevent.js:96
+#: src/webui/static/app/epgevent.js:97 src/webui/static/app/status.js:109
+msgid "Title"
+msgstr "Τίτλος"
+
+#: src/webui/static/app/i18n-post.js:125
+msgid "Today"
+msgstr "Σήμερα"
+
+#: src/webui/static/app/tvheadend.js:996
+msgid "Toggle mute"
+msgstr "Σίγαση / κατάργηση σίγασης"
+
+#: src/webui/static/app/dvr.js:681 src/webui/static/app/dvr.js:866
+#: src/webui/static/app/dvr.js:964
+msgid "Toggle re-record functionality"
+msgstr "Εναλλαγή δυνατότητας επανεγγραφής"
+
+#: src/webui/static/app/dvr.js:548
+msgid "Toggle the previously recorded state."
+msgstr "Εναλλαγή κατάστασης «Έχει ήδη εγγραφεί»."
+
+#: src/webui/static/app/tvheadend.js:1425
+msgid "Total"
+msgstr "Σύνολο"
+
+#: src/webui/static/app/tvhlog.js:164
+msgid "Trace"
+msgstr "Ανίχνευση (Trace)"
+
+#: src/webui/static/app/status.js:471
+msgid "Transport Errors"
+msgstr "Σφάλματα μεταφοράς"
+
+#: src/webui/static/app/epggrab.js:26
+msgid "Trigger OTA EPG Grabber"
+msgstr "Εκκίνηση συλλέκτη OTA EPG"
+
+#: src/webui/static/app/i18n-post.js:95
+msgid "Tue"
+msgstr "Τρί"
+
+#: src/webui/static/app/i18n-post.js:85
+msgid "Tuesday"
+msgstr "Τρίτη"
+
+#: src/webui/static/app/epggrab.js:27
+msgid "Tune to the over-the-air EPG muxes to grab new events now"
+msgstr "Συντονισμός στους πολυπλέκτες OTA EPG για άμεση συλλογή νέων συμβάντων"
+
+#: src/webui/static/app/tvheadend.js:1517
+msgid "Tvheadend Web-Panel"
+msgstr "Πίνακας διαχείρισης Tvheadend"
+
+#: src/webui/static/app/tvheadend.js:1536
+msgid "Tvheadend log"
+msgstr "Καταγραφή Tvheadend"
+
+#: src/webui/static/app/caclient.js:49 src/webui/static/app/mpegts.js:74
+#: src/webui/static/app/mpegts.js:167 src/webui/static/app/profile.js:64
+#: src/webui/static/app/status.js:686
+msgid "Type"
+msgstr "Τύπος"
+
+#: src/webui/static/app/status.js:714
+msgid "UDP"
+msgstr "UDP"
+
+#: src/webui/static/app/epg.js:293
+msgid "UHDTV"
+msgstr "UHDTV"
+
+#: src/webui/static/app/wizard.js:188
+msgid "Unable to obtain wizard page!"
+msgstr "Δεν ήταν δυνατή η ανάκτηση σελίδας του οδηγού!"
+
+#: src/webui/static/app/status.js:465
+msgid "Uncorrected Blocks"
+msgstr "Μη διορθωμένα μπλοκ"
+
+#: src/webui/static/app/idnode.js:1847 src/webui/static/app/idnode.js:2358
+#: src/webui/static/app/idnode.js:2905
+msgid "Undo"
+msgstr "Αναίρεση"
+
+#: src/webui/static/app/status.js:505 src/webui/static/app/status.js:525
+msgid "Unknown"
+msgstr "Άγνωστο"
+
+#: src/webui/static/app/dvr.js:583
+msgid "Upcoming / Current Recordings"
+msgstr "Επερχόμενες / Τρέχουσες εγγραφές"
+
+#: src/webui/static/app/dvr.js:582
+msgid "Upcoming Recording"
+msgstr "Επερχόμενη εγγραφή"
+
+#: src/webui/static/app/tvheadend.js:1425
+msgid "Used by tvheadend"
+msgstr "Χρησιμοποιείται από το Tvheadend"
+
+#: src/webui/static/app/status.js:102 src/webui/static/app/status.js:721
+msgid "Username"
+msgstr "Όνομα χρήστη"
+
+#: src/webui/static/app/tvheadend.js:1133
+msgid "Users"
+msgstr "Χρήστες"
+
+#: src/webui/static/app/esfilter.js:26
+msgid "Video Stream Filter"
+msgstr "Φίλτρο ροής βίντεο"
+
+#: src/webui/static/app/esfilter.js:27
+msgid "Video Stream Filters"
+msgstr "Φίλτρα ροών βίντεο"
+
+#: src/webui/static/app/epg.js:1351 src/webui/static/app/epg.js:1353
+#: src/webui/static/app/idnode.js:1249 src/webui/static/app/idnode.js:2122
+#: src/webui/static/app/idnode.js:2529 src/webui/static/app/idnode.js:2975
+#: src/webui/static/app/servicemapper.js:54 src/webui/static/app/status.js:221
+#: src/webui/static/app/status.js:556 src/webui/static/app/status.js:779
+msgid "View help docs."
+msgstr "Προβολή εγγράφων βοήθειας."
+
+#: src/webui/static/app/idnode.js:638
+msgid "View level"
+msgstr "Επίπεδο προβολής"
+
+#: src/webui/static/app/idnode.js:641
+msgid "View level: "
+msgstr "Επίπεδο προβολής: "
+
+#: src/webui/static/app/tvheadend.js:1005
+msgid "Volume"
+msgstr "Ένταση ήχου"
+
+#: src/webui/static/app/epg.js:612 src/webui/static/app/epg.js:1339
+msgid "Watch TV"
+msgstr "Παρακολούθηση τηλεόρασης"
+
+#: src/webui/static/app/epg.js:1341
+msgid "Watch live TV in a new browser window."
+msgstr ""
+"Παρακολούθηση ζωντανής τηλεόρασης σε νέο παράθυρο του προγράμματος "
+"περιήγησης."
+
+#: src/webui/static/app/i18n-post.js:96
+msgid "Wed"
+msgstr "Τετ"
+
+#: src/webui/static/app/i18n-post.js:86
+msgid "Wednesday"
+msgstr "Τετάρτη"
+
+#: src/webui/static/app/status.js:420
+msgid "Weight"
+msgstr "Στάθμιση"
+
+#: src/webui/static/app/dvr.js:731
+msgid "When enabled, group the recordings by the selected column."
+msgstr "Όταν είναι ενεργό, οι εγγραφές ομαδοποιούνται κατά την επιλεγμένη στήλη."
+
+#: src/webui/static/app/epg.js:303
+msgid "Widescreen"
+msgstr "Ευρεία οθόνη"
+
+#: src/webui/static/app/dvr.js:72
+msgid "Will be skipped"
+msgstr "Θα παραλειφθεί"
+
+#: src/webui/static/app/wizard.js:59
+#, python-brace-format
+msgid "Wizard - page \"{0}\" not found"
+msgstr "Οδηγός — η σελίδα «{0}» δεν βρέθηκε"
+
+#: src/webui/static/app/tvheadend.js:404
+msgid "Writer"
+msgstr "Σεναριογράφος"
+
+#: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
+msgid "Yes"
+msgstr "Ναι"
+
+#: src/webui/static/app/idnode.js:490 src/webui/static/app/idnode.js:870
+msgid "You must provide a value - use octal chmod notation, e.g. 0664"
+msgstr "Πρέπει να δώσετε τιμή με οκταδική σύνταξη chmod, π.χ. 0664"
+
+#: src/webui/static/app/i18n-post.js:243
+msgid "You must select at least one item in this group"
+msgstr "Πρέπει να επιλέξετε τουλάχιστον ένα στοιχείο αυτής της ομάδας"
+
+#: src/webui/static/app/i18n-post.js:248
+msgid "You must select one item in this group"
+msgstr "Πρέπει να επιλέξετε ένα στοιχείο αυτής της ομάδας"
+
+#: src/webui/static/app/status.js:172 src/webui/static/app/status.js:437
+msgid "all"
+msgstr "όλα"
+
+#: src/webui/static/app/dvr.js:72
+msgid "because it is a rerun of:"
+msgstr "επειδή πρόκειται για επαναμετάδοση του:"
+
+#: src/webui/static/app/i18n-post.js:218
+msgid "false"
+msgstr "ψευδές"
+
+#: src/webui/static/app/i18n-post.js:237
+msgid "g:i A#TimeField"
+msgstr "g:i A#TimeField"
+
+#: src/webui/static/app/i18n-post.js:238
+msgid ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+msgstr ""
+"g:ia|g:iA|g:i a|g:i A|h:i|g:i|H:i|ga|ha|gA|h a|g a|g "
+"A|gi|hi|gia|hia|g|H#TimeField"
+
+#: src/webui/static/app/epg.js:715 src/webui/static/app/epg.js:717
+#: src/webui/static/app/idnode.js:381 src/webui/static/app/idnode.js:382
+msgid "hrs"
+msgstr "ώρες"
+
+#: src/webui/static/app/tvheadend.js:1400
+msgid "login"
+msgstr "σύνδεση"
+
+#: src/webui/static/app/tvheadend.js:1397
+msgid "logout"
+msgstr "Αποσύνδεση"
+
+#: src/webui/static/app/tvheadend.js:624
+msgid ""
+"looking for please see the "
+"[documentation](http://docs.tvheadend.org/documentation) "
+msgstr ""
+"για περισσότερες πληροφορίες ανατρέξτε στην "
+"[τεκμηρίωση](http://docs.tvheadend.org/documentation) "
+
+#: src/webui/static/app/i18n-post.js:229
+msgid "m/d/Y#DateColumn"
+msgstr "m/d/Y#DateColumn"
+
+#: src/webui/static/app/i18n-post.js:282
+msgid "m/d/Y#DateFilter"
+msgstr "m/d/Y#DateFilter"
+
+#: src/webui/static/app/i18n-post.js:120
+msgid "m/d/Y#Format.date"
+msgstr "m/d/Y#Format.date"
+
+#: src/webui/static/app/i18n-post.js:191
+msgid "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+msgstr "m/d/Y|m-d-y|m-d-Y|m/d|m-d|md|mdy|mdY|d|Y-m-d#DateField"
+
+#: src/webui/static/app/i18n-post.js:190
+msgid "m/d/y#DateField"
+msgstr "m/d/y#DateField"
+
+#: src/webui/static/app/i18n-post.js:136
+msgid "m/d/y#DatePicker"
+msgstr "m/d/y#DatePicker"
+
+#: src/webui/static/app/dvr.js:94 src/webui/static/app/epg.js:246
+#: src/webui/static/app/epg.js:717 src/webui/static/app/epg.js:720
+#: src/webui/static/app/idnode.js:382 src/webui/static/app/idnode.js:384
+msgid "min"
+msgstr "λεπ."
+
+#: src/webui/static/app/i18n-post.js:145
+#, python-brace-format
+msgid "of {0}"
+msgstr "από {0}"
+
+#: src/webui/static/app/tvheadend.js:625
+msgid ""
+"or join the [IRC channel on "
+"libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
+msgstr ""
+"ή μπείτε στο [κανάλι IRC στο "
+"libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
+
+#: src/webui/static/app/i18n-post.js:217
+msgid "true"
+msgstr "αληθές"
+
+#: src/webui/static/app/i18n-post.js:135
+#, python-brace-format
+msgid "{0} (Spacebar)"
+msgstr "{0} (Πλήκτρο διαστήματος)"
+
+#: src/webui/static/app/i18n-post.js:189
+#, python-brace-format
+msgid "{0} is not a valid date - it must be in the format {1}"
+msgstr "Το {0} δεν είναι έγκυρη ημερομηνία — απαιτείται μορφή {1}"
+
+#: src/webui/static/app/i18n-post.js:180
+#, python-brace-format
+msgid "{0} is not a valid number"
+msgstr "Το {0} δεν είναι έγκυρος αριθμός"
+
+#: src/webui/static/app/i18n-post.js:236
+#, python-brace-format
+msgid "{0} is not a valid time"
+msgstr "Το {0} δεν είναι έγκυρη ώρα"
+
+#: src/webui/static/app/i18n-post.js:14
+#, python-brace-format
+msgid "{0} selected row{1}"
+msgstr "{0} επιλεγμένες γραμμές{1}"
+
+#. / {0} start, {1} end, {2} total, {3} title
+#: src/webui/static/app/tvheadend.js:735
+#, python-brace-format
+msgid "{3} {0} - {1} of {2}"
+msgstr "{3} {0} - {1} από {2}"
