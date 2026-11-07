@@ -622,8 +622,11 @@ static void
 pass_muxer_eit_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 {
   pass_muxer_t *pm;
-  uint16_t sid, tsid, onid;
-  uint8_t *sbuf, *out;
+  uint16_t sid;
+  uint16_t tsid;
+  uint16_t onid;
+  uint8_t *sbuf;
+  uint8_t *out;
   int olen;
 
   /* A single-service pass stream should carry the selected service's EIT
