@@ -184,6 +184,13 @@ typedef enum {
   DVR_RET_REM_FOREVER   = INT32_MAX
 } dvr_retention_removal_t;
 
+typedef struct dvr_postprocessor {
+  LIST_ENTRY(dvr_postprocessor) link;
+  uint64_t spawn_handle;
+} dvr_postprocessor_t;
+
+LIST_HEAD(dvr_postprocessor_list, dvr_postprocessor);
+
 typedef struct dvr_entry {
 
   idnode_t de_id;
@@ -321,6 +328,9 @@ typedef struct dvr_entry {
    */
   pthread_t de_thread;
   int de_thread_shutdown;
+
+  /* Track postprocessors separately, including segmented recordings. */
+  struct dvr_postprocessor_list de_postprocessors;
 
   th_subscription_t *de_s;
 
@@ -690,6 +700,7 @@ int dvr_entry_verify(dvr_entry_t *de, access_t *a, int readonly);
 void dvr_entry_changed(dvr_entry_t *de);
 
 void dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre);
+void dvr_spawn_postprocessor(dvr_entry_t *de, const char *cmd);
 /// Spawn a fetch of artwork for the entry.
 void dvr_spawn_fetch_artwork(dvr_entry_t *de);
 

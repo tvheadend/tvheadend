@@ -2043,8 +2043,9 @@ fin:
 /**
  *
  */
-void
-dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
+static void
+dvr_spawn_cmd_internal(dvr_entry_t *de, const char *cmd, const char *filename,
+                       int pre, uint64_t *handle)
 {
   char buf1[MAX(PATH_MAX, 2048)], *buf2;
   char tmp[MAX(PATH_MAX, 512)];
@@ -2052,6 +2053,8 @@ dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
   htsmsg_field_t *f;
   char **args;
 
+  if (handle)
+    *handle = 0;
   if (!pre) {
     if ((f = htsmsg_field_last(de->de_files)) != NULL &&
         (e = htsmsg_field_get_map(f)) != NULL) {
@@ -2079,10 +2082,35 @@ dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
     htsstr_substitute(buf2, buf1, sizeof(buf1), '%', dvr_subs_postproc_info, info, tmp, sizeof(tmp));
 
   args = htsstr_argsplit(buf1);
-  if(args[0])
-    spawnv(args[0], (void *)args, NULL, 1, 1);
-
+  if (args[0]) {
+    if (handle)
+      spawnv_tracked(args[0], (void *)args, handle, 1, 1);
+    else
+      spawnv(args[0], (void *)args, NULL, 1, 1);
+  }
   htsstr_argsplit_free(args);
+}
+
+void
+dvr_spawn_cmd(dvr_entry_t *de, const char *cmd, const char *filename, int pre)
+{
+  dvr_spawn_cmd_internal(de, cmd, filename, pre, NULL);
+}
+
+void
+dvr_spawn_postprocessor(dvr_entry_t *de, const char *cmd)
+{
+  dvr_postprocessor_t *job = calloc(1, sizeof(*job));
+  if (!job) {
+    tvhwarn(LS_DVR, "Cannot track postprocessor (out of memory)");
+    dvr_spawn_cmd(de, cmd, NULL, 0);
+    return;
+  }
+  dvr_spawn_cmd_internal(de, cmd, NULL, 0, &job->spawn_handle);
+  if (job->spawn_handle)
+    LIST_INSERT_HEAD(&de->de_postprocessors, job, link);
+  else
+    free(job);
 }
 
 /**
@@ -2109,7 +2137,7 @@ dvr_thread_epilog(dvr_entry_t *de, const char *dvr_postproc)
     htsmsg_set_s64(e, "stop", gclk());
 
   if(dvr_postproc && dvr_postproc[0])
-    dvr_spawn_cmd(de, dvr_postproc, NULL, 0);
+    dvr_spawn_postprocessor(de, dvr_postproc);
 
   idnode_changed(&de->de_id);
 }

@@ -19,6 +19,8 @@
 #ifndef SPAWN_H
 #define SPAWN_H
 
+#include <stdint.h>
+
 void spawn_info ( const char *fmt, ... );
 
 void spawn_error ( const char *fmt, ... );
@@ -37,9 +39,14 @@ int spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
 
 int spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr);
 
+/* A handle for one spawned invocation, independent of PID reuse. */
+int spawnv_tracked(const char *prog, char *argv[], uint64_t *handle,
+                   int redir_stdout, int redir_stderr);
+
 int spawn_reap(pid_t pid, char *stxt, size_t stxtlen);
 
 int spawn_kill(pid_t pid, int sig, int timeout);
+int spawn_kill_tracked(uint64_t handle, int sig, int timeout);
 
 void spawn_init(void);
 

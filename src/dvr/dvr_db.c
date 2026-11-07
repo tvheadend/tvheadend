@@ -18,8 +18,10 @@
  */
 
 #include <ctype.h>
+#include <signal.h>
 
 #include "tvheadend.h"
+#include "spawn.h"
 #include "settings.h"
 #include "dvr.h"
 #include "htsp_server.h"
@@ -2132,6 +2134,8 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
 void
 dvr_entry_dec_ref(dvr_entry_t *de)
 {
+  dvr_postprocessor_t *job;
+
   lock_assert(&global_lock);
 
   if(de->de_refcnt > 1) {
@@ -2153,6 +2157,12 @@ dvr_entry_dec_ref(dvr_entry_t *de)
 
   if(de->de_config != NULL)
     LIST_REMOVE(de, de_config_link);
+
+  /* Do not interrupt postprocessing on normal DVR entry expiration. */
+  while ((job = LIST_FIRST(&de->de_postprocessors)) != NULL) {
+    LIST_REMOVE(job, link);
+    free(job);
+  }
 
   htsmsg_destroy(de->de_files);
   free(de->de_directory);
@@ -5291,6 +5301,7 @@ dvr_get_files_details(dvr_entry_t *de, time_t *files_start, time_t *files_stop, 
 int
 dvr_entry_delete(dvr_entry_t *de)
 {
+  dvr_postprocessor_t *job;
   dvr_config_t *cfg = de->de_config;
   htsmsg_t *m;
   htsmsg_field_t *f;
@@ -5315,6 +5326,15 @@ dvr_entry_delete(dvr_entry_t *de)
 	  de->de_creator ?: "", str1, str2);
   free(str2);
   free(str1);
+
+  /* Delete/Remove stops only this entry's postprocessors. Stop Recording
+   * leaves them running normally. No wait is performed under global_lock. */
+  while ((job = LIST_FIRST(&de->de_postprocessors)) != NULL) {
+    LIST_REMOVE(job, link);
+    if (spawn_kill_tracked(job->spawn_handle, SIGTERM, 5) == 0)
+      tvhinfo(LS_DVR, "Stopping postprocessor for removed recording %s", ubuf);
+    free(job);
+  }
 
   if(!htsmsg_is_empty(de->de_files)) {
 #if ENABLE_INOTIFY

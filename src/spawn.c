@@ -44,6 +44,7 @@ extern char **environ;
 tvh_mutex_t spawn_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 
 static LIST_HEAD(, spawn) spawns;
+static uint64_t spawn_next_handle;
 
 static char *spawn_info_buf = NULL;
 static char *spawn_error_buf = NULL;
@@ -58,6 +59,7 @@ static int spawn_pipe_running;
 typedef struct spawn {
   LIST_ENTRY(spawn) link;
   pid_t pid;
+  uint64_t handle;
   const char *name;
   int64_t killed;
 } spawn_t;
@@ -336,17 +338,54 @@ spawn_kill(pid_t pid, int sig, int timeout)
   return r;
 }
 
+/* Target a registered invocation, not a potentially reused PID. */
+int
+spawn_kill_tracked(uint64_t handle, int sig, int timeout)
+{
+  int r = -ESRCH;
+  spawn_t *s;
+
+  if (!handle)
+    return r;
+  spawn_reaper();
+  tvh_mutex_lock(&spawn_mutex);
+  LIST_FOREACH(s, &spawns, link)
+    if (s->handle == handle)
+      break;
+  if (s) {
+    if (!s->killed)
+      s->killed = mclk() + sec2mono(MINMAX(timeout, 5, 3600));
+    r = kill(-s->pid, sig);
+    if (r < 0) {
+      if (errno == EPERM)
+        tvherror(LS_SPAWN, "Unable to kill tracked task pid %d (not enough permissions)", s->pid);
+      r = -errno;
+    }
+  }
+  tvh_mutex_unlock(&spawn_mutex);
+  return r;
+}
+
 /**
  * Enqueue a spawn on the pending spawn list
  */
 static spawn_t *
-spawn_enq(const char *name, int pid)
+spawn_enq(const char *name, int pid, uint64_t *handle)
 {
   spawn_t *s = calloc(1, sizeof(spawn_t));
+  if (handle)
+    *handle = 0;
+  if (!s)
+    return NULL;
   s->name = strdup(name);
   s->pid = pid;
   tvh_mutex_lock(&spawn_mutex);
+  s->handle = ++spawn_next_handle;
+  if (!s->handle)
+    s->handle = ++spawn_next_handle;
   LIST_INSERT_HEAD(&spawns, s, link);
+  if (handle)
+    *handle = s->handle;
   tvh_mutex_unlock(&spawn_mutex);
   return s;
 }
@@ -578,7 +617,7 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
 
   tvh_mutex_unlock(&fork_lock);
 
-  spawn_enq(prog, p);
+  spawn_enq(prog, p, NULL);
 
   close(fd[1]);
 
@@ -714,7 +753,7 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
 
   tvh_mutex_unlock(&fork_lock);
 
-  spawn_enq(prog, p);
+  spawn_enq(prog, p, NULL);
 
   close(fd[0]);
 
@@ -738,8 +777,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
  * 
  * *outp will point to the allocated buffer
  */
-int
-spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr)
+static int
+spawnv_impl(const char *prog, char *argv[], pid_t *pid, uint64_t *handle,
+            int redir_stdout, int redir_stderr)
 {
   pid_t p, f, maxfd;
   char bin[256];
@@ -792,6 +832,10 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
     for (f = 3; f < maxfd; f++)
       close(f);
 
+    /* Establish a process group before exec to avoid a parent/exec race. */
+    if (pid || handle)
+      setpgid(0, 0);
+
     execve(prog, argv, environ);
     spawn_error("pid %d cannot execute %s -- %s\n",
 	        getpid(), prog, strerror(errno));
@@ -801,21 +845,33 @@ spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_s
 
   tvh_mutex_unlock(&fork_lock);
 
-  spawn_enq(prog, p);
+  spawn_enq(prog, p, handle);
 
-  if (pid) {
+  if (pid)
     *pid = p;
-
-    // make the spawned process a session leader so killing the
-    // process group recursively kills any child process that
-    // might have been spawned
+  if (pid || handle)
     setpgid(p, p);
-  }
 
   // do not pass the local variable outside
   if (argv[0] == bin)
     argv[0] = NULL;
   return 0;
+}
+
+int
+spawnv(const char *prog, char *argv[], pid_t *pid, int redir_stdout, int redir_stderr)
+{
+  return spawnv_impl(prog, argv, pid, NULL, redir_stdout, redir_stderr);
+}
+
+int
+spawnv_tracked(const char *prog, char *argv[], uint64_t *handle,
+               int redir_stdout, int redir_stderr)
+{
+  if (!handle)
+    return -EINVAL;
+  *handle = 0;
+  return spawnv_impl(prog, argv, NULL, handle, redir_stdout, redir_stderr);
 }
 
 /*
