@@ -56,6 +56,33 @@ t2mi_service_has_carrier ( mpegts_service_t *s )
   return r;
 }
 
+/* Order for two carrier muxes of one T2-MI network: by the transponder that
+ * carries them, in the order the transponders themselves are scanned, then
+ * by carrier service.  The scan queue falls back to this for muxes of equal
+ * weight, so the carriers of one transponder sit next to each other and a
+ * scan finishes a transponder before it moves the tuner to the next one;
+ * ordered by their random UUIDs the carriers of all transponders would be
+ * mixed and a single tuner would hop between them all the way. */
+int
+t2mi_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
+{
+  t2mi_mux_t *ta = (t2mi_mux_t *)a, *tb = (t2mi_mux_t *)b;
+  mpegts_mux_t *sa, *sb;
+  int r;
+
+  if (!idnode_is_instance(&a->mm_network->mn_id, &t2mi_network_class) ||
+      !idnode_is_instance(&b->mm_network->mn_id, &t2mi_network_class))
+    return 0;
+
+  sa = ta->mm_t2mi_src_mux ? mpegts_mux_find(ta->mm_t2mi_src_mux) : NULL;
+  sb = tb->mm_t2mi_src_mux ? mpegts_mux_find(tb->mm_t2mi_src_mux) : NULL;
+  if (sa && sb && sa != sb && (r = mpegts_mux_compare(sa, sb)) != 0)
+    return r;
+  if (sa != sb)
+    return sa ? -1 : 1;
+  return (int)ta->mm_t2mi_src_sid - (int)tb->mm_t2mi_src_sid;
+}
+
 /* **************************************************************************
  * Input class
  * *************************************************************************/
@@ -664,6 +691,20 @@ t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
   return 0;
 }
 
+/* Let the scan queue of the network that owns a carrier's source mux run
+ * again now. */
+static void
+t2mi_kick_source_scan ( t2mi_mux_t *tm )
+{
+  mpegts_mux_t *src;
+  mpegts_network_t *mn;
+
+  src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+  if (src == NULL || (mn = src->mm_network) == NULL)
+    return;
+  mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
+}
+
 static void
 t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
@@ -672,6 +713,12 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 
   mtimer_disarm(&tm->tm_busy_timer);
   t2mi_mux_unsubscribe(tm);
+
+  /* The carrier gave its share of the source tuner back.  The scan of the
+   * source's own network (the other transponders) may be waiting for that
+   * tuner, and nothing else wakes it before its slow safety timer, which
+   * would leave a single tuner idle between two transponders. */
+  t2mi_kick_source_scan(tm);
 
   /* Stop the decap thread (and drop its queue) before touching the decap
    * and buffer it uses.  Guarded so a mux that never fully started does
@@ -959,13 +1006,22 @@ t2mi_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
    * (s_dvb_svcname) is not unique across transponders, so when two muxes
    * reuse the same SID it can carry a name that leaked from an unrelated
    * transponder, which is misleading. */
+  /* A carrier found inside another carrier is named as a path: the name of
+   * the carrier it sits in, then its own PID and SID.  Both are only
+   * meaningful inside the transport stream they were read from, so each hop
+   * keeps its own pair ("12584V/T2MI-p8008-s1008/p4096-s201").  Only the
+   * first hop carries the T2MI- prefix, repeating it adds nothing. */
+  const char *prefix =
+    (src && idnode_is_instance(&src->mm_network->mn_id, &t2mi_network_class))
+      ? "" : "T2MI-";
+
   pid = t2mi_mux_carrier_pid(tm, src);
   if (pid > 0 && tm->mm_t2mi_src_sid)
-    snprintf(buf, len, "%s/T2MI-p%d-s%u", sbuf, pid, tm->mm_t2mi_src_sid);
+    snprintf(buf, len, "%s/%sp%d-s%u", sbuf, prefix, pid, tm->mm_t2mi_src_sid);
   else if (tm->mm_t2mi_src_sid)
-    snprintf(buf, len, "%s/T2MI-s%u", sbuf, tm->mm_t2mi_src_sid);
+    snprintf(buf, len, "%s/%ss%u", sbuf, prefix, tm->mm_t2mi_src_sid);
   else
-    snprintf(buf, len, "%s/T2MI-p%d", sbuf, pid);
+    snprintf(buf, len, "%s/%sp%d", sbuf, prefix, pid);
 }
 
 static htsmsg_t *
@@ -1116,16 +1172,84 @@ t2mi_network_trigger ( t2mi_network_t *tn )
   mtimer_arm_rel(&tn->tn_disc_timer, t2mi_network_timer_cb, tn, sec2mono(2));
 }
 
-/* a PMT on a source mux produced a T2-MI carrier component - reconcile
- * the networks that selected the mux (called from dvb_psi_pmt.c) */
+/* The source mux is being scanned and it is tuned right now, so the real
+ * tuner is already locked on its transponder: scan the carrier of service
+ * 'sid' along with it instead of leaving that for a later pass that has to
+ * tune the transponder again, and may have to wait for a tuner another
+ * transponder holds.  The carrier takes the weight and kind of the scan that
+ * reached it.  Carriers that are already queued or being scanned are left
+ * alone, which also keeps repeated PMT parses from queueing them twice. */
+static void
+t2mi_network_scan_carrier
+  ( t2mi_network_t *tn, mpegts_mux_t *src, uint16_t sid )
+{
+  mpegts_mux_t *mm;
+  t2mi_mux_t *tm;
+  char ubuf[UUID_HEX_SIZE];
+
+  /* A purely initial scan only reaches carriers if the network wants one.
+   * The scan flags accumulate, so a source whose initial scan was still
+   * waiting when somebody asked for a scan also carries the user flag:
+   * that one is a real request and does reach the carriers. */
+  if ((src->mm_scan_flags & SUBSCRIPTION_INITSCAN) &&
+      !(src->mm_scan_flags & (SUBSCRIPTION_USERSCAN | SUBSCRIPTION_IDLESCAN)) &&
+      tn->mn_skipinitscan) {
+    tvhtrace(LS_T2MI, "%s - initial scan does not reach the carriers of "
+             "network %s", src->mm_nicename, tn->mn_network_name ?: "");
+    return;
+  }
+
+  idnode_uuid_as_str(&src->mm_id, ubuf);
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link) {
+    tm = (t2mi_mux_t *)mm;
+    if (tm->mm_t2mi_src_sid != sid || tm->mm_t2mi_src_mux == NULL ||
+        strcmp(tm->mm_t2mi_src_mux, ubuf))
+      continue;
+    if (mm->mm_active)
+      continue;
+    if (mm->mm_scan_state == MM_SCAN_STATE_PEND ||
+        mm->mm_scan_state == MM_SCAN_STATE_IPEND) {
+      /* already waiting its turn: its transponder is tuned now, so let the
+       * queue look at it again at once instead of at its next timer */
+      mtimer_arm_rel(&tn->mn_scan_timer, mpegts_network_scan_timer_cb, tn, 0);
+      continue;
+    }
+    if (mm->mm_scan_state != MM_SCAN_STATE_IDLE)
+      continue;
+    tvhdebug(LS_T2MI, "%s - scanning along with its source %s",
+             mm->mm_nicename, src->mm_nicename);
+    mpegts_network_scan_queue_add(mm, src->mm_scan_weight,
+                                  src->mm_scan_flags, 0);
+  }
+}
+
+/* a PMT on a mux produced the T2-MI carrier component of service 'sid'
+ * (called from dvb_psi_pmt.c).  Reconcile the networks that selected the
+ * mux as a source, or that own it when it is itself a carrier, and when the
+ * mux is being scanned let the carrier ride along on its tuner. */
 void
-t2mi_carrier_seen ( struct mpegts_mux *mm )
+t2mi_carrier_seen ( struct mpegts_mux *mm, uint16_t sid )
 {
   idnode_list_mapping_t *ilm;
+  t2mi_network_t *tn;
 
   lock_assert(&global_lock);
-  LIST_FOREACH(ilm, &mm->mm_t2mi_networks, ilm_in2_link)
-    t2mi_network_trigger((t2mi_network_t *)ilm->ilm_in1);
+  tvhtrace(LS_T2MI, "%s - carrier service %u seen (scan state %d, flags %04X)",
+           mm->mm_nicename, sid, mm->mm_scan_state, mm->mm_scan_flags);
+  LIST_FOREACH(ilm, &mm->mm_t2mi_networks, ilm_in2_link) {
+    tn = (t2mi_network_t *)ilm->ilm_in1;
+    t2mi_network_trigger(tn);
+    if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
+      t2mi_network_scan_carrier(tn, mm, sid);
+  }
+
+  /* a carrier mux that carries another carrier */
+  if (idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class)) {
+    tn = (t2mi_network_t *)mm->mm_network;
+    t2mi_network_trigger(tn);
+    if (mm->mm_scan_state == MM_SCAN_STATE_ACTIVE)
+      t2mi_network_scan_carrier(tn, mm, sid);
+  }
 }
 
 /* a source mux is being deleted: at a real deletion (delconf) cascade to
@@ -1284,6 +1408,60 @@ t2mi_network_add_mux ( t2mi_network_t *tn, const char *src_uuid, uint16_t sid )
   return tm;
 }
 
+/* How many T2-MI hops lie between a mux and the real transponder: 0 for a
+ * normal mux, 1 for a carrier of a transponder, 2 for a carrier found
+ * inside another carrier, and so on. */
+#define T2MI_MAX_DEPTH 3
+
+static int
+t2mi_mux_depth ( mpegts_mux_t *mm )
+{
+  t2mi_mux_t *tm;
+  int depth = 0;
+
+  while (mm && idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class)) {
+    if (++depth > T2MI_MAX_DEPTH)
+      break;
+    tm = (t2mi_mux_t *)mm;
+    mm = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+  }
+  return depth;
+}
+
+/* Look for carrier services on 'mm' and create, or confirm, the T2-MI mux
+ * of each one.  'mm' is either a source mux selected by the network or one
+ * of the network's own carrier muxes that carries another carrier.
+ * Returns the number of muxes created. */
+static int
+t2mi_discover_source ( t2mi_network_t *tn, mpegts_mux_t *mm )
+{
+  mpegts_service_t *s;
+  t2mi_mux_t *tm;
+  char src_ubuf[UUID_HEX_SIZE];
+  int created = 0;
+  uint16_t sid;
+
+  idnode_uuid_as_str(&mm->mm_id, src_ubuf);
+  LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
+    sid = service_id16(s);
+    if (sid == 0 || !t2mi_service_is_carrier(s))
+      continue;
+    if ((tm = t2mi_network_find_mux(tn, src_ubuf, sid)) != NULL) {
+      tm->tm_seen = 1;
+      continue;
+    }
+    /* honor the network discovery setting for new carriers */
+    if (tn->mn_autodiscovery == MN_DISCOVERY_DISABLE)
+      continue;
+    if ((tm = t2mi_network_add_mux(tn, src_ubuf, sid)) != NULL) {
+      tm->tm_seen = 1;
+      created++;
+      tvhinfo(LS_T2MI, "discovered carrier on %s SID %u", src_ubuf, sid);
+    }
+  }
+  return created;
+}
+
 static void
 t2mi_network_discover ( t2mi_network_t *tn )
 {
@@ -1291,9 +1469,7 @@ t2mi_network_discover ( t2mi_network_t *tn )
   mpegts_mux_t *mm, *mm_next, *src;
   mpegts_service_t *s;
   t2mi_mux_t *tm;
-  char src_ubuf[UUID_HEX_SIZE];
   int created = 0, retired = 0;
-  uint16_t sid;
 
   lock_assert(&global_lock);
 
@@ -1328,24 +1504,28 @@ t2mi_network_discover ( t2mi_network_t *tn )
       }
     }
 
-    idnode_uuid_as_str(&mm->mm_id, src_ubuf);
-    LIST_FOREACH(s, &mm->mm_services, s_dvb_mux_link) {
-      sid = service_id16(s);
-      if (sid == 0 || !t2mi_service_is_carrier(s))
-        continue;
-      if ((tm = t2mi_network_find_mux(tn, src_ubuf, sid)) != NULL) {
-        tm->tm_seen = 1;
-        continue;
-      }
-      /* honor the network discovery setting for new carriers */
-      if (tn->mn_autodiscovery == MN_DISCOVERY_DISABLE)
-        continue;
-      if ((tm = t2mi_network_add_mux(tn, src_ubuf, sid)) != NULL) {
-        tm->tm_seen = 1;
-        created++;
-        tvhinfo(LS_T2MI, "discovered carrier on %s SID %u", src_ubuf, sid);
-      }
+    created += t2mi_discover_source(tn, mm);
+  }
+
+  /* A carrier can itself carry another carrier: some feeds wrap a T2-MI
+   * (or piped) stream inside a piped transponder stream, e.g. the UHD
+   * services on the Abertis feed.  Treat the network's own carrier muxes
+   * as sources too, so what they carry is found the same way.  New muxes
+   * are put at the head of the list and are not visited in this pass (they
+   * have no services yet); the depth limit keeps a loop from nesting
+   * forever.  Only the private-stream policy is applied here: the carrier
+   * has just been scanned (or will be), so nothing is rescanned. */
+  for (mm = LIST_FIRST(&tn->mn_muxes); mm; mm = mm_next) {
+    mm_next = LIST_NEXT(mm, mm_network_link);
+    if (t2mi_mux_depth(mm) >= T2MI_MAX_DEPTH)
+      continue;
+    if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
+      mm->mm_t2mi_ignore_private = tn->tn_ignore_private;
+      idnode_changed(&mm->mm_id);
+      if (mm->mm_active)
+        t2mi_reparse_source_pmts(mm);
     }
+    created += t2mi_discover_source(tn, mm);
   }
 
   /* Retire auto-discovered muxes whose carrier is confirmed gone.  A
@@ -1418,7 +1598,9 @@ t2mi_network_src_mux_link ( idnode_t *in1, idnode_t *in2, void *origin )
   t2mi_network_t *tn = (t2mi_network_t *)in1;
   mpegts_mux_t *mm = (mpegts_mux_t *)in2;
 
-  /* a T2-MI mux cannot be the source of another T2-MI mux */
+  /* A carrier mux is not selected as a source by hand: a carrier that
+   * carries another carrier is found by the network's own discovery (see
+   * t2mi_network_discover()), which also keeps the nesting depth bounded. */
   if (idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class))
     return 0;
   return idnode_list_link(in1, &tn->tn_src_muxes,

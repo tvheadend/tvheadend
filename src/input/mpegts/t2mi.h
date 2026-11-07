@@ -20,6 +20,8 @@
 #ifndef __T2MI_H__
 #define __T2MI_H__
 
+#include <stdint.h>
+
 struct mpegts_mux;
 
 void t2mi_init ( void );
@@ -28,9 +30,15 @@ void t2mi_done ( void );
 /* number of T2-MI / TS-piping carrier services currently present on a mux */
 int t2mi_mux_count_carriers ( struct mpegts_mux *mm );
 
-/* a PMT on this mux produced a T2-MI carrier component - reconcile the
- * automatic networks that selected the mux as a source */
-void t2mi_carrier_seen ( struct mpegts_mux *mm );
+/* a PMT on this mux produced the T2-MI carrier component of service 'sid' -
+ * reconcile the automatic networks that selected the mux as a source (or
+ * own it, when it is a carrier itself), and scan the carrier along with the
+ * mux when the mux is being scanned */
+void t2mi_carrier_seen ( struct mpegts_mux *mm, uint16_t sid );
+
+/* order of two muxes of one T2-MI network (0 if they are not such muxes):
+ * carriers of one transponder next to each other */
+int t2mi_mux_compare ( struct mpegts_mux *a, struct mpegts_mux *b );
 
 /* the mux is being deleted - unlink it from the automatic networks that
  * selected it as a source (silently when delconf is 0, i.e. shutdown) */

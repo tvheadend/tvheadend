@@ -751,7 +751,7 @@ dvb_pmt_callback
   tvh_mutex_unlock(&s->s_stream_mutex);
 #if ENABLE_T2MI
   if (has_t2mi)
-    t2mi_carrier_seen(mm);
+    t2mi_carrier_seen(mm, service_id16(s));
 #endif
   if (restart)
     service_restart((service_t*)s);

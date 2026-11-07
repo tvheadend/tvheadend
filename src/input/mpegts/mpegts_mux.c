@@ -1634,6 +1634,10 @@ mpegts_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
       r = mc1->dmc_fe_freq - mc2->dmc_fe_freq;
   }
 #endif
+#if ENABLE_T2MI
+  if (r == 0)
+    r = t2mi_mux_compare(a, b);
+#endif
   return r ?: uuid_cmp(&a->mm_id.in_uuid, &b->mm_id.in_uuid);
 }
 
