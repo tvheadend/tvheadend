@@ -39,7 +39,8 @@ const canBack = computed(() => help.history.value.length > 1)
 
 /* Resolve a click inside rendered markdown to an internal help
  * page, or null when the browser should handle it natively:
- *   - in-doc anchor (`#section`)
+ *   - in-doc anchor (`#section`, the body click handles these
+ *     itself in scrollToAnchor)
  *   - root-absolute path (`/...`)
  *   - external URL (`http://...`, `mailto:`, etc. — these already
  *     carry `target="_blank"` from addExternalLinkAttrs)
@@ -60,9 +61,33 @@ function resolveInternalLink(
   return { href, text: anchor.textContent?.trim() || undefined }
 }
 
+/* In-doc anchor click (`#section`), e.g. the "Contents" table at
+ * the top of most help pages. index.html sets
+ * `<base href="/gui/static/">`, so the browser would resolve
+ * `#items` to `/gui/static/#items` and leave the app. Scroll to
+ * the matching element inside the body instead (marked gives each
+ * heading an id made from its text). The default is prevented even
+ * when nothing matches, so a stale anchor is a no-op. The lookup
+ * stays inside the body because marked's ids carry no prefix and
+ * can repeat an id used elsewhere on the page. Returns true when
+ * the click was on an in-doc anchor. */
+function scrollToAnchor(ev: MouseEvent): boolean {
+  const anchor = (ev.target as HTMLElement | null)?.closest('a')
+  const href = anchor?.getAttribute('href') ?? ''
+  if (!href.startsWith('#')) return false
+  ev.preventDefault()
+  const id = href.slice(1)
+  const body = ev.currentTarget as HTMLElement | null
+  if (!id || !body) return true
+  const target = Array.from(body.querySelectorAll<HTMLElement>('[id]')).find((el) => el.id === id)
+  target?.scrollIntoView({ block: 'start' })
+  return true
+}
+
 /* Body cross-link click — route relative links through in-panel
  * navigation so the body re-renders and a breadcrumb crumb pushes. */
 function onBodyClick(ev: MouseEvent) {
+  if (scrollToAnchor(ev)) return
   const link = resolveInternalLink(ev)
   if (link) help.navigateTo(link.href, link.text).catch(() => {})
 }

@@ -7,8 +7,6 @@
 This panel displays all available SAT>IP 
 DVB-T/DVB-S/DVB-C/ATSC-T/ATSC-C frontend parameters.
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons

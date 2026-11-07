@@ -6,8 +6,6 @@
 
 This panel displays all available SAT>IP client parameters.
 
-<tvh_include>inc/dvbinputs_table</tvh_include>
-
 ---
 
 ## Buttons
