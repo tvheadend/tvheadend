@@ -233,12 +233,21 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
   int status, res;
   spawn_t *s;
 
+  /* Pair waitpid with registration under fork_lock: otherwise a fast
+   * child can be reaped before its handle is put into the spawn list. */
+  tvh_mutex_lock(&fork_lock);
   pid = waitpid(wpid, &status, WNOHANG);
-  if(pid < 0 && ERRNO_AGAIN(errno))
+  if (pid < 0 && ERRNO_AGAIN(errno)) {
+    tvh_mutex_unlock(&fork_lock);
     return -EAGAIN;
-  if(pid < 0)
-    return -errno;
-  if(pid < 1) {
+  }
+  if (pid < 0) {
+    int err = errno;
+    tvh_mutex_unlock(&fork_lock);
+    return -err;
+  }
+  if (pid < 1) {
+    tvh_mutex_unlock(&fork_lock);
     if (wpid > 0 && pid != wpid)
       return -EAGAIN;
     return 0;
@@ -274,6 +283,7 @@ spawn_reap(pid_t wpid, char *stxt, size_t stxtlen)
     free(s);
   }
   tvh_mutex_unlock(&spawn_mutex);
+  tvh_mutex_unlock(&fork_lock);
   return res;
 }
 
@@ -615,9 +625,9 @@ spawn_and_give_stdout(const char *prog, char *argv[], char *envp[],
     exit(1);
   }
 
-  tvh_mutex_unlock(&fork_lock);
-
   spawn_enq(prog, p, NULL);
+
+  tvh_mutex_unlock(&fork_lock);
 
   close(fd[1]);
 
@@ -751,9 +761,9 @@ spawn_with_passthrough(const char *prog, char *argv[], char *envp[],
     exit(1);
   }
 
-  tvh_mutex_unlock(&fork_lock);
-
   spawn_enq(prog, p, NULL);
+
+  tvh_mutex_unlock(&fork_lock);
 
   close(fd[0]);
 
@@ -843,9 +853,9 @@ spawnv_impl(const char *prog, char *argv[], pid_t *pid, uint64_t *handle,
     exit(1);
   }
 
-  tvh_mutex_unlock(&fork_lock);
-
   spawn_enq(prog, p, handle);
+
+  tvh_mutex_unlock(&fork_lock);
 
   if (pid)
     *pid = p;
