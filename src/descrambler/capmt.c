@@ -708,6 +708,24 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   return 0;
 }
 
+/*
+ * A fast message goes before the messages that are not fast, but behind the
+ * fast ones (and the hello) already queued: ECMs leave in the order they came
+ */
+static void
+capmt_queue_fast(capmt_t *capmt, capmt_message_t *msg)
+{
+  capmt_message_t *msg2;
+
+  TAILQ_FOREACH(msg2, &capmt->capmt_writeq, cm_link)
+    if ((msg2->cm_flags & (CAPMT_MSG_FAST | CAPMT_MSG_HELLO)) == 0)
+      break;
+  if (msg2)
+    TAILQ_INSERT_BEFORE(msg2, msg, cm_link);
+  else
+    TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+}
+
 /**
  *
  */
@@ -741,15 +759,12 @@ capmt_queue_msg
   msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
   msg->cm_flags   = flags;
-  if (flags & CAPMT_MSG_FAST) {
-    msg2 = TAILQ_FIRST(&capmt->capmt_writeq);
-    TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
-    if (msg2 && (msg2->cm_flags & CAPMT_MSG_HELLO) != 0) {
-      TAILQ_REMOVE(&capmt->capmt_writeq, msg2, cm_link);
-      TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg2, cm_link);
-    }
-  } else
+  if (!(flags & CAPMT_MSG_FAST))
     TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+  else if (flags & CAPMT_MSG_HELLO)
+    TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
+  else
+    capmt_queue_fast(capmt, msg);
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
 
