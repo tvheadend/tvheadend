@@ -6,9 +6,10 @@
  * from prop_t metadata. Pure functions; no Vue, no Pinia, no DOM
  * mounting required.
  */
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { validateField } from '../idnode-fields/validators'
 import type { IdnodeProp } from '@/types/idnode'
+import { clearLocale } from '@/test/__helpers__/switchLocale'
 
 function p(extra: Partial<IdnodeProp>): IdnodeProp {
   return { id: 'f', ...extra }
@@ -195,6 +196,19 @@ describe('validateField — multi-select skip', () => {
       ],
     })
     expect(validateField(prop, ['a', 'b'])).toBeNull()
+  })
+})
+
+describe('validateField — translated messages', () => {
+  afterEach(() => {
+    clearLocale()
+  })
+
+  it('translates the message and fills in the limit', () => {
+    ;(globalThis as unknown as { tvh_locale?: Record<string, string> }).tvh_locale = {
+      'Must be at least {0}': 'Musí být alespoň {0}',
+    }
+    expect(validateField(p({ type: 'int', intmin: 10 }), 5)).toBe('Musí být alespoň 10')
   })
 })
 

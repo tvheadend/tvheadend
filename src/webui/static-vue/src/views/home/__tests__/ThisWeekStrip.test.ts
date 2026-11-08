@@ -14,10 +14,6 @@ import ThisWeekStrip from '../ThisWeekStrip.vue'
  * spring-forward transition regardless of the host's locale. */
 process.env.TZ = 'Europe/Berlin'
 
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (s: string) => s }),
-}))
-
 /* Controllable dvrEntries stub — mutated per test before mount. */
 interface MockEntry {
   uuid: string

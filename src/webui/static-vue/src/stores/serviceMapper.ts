@@ -37,6 +37,7 @@ import { defineStore } from 'pinia'
 import { apiCall } from '@/api/client'
 import { cometClient } from '@/api/comet'
 import type { NotificationMessage } from '@/types/comet'
+import { t } from '@/composables/useI18n'
 
 export interface ServiceMapperStatus {
   /** Total services queued for the job. 0 when no job has run. */
@@ -138,7 +139,7 @@ export const useServiceMapperStore = defineStore('serviceMapper', () => {
        * update can be up to 30 s away (one per service). */
       void resolveActiveName()
     } catch (e) {
-      error.value = e instanceof Error ? e.message : `Failed to load: ${String(e)}`
+      error.value = e instanceof Error ? e.message : t('Failed to load: {0}', String(e))
     }
   }
 
@@ -185,7 +186,7 @@ export const useServiceMapperStore = defineStore('serviceMapper', () => {
       /* Comet will deliver the post-stop status. Don't optimistic-
        * clear — the server's view is authoritative. */
     } catch (e) {
-      error.value = e instanceof Error ? e.message : `Failed to stop: ${String(e)}`
+      error.value = e instanceof Error ? e.message : t('Failed to stop: {0}', String(e))
     } finally {
       stopping.value = false
     }

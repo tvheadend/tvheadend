@@ -33,9 +33,11 @@ import { computed } from 'vue'
 import Select from 'primevue/select'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 import { useEnumOptions } from './useEnumOptions'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 /* Enable Select's filter affordance at this option count and above.
  * Tuned for "scrolling stops being comfortable" — short enums
@@ -128,7 +130,7 @@ const optionKeys = computed(() => new Set(options.value.map((o) => String(o.key)
 const combinedOptions = computed<Array<{ key: string | number; val: string }>>(() => {
   const out: Array<{ key: string | number; val: string }> = []
   if (props.prop.type === 'str' && !props.prop.mandatory) {
-    out.push({ key: '', val: '(none)' })
+    out.push({ key: '', val: t('(none)') })
   }
   for (const o of options.value) out.push(o)
   const v = props.modelValue

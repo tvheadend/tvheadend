@@ -39,7 +39,7 @@ const props = defineProps<{
   col: ColumnDef
 }>()
 
-const { t } = useI18n()
+const { tn } = useI18n()
 
 /* Provided by ChannelManageDrawer. Reactive Map keyed by the
  * stringified effective number; value = count of rows holding
@@ -76,9 +76,11 @@ const showDuplicateWarning = computed<boolean>(() => duplicateCount.value > 1)
 const duplicateTooltip = computed<string>(() => {
   /* count includes THIS row, so "others" = count - 1. */
   const others = duplicateCount.value - 1
-  return others === 1
-    ? t('Shares this number with 1 other channel')
-    : t('Shares this number with {0} other channels', others)
+  return tn(
+    'Shares this number with {0} other channel',
+    'Shares this number with {0} other channels',
+    others,
+  )
 })
 </script>
 

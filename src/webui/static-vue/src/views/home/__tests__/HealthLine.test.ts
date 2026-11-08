@@ -9,13 +9,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { enableAutoUnmount, mount } from '@vue/test-utils'
 import HealthLine from '../HealthLine.vue'
-
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({
-    t: (s: string, ...args: Array<string | number>) =>
-      s.replace(/\{(\d+)\}/g, (m, i) => String(args[Number(i)] ?? m)),
-  }),
-}))
+import { clearLocale, czechPlural, switchLocale } from '@/test/__helpers__/switchLocale'
 
 /* Controllable access-store disk figures — set per test before mount. */
 const accessData: { freediskspace?: number; totaldiskspace?: number } = {}
@@ -43,6 +37,9 @@ vi.mock('@/stores/status', () => ({
 const TIB = 1024 ** 4
 
 enableAutoUnmount(afterEach)
+afterEach(() => {
+  clearLocale()
+})
 beforeEach(() => {
   accessData.freediskspace = undefined
   accessData.totaldiskspace = undefined
@@ -120,6 +117,28 @@ describe('HealthLine', () => {
     statusEntries.push({ uuid: 'tuner-a', subs: 1 })
     const w = mount(HealthLine, globalMountOpts)
     expect(w.find('.health-line__streams').text()).toBe('1 active subscription')
+  })
+
+  it('picks the plural form of the language for the count', async () => {
+    accessData.totaldiskspace = 2 * TIB
+    accessData.freediskspace = TIB
+    await switchLocale(
+      {
+        '{0} active subscription': [
+          '{0} aktivní odběr',
+          '{0} aktivní odběry',
+          '{0} aktivního odběru',
+          '{0} aktivních odběrů',
+        ],
+      },
+      czechPlural,
+    )
+    const texts = [1, 2, 5].map((subs) => {
+      statusEntries.length = 0
+      statusEntries.push({ uuid: 'tuner-a', subs })
+      return mount(HealthLine, globalMountOpts).find('.health-line__streams').text()
+    })
+    expect(texts).toEqual(['1 aktivní odběr', '2 aktivní odběry', '5 aktivních odběrů'])
   })
 
   it('listens to input_status only while mounted, and only for admins', () => {

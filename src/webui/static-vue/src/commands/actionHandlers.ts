@@ -26,7 +26,7 @@
 import type { Router } from 'vue-router'
 import { apiCall } from '@/api/client'
 import { serverUrl } from '@/utils/base'
-import { t } from '@/composables/useI18n'
+import { t, tn } from '@/composables/useI18n'
 import type { useConfirmDialog } from '@/composables/useConfirmDialog'
 import type { useToastNotify } from '@/composables/useToastNotify'
 import type { useWizardStore } from '@/stores/wizard'
@@ -61,9 +61,7 @@ export async function scanAllNetworks(toast: Toast): Promise<void> {
     }
     await apiCall('mpegts/network/scan', { uuid: JSON.stringify(uuids) })
     toast.success(
-      uuids.length === 1
-        ? t('Scan started on 1 network.')
-        : t('Scan started on {0} networks.', uuids.length),
+      tn('Scan started on {0} network.', 'Scan started on {0} networks.', uuids.length),
     )
   } catch (e) {
     toast.error(e instanceof Error ? e.message : String(e), {

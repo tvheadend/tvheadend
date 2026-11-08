@@ -46,7 +46,7 @@ import PlayCell from '@/components/PlayCell.vue'
 import type { ColumnDef } from '@/types/column'
 import type { BaseRow, FilterDef } from '@/types/grid'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const entityEditor = useEntityEditor()
 const router = useRouter()
 
@@ -224,12 +224,18 @@ function removeEntry(entry: FinishedEntry): void {
         v-if="failedCount > 0"
         type="button"
         class="recently-recorded__alert"
-        :aria-label="t('{0} failed recordings in the last 7 days', failedCount)"
+        :aria-label="
+          tn(
+            '{0} failed recording in the last 7 days',
+            '{0} failed recordings in the last 7 days',
+            failedCount,
+          )
+        "
         @click="navigateToFailed"
       >
         <AlertTriangle :size="14" aria-hidden="true" />
         <span class="recently-recorded__alert-text">
-          {{ t('{0} failed · last 7 days', failedCount) }}
+          {{ tn('{0} failed · last 7 days', '{0} failed · last 7 days', failedCount) }}
         </span>
         <span aria-hidden="true" class="recently-recorded__alert-chevron">›</span>
       </button>

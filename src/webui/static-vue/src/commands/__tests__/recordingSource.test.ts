@@ -57,6 +57,7 @@ describe('recordingSource', () => {
 
   afterEach(() => {
     __resetRecordingSourceForTests()
+    vi.unstubAllGlobals()
   })
 
   it('fetches dvr/entry/grid_finished on first ensureRecordingsLoaded call', async () => {
@@ -219,6 +220,22 @@ describe('recordingSource', () => {
     await ensureRecordingsLoaded(deps)
     await ensureRecordingsLoaded(deps)
     expect(apiMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('refetches inside the 60s cache window after a language change', async () => {
+    apiMock.mockResolvedValue({ entries: [{ uuid: 'r-a' }] })
+    await ensureRecordingsLoaded(deps)
+    expect(getRecordingCommands().value[0].label).toBe('(Untitled)')
+    vi.stubGlobal('tvh_locale', {
+      '(Untitled)': '(Bez názvu)',
+      'Show details': 'Zobrazit podrobnosti',
+    })
+    vi.stubGlobal('tvh_locale_lang', 'cs')
+    await ensureRecordingsLoaded(deps)
+    expect(apiMock).toHaveBeenCalledTimes(2)
+    const cmd = getRecordingCommands().value[0]
+    expect(cmd.label).toBe('(Bez názvu)')
+    expect(cmd.actionLabel).toBe('Zobrazit podrobnosti')
   })
 
   it('coalesces concurrent in-flight calls into a single fetch', async () => {

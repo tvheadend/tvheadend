@@ -38,6 +38,7 @@ import { useRouter } from 'vue-router'
 import ProgressBar from 'primevue/progressbar'
 import WizardFooter from './WizardFooter.vue'
 import { useWizardStore } from '@/stores/wizard'
+import { N_, t } from '@/composables/useI18n'
 import { apiCall } from '@/api/client'
 import { addExternalLinkAttrs, renderMarkdown, rewriteStaticUrls } from '@/utils/markdown'
 import type { IdnodeProp } from '@/types/idnode'
@@ -47,11 +48,10 @@ const wizard = useWizardStore()
 
 const iconUrl = ref<string>('')
 const descriptionHtml = ref<string>('')
-/* Server-emitted captions for the count rows. Fallbacks are
- * marked novel for the i18n audit since they ship in this Vue
- * source file and aren't in `static/app/*.js`. */
-/* i18n: new string */ const muxesLabel = ref<string>('Muxes')
-/* i18n: new string */ const servicesLabel = ref<string>('Services')
+/* Server-emitted captions for the count rows. Until they arrive
+ * the rows show these fallbacks. */
+const muxesLabel = ref<string>(t('Muxes'))
+const servicesLabel = ref<string>(t('Services'))
 
 const progress = computed(() => wizard.progress)
 
@@ -112,8 +112,9 @@ onBeforeUnmount(() => {
 /* Footer Skip-button label flips from "Skip" to "Next" once the
  * scan finishes. Same button, same emit; only the label
  * changes so the user reads a continuation rather than an
- * opt-out when the scan is genuinely complete. */
-const skipLabel = computed(() => (progressPercent.value >= 100 ? 'Next' : 'Skip'))
+ * opt-out when the scan is genuinely complete. The footer
+ * translates it. */
+const skipLabel = computed(() => (progressPercent.value >= 100 ? N_('Next') : N_('Skip')))
 
 function normalizeStaticUrl(u: string): string {
   if (!u) return ''

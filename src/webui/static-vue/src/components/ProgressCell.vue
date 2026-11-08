@@ -32,6 +32,7 @@
  */
 import { computed, inject, type Ref } from 'vue'
 import type { ProgressDisplay } from '@/views/epg/epgViewOptions'
+import { useI18n } from '@/composables/useI18n'
 
 export interface ProgressOptions {
   display: ProgressDisplay
@@ -41,6 +42,8 @@ export interface ProgressOptions {
 const props = defineProps<{
   row: { start?: number; stop?: number }
 }>()
+
+const { t } = useI18n()
 
 const now = inject<Ref<number>>('epg-now', { value: Math.floor(Date.now() / 1000) } as Ref<number>)
 
@@ -92,7 +95,7 @@ const pieGradient = computed(() => {
       <div
         class="progress-cell__pie"
         :style="{ background: pieGradient }"
-        :title="`${Math.round(pct)}% elapsed`"
+        :title="t('{0}% elapsed', Math.round(pct))"
       />
     </div>
     <div v-else class="progress-cell">

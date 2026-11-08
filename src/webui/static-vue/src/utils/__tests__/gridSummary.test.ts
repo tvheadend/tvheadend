@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2026 Tvheadend contributors
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import { summaryText } from '../gridSummary'
+import { clearLocale, czechPlural } from '@/test/__helpers__/switchLocale'
 
 describe('summaryText — no selection', () => {
   it('renders "Entries: <n>" by default with no total', () => {
@@ -82,6 +83,10 @@ describe('summaryText — no selection', () => {
 })
 
 describe('summaryText — partial selection', () => {
+  afterEach(() => {
+    clearLocale()
+  })
+
   it('renders "<m> of <n> selected" — label dropped intentionally', () => {
     /* "1 of 147 recordings selected" reads verbose. The
      * unlabelled form mirrors the pre-refactor phone-list-summary
@@ -110,6 +115,22 @@ describe('summaryText — partial selection', () => {
         label: 'recordings',
       })
     ).toBe('3 of 42 selected')
+  })
+
+  it('takes the plural form for the selected count', () => {
+    const g = globalThis as unknown as {
+      tvh_locale?: Record<string, string | string[]>
+      tvh_locale_plural?: (n: number) => number
+    }
+    g.tvh_locale = {
+      '{0} of {1} selected': ['{0} z {1} vybrána', '{0} z {1} vybrány', '{0} z {1} vybráno', '{0} z {1} vybráno'],
+    }
+    g.tvh_locale_plural = czechPlural
+    const text = (selected: number) =>
+      summaryText({ entries: 147, selected, allVisibleSelected: false, label: 'recordings' })
+    expect(text(1)).toBe('1 z 147 vybrána')
+    expect(text(3)).toBe('3 z 147 vybrány')
+    expect(text(5)).toBe('5 z 147 vybráno')
   })
 
   it('boundary case — every-but-one selected', () => {

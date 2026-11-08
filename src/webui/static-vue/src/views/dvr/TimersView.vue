@@ -104,7 +104,7 @@ const {
   createBase: 'dvr/timerec',
   editList,
   createList: EDITOR_LIST_BASE,
-  entityNoun: t('timer entries'),
+  confirmText: t('Do you really want to delete the selected timer entries?'),
   addTooltip: t('Add a new timer entry'),
 })
 </script>
@@ -118,7 +118,7 @@ const {
     store-key="dvr-timerec"
     :default-sort="{ key: 'name', dir: 'ASC' }"
     :virtual-scroller-options="{ itemSize: 36, lazy: false }"
-    count-label="timers"
+    :count-label="t('Timers')"
     edit-mode="cell"
     class="timer__grid"
     @row-dblclick="(row) => openEditor([row])"

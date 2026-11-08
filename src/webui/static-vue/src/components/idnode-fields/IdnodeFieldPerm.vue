@@ -23,8 +23,10 @@
 import { computed } from 'vue'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 const props = defineProps<{
   prop: IdnodeProp
@@ -133,84 +135,84 @@ function onOctalInput(ev: Event) {
       <div class="ifld-perm__matrix" aria-hidden="false">
         <span class="ifld-perm__matrix-spacer" aria-hidden="true"></span>
         <span
-          v-tooltip.top="'Read — list directory contents / read file bytes'"
+          v-tooltip.top="t('Read — list directory contents / read file bytes')"
           class="ifld-perm__matrix-colhead"
           aria-hidden="true"
         >R</span>
         <span
-          v-tooltip.top="'Write — create/delete files / modify file'"
+          v-tooltip.top="t('Write — create/delete files / modify file')"
           class="ifld-perm__matrix-colhead"
           aria-hidden="true"
         >W</span>
         <span
-          v-tooltip.top="'Execute — traverse directory / run as program'"
+          v-tooltip.top="t('Execute — traverse directory / run as program')"
           class="ifld-perm__matrix-colhead"
           aria-hidden="true"
         >X</span>
 
-        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">Owner</span>
+        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">{{ t('Owner') }}</span>
         <input
           v-model="ownerR"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Owner read"
+          :aria-label="t('Owner read')"
         />
         <input
           v-model="ownerW"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Owner write"
+          :aria-label="t('Owner write')"
         />
         <input
           v-model="ownerX"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Owner execute"
+          :aria-label="t('Owner execute')"
         />
 
-        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">Group</span>
+        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">{{ t('Group') }}</span>
         <input
           v-model="groupR"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Group read"
+          :aria-label="t('Group read')"
         />
         <input
           v-model="groupW"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Group write"
+          :aria-label="t('Group write')"
         />
         <input
           v-model="groupX"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Group execute"
+          :aria-label="t('Group execute')"
         />
 
-        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">Other</span>
+        <span class="ifld-perm__matrix-rowhead" aria-hidden="true">{{ t('Other') }}</span>
         <input
           v-model="otherR"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Other read"
+          :aria-label="t('Other read')"
         />
         <input
           v-model="otherW"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Other write"
+          :aria-label="t('Other write')"
         />
         <input
           v-model="otherX"
           type="checkbox"
           :disabled="isReadonly"
-          aria-label="Other execute"
+          :aria-label="t('Other execute')"
         />
       </div>
 
       <div class="ifld-perm__octal">
-        <label :for="prop.id + '-octal'" class="ifld-perm__octal-label">Octal</label>
+        <label :for="prop.id + '-octal'" class="ifld-perm__octal-label">{{ t('Octal') }}</label>
         <input
           :id="prop.id + '-octal'"
           class="ifld-perm__octal-input"
@@ -233,21 +235,21 @@ function onOctalInput(ev: Event) {
       already has any of these bits set so the user sees them.
     -->
     <details class="ifld-perm__special" :open="hasSpecialBits">
-      <summary class="ifld-perm__special-title">Advanced (special bits)</summary>
+      <summary class="ifld-perm__special-title">{{ t('Advanced (special bits)') }}</summary>
       <div class="ifld-perm__special-row">
-        <label v-tooltip.right="'Run with file owner\'s privileges (rare on directories)'">
+        <label v-tooltip.right="t('Run with file owner\'s privileges (rare on directories)')">
           <input v-model="setuid" type="checkbox" :disabled="isReadonly" />
           setuid
         </label>
         <label
           v-tooltip.right="
-            'New files inherit directory\'s group — useful for shared recording dirs'
+            t('New files inherit directory\'s group — useful for shared recording dirs')
           "
         >
           <input v-model="setgid" type="checkbox" :disabled="isReadonly" />
           setgid
         </label>
-        <label v-tooltip.right="'Only owner can delete their files in this directory'">
+        <label v-tooltip.right="t('Only owner can delete their files in this directory')">
           <input v-model="sticky" type="checkbox" :disabled="isReadonly" />
           sticky
         </label>
