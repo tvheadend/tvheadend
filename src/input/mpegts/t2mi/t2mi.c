@@ -1276,6 +1276,9 @@ t2mi_source_mux_deleting ( struct mpegts_mux *mm, int delconf )
             !strcmp(tm->mm_t2mi_src_mux, ubuf)) {
           tvhinfo(LS_T2MI, "source mux removed, removing %s", tmm->mm_nicename);
           tmm->mm_delete(tmm, 1);
+          /* a carrier nested in the deleted one is deleted with it, and it
+           * can be the mux cached as next: start over from the head */
+          tmm_next = LIST_FIRST(&mn->mn_muxes);
         }
       }
     }
@@ -1554,6 +1557,9 @@ t2mi_network_discover ( t2mi_network_t *tn )
               mm->mm_nicename);
       mm->mm_delete(mm, 1);
       retired++;
+      /* deleting a carrier also deletes the carriers nested in it, and one
+       * of those can be the mux cached as next: start over from the head */
+      mm_next = LIST_FIRST(&tn->mn_muxes);
     }
   }
 
