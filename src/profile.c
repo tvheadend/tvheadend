@@ -34,6 +34,15 @@
 #endif
 #include "dvr/dvr.h"
 
+#if ENABLE_LIBAV
+PROP_DOC(dvr_streaming)
+#define PROFILE_RECPLAY_PROPERTY { \
+  .type = PT_BOOL, .id = "dvr_streaming", \
+  .name = N_("Stream recordings over HTSP"), .doc = prop_doc_dvr_streaming, \
+  .off = offsetof(profile_t, pro_dvr_streaming), .opts = PO_EXPERT, .group = 1 \
+}
+#endif
+
 extern const idclass_t profile_htsp_class;
 
 profile_builders_queue profile_builders;
@@ -683,16 +692,17 @@ profile_input(void *opaque, streaming_message_t *sm)
     if (sm->sm_type == SMT_STOP) {
       prch->prch_stop = 1;
       /* elect new master */
-      prsh->prsh_master = NULL;
       LIST_FOREACH(prch2, &prsh->prsh_chains, prch_sharer_link)
         if (!prch2->prch_stop) {
           prsh->prsh_master = prch2;
           break;
         }
-      if (prsh->prsh_master)
+      if (prsh->prsh_master != prch)
         goto direct;
     }
     streaming_target_deliver(prch->prch_share, sm);
+    if (prch->prch_stop)
+      prsh->prsh_master = NULL;
     return;
   }
 
@@ -824,6 +834,10 @@ profile_sharer_input(void *opaque, streaming_message_t *sm)
       run = prch;
       continue;
     } else if (sm->sm_type == SMT_STOP) {
+      if (prch->prch_stop)
+        continue;
+      if (run)
+        profile_sharer_deliver(run, streaming_msg_clone(sm));
       run = prch;
       continue;
     }
@@ -1022,6 +1036,8 @@ profile_sharer_destroy(profile_chain_t *prch)
       tvh_mutex_unlock(&prsh->prsh_queue_mutex);
 	  } 
   }
+  prch->prch_sharer = NULL;
+  prch->prch_post_share = NULL;
 }
 
 /*
@@ -1205,7 +1221,9 @@ const idclass_t profile_htsp_class =
   .ic_class      = "profile-htsp",
   .ic_caption    = N_("HTSP Stream Profile"),
   .ic_properties = (const property_t[]){
-    /* Ready for future extensions */
+#if ENABLE_LIBAV
+    PROFILE_RECPLAY_PROPERTY,
+#endif
     { }
   }
 };
@@ -2515,6 +2533,7 @@ const idclass_t profile_transcode_class =
     {}
   },
   .ic_properties = (const property_t[]){
+    PROFILE_RECPLAY_PROPERTY,
     {
       .type     = PT_INT,
       .id       = "container",
