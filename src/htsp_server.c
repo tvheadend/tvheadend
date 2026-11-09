@@ -109,7 +109,7 @@ typedef struct htsp_msg_q {
   TAILQ_ENTRY(htsp_msg_q) hmq_link;
   int hmq_strict_prio;      /* Serve this queue 'til it's empty */
   int hmq_length;
-  int hmq_payload;          /* Bytes of streaming payload that's enqueued */
+  int64_t hmq_payload;      /* Bytes of streaming payload that's enqueued */
   int hmq_dead;
 } htsp_msg_q_t;
 
@@ -195,7 +195,7 @@ typedef struct htsp_subscription {
 
   int hs_90khz;
 
-  int hs_queue_depth;
+  int64_t hs_queue_depth;
 
   /* data rate of the stream (bytes/s, smoothed over the last seconds) */
   int64_t hs_rate;
@@ -4180,7 +4180,7 @@ htsp_stream_deliver(htsp_subscription_t *hs, th_pkt_t *pkt)
   htsp_msg_t *hm;
   htsp_connection_t *htsp = hs->hs_htsp;
   int64_t ts;
-  int qlen = hs->hs_q.hmq_payload;
+  int64_t qlen = hs->hs_q.hmq_payload;
   int video = SCT_ISVIDEO(pkt->pkt_type);
   int64_t now;
   int64_t depth;
