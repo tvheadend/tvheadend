@@ -1625,13 +1625,19 @@ dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
     while ((sub = dvb_mux_first_submux((dvb_mux_t *)mm)) != NULL)
       sub->mm_delete(sub, delconf);
   }
-  free(((dvb_mux_t *)mm)->lm_parent);
-  ((dvb_mux_t *)mm)->lm_parent = NULL;
-  free(((dvb_mux_t *)mm)->lm_dab_ensemble);
-  ((dvb_mux_t *)mm)->lm_dab_ensemble = NULL;
 
-  /* Delete the mux */
+  /* Delete the mux (the strings stay for its last save, see dvb_mux_free) */
   mpegts_mux_delete(mm, delconf);
+}
+
+static void
+dvb_mux_free ( mpegts_mux_t *mm )
+{
+  dvb_mux_t *lm = (dvb_mux_t *)mm;
+
+  free(lm->lm_parent);
+  free(lm->lm_dab_ensemble);
+  mpegts_mux_free(mm);
 }
 
 /* **************************************************************************
@@ -1713,20 +1719,9 @@ dvb_mux_create0
 
   /* Callbacks */
   lm->mm_delete           = dvb_mux_delete;
+  lm->mm_free             = dvb_mux_free;
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
-
-#if ENABLE_DVBDAB
-  /* the ensemble label used to be kept as provider network name */
-  if (mpegts_mux_is_dab(mm) && lm->lm_dab_ensemble == NULL &&
-      mm->mm_provider_network_name) {
-    if (strcmp(mm->mm_provider_network_name, "ETI-NA"))
-      lm->lm_dab_ensemble = mm->mm_provider_network_name;
-    else
-      free(mm->mm_provider_network_name);
-    mm->mm_provider_network_name = NULL;
-  }
-#endif
 
   mpegts_mux_update_nice_name(mm);
 
