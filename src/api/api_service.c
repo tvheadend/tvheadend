@@ -92,6 +92,8 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
       htsmsg_add_u32(e, "teletext_initial_page", es->es_teletext_initial_page);
   } else if (SCT_ISAUDIO(es->es_type)) {
     htsmsg_add_u32(e, "audio_type",     es->es_audio_type);
+    if (es->es_receiver_mix)
+      htsmsg_add_u32(e, "receiver_mix", 1);
     if (es->es_audio_version)
       htsmsg_add_u32(e, "audio_version", es->es_audio_version);
   } else if (SCT_ISVIDEO(es->es_type)) {
