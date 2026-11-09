@@ -272,6 +272,7 @@ dvb_psi_parse_pmt
   uint32_t update = 0;
   int composition_id;
   int ancillary_id;
+  int component_tag;
   int version;
   int position;
   int tt_position;
@@ -342,6 +343,7 @@ dvb_psi_parse_pmt
     hts_stream_type = SCT_UNKNOWN;
     composition_id = -1;
     ancillary_id = -1;
+    component_tag = -1;
     rds_uecp = 0;
     ac4 = 0;
     tt_position = 1000;
@@ -424,6 +426,10 @@ dvb_psi_parse_pmt
 
       case DVB_DESC_VIDEO_STREAM:
         video_stream = dlen > 0 && SCT_ISVIDEO(hts_stream_type);
+        break;
+
+      case DVB_DESC_STREAM_ID:
+        component_tag = dlen >= 1 ? ptr[0] : -1;
         break;
 
       case DVB_DESC_REGISTRATION:
@@ -572,6 +578,14 @@ dvb_psi_parse_pmt
         update |= PMT_UPDATE_RDS_UECP;
       }
 
+      if(component_tag >= 0 ?
+           !st->es_component_tag_set || st->es_component_tag != component_tag :
+           st->es_component_tag_set) {
+        st->es_component_tag = component_tag >= 0 ? component_tag : 0;
+        st->es_component_tag_set = component_tag >= 0;
+        update |= PMT_UPDATE_COMPONENT_TAG;
+      }
+
       if (st->es_pid == set->set_pcr_pid)
         pcr_shared = 1;
     }
@@ -605,12 +619,29 @@ dvb_psi_parse_pmt
     }
   }
 
+  /* teletext subtitles belong to the component of their teletext stream */
+  TAILQ_FOREACH(st, &set->set_all, es_link) {
+    if(st->es_type != SCT_TEXTSUB || st->es_parent_pid == 0)
+      continue;
+    TAILQ_FOREACH(next, &set->set_all, es_link)
+      if(next->es_pid == st->es_parent_pid && next->es_type == SCT_TELETEXT)
+        break;
+    if(next == NULL)
+      continue;
+    if(st->es_component_tag_set != next->es_component_tag_set ||
+       st->es_component_tag != next->es_component_tag) {
+      st->es_component_tag = next->es_component_tag;
+      st->es_component_tag_set = next->es_component_tag_set;
+      update |= PMT_UPDATE_COMPONENT_TAG;
+    }
+  }
+
   if(update & PMT_REORDERED)
     elementary_set_sort_streams(set);
 
   if (update) {
     tvhdebug(mt->mt_subsys, "%s: Service \"%s\" PMT (version %d) updated"
-     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+     "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
      mt->mt_name,
      nicename, version,
      update&PMT_UPDATE_PCR               ? ", PCR PID changed":"",
@@ -629,6 +660,7 @@ dvb_psi_parse_pmt
      update&PMT_UPDATE_CAID_DELETED      ? ", CAID deleted":"",
      update&PMT_UPDATE_CAID_PID          ? ", CAID PID changed":"",
      update&PMT_UPDATE_RDS_UECP          ? ", RDS UECP flag changed":"",
+     update&PMT_UPDATE_COMPONENT_TAG     ? ", Component tag changed":"",
      update&PMT_REORDERED                ? ", PIDs reordered":"");
   }
 
