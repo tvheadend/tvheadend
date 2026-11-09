@@ -1619,6 +1619,10 @@ dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
                       idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
                       idnode_uuid_as_str(&mm->mm_id, ubuf2));
 
+  /* a sub-mux has the tuning of its transponder in its last save */
+  if (!delconf && mpegts_mux_is_submux(mm))
+    dvb_mux_submux_sync((dvb_mux_t *)mm);
+
   /* the sub-muxes of a transponder go with it */
   if (!mpegts_mux_is_submux(mm)) {
     mpegts_mux_t *sub;
