@@ -166,6 +166,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_SATIP_SERVER
   { "satip_server", NULL },
 #endif
+  { "receivermix", NULL }, /* HTSP: receiver mix of supplementary audio */
 #if ENABLE_TIMESHIFT
   { "timeshift", (uint32_t *)&timeshift_conf.enabled },
 #endif
