@@ -895,6 +895,7 @@ satip_frontend_update_pids
   satip_tune_req_t *tr;
   mpegts_pid_t *mp;
   mpegts_pid_sub_t *mps;
+  uint16_t stream_pid;
 
   tvh_mutex_lock(&lfe->sf_dvr_lock);
   if ((tr = lfe->sf_req) != NULL) {
@@ -923,6 +924,16 @@ satip_frontend_update_pids
           mpegts_pid_add(&tr->sf_pids, mp->mp_pid, mps->mps_weight);
       }
     }
+    /* A sub-mux (DAB): only the PID it is carried in, the PIDs in mm_pids are
+     * those of the inner stream, they do not exist in the outer one */
+    stream_pid = dvb_mux_stream_pid(mm);
+    if (stream_pid > 0) {
+      mpegts_pid_done(&tr->sf_pids);
+      mpegts_pid_add(&tr->sf_pids, stream_pid, 10);
+    }
+    /* The DAB probe looks for DAB content in all PIDs */
+    if (mm->mm_dab_probe_ctx && lfe->sf_device->sd_fullmux_ok)
+      tr->sf_pids.all = 1;
     mpegts_pid_add(&tr->sf_pids, 0, MPS_WEIGHT_PMT_SCAN);
     if (lfe->sf_device->sd_pids21)
       mpegts_pid_add(&tr->sf_pids, 21, MPS_WEIGHT_PMT_SCAN);
@@ -2369,6 +2380,11 @@ satip_frontend_create
   lfe->ti_wizard_set     = satip_frontend_wizard_set;
   lfe->mi_display_name   = satip_frontend_display_name;
   lfe->mi_is_enabled     = satip_frontend_is_enabled;
+#if ENABLE_DVBDAB
+  /* DAB muxes: converted from the packets the input delivers */
+  lfe->mi_mux_types     |= (1u << MM_TYPE_DAB_MPE) | (1u << MM_TYPE_DAB_ETI) |
+                           (1u << MM_TYPE_DAB_TSNI);
+#endif
   lfe->mi_warm_mux       = satip_frontend_warm_mux;
   lfe->mi_start_mux      = satip_frontend_start_mux;
   lfe->mi_stop_mux       = satip_frontend_stop_mux;

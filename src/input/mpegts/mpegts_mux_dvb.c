@@ -129,12 +129,215 @@ dvb_mux_class_delsys_set (void *o, const void *v)
   return 0;
 }
 
+/*
+ * DAB fields only for their mux type: not in the editor of other muxes, not
+ * saved for them (PO_HIDDEN alone only hides a grid column, the forms show
+ * it). In the class schema (o == NULL: grid columns, the add form) they are
+ * columns hidden by default.
+ */
+static uint32_t
+dvb_mux_class_dab_ip_opts(void *o, uint32_t opts)
+{
+  const mpegts_mux_t *mm = o;
+  (void) opts;
+  if (mm == NULL)
+    return PO_HIDDEN;
+  if (mm->mm_type == MM_TYPE_DAB_MPE)
+    return 0;
+  return PO_NOUI | PO_NOSAVE;
+}
+
+static uint32_t
+dvb_mux_class_dab_opts(void *o, uint32_t opts)
+{
+  const mpegts_mux_t *mm = o;
+  if (mm == NULL)
+    return opts | PO_HIDDEN;
+  if (mpegts_mux_is_dab(mm))
+    return opts;
+  return opts | PO_NOUI | PO_NOSAVE;
+}
+
+static uint32_t
+dvb_mux_class_dab_eti_opts(void *o, uint32_t opts)
+{
+  const mpegts_mux_t *mm = o;
+  (void) opts;
+  if (mm == NULL)
+    return PO_HIDDEN;
+  if (mm->mm_type == MM_TYPE_DAB_ETI)
+    return 0;
+  return PO_NOUI | PO_NOSAVE;
+}
+
+/*
+ * DAB IP address get/set helpers (string <-> uint32)
+ */
+static const void *
+dvb_mux_class_dab_ip_get(void *o)
+{
+  static char buf[32];
+  static char *s;
+  const dvb_mux_t *lm = o;
+  uint32_t ip = lm->lm_tuning.dmc_dab_ip;
+
+  s = buf;
+  if (ip == 0)
+    buf[0] = '\0';
+  else
+    snprintf(buf, sizeof(buf), "%u.%u.%u.%u",
+             (ip >> 24) & 0xFF, (ip >> 16) & 0xFF,
+             (ip >> 8) & 0xFF, ip & 0xFF);
+  return &s;
+}
+
+static int
+dvb_mux_class_dab_ip_set(void *o, const void *v)
+{
+  dvb_mux_t *lm = o;
+  const char *s = v;
+  uint32_t ip = 0;
+  unsigned int q[4];
+
+  if (s && *s && sscanf(s, "%u.%u.%u.%u", &q[0], &q[1], &q[2], &q[3]) == 4)
+    ip = (q[0] << 24) | (q[1] << 16) | (q[2] << 8) | q[3];
+
+  if (ip != lm->lm_tuning.dmc_dab_ip) {
+    lm->lm_tuning.dmc_dab_ip = ip;
+    return 1;
+  }
+  return 0;
+}
+
+/*
+ * Mux type: a sub-mux (DAB) is carried in a PID of its transponder
+ */
+static htsmsg_t *
+dvb_mux_class_type_list ( void *o, const char *lang )
+{
+  static const struct strtab tab[] = {
+    { N_("TS"),                       MM_TYPE_TS },
+#if ENABLE_DVBDAB
+    { N_("DAB-MPE"),                  MM_TYPE_DAB_MPE },
+    { N_("DAB-ETI"),                  MM_TYPE_DAB_ETI },
+    { N_("DAB-TSNI"),                 MM_TYPE_DAB_TSNI },
+#endif
+  };
+  (void) o;
+  return strtab2htsmsg(tab, 1, lang);
+}
+
+/* the stream PID only for a sub-mux carried in a PID */
+static uint32_t
+dvb_mux_class_stream_pid_opts ( void *o, uint32_t opts )
+{
+  const mpegts_mux_t *mm = o;
+  (void) opts;
+  if (mm == NULL)
+    return PO_HIDDEN;
+  if (mm->mm_type == MM_TYPE_DAB_MPE ||
+      mm->mm_type == MM_TYPE_DAB_ETI ||
+      mm->mm_type == MM_TYPE_DAB_TSNI)
+    return 0;
+  return PO_NOUI | PO_NOSAVE;
+}
+
+/* the transponder of a sub-mux: internal, saved for sub-muxes only */
+static uint32_t
+dvb_mux_class_parent_opts ( void *o, uint32_t opts )
+{
+  const mpegts_mux_t *mm = o;
+  if (mm == NULL)
+    return opts | PO_HIDDEN;
+  if (mpegts_mux_is_submux(mm))
+    return opts | PO_NOUI;
+  return opts | PO_NOUI | PO_NOSAVE;
+}
+
 const idclass_t dvb_mux_class =
 {
   .ic_super      = &mpegts_mux_class,
   .ic_class      = "dvb_mux",
   .ic_caption    = N_("DVB multiplex"),
   .ic_properties = (const property_t[]){
+    {
+      .type     = PT_INT,
+      .id       = "tstype",
+      .name     = N_("Type"),
+      .desc     = N_("Transport stream type: TS (standard) or DAB."),
+      .off      = offsetof(mpegts_mux_t, mm_type),
+      .def.i    = MM_TYPE_TS,
+      .list     = dvb_mux_class_type_list,
+      .opts     = PO_DOC_NLIST
+    },
+    {
+      .type     = PT_U16,
+      .id       = "pid",
+      .name     = N_("Stream PID"),
+      .desc     = N_("PID containing the encapsulated stream (DAB)."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_fe_pid),
+      .get_opts = dvb_mux_class_stream_pid_opts,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "parent_mux",
+      .name     = N_("Transponder"),
+      .desc     = N_("The mux a sub-mux is carried in: its tuning follows "
+                     "that of the transponder."),
+      .off      = offsetof(dvb_mux_t, lm_parent),
+      .opts     = PO_RDONLY,
+      .get_opts = dvb_mux_class_parent_opts,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "dab_ensemble",
+      .name     = N_("Ensemble"),
+      .desc     = N_("The label of the DAB ensemble, from the scan."),
+      .off      = offsetof(dvb_mux_t, lm_dab_ensemble),
+      .opts     = PO_RDONLY,
+      .get_opts = dvb_mux_class_dab_opts,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "dab_ip",
+      .name     = N_("DAB IP"),
+      .desc     = N_("Multicast IP address for DAB-MPE/GSE."),
+      .get      = dvb_mux_class_dab_ip_get,
+      .set      = dvb_mux_class_dab_ip_set,
+      .get_opts = dvb_mux_class_dab_ip_opts,
+    },
+    {
+      .type     = PT_U16,
+      .id       = "dab_port",
+      .name     = N_("DAB Port"),
+      .desc     = N_("UDP port for DAB-MPE/GSE."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_port),
+      .get_opts = dvb_mux_class_dab_ip_opts,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dab_eti_padding",
+      .name     = N_("ETI Padding"),
+      .desc     = N_("Leading 0xFF bytes in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_padding),
+      .get_opts = dvb_mux_class_dab_eti_opts,
+    },
+    {
+      .type     = PT_INT,
+      .id       = "dab_eti_offset",
+      .name     = N_("ETI Bit Offset"),
+      .desc     = N_("Bit position of E1 sync in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_bit_offset),
+      .get_opts = dvb_mux_class_dab_eti_opts,
+    },
+    {
+      .type     = PT_BOOL,
+      .id       = "dab_eti_inverted",
+      .name     = N_("ETI Inverted"),
+      .desc     = N_("Signal is bit-inverted in ETI-NA."),
+      .off      = offsetof(dvb_mux_t, lm_tuning.dmc_dab_eti_inverted),
+      .get_opts = dvb_mux_class_dab_eti_opts,
+    },
     {}
   }
 };
@@ -1134,6 +1337,165 @@ const idclass_t dvb_mux_dab_class =
  * Class methods
  * *************************************************************************/
 
+/*
+ * Sub-muxes (DAB) are carried in a PID of a transponder and have its
+ * tuning. They keep the uuid of the transponder and follow its tuning when
+ * it changes (NIT, blind scan, the user): at its save, and when they start.
+ * All with global_lock.
+ */
+
+/* the same transponder: what a sub-mux copied from it */
+static int
+dvb_mux_same_transponder ( const dvb_mux_conf_t *a, const dvb_mux_conf_t *b )
+{
+  if (a->dmc_fe_type != b->dmc_fe_type ||
+      a->dmc_fe_freq != b->dmc_fe_freq ||
+      a->dmc_fe_stream_id != b->dmc_fe_stream_id)
+    return 0;
+  if (a->dmc_fe_type == DVB_TYPE_S &&
+      a->u.dmc_fe_qpsk.polarisation != b->u.dmc_fe_qpsk.polarisation)
+    return 0;
+  return 1;
+}
+
+uint16_t
+dvb_mux_stream_pid ( mpegts_mux_t *mm )
+{
+  if (!mpegts_mux_is_submux(mm))
+    return 0;
+  return ((dvb_mux_t *)mm)->lm_tuning.dmc_fe_pid;
+}
+
+void
+dvb_mux_submux_link ( dvb_mux_t *sm, const dvb_mux_t *parent )
+{
+  char ubuf[UUID_HEX_SIZE];
+  const char *u = idnode_uuid_as_str(&parent->mm_id, ubuf);
+
+  if (sm->lm_parent && !strcmp(sm->lm_parent, u))
+    return;
+  tvh_str_update(&sm->lm_parent, u);
+  idnode_changed(&sm->mm_id);
+}
+
+/* the transponder of a sub-mux; a configuration from before the link (or
+ * with the transponder gone) takes the one it was created from */
+dvb_mux_t *
+dvb_mux_submux_parent ( dvb_mux_t *sm )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t *)sm;
+  mpegts_mux_t *p;
+
+  if (sm->lm_parent) {
+    p = mpegts_mux_find(sm->lm_parent);
+    if (p != NULL && p != mm && p->mm_network == mm->mm_network &&
+        !mpegts_mux_is_submux(p) && idnode_is_instance(&p->mm_id, &dvb_mux_class))
+      return (dvb_mux_t *)p;
+  }
+  LIST_FOREACH(p, &mm->mm_network->mn_muxes, mm_network_link)
+    if (p != mm && !mpegts_mux_is_submux(p) &&
+        dvb_mux_same_transponder(&((dvb_mux_t *)p)->lm_tuning, &sm->lm_tuning)) {
+      dvb_mux_submux_link(sm, (dvb_mux_t *)p);
+      return (dvb_mux_t *)p;
+    }
+  return NULL;
+}
+
+/* the same tuning, member by member (the struct has padding); the types with
+ * more than their delivery system parameters are never taken for the same */
+static int
+dvb_mux_conf_same ( const dvb_mux_conf_t *a, const dvb_mux_conf_t *b )
+{
+  if (a->dmc_fe_type != b->dmc_fe_type ||
+      a->dmc_fe_delsys != b->dmc_fe_delsys ||
+      a->dmc_fe_modulation != b->dmc_fe_modulation ||
+      a->dmc_fe_freq != b->dmc_fe_freq ||
+      a->dmc_fe_inversion != b->dmc_fe_inversion ||
+      a->dmc_fe_rolloff != b->dmc_fe_rolloff ||
+      a->dmc_fe_pilot != b->dmc_fe_pilot ||
+      a->dmc_fe_stream_id != b->dmc_fe_stream_id ||
+      a->dmc_fe_pls_mode != b->dmc_fe_pls_mode ||
+      a->dmc_fe_pls_code != b->dmc_fe_pls_code ||
+      a->dmc_fe_data_slice != b->dmc_fe_data_slice ||
+      a->dmc_fe_pid != b->dmc_fe_pid ||
+      a->dmc_dab_ip != b->dmc_dab_ip ||
+      a->dmc_dab_port != b->dmc_dab_port ||
+      a->dmc_dab_eti_padding != b->dmc_dab_eti_padding ||
+      a->dmc_dab_eti_bit_offset != b->dmc_dab_eti_bit_offset ||
+      a->dmc_dab_eti_inverted != b->dmc_dab_eti_inverted)
+    return 0;
+  switch (a->dmc_fe_type) {
+  case DVB_TYPE_S:
+    return a->u.dmc_fe_qpsk.polarisation == b->u.dmc_fe_qpsk.polarisation &&
+           a->u.dmc_fe_qpsk.orbital_pos == b->u.dmc_fe_qpsk.orbital_pos &&
+           a->u.dmc_fe_qpsk.symbol_rate == b->u.dmc_fe_qpsk.symbol_rate &&
+           a->u.dmc_fe_qpsk.fec_inner == b->u.dmc_fe_qpsk.fec_inner;
+  case DVB_TYPE_C:
+    return a->u.dmc_fe_qam.symbol_rate == b->u.dmc_fe_qam.symbol_rate &&
+           a->u.dmc_fe_qam.fec_inner == b->u.dmc_fe_qam.fec_inner;
+  case DVB_TYPE_T:
+    return a->u.dmc_fe_ofdm.bandwidth == b->u.dmc_fe_ofdm.bandwidth &&
+           a->u.dmc_fe_ofdm.code_rate_HP == b->u.dmc_fe_ofdm.code_rate_HP &&
+           a->u.dmc_fe_ofdm.code_rate_LP == b->u.dmc_fe_ofdm.code_rate_LP &&
+           a->u.dmc_fe_ofdm.transmission_mode == b->u.dmc_fe_ofdm.transmission_mode &&
+           a->u.dmc_fe_ofdm.guard_interval == b->u.dmc_fe_ofdm.guard_interval &&
+           a->u.dmc_fe_ofdm.hierarchy_information == b->u.dmc_fe_ofdm.hierarchy_information;
+  default:
+    return 0;
+  }
+}
+
+/* the tuning of the transponder, except what makes this a sub-mux; 1 = changed */
+int
+dvb_mux_submux_sync ( dvb_mux_t *sm )
+{
+  dvb_mux_t *p = dvb_mux_submux_parent(sm);
+  dvb_mux_conf_t dmc;
+
+  if (p == NULL)
+    return 0;
+  memcpy(&dmc, &p->lm_tuning, sizeof(dmc));
+  dmc.dmc_fe_pid = sm->lm_tuning.dmc_fe_pid;
+  dmc.dmc_dab_ip = sm->lm_tuning.dmc_dab_ip;
+  dmc.dmc_dab_port = sm->lm_tuning.dmc_dab_port;
+  dmc.dmc_dab_eti_padding = sm->lm_tuning.dmc_dab_eti_padding;
+  dmc.dmc_dab_eti_bit_offset = sm->lm_tuning.dmc_dab_eti_bit_offset;
+  dmc.dmc_dab_eti_inverted = sm->lm_tuning.dmc_dab_eti_inverted;
+  if (dvb_mux_conf_same(&dmc, &sm->lm_tuning))
+    return 0;
+  tvhinfo(LS_MPEGTS, "%s: tuning of the transponder %s taken over",
+          sm->mm_nicename, p->mm_nicename);
+  memcpy(&sm->lm_tuning, &dmc, sizeof(dmc));
+  mpegts_mux_update_nice_name((mpegts_mux_t *)sm);
+  idnode_changed(&sm->mm_id);
+  return 1;
+}
+
+/* a sub-mux of the transponder, NULL if it has none */
+static mpegts_mux_t *
+dvb_mux_first_submux ( dvb_mux_t *lm )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t *)lm;
+  mpegts_mux_t *p;
+
+  LIST_FOREACH(p, &mm->mm_network->mn_muxes, mm_network_link)
+    if (mpegts_mux_is_submux(p) && dvb_mux_submux_parent((dvb_mux_t *)p) == lm)
+      return p;
+  return NULL;
+}
+
+/* the transponder has changed: its sub-muxes follow */
+static void
+dvb_mux_submux_propagate ( dvb_mux_t *lm )
+{
+  mpegts_mux_t *mm = (mpegts_mux_t *)lm;
+  mpegts_mux_t *p;
+
+  LIST_FOREACH(p, &mm->mm_network->mn_muxes, mm_network_link)
+    if (mpegts_mux_is_submux(p) && dvb_mux_submux_parent((dvb_mux_t *)p) == lm)
+      dvb_mux_submux_sync((dvb_mux_t *)p);
+}
+
 static htsmsg_t *
 dvb_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
 {
@@ -1143,12 +1505,48 @@ dvb_mux_config_save ( mpegts_mux_t *mm, char *filename, size_t fsize )
   if (filename == NULL) {
     mpegts_mux_save(mm, c, 1);
   } else {
+    if (!mpegts_mux_is_submux(mm))
+      dvb_mux_submux_propagate((dvb_mux_t *)mm);
     mpegts_mux_save(mm, c, 0);
     snprintf(filename, fsize, "input/dvb/networks/%s/muxes/%s",
              idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
              idnode_uuid_as_str(&mm->mm_id, ubuf2));
   }
+  /* a TS mux is saved as upstream saves it: without a type (none = TS) */
+  if (mm->mm_type == MM_TYPE_TS)
+    htsmsg_delete_field(c, "tstype");
   return c;
+}
+
+/* "<transponder> <ensemble>[ / PID <n>]" */
+static void
+dvb_mux_submux_name ( mpegts_mux_t *mm, char *buf, size_t len )
+{
+  dvb_mux_t *lm = (dvb_mux_t*)mm;
+  const dvb_mux_conf_t *dmc = &lm->lm_tuning;
+  size_t l = strlen(buf);
+  uint32_t ip = dmc->dmc_dab_ip;
+
+  if (mm->mm_type == MM_TYPE_TS || l + 1 >= len)
+    return;
+  buf += l;
+  len -= l;
+  if (mpegts_mux_is_dab(mm)) {
+    /* before the first scan: where the ensemble is */
+    if (lm->lm_dab_ensemble && *lm->lm_dab_ensemble) {
+      /* the same ensemble can come in several PIDs */
+      if (mm->mm_type == MM_TYPE_DAB_ETI || mm->mm_type == MM_TYPE_DAB_TSNI)
+        snprintf(buf, len, " %s / PID %u", lm->lm_dab_ensemble, dmc->dmc_fe_pid);
+      else
+        snprintf(buf, len, " %s", lm->lm_dab_ensemble);
+    } else if (mm->mm_type == MM_TYPE_DAB_MPE)
+      snprintf(buf, len, " DAB-MPE %u.%u.%u.%u:%u", (ip >> 24) & 0xFF,
+               (ip >> 16) & 0xFF, (ip >> 8) & 0xFF, ip & 0xFF, dmc->dmc_dab_port);
+    else if (mm->mm_type == MM_TYPE_DAB_ETI)
+      snprintf(buf, len, " ETI-NA %u", dmc->dmc_fe_pid);
+    else
+      snprintf(buf, len, " DAB-TSNI %u", dmc->dmc_fe_pid);
+  }
 }
 
 static void
@@ -1183,7 +1581,31 @@ dvb_mux_display_name ( mpegts_mux_t *mm, char *buf, size_t len )
     else
       snprintf(buf, len, "%d%s", freq, extra);
   }
+
+  /* a sub-mux (or DAB) has the tuning of its transponder: add what tells
+   * it apart */
+  dvb_mux_submux_name(mm, buf, len);
 }
+
+#if ENABLE_DVBDAB
+/*
+ * The label of a DAB ensemble: from the probe, or from the provider of the
+ * services in the SDT of the converted TS (libdvbdab) - global_lock
+ */
+int
+dvb_mux_set_dab_ensemble ( mpegts_mux_t *mm, const char *label )
+{
+  dvb_mux_t *lm = (dvb_mux_t *)mm;
+
+  if (!mpegts_mux_is_dab(mm) || label == NULL || *label == '\0' ||
+      !strcmp(lm->lm_dab_ensemble ?: "", label))
+    return 0;
+  tvh_str_update(&lm->lm_dab_ensemble, label);
+  mpegts_mux_update_nice_name(mm);
+  idnode_changed(&mm->mm_id);
+  return 1;
+}
+#endif
 
 static void
 dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
@@ -1196,6 +1618,17 @@ dvb_mux_delete ( mpegts_mux_t *mm, int delconf )
     hts_settings_remove("input/dvb/networks/%s/muxes/%s",
                       idnode_uuid_as_str(&mm->mm_network->mn_id, ubuf1),
                       idnode_uuid_as_str(&mm->mm_id, ubuf2));
+
+  /* the sub-muxes of a transponder go with it */
+  if (!mpegts_mux_is_submux(mm)) {
+    mpegts_mux_t *sub;
+    while ((sub = dvb_mux_first_submux((dvb_mux_t *)mm)) != NULL)
+      sub->mm_delete(sub, delconf);
+  }
+  free(((dvb_mux_t *)mm)->lm_parent);
+  ((dvb_mux_t *)mm)->lm_parent = NULL;
+  free(((dvb_mux_t *)mm)->lm_dab_ensemble);
+  ((dvb_mux_t *)mm)->lm_dab_ensemble = NULL;
 
   /* Delete the mux */
   mpegts_mux_delete(mm, delconf);
@@ -1282,6 +1715,18 @@ dvb_mux_create0
   lm->mm_delete           = dvb_mux_delete;
   lm->mm_display_name     = dvb_mux_display_name;
   lm->mm_config_save      = dvb_mux_config_save;
+
+#if ENABLE_DVBDAB
+  /* the ensemble label used to be kept as provider network name */
+  if (mpegts_mux_is_dab(mm) && lm->lm_dab_ensemble == NULL &&
+      mm->mm_provider_network_name) {
+    if (strcmp(mm->mm_provider_network_name, "ETI-NA"))
+      lm->lm_dab_ensemble = mm->mm_provider_network_name;
+    else
+      free(mm->mm_provider_network_name);
+    mm->mm_provider_network_name = NULL;
+  }
+#endif
 
   mpegts_mux_update_nice_name(mm);
 

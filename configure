@@ -79,6 +79,7 @@ OPTIONS=(
   "cclang_threadsan:no"
   "gperftools:no"
   "execinfo:auto"
+  "dvbdab:auto"
 )
 
 #
@@ -569,6 +570,17 @@ if enabled_or_auto uriparser; then
 fi
 
 #
+# libdvbdab - DAB/DAB+ in DVB streams (ETI-NA, MPE, GSE, TSNI)
+#
+if enabled_or_auto dvbdab; then
+  if check_pkg dvbdab ">=1.0.1"; then
+    enable dvbdab
+  elif enabled dvbdab; then
+    die "libdvbdab >= 1.0.1 not found (use --disable-dvbdab)"
+  fi
+fi
+
+#
 # Bundling
 #
 if enabled bundle; then
@@ -874,6 +886,11 @@ then
 fi
 if enabled linuxdvb || enabled satip_client || enabled hdhomerun_client || enabled satip_server; then
   enable mpegts_dvb
+fi
+
+# DAB muxes are sub-muxes of DVB networks
+if enabled dvbdab && ! enabled mpegts_dvb; then
+  disable dvbdab
 fi
 
 #
