@@ -218,6 +218,55 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
 }
 
 /**
+ * Audio type from the component_type of the AC-3 and Enhanced AC-3
+ * descriptors (EN 300 468 annex D): service_type 2 = visually impaired
+ * (audio description), 3 = hearing impaired
+ */
+static void
+psi_desc_ac3_component(const uint8_t *ptr, int size, int *audio_type)
+{
+  if (size < 2 || !(ptr[0] & 0x80)) /* component_type_flag */
+    return;
+  switch ((ptr[1] >> 3) & 0x07) {   /* service_type */
+  case 0x02:
+    *audio_type = 3;
+    break;
+  case 0x03:
+    *audio_type = 2;
+    break;
+  default:
+    break;
+  }
+}
+
+/**
+ * Audio type from the AAC_type of the AAC descriptor (the component_type
+ * values of stream_content 0x6, EN 300 468 table 26)
+ */
+static void
+psi_desc_aac_type(const uint8_t *ptr, int size, int *audio_type)
+{
+  if (size < 3 || !(ptr[1] & 0x80)) /* AAC_type_flag */
+    return;
+  switch (ptr[2]) {
+  case 0x40: /* HE-AAC audio description for the visually impaired */
+  case 0x44: /* HE-AAC v2 audio description ... */
+  case 0x47: /* HE-AAC receiver mix audio description ... */
+  case 0x48: /* HE-AAC broadcaster mix audio description ... */
+  case 0x49: /* HE-AAC v2 receiver mix audio description ... */
+  case 0x4a: /* HE-AAC v2 broadcaster mix audio description ... */
+    *audio_type = 3;
+    break;
+  case 0x41: /* HE-AAC audio for the hard of hearing */
+  case 0x45: /* HE-AAC v2 audio for the hard of hearing */
+    *audio_type = 2;
+    break;
+  default:
+    break;
+  }
+}
+
+/**
  * Parser for supplementary audio descriptor (EN 300 468 6.4.11)
  */
 static void
@@ -283,6 +332,7 @@ dvb_psi_parse_pmt
   const char *supp_lang;
   uint8_t audio_type, audio_version;
   int supp_audio_type;
+  int codec_audio_type;
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
 
@@ -349,6 +399,7 @@ dvb_psi_parse_pmt
     supp_lang = NULL;
     audio_type = 0;
     supp_audio_type = -1;
+    codec_audio_type = -1;
     audio_version = 0;
     video_stream = 0;
 
@@ -449,6 +500,7 @@ dvb_psi_parse_pmt
       case DVB_DESC_AC3:
         if(estype == 0x06 || estype == 0x81)
           hts_stream_type = SCT_AC3;
+        psi_desc_ac3_component(ptr, dlen, &codec_audio_type);
         break;
 
       case DVB_DESC_AAC:
@@ -456,6 +508,7 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_MP4A;
         else if(estype == 0x11)
           hts_stream_type = SCT_AAC;
+        psi_desc_aac_type(ptr, dlen, &codec_audio_type);
         break;
 
       case DVB_DESC_SUBTITLE:
@@ -471,6 +524,7 @@ dvb_psi_parse_pmt
       case DVB_DESC_EAC3:
         if(estype == 0x06 || estype == 0x81)
           hts_stream_type = SCT_EAC3;
+        psi_desc_ac3_component(ptr, dlen, &codec_audio_type);
         break;
 
       case DVB_DESC_EXTENSION:
@@ -505,6 +559,10 @@ dvb_psi_parse_pmt
 
     if (supp_lang)
       lang = supp_lang;
+    /* the codec descriptors (AC-3, E-AC-3, AAC) when the ISO 639
+     * descriptor says nothing; the supplementary audio descriptor wins */
+    if (codec_audio_type >= 0 && audio_type == 0)
+      audio_type = codec_audio_type;
     if (supp_audio_type >= 0)
       audio_type = supp_audio_type;
 
