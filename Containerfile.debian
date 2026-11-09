@@ -7,6 +7,9 @@ ARG TARGET_ARCH="library"
 
 FROM docker.io/${TARGET_ARCH}/debian:${DEBIAN_VERSION} AS builder
 
+# libdvbdab (DAB/DAB+ in DVB streams), https://github.com/L-S-D/libdvbdab
+ARG LIBDVBDAB_REF="504ff9a725ba2eeea9dffe5cf716add85676c875"
+
 ENV DEBIAN_FRONTEND noninteractive
 
 WORKDIR /src
@@ -14,6 +17,7 @@ WORKDIR /src
 COPY . /src/
 
 ENV VUE_FILE_CACHE="/src/.vuecache"
+ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
 
 RUN apt-get update --yes && apt-get install --yes \
         'build-essential' \
@@ -29,6 +33,7 @@ RUN apt-get update --yes && apt-get install --yes \
         'libhdhomerun-dev' \
         'libopus-dev' \
         'libpcre2-dev' \
+        'libpugixml-dev' \
         'libssl-dev' \
         'liburiparser-dev' \
         'libva-dev' \
@@ -45,6 +50,7 @@ RUN apt-get update --yes && apt-get install --yes \
         'zlib1g-dev' \
     && \
     git config --global --add safe.directory '/src/data/dvb-scan' && \
+    sh support/build-libdvbdab.sh "${LIBDVBDAB_REF}" && \
     ./configure \
                 --prefix='/usr/local' \
                 --disable-doc \
@@ -61,6 +67,7 @@ RUN apt-get update --yes && apt-get install --yes \
                 --disable-libx265_static \
                 --enable-bundle \
                 --enable-dvbcsa \
+                --enable-dvbdab \
                 --enable-hdhomerun_client \
                 --enable-kqueue \
                 --enable-libav \
@@ -97,6 +104,7 @@ RUN apt-get update --yes && apt-get install --yes \
         'libswscale8' \
         'libopus0' \
         'libpcre2-8-0' \
+        'libpugixml1v5' \
         'libssl3t64' \
         'liburiparser1' \
         'libva2' \

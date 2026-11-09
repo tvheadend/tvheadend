@@ -7,11 +7,15 @@ ARG TARGET_ARCH="library"
 
 FROM docker.io/${TARGET_ARCH}/alpine:${ALPINE_VERSION} AS builder
 
+# libdvbdab (DAB/DAB+ in DVB streams), https://github.com/L-S-D/libdvbdab
+ARG LIBDVBDAB_REF="504ff9a725ba2eeea9dffe5cf716add85676c875"
+
 WORKDIR /src
 
 COPY . /src/
 
 ENV VUE_FILE_CACHE="/src/.vuecache"
+ENV PKG_CONFIG_PATH="/usr/local/lib/pkgconfig"
 
 RUN apk add --no-cache \
         'avahi-dev' \
@@ -32,6 +36,7 @@ RUN apk add --no-cache \
         'openssl-dev>3' \
         'pcre2' \
         'pngquant' \
+        'pugixml-dev' \
         'py3-requests' \
         'python3' \
         'uriparser-dev' \
@@ -39,6 +44,7 @@ RUN apk add --no-cache \
         'zlib-dev' \
     && \
     git config --global --add safe.directory '/src/data/dvb-scan' && \
+    sh support/build-libdvbdab.sh "${LIBDVBDAB_REF}" && \
     ./configure \
                 --prefix='/usr/local' \
                 --disable-doc \
@@ -55,6 +61,7 @@ RUN apk add --no-cache \
                 --disable-libx265_static \
                 --enable-bundle \
                 --enable-dvbcsa \
+                --enable-dvbdab \
                 --enable-hdhomerun_client \
                 --enable-kqueue \
                 --disable-libav \
@@ -82,6 +89,7 @@ RUN apk add --no-cache \
         'libdvbcsa' \
         'libhdhomerun-libs' \
         'libssl3' \
+        'libstdc++' \
         'liburiparser' \
         'libva' \
         'libvpx' \
@@ -89,6 +97,7 @@ RUN apk add --no-cache \
         'perl-http-entity-parser' \
         'pngquant' \
         'pcre2' \
+        'pugixml' \
         'python3' \
         'tini' \
         'xmltv' \
