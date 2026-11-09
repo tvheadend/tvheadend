@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 44
+#define HTSP_PROTO_VERSION 45
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -4357,6 +4357,10 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     if (SCT_ISAUDIO(ssc->es_type))
     {
       htsmsg_add_u32(c, "audio_type", ssc->es_audio_type);
+      /* supplementary audio to be mixed with the main audio (e.g. a
+       * receiver-mix audio description), not for playing alone */
+      if (ssc->es_receiver_mix)
+        htsmsg_add_u32(c, "receiver_mix", 1);
       if (ssc->es_audio_version)
         htsmsg_add_u32(c, "audio_version", ssc->es_audio_version);
       if (ssc->es_channels)

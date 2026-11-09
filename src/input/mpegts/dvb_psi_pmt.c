@@ -220,13 +220,18 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
 /**
  * Audio type from the component_type of the AC-3 and Enhanced AC-3
  * descriptors (EN 300 468 annex D): service_type 2 = visually impaired
- * (audio description), 3 = hearing impaired
+ * (audio description), 3 = hearing impaired; full_service_flag
  */
 static void
-psi_desc_ac3_component(const uint8_t *ptr, int size, int *audio_type)
+psi_desc_ac3_component(const uint8_t *ptr, int size, int *audio_type,
+                       int *receiver_mix)
 {
   if (size < 2 || !(ptr[0] & 0x80)) /* component_type_flag */
     return;
+  /* full_service_flag 0: to be combined with another (main) service; a
+   * complete main service (service_type 0) is always complete */
+  if ((ptr[1] >> 3) & 0x07)
+    *receiver_mix = !(ptr[1] & 0x40);
   switch ((ptr[1] >> 3) & 0x07) {   /* service_type */
   case 0x02:
     *audio_type = 3;
@@ -244,10 +249,22 @@ psi_desc_ac3_component(const uint8_t *ptr, int size, int *audio_type)
  * values of stream_content 0x6, EN 300 468 table 26)
  */
 static void
-psi_desc_aac_type(const uint8_t *ptr, int size, int *audio_type)
+psi_desc_aac_type(const uint8_t *ptr, int size, int *audio_type,
+                  int *receiver_mix)
 {
   if (size < 3 || !(ptr[1] & 0x80)) /* AAC_type_flag */
     return;
+  switch (ptr[2]) {
+  case 0x42: /* HE-AAC receiver-mixed supplementary audio */
+  case 0x46: /* HE-AAC v2 receiver-mixed supplementary audio */
+  case 0x47: /* HE-AAC receiver mix audio description */
+  case 0x49: /* HE-AAC v2 receiver mix audio description */
+    *receiver_mix = 1;
+    break;
+  default:
+    *receiver_mix = 0;
+    break;
+  }
   switch (ptr[2]) {
   case 0x40: /* HE-AAC audio description for the visually impaired */
   case 0x44: /* HE-AAC v2 audio description ... */
@@ -271,10 +288,15 @@ psi_desc_aac_type(const uint8_t *ptr, int size, int *audio_type)
  */
 static void
 psi_desc_supplementary_audio(const uint8_t *ptr, int size,
-                             int *audio_type, const char **lang)
+                             int *audio_type, const char **lang,
+                             int *receiver_mix)
 {
   if (size < 2 || ptr[0] != 0x06)
     return;
+
+  /* mix_type 0: supplementary stream, mixed with the main audio by the
+   * receiver; 1: complete and independent */
+  *receiver_mix = !(ptr[1] & 0x80);
 
   switch ((ptr[1] >> 2) & 0x1f) { /* editorial_classification */
   case 0x01: /* audio description for the visually impaired */
@@ -333,6 +355,9 @@ dvb_psi_parse_pmt
   uint8_t audio_type, audio_version;
   int supp_audio_type;
   int codec_audio_type;
+  int supp_receiver_mix;
+  int codec_receiver_mix;
+  int receiver_mix;
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
 
@@ -400,6 +425,8 @@ dvb_psi_parse_pmt
     audio_type = 0;
     supp_audio_type = -1;
     codec_audio_type = -1;
+    supp_receiver_mix = -1;
+    codec_receiver_mix = -1;
     audio_version = 0;
     video_stream = 0;
 
@@ -500,7 +527,7 @@ dvb_psi_parse_pmt
       case DVB_DESC_AC3:
         if(estype == 0x06 || estype == 0x81)
           hts_stream_type = SCT_AC3;
-        psi_desc_ac3_component(ptr, dlen, &codec_audio_type);
+        psi_desc_ac3_component(ptr, dlen, &codec_audio_type, &codec_receiver_mix);
         break;
 
       case DVB_DESC_AAC:
@@ -508,7 +535,7 @@ dvb_psi_parse_pmt
           hts_stream_type = SCT_MP4A;
         else if(estype == 0x11)
           hts_stream_type = SCT_AAC;
-        psi_desc_aac_type(ptr, dlen, &codec_audio_type);
+        psi_desc_aac_type(ptr, dlen, &codec_audio_type, &codec_receiver_mix);
         break;
 
       case DVB_DESC_SUBTITLE:
@@ -524,7 +551,7 @@ dvb_psi_parse_pmt
       case DVB_DESC_EAC3:
         if(estype == 0x06 || estype == 0x81)
           hts_stream_type = SCT_EAC3;
-        psi_desc_ac3_component(ptr, dlen, &codec_audio_type);
+        psi_desc_ac3_component(ptr, dlen, &codec_audio_type, &codec_receiver_mix);
         break;
 
       case DVB_DESC_EXTENSION:
@@ -537,7 +564,8 @@ dvb_psi_parse_pmt
         if((estype == 0x06 || estype == 0x81) && ac4)
           hts_stream_type = SCT_AC4;
 
-        psi_desc_supplementary_audio(ptr, dlen, &supp_audio_type, &supp_lang);
+        psi_desc_supplementary_audio(ptr, dlen, &supp_audio_type, &supp_lang,
+                                     &supp_receiver_mix);
         break;
 
       case DVB_DESC_ANCILLARY_DATA:
@@ -565,6 +593,11 @@ dvb_psi_parse_pmt
       audio_type = codec_audio_type;
     if (supp_audio_type >= 0)
       audio_type = supp_audio_type;
+    receiver_mix = 0;
+    if (supp_receiver_mix >= 0)
+      receiver_mix = supp_receiver_mix;
+    else if (codec_receiver_mix >= 0)
+      receiver_mix = codec_receiver_mix;
 
     if (hts_stream_type != SCT_UNKNOWN) {
 
@@ -605,6 +638,11 @@ dvb_psi_parse_pmt
         update |= PMT_UPDATE_AUDIO_TYPE;
         st->es_audio_type = audio_type;
         st->es_audio_version = audio_version;
+      }
+
+      if(st->es_receiver_mix != receiver_mix) {
+        update |= PMT_UPDATE_AUDIO_TYPE;
+        st->es_receiver_mix = receiver_mix;
       }
 
       /* FIXME: it might make sense that PMT info has greater priority */
