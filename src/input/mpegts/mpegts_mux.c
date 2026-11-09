@@ -1124,6 +1124,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
 
   assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
 
+  /* the end of this scan is put off for the DAB probe */
+  if (mpegts_dab_probe_waiting(mm))
+    return;
+
   /* Log */
   tvh_mutex_lock(&mm->mm_tables_lock);
   mpegts_table_consistency_check(mm);

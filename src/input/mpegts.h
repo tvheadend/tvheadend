@@ -1246,10 +1246,14 @@ void eit_sdt_callback(mpegts_table_t *mt, uint32_t priv);
 #if ENABLE_DVBDAB
 void mpegts_dab_probe_start(mpegts_mux_t *mm);
 int  mpegts_dab_probe_complete(mpegts_mux_t *mm, int evaluate);
+int  mpegts_dab_probe_wait(mpegts_mux_t *mm, int result, int weight);
+int  mpegts_dab_probe_waiting(mpegts_mux_t *mm);
 int  dvb_mux_set_dab_ensemble(mpegts_mux_t *mm, const char *label);
 #else
 #define mpegts_dab_probe_start(mm)              ((void)0)
 #define mpegts_dab_probe_complete(mm, evaluate) (0)
+#define mpegts_dab_probe_wait(mm, result, weight) (0)
+#define mpegts_dab_probe_waiting(mm)              (0)
 #define dvb_mux_set_dab_ensemble(mm, label)     (0)
 #endif
 

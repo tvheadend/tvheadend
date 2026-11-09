@@ -221,6 +221,11 @@ mpegts_network_scan_mux_done0
   mpegts_mux_scan_state_t state = mm->mm_scan_state;
   int dab_found = 0;
 
+  /* The DAB data come slower than the tables of a scan: a scan that ended
+   * (not a cancelled one) waits for the probe, for a while at most */
+  if (result != MM_SCAN_NONE && mpegts_dab_probe_wait(mm, result, weight))
+    return;
+
   /* Complete DAB probe before finishing scan: its findings only count for a
    * scan that ended - not when it was cancelled (the mux stopped, deleted,
    * or its tuner taken), the mux may be going away */
@@ -270,6 +275,14 @@ mpegts_network_scan_mux_done0
   /* Re-enable? */
   if (weight > 0)
     mpegts_network_scan_queue_add(mm, weight, mm->mm_scan_flags, 10);
+}
+
+/* The end of a scan that was put off */
+void
+mpegts_network_scan_mux_end
+  ( mpegts_mux_t *mm, mpegts_mux_scan_result_t result, int weight )
+{
+  mpegts_network_scan_mux_done0(mm, result, weight);
 }
 
 /* Failed - couldn't start */

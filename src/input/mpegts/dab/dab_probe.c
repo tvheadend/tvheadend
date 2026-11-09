@@ -23,10 +23,22 @@
 typedef struct dab_probe_ctx {
   mpegts_mux_t      *mm;
   dvbdab_scanner_t  *scanner;
+  mtimer_t           wait_timer;  /* the end of the scan waits for the scanner */
+  int64_t            started;
+  int                result;      /* the result the scan ended with */
+  int                weight;
+  int                waiting;
 } dab_probe_ctx_t;
 
 /* Scanner timeout in milliseconds */
+#ifndef DAB_PROBE_TIMEOUT_MS
 #define DAB_PROBE_TIMEOUT_MS  5000
+#endif
+
+/* The longest a scan that ended waits for the scanner */
+#ifndef DAB_PROBE_MAX_MS
+#define DAB_PROBE_MAX_MS      (DAB_PROBE_TIMEOUT_MS + 3000)
+#endif
 
 /*
  * Secondary scan callback - receives all TS packets
@@ -302,6 +314,7 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
   dvbdab_scanner_set_timeout(ctx->scanner, DAB_PROBE_TIMEOUT_MS);
 
   ctx->mm = mm;
+  ctx->started = mclk();
 
   /* Store in dedicated field */
   mm->mm_dab_probe_ctx = ctx;
@@ -316,6 +329,65 @@ mpegts_dab_probe_start(mpegts_mux_t *mm)
   mpegts_mux_update_pids(mm);
 }
 
+/* the scanner has all it can get (it is fed by the input thread) */
+static int
+dab_probe_scanner_done(dab_probe_ctx_t *ctx)
+{
+  mpegts_mux_t *mm = ctx->mm;
+  mpegts_mux_instance_t *mmi = mm->mm_active;
+  mpegts_input_t *mi = mmi ? mmi->mmi_input : NULL;
+  int done;
+
+  if (mi)
+    tvh_mutex_lock(&mi->mi_output_lock);
+  done = dvbdab_scanner_is_done(ctx->scanner);
+  if (mi)
+    tvh_mutex_unlock(&mi->mi_output_lock);
+  return done;
+}
+
+static void
+dab_probe_wait_cb(void *aux)
+{
+  mpegts_mux_t *mm = aux;
+  dab_probe_ctx_t *ctx = mm->mm_dab_probe_ctx;
+
+  if (ctx)
+    mpegts_network_scan_mux_end(mm, ctx->result, ctx->weight);
+}
+
+/* the end of the scan waits for the probe (the tables go on reporting meanwhile) */
+int
+mpegts_dab_probe_waiting(mpegts_mux_t *mm)
+{
+  dab_probe_ctx_t *ctx = mm->mm_dab_probe_ctx;
+
+  return ctx != NULL && ctx->waiting;
+}
+
+/*
+ * The DAB data come slower than the tables of a scan: a scan that ended
+ * (not a cancelled one) waits until the scanner is done, for a while at
+ * most. Returns 1 if the end of the scan is put off.
+ */
+int
+mpegts_dab_probe_wait(mpegts_mux_t *mm, int result, int weight)
+{
+  dab_probe_ctx_t *ctx = mm->mm_dab_probe_ctx;
+
+  if (ctx == NULL || dab_probe_scanner_done(ctx) ||
+      mclk() - ctx->started >= ms2mono(DAB_PROBE_MAX_MS))
+    return 0;
+  if (!ctx->waiting) {
+    ctx->waiting = 1;
+    tvhdebug(LS_MPEGTS, "mux %s: waiting for the DAB probe", mm->mm_nicename);
+  }
+  ctx->result = result;
+  ctx->weight = weight;
+  mtimer_arm_rel(&ctx->wait_timer, dab_probe_wait_cb, mm, ms2mono(500));
+  return 1;
+}
+
 /*
  * Complete DAB probe - called when mux scan ends
  */
@@ -328,6 +400,8 @@ mpegts_dab_probe_complete(mpegts_mux_t *mm, int evaluate)
 
   if (!ctx)
     return 0;
+
+  mtimer_disarm(&ctx->wait_timer);
 
   /* Remove callback only if still ours - under mi_output_lock, so the input
    * thread is not inside the scanner when it is destroyed below */
