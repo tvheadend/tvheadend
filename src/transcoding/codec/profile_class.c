@@ -316,6 +316,16 @@ const codec_profile_class_t codec_profile_class = {
                 .list     = codec_profile_class_profile_list,
                 .def.i    = FF_AV_PROFILE_UNKNOWN,
             },
+            {
+                .type     = PT_INT,
+                .id       = "has_support_for_filter2",
+                .name     = N_("has_support_for_filter2"),
+                .desc     = N_("has_support_for_filter2."),
+                .group    = 1,
+                .opts     = PO_ADVANCED | PO_PHIDDEN | PO_NOSAVE,
+                .off      = offsetof(TVHCodecProfile, has_support_for_filter2),
+                .def.i    = 0,
+            },
             {}
         }
     },

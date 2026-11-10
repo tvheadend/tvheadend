@@ -20,6 +20,10 @@
 #include "hwaccels.h"
 #include "../internals.h"
 
+#if ENABLE_NVENC
+#include "nv.h"
+#endif
+
 #if ENABLE_VAAPI
 #include "vaapi.h"
 #endif
@@ -73,15 +77,20 @@ hwaccels_decode_setup_context(AVCodecContext *avctx,
                               const enum AVPixelFormat pix_fmt)
 {
     const AVPixFmtDescriptor *desc;
+    TVHContext *ctx = avctx->opaque;
 
     if (check_pix_fmt(avctx, pix_fmt)) {
         desc = av_pix_fmt_desc_get(pix_fmt);
         tvherror(LS_TRANSCODE, "no HWAccel for the pixel format '%s'", desc ? desc->name : "<unk>");
         return AVERROR(ENOENT);
     }
-    switch (pix_fmt) {
+    switch (ctx->iavhwdevtype) {
+#if ENABLE_NVENC
+        case AV_HWDEVICE_TYPE_CUDA:
+            return nv_decode_setup_context(avctx);
+#endif
 #if ENABLE_VAAPI
-        case AV_PIX_FMT_VAAPI:
+        case AV_HWDEVICE_TYPE_VAAPI:
             return vaapi_decode_setup_context(avctx);
 #endif
         default:
@@ -90,7 +99,47 @@ hwaccels_decode_setup_context(AVCodecContext *avctx,
     return -1;
 }
 
+static int is_pix_fmt_in_list(const enum AVPixelFormat check_pix_fmt, const enum AVPixelFormat *pix_fmts) {
+    enum AVPixelFormat pix_fmt = AV_PIX_FMT_NONE;
+    int i;
+    for (i = 0; pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+        pix_fmt = pix_fmts[i];
+        if (check_pix_fmt == pix_fmt)
+            return 1;
+    }
+    return 0;
+}
 
+/**
+ * @brief Negotiates and selects the optimal pixel format for decoding.
+ *
+ * This function is used as the 'get_format' callback for the FFmpeg decoder context. 
+ * Its primary goal is to select a hardware-accelerated pixel format if available 
+ * and supported by the current configuration.
+ *
+ * The selection process follows two distinct logic paths based on the profile:
+ * 1. **Modern API Path (New Implementation)**: If the profile supports 'filter2', 
+ * it iterates through the codec's hardware configurations. It looks for a 
+ * match between the required hardware device type and a configuration using 
+ * a hardware device context. If a match is found and the context is 
+ * successfully set up, the hardware pixel format is returned.
+ * 2. **Legacy Path (Old Implementation)**: If the modern path is unavailable or 
+ * not supported, it iterates through the provided list of candidate pixel 
+ * formats looking for any format marked with the `AV_PIX_FMT_FLAG_HWACCEL` 
+ * flag. It attempts to initialize the hardware context for the first valid 
+ * match found.
+ *
+ * If no hardware acceleration path is successful, the function falls back to the 
+ * first available software format provided in the `pix_fmts` list.
+ *
+ * @param avctx    The codec context being initialized for decoding.
+ * @param pix_fmts A null-terminated list of possible pixel formats acceptable 
+ * by the decoder.
+ *
+ * @return The selected AVPixelFormat. Returns a hardware pixel format if 
+ * acceleration setup is successful; otherwise, returns the software 
+ * fallback format.
+ */
 enum AVPixelFormat
 hwaccels_decode_get_format(AVCodecContext *avctx,
                            const enum AVPixelFormat *pix_fmts)
@@ -99,6 +148,46 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
     const AVPixFmtDescriptor *desc;
     int i;
 
+    TVHContext *ctx = avctx->opaque;
+    if ((ctx->profile)->has_support_for_filter2) {
+        // new implementation
+        // Guard: delay HW frames context init until dimensions known.
+        // MPEG2 (and others) can call get_format() before sequence header -> width/height still 0.
+        if ((avctx->width <= 0 || avctx->height <= 0) &&
+            (avctx->coded_width <= 0 || avctx->coded_height <= 0)) {
+            // Pick first non-hwaccel format as a safe SW fallback for now.
+            for (i = 0; pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+                const AVPixFmtDescriptor *d = av_pix_fmt_desc_get(pix_fmts[i]);
+                if (!d) continue;
+                if (!(d->flags & AV_PIX_FMT_FLAG_HWACCEL))
+                    return pix_fmts[i];
+            }
+            return pix_fmts[0]; // last-resort
+        }
+        // 1. Iterate through all HW configs supported by this codec
+        for (i = 0; ; i++) {
+            const AVCodecHWConfig *config = avcodec_get_hw_config(avctx->codec, i);
+            if (!config) break;
+            // 2. If the current format in the list matches a format in a 
+            //    Hardware Device Context config, it's a hardware path
+            //    that is matching with input hw device type
+            if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                config->device_type == ctx->iavhwdevtype && 
+                is_pix_fmt_in_list(config->pix_fmt, pix_fmts) &&
+                !hwaccels_decode_setup_context(avctx, config->pix_fmt)) {
+                // Because it came from a HW_DEVICE_CTX config, we know 
+                // it's the hardware-accelerated path.
+                if (!avctx->hw_frames_ctx) {
+                    // hw_frames_ctx is not initialized most likely will fail
+                    tvhwarn(LS_LIBAV,  "Decoder hw_frames_ctx is not available for pix_fmt = %s", av_get_pix_fmt_name(config->pix_fmt));
+                }
+                tvhtrace(LS_TRANSCODE, "hwaccels: [%s] trying pix_fmt: %s", avctx->codec->name, av_get_pix_fmt_name(config->pix_fmt));
+                // return pix_fmt
+                return config->pix_fmt; 
+            }
+        }
+    }
+    // old implementation
     for (i = 0; pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         pix_fmt = pix_fmts[i];
         if ((desc = av_pix_fmt_desc_get(pix_fmt))) {
@@ -113,134 +202,90 @@ hwaccels_decode_get_format(AVCodecContext *avctx,
 }
 
 
-void
-hwaccels_decode_close_context(AVCodecContext *avctx)
-{
-    TVHContext *ctx = avctx->opaque;
-
-    if (ctx->hw_accel_ictx) {
-        switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
-            case AV_PIX_FMT_VAAPI:
-                vaapi_decode_close_context(avctx);
-                break;
-#endif
-            default:
-                break;
-        }
-        ctx->hw_accel_ictx = NULL;
-    }
-}
-
-
 int
-hwaccels_get_scale_filter(AVCodecContext *iavctx, AVCodecContext *oavctx,
-                          char *filter, size_t filter_len)
+hwaccels_decode_get_filters(TVHContext *self, char *filter, size_t filter_len)    
 {
-    TVHContext *ctx = iavctx->opaque;
 
-    if (ctx->hw_accel_ictx) {
-        switch (iavctx->pix_fmt) {
-#if ENABLE_VAAPI
-            case AV_PIX_FMT_VAAPI:
-                return vaapi_get_scale_filter(iavctx, oavctx, filter, filter_len);
+    switch (self->iavhwdevtype) {
+#if ENABLE_NVENC
+        case AV_HWDEVICE_TYPE_CUDA:
+            return nv_get_filters(self, filter, filter_len);
 #endif
-            default:
-                break;
-        }
+#if ENABLE_VAAPI
+        case AV_HWDEVICE_TYPE_VAAPI:
+            return vaapi_get_filters(self, filter, filter_len);
+#endif
+        default:
+            break;
     }
     
-    return -1;
+    return 0;
 }
 
 
 int
-hwaccels_get_deint_filter(AVCodecContext *avctx, char *filter, size_t filter_len)
+hwaccels_download(TVHContext *self, char *filter, size_t filter_len, int skip_format)    
 {
-    const TVHContext *ctx = avctx->opaque;
 
-    if (ctx->hw_accel_ictx) {
-        switch (avctx->pix_fmt) {
+    switch (self->iavhwdevtype) {
 #if ENABLE_VAAPI
-            case AV_PIX_FMT_VAAPI:
-                return vaapi_get_deint_filter(avctx, filter, filter_len);
+        case AV_HWDEVICE_TYPE_VAAPI:
+            // VAAPI will use default : 
+            // NOTE: this must be left last
 #endif
-            default:
-                break;
-        }
+        default:
+            if (skip_format) {
+                if (str_snprintf(filter, filter_len, "hwdownload")) {
+                    return -1;
+                }
+            }
+            else {
+                if (str_snprintf(filter, filter_len, "hwdownload,format=pix_fmts=%s",
+                                av_get_pix_fmt_name(self->iavctx->sw_pix_fmt))) {
+                    return -1;
+                }
+            }
+            break;
     }
-
-    return -1;
+    return 0;
 }
 
-int
-hwaccels_get_denoise_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len)
-{
-    TVHContext *ctx = avctx->opaque;
-
-    if (ctx->hw_accel_ictx) {
-        switch (avctx->pix_fmt) {
-#if ENABLE_VAAPI
-            case AV_PIX_FMT_VAAPI:
-                return vaapi_get_denoise_filter(avctx, value, filter, filter_len);
-#endif
-            default:
-                break;
-        }
-    }
-    
-    return -1;
-}
 
 int
-hwaccels_get_sharpness_filter(AVCodecContext *avctx, int value, char *filter, size_t filter_len)
+hwaccels_upload(TVHContext *self, char *filter, size_t filter_len)    
 {
-    TVHContext *ctx = avctx->opaque;
 
-    if (ctx->hw_accel_ictx) {
-        switch (avctx->pix_fmt) {
+    switch (self->oavhwdevtype) {
 #if ENABLE_VAAPI
-            case AV_PIX_FMT_VAAPI:
-                return vaapi_get_sharpness_filter(avctx, value, filter, filter_len);
+        case AV_HWDEVICE_TYPE_VAAPI:
+            // VAAPI will use default : 
+            // NOTE: this must be left last
 #endif
-            default:
-                break;
-        }
+        default:
+            if (str_snprintf(filter, filter_len, "format=pix_fmts=%s,hwupload",  // =extra_hw_frames=16
+                            av_get_pix_fmt_name(self->oavctx->sw_pix_fmt))) {
+                return -1;
+            }
+            break;
     }
     
-    return -1;
+    return 0;
 }
+
 
 /* encoding ================================================================= */
 
 int
-hwaccels_initialize_encoder_from_decoder(const AVCodecContext *iavctx, AVCodecContext *oavctx)
+hwaccels_encode_setup_context(TVHContext *self)
 {
-    switch (iavctx->pix_fmt) {
-        case AV_PIX_FMT_VAAPI:
-            /* we need to ref hw_frames_ctx of decoder to initialize encoder's codec.
-            Only after we get a decoded frame, can we obtain its hw_frames_ctx */
-            oavctx->hw_frames_ctx = av_buffer_ref(iavctx->hw_frames_ctx);
-            if (!oavctx->hw_frames_ctx) {
-                return AVERROR(ENOMEM);
-            }
-            return 0;
-        case AV_PIX_FMT_YUV420P:
-            break;
-        default:
-            break;
-    }
-    return 0;
-}
-
-
-int
-hwaccels_encode_setup_context(AVCodecContext *avctx)
-{
-    switch (avctx->pix_fmt) {
+    switch (self->oavhwdevtype) {
+#if ENABLE_NVENC
+        case AV_HWDEVICE_TYPE_CUDA:
+            return nv_encode_setup_context(self->oavctx);
+#endif
 #if ENABLE_VAAPI
-        case AV_PIX_FMT_VAAPI:
-            return vaapi_encode_setup_context(avctx);
+        case AV_HWDEVICE_TYPE_VAAPI:
+            return vaapi_encode_setup_context(self->oavctx);
 #endif
         default:
             break;
@@ -250,17 +295,26 @@ hwaccels_encode_setup_context(AVCodecContext *avctx)
 
 
 void
-hwaccels_encode_close_context(AVCodecContext *avctx)
+hwaccels_context_destroy(TVHContext *self)
 {
-    switch (avctx->pix_fmt) {
+    if (!self)
+        return;
+    switch (self->iavhwdevtype) {
+#if ENABLE_NVENC
+        case AV_HWDEVICE_TYPE_CUDA:
+            nv_decode_destroy(self);
+            break;
+#endif
 #if ENABLE_VAAPI
-        case AV_PIX_FMT_VAAPI:
-            vaapi_encode_close_context(avctx);
+        case AV_HWDEVICE_TYPE_VAAPI:
+            vaapi_decode_destroy(self);
             break;
 #endif
         default:
             break;
     }
+    if (self->hw_device_octx)
+        av_buffer_unref(&self->hw_device_octx);
 }
 
 
@@ -275,6 +329,9 @@ hwaccels_init(void)
 void
 hwaccels_done(void)
 {
+#if ENABLE_NVENC
+    nv_done();
+#endif
 #if ENABLE_VAAPI
     vaapi_done();
 #endif

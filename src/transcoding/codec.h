@@ -93,6 +93,15 @@ struct tvh_codec_profile {
     double qscale;
     int profile;
     char *device; // for hardware acceleration
+    /**
+     * Support for tvh_context_open_filters2()
+     * @note
+     * int: 
+     * VALUE - support
+     * - 0 - no support (use tvh_context_open_filters())
+     * - 1 - has support for tvh_context_open_filters2()
+     */
+    int has_support_for_filter2;
     LIST_ENTRY(tvh_codec_profile) link;
 };
 

@@ -66,6 +66,7 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
 #if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     int hwaccel = -1;
     int hwaccel_details = -1;
+    enum AVHWDeviceType avhwdevtype = AV_HWDEVICE_TYPE_NONE;
     if (SCT_ISVIDEO(ssc->es_type)) {
         if (((hwaccel         = tvh_codec_profile_video_get_hwaccel(profile)) < 0) ||
             ((hwaccel_details = tvh_codec_profile_video_get_hwaccel_details(profile)) < 0)) {
@@ -99,23 +100,26 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
             } else if (icodec_id == AV_CODEC_ID_VP8) {
                 icodec = avcodec_find_decoder_by_name("vp8_cuvid");
             }
+            if (icodec) avhwdevtype = AV_HWDEVICE_TYPE_CUDA;
         }
 #endif
 #if ENABLE_VAAPI
         if (!icodec && 
             idnode_is_instance(&profile->idnode, (idclass_t *)&codec_profile_video_class) &&
             hwaccel &&
-            (hwaccel_details == HWACCEL_PRIORITIZE_VAAPI)) {
-            if (icodec_id == AV_CODEC_ID_MPEG2VIDEO) {
-                icodec = avcodec_find_decoder_by_name("mpeg2_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_H264) {
-                icodec = avcodec_find_decoder_by_name("h264_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_HEVC) {
-                icodec = avcodec_find_decoder_by_name("hevc_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_VP9) {
-                icodec = avcodec_find_decoder_by_name("vp9_vaapi");
-            } else if (icodec_id == AV_CODEC_ID_VP8) {
-                icodec = avcodec_find_decoder_by_name("vp8_vaapi");
+            // VAAPI is used also for software encoders
+            (hwaccel_details == HWACCEL_AUTO || hwaccel_details == HWACCEL_PRIORITIZE_VAAPI)) {
+                // VAAPI does not have a standalone decoder named mpeg2_vaapi h264_vaapi hevc_vaapi vp9_vaapi
+                // Instead, VAAPI uses the standard software decoder (e.g., mpeg2video) and "accelerates" it by attaching a hardware device context to it.
+            icodec = avcodec_find_decoder(icodec_id);
+
+            for (int i = 0;; i++) {
+                const AVCodecHWConfig *config = avcodec_get_hw_config(icodec, i);
+                if (!config) break;
+                if (config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX &&
+                    config->device_type == AV_HWDEVICE_TYPE_VAAPI) {
+                    avhwdevtype =  AV_HWDEVICE_TYPE_VAAPI;
+                }
             }
         }
 #endif
@@ -141,6 +145,10 @@ tvh_stream_setup(TVHStream *self, TVHCodecProfile *profile, tvh_ssc_t *ssc)
                                              icodec, ocodec, ssc->ssc_gh))) {
         return -1;
     }
+#if ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
+    // record decoder hw accel (to be used later on, during decode for pix fmt selection)
+    self->context->iavhwdevtype = avhwdevtype;
+#endif // from ENABLE_MMAL | ENABLE_NVENC | ENABLE_VAAPI
     self->type = ssc->es_type = codec_id2streaming_component_type(ocodec->id);
     if (ssc->es_type == SCT_UNKNOWN) {
         tvh_stream_log(self, LOG_ERR, "unable to translate AV type %s [%d] to SCT!", ocodec->name, ocodec->id);
