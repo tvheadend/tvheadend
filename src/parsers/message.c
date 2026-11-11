@@ -154,6 +154,9 @@ ts_recv_hbbtv1_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
   parser_t *prs = pes->es_parser;
   htsmsg_t *apps = dvb_psi_parse_hbbtv(mt, buf, len, NULL);
 
+  /* Forward every repetition, a section lost further down the chain is not sent again. */
+  dvb_table_reset(mt);
+
   if (apps) {
     void *bin;
     size_t binlen;
