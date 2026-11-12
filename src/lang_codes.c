@@ -362,7 +362,7 @@ const lang_code_t lang_codes[] = {
   { "pra", NULL, NULL , "Prakrit languages" },
   { "pus", "ps", NULL , "Pashto" },
   { "qaa", NULL, NULL , "Reserved" },
-  // Note: above is actually range from qaa to qtz
+  // Note: qab..qtz (reserved for local use as well) are added at runtime
   { "que", "qu", NULL , "Quechua" },
   { "raj", NULL, NULL , "Rajasthani" },
   { "rap", NULL, NULL , "Rapanui" },
@@ -501,6 +501,13 @@ lang_code_lookup_t* lang_codes_code2b = NULL;
 lang_code_lookup_t* lang_codes_code1 = NULL;
 lang_code_lookup_t* lang_codes_code2t = NULL;
 
+/* ISO 639-2 reserves qaa..qtz for local use. Broadcasters give them a
+ * meaning of their own, so each one is a code of its own - folding them
+ * into "qaa" made all of them look like the same thing */
+#define LANG_CODES_LOCAL (('t' - 'a' + 1) * 26)
+static lang_code_t lang_codes_local[LANG_CODES_LOCAL];
+static char lang_codes_local_code[LANG_CODES_LOCAL][4];
+
 tvh_mutex_t lang_code_split_mutex = TVH_THREAD_MUTEX_INITIALIZER;
 RB_HEAD(,lang_code_list) lang_code_split_tree = { NULL, NULL, NULL, 0 };
 
@@ -556,6 +563,18 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
       if (c->code2t) _lang_code_lookup_add(lang_codes_code2t, c, _lang_code2t_cmp);
       c++;
     }
+
+    /* qab..qtz ("qaa" is in the table) */
+    for (i = 1; i < LANG_CODES_LOCAL; i++) {
+      char *s = lang_codes_local_code[i];
+      s[0] = 'q';
+      s[1] = 'a' + i / 26;
+      s[2] = 'a' + i % 26;
+      s[3] = '\0';
+      lang_codes_local[i].code2b = s;
+      lang_codes_local[i].desc = "Reserved for local use";
+      _lang_code_lookup_add(lang_codes_code2b, &lang_codes_local[i], _lang_code2b_cmp);
+    }
   }
 
   if (code && *code && len) {
@@ -570,14 +589,6 @@ static const lang_code_t *_lang_code_get ( const char *code, size_t len )
       len--;
     }
     tmp[i] = '\0';
-
-    /* Convert special case (qaa..qtz) */
-    if (*tmp == 'q') {
-      if (tmp[1] >= 'a' && tmp[1] <= 'z' && tmp[2] >= 'a' && tmp[2] <= 'z') {
-        tmp[1] = 'a';
-        tmp[2] = 'a';
-      }
-    }
 
     /* Search */
     if (i) {
