@@ -411,3 +411,19 @@ satip_rtsp_play( http_client_t *hc, const char *pids,
   }
   return r;
 }
+
+int
+satip_rtsp_play_bare( http_client_t *hc )
+{
+  const char *stream = NULL;
+  char stream_buf[32];
+
+  if (hc->hc_rtsp_stream_id >= 0) {
+    snprintf(stream_buf, sizeof(stream_buf), "/stream=%li",
+             hc->hc_rtsp_stream_id);
+    stream = stream_buf;
+  }
+
+  tvhtrace(LS_SATIP, "%04X: PLAY (bare, no params)", hc->hc_id);
+  return rtsp_play(hc, stream, NULL);
+}
