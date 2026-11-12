@@ -26,6 +26,7 @@
 #include "access.h"
 #include "api.h"
 #include "notify.h"
+#include "input/mpegts/dvb.h"
 
 static int
 api_mapper_stop
@@ -80,6 +81,13 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
   if (SCT_ISSUBTITLE(es->es_type)) {
     htsmsg_add_u32(e, "composition_id", es->es_composition_id);
     htsmsg_add_u32(e, "ancillary_id",   es->es_ancillary_id);
+    if (es->es_subtitle_type)
+      htsmsg_add_u32(e, "subtitle_type", es->es_subtitle_type);
+    if (es->es_type == SCT_TEXTSUB && es->es_pid >= DVB_TELETEXT_BASE)
+      htsmsg_add_u32(e, "teletext_page", es->es_pid - DVB_TELETEXT_BASE);
+  } else if (es->es_type == SCT_TELETEXT) {
+    if (es->es_teletext_initial_page)
+      htsmsg_add_u32(e, "teletext_initial_page", es->es_teletext_initial_page);
   } else if (SCT_ISAUDIO(es->es_type)) {
     htsmsg_add_u32(e, "audio_type",     es->es_audio_type);
     if (es->es_audio_version)
