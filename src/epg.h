@@ -151,6 +151,24 @@ typedef uint64_t epg_changes_t;
 #define EPG_CHANGED_FIRST_AIRED    (1ULL<<32)
 #define EPG_CHANGED_COPYRIGHT_YEAR (1ULL<<33)
 #define EPG_CHANGED_RATING_LABEL   (1ULL<<34)
+#define EPG_CHANGED_TYPED_IMAGE(t) (1ULL<<(35 + (t)))
+
+/* Typed programme images, in addition to the untyped image */
+typedef enum epg_image_type {
+  EPG_IMAGE_POSTER,
+  EPG_IMAGE_BACKDROP,
+  EPG_IMAGE_STILL,
+  EPG_IMAGE_TYPE_COUNT
+} epg_image_type_t;
+
+typedef struct epg_image_type_info {
+  const char *xmltv;  ///< XMLTV image type
+  const char *db;     ///< EPG database key
+  const char *dvr;    ///< DVR entry property
+  const char *api;    ///< EPG JSON and HTSP field
+} epg_image_type_info_t;
+
+extern const epg_image_type_info_t epg_image_types[EPG_IMAGE_TYPE_COUNT];
 
 typedef struct epg_object_ops {
   void (*getref)  ( void *o );        ///< Get a reference
@@ -291,6 +309,8 @@ struct epg_broadcast
   lang_str_t                *description;      ///< Description
 
   char                      *image;            ///< Episode image
+  char                      *typed_image[EPG_IMAGE_TYPE_COUNT]; ///< Typed images
+  epg_changes_t              image_changes;    ///< Pending typed-image notifications
   epg_genre_list_t           genre;            ///< Episode genre(s)
   epg_episode_num_t          epnum;            ///< Episode numbering; NOTE: use the accessor routine!
 
@@ -410,6 +430,10 @@ int epg_broadcast_set_genre
   __attribute__((warn_unused_result));
 int epg_broadcast_set_image
   ( epg_broadcast_t *b, const char *i, epg_changes_t *changed )
+  __attribute__((warn_unused_result));
+int epg_broadcast_set_typed_image
+  ( epg_broadcast_t *b, epg_image_type_t type, const char *i,
+    epg_changes_t *changed )
   __attribute__((warn_unused_result));
 int epg_broadcast_set_is_bw
   ( epg_broadcast_t *b, uint8_t bw, epg_changes_t *changed )

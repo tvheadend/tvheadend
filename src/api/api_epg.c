@@ -87,6 +87,7 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
   epg_genre_t *eg;
   dvr_entry_t *de;
   char ubuf[UUID_HEX_SIZE];
+  int t;
 
   if (!ch) return NULL;
 
@@ -181,6 +182,14 @@ api_epg_entry ( epg_broadcast_t *eb, const char *lang, const access_t *perm, con
     htsmsg_add_str(m, "episodeOnscreen", buf);
 
   /* Image */
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+    s = eb->typed_image[t];
+    if (!strempty(s)) {
+      s = imagecache_get_propstr_prio(s, buf, sizeof(buf), (int64_t)eb->start);
+      htsmsg_add_str(m, epg_image_types[t].api, s);
+    }
+  }
+
   s = eb->image;
   if (!strempty(s)) {
     s = imagecache_get_propstr_prio(s, buf, sizeof(buf), (int64_t)eb->start);
