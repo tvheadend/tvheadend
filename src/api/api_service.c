@@ -77,6 +77,8 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
   htsmsg_add_u32(e, "pid",      es->es_pid);
   htsmsg_add_str(e, "type",     streaming_component_type2txt(es->es_type));
   htsmsg_add_str(e, "language", es->es_lang);
+  if (es->es_component_tag_set)
+    htsmsg_add_u32(e, "component_tag", es->es_component_tag);
   if (SCT_ISSUBTITLE(es->es_type)) {
     htsmsg_add_u32(e, "composition_id", es->es_composition_id);
     htsmsg_add_u32(e, "ancillary_id",   es->es_ancillary_id);

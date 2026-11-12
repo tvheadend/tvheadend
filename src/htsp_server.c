@@ -51,7 +51,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 44
+#define HTSP_PROTO_VERSION 45
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -4334,6 +4334,10 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     htsmsg_add_str(c, "type", type);
     if(ssc->es_lang[0])
       htsmsg_add_str(c, "language", ssc->es_lang);
+
+    /* DVB stream identifier: e.g. HbbTV selects components by it */
+    if(ssc->es_component_tag_set)
+      htsmsg_add_u32(c, "component_tag", ssc->es_component_tag);
 
     if(ssc->es_type == SCT_DVBSUB) {
       htsmsg_add_u32(c, "composition_id", ssc->es_composition_id);

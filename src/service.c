@@ -1658,6 +1658,9 @@ void service_save ( service_t *t, htsmsg_t *m )
     if(st->es_type == SCT_TEXTSUB)
       htsmsg_add_u32(sub, "parentpid", st->es_parent_pid);
 
+    if(st->es_component_tag_set)
+      htsmsg_add_u32(sub, "componenttag", st->es_component_tag);
+
     if(SCT_ISVIDEO(st->es_type)) {
       if(st->es_width)
 	      htsmsg_add_u32(sub, "width", st->es_width);
@@ -1844,6 +1847,11 @@ void service_load ( service_t *t, htsmsg_t *c )
       if(type == SCT_TEXTSUB) {
         if(!htsmsg_get_u32(c, "parentpid", &u32))
 	        st->es_parent_pid = u32;
+      }
+
+      if(!htsmsg_get_u32(c, "componenttag", &u32) && u32 <= 0xff) {
+        st->es_component_tag = u32;
+        st->es_component_tag_set = 1;
       }
 
       if(SCT_ISVIDEO(type)) {

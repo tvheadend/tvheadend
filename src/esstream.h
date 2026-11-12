@@ -112,6 +112,9 @@ struct elementary_info {
   uint16_t es_composition_id;
   uint16_t es_ancillary_id;
 
+  uint8_t es_component_tag;      /* DVB stream identifier descriptor */
+  uint8_t es_component_tag_set;  /* es_component_tag is known */
+
   uint16_t es_parent_pid;    /* For subtitle streams originating from
 				a teletext stream. this is the pid
 				of the teletext stream */
