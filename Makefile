@@ -471,6 +471,13 @@ SRCS-IPTV = \
 SRCS-${CONFIG_IPTV} += $(SRCS-IPTV)
 I18N-C += $(SRCS-IPTV)
 
+# DAB (Digital Audio Broadcasting) probe and streaming - libdvbdab
+# (configure: dvbdab, flags come from pkg-config)
+SRCS-DAB = \
+	src/input/mpegts/dab/dab_probe.c \
+	src/input/mpegts/dab/dab_stream.c
+SRCS-${CONFIG_DVBDAB} += $(SRCS-DAB)
+
 # TSfile
 SRCS-TSFILE = \
 	src/input/mpegts/tsfile/tsfile.c \

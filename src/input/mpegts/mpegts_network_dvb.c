@@ -231,6 +231,20 @@ const idclass_t dvb_network_class =
   .ic_caption    = N_("LinuxDVB network"),
   .ic_delete     = dvb_network_class_delete,
   .ic_properties = (const property_t[]){
+#if ENABLE_DVBDAB
+    {
+      .type     = PT_BOOL,
+      .id       = "dab_probe",
+      .name     = N_("Search DAB ensembles"),
+      .desc     = N_("While a mux of this network is scanned, look for DAB "
+                     "ensembles carried in it (ETI-NA, MPE, TS NI) and add "
+                     "a mux for each one. The whole mux is received during "
+                     "the scan; off by default."),
+      .off      = offsetof(dvb_network_t, ln_dab_probe),
+      .def.i    = 0,
+      .opts     = PO_ADVANCED,
+    },
+#endif
     {}
   }
 };
@@ -540,6 +554,9 @@ dvb_network_find_mux
 
   LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
 
+    /* a sub-mux (DAB) shares the tuning of its transponder */
+    if (mpegts_mux_is_submux(mm)) continue;
+
     if (check && mm->mm_enabled != MM_ENABLE) continue;
 
     deltaf = 2000; // 2K/MHz
@@ -611,6 +628,55 @@ dvb_network_find_mux
     mm = mm_alt;
   }
   return (dvb_mux_t *)mm;
+}
+
+/* the DAB mux of this type on the same transponder, in the same PID (and for
+ * MPE: from the same IP source) */
+static dvb_mux_t *
+dvb_network_find_mux_dab
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc, int type )
+{
+  mpegts_mux_t *mm;
+  const dvb_mux_conf_t *c;
+
+  LIST_FOREACH(mm, &ln->mn_muxes, mm_network_link) {
+    if (mm->mm_type != type) continue;
+
+    c = &((dvb_mux_t *)mm)->lm_tuning;
+    if (c->dmc_fe_type != dmc->dmc_fe_type) continue;
+    if (deltaU32(c->dmc_fe_freq, dmc->dmc_fe_freq) > 2000) continue;
+    if (c->u.dmc_fe_qpsk.polarisation != dmc->u.dmc_fe_qpsk.polarisation) continue;
+    if (c->dmc_fe_stream_id != dmc->dmc_fe_stream_id) continue;
+    if (c->dmc_fe_pls_mode != dmc->dmc_fe_pls_mode) continue;
+    if (c->dmc_fe_pls_code != dmc->dmc_fe_pls_code) continue;
+    if (c->dmc_fe_pid != dmc->dmc_fe_pid) continue;
+    if (type == MM_TYPE_DAB_MPE &&
+        (c->dmc_dab_ip != dmc->dmc_dab_ip || c->dmc_dab_port != dmc->dmc_dab_port))
+      continue;
+    return (dvb_mux_t *)mm;
+  }
+  return NULL;
+}
+
+dvb_mux_t *
+dvb_network_find_mux_dab_mpe
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc )
+{
+  return dvb_network_find_mux_dab(ln, dmc, MM_TYPE_DAB_MPE);
+}
+
+dvb_mux_t *
+dvb_network_find_mux_dab_eti
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc )
+{
+  return dvb_network_find_mux_dab(ln, dmc, MM_TYPE_DAB_ETI);
+}
+
+dvb_mux_t *
+dvb_network_find_mux_dab_tsni
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc )
+{
+  return dvb_network_find_mux_dab(ln, dmc, MM_TYPE_DAB_TSNI);
 }
 
 static htsmsg_t *
@@ -885,6 +951,7 @@ dvb_network_create0
   ln = calloc(1, sizeof(dvb_network_t));
   ln->ln_type = dvb_fe_type_by_network_class(idc);
   assert(ln->ln_type != DVB_TYPE_NONE);
+  ln->ln_dab_probe = 0;   /* off unless the network asks for it */
 
   /* Create */
   if (!(ln = (dvb_network_t*)mpegts_network_create0((void*)ln,

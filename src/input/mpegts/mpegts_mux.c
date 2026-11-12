@@ -243,6 +243,12 @@ mpegts_mux_instance_start
     return 0;
   }
 
+#if ENABLE_MPEGTS_DVB
+  /* a sub-mux is tuned as its transponder is now */
+  if (mpegts_mux_is_submux(mm))
+    dvb_mux_submux_sync((dvb_mux_t *)mm);
+#endif
+
   /* Update nicename */
   mpegts_mux_update_nice_name(mm);
 
@@ -262,8 +268,13 @@ mpegts_mux_instance_start
   r = mi->mi_warm_mux(mi, mmi);
   if (r) return r;
   mm->mm_input_pos = 0;
+  if (mpegts_mux_decap_start(mmi))
+    return SM_CODE_TUNING_FAILED;
   r = mi->mi_start_mux(mi, mmi, weight);
-  if (r) return r;
+  if (r) {
+    mpegts_mux_decap_stop(mmi);
+    return r;
+  }
 
   /* Start */
   tvhdebug(LS_MPEGTS, "%s - started", mm->mm_nicename);
@@ -887,6 +898,7 @@ mpegts_mux_stop ( mpegts_mux_t *mm, int force, int reason )
   mi->mi_stopping_mux(mi, mmi);
   mtimer_disarm(&mm->mm_update_pids_timer); /* Stop PID timer */
   mi->mi_stop_mux(mi, mmi);
+  mpegts_mux_decap_stop(mmi); /* the input delivers no more */
   mi->mi_stopped_mux(mi, mmi);
 
   assert(mm->mm_active == NULL);
@@ -1111,6 +1123,10 @@ mpegts_mux_scan_done ( mpegts_mux_t *mm, const char *buf, int res )
   int total = 0, incomplete = 0;
 
   assert(mm->mm_scan_state == MM_SCAN_STATE_ACTIVE);
+
+  /* the end of this scan is put off for the DAB probe */
+  if (mpegts_dab_probe_waiting(mm))
+    return;
 
   /* Log */
   tvh_mutex_lock(&mm->mm_tables_lock);

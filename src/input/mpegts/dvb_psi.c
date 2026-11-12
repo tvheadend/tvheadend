@@ -165,6 +165,11 @@ dvberr:
 static int
 mpegts_mux_tsid_check(mpegts_mux_t *mm, mpegts_table_t *mt, uint16_t tsid)
 {
+  /* DAB muxes use the ensemble ID as TSID: keep one that is set - one
+   * without (ETI-NA found by the probe without its FIC, or a mux added by
+   * hand) takes it from the PAT, otherwise no SDT would ever be accepted */
+  if (mpegts_mux_is_dab(mm) && mm->mm_tsid != MPEGTS_TSID_NONE)
+    return 0;
   if (tsid == 0 && !mm->mm_tsid_accept_zero_value) {
     if (tvhlog_limit(&mm->mm_tsid_loglimit, 2)) {
       tvhwarn(mt->mt_subsys, "%s: %s: TSID zero value detected, ignoring", mt->mt_name, mm->mm_nicename);
@@ -1726,6 +1731,11 @@ dvb_sdt_mux
         tvhtrace(mt->mt_subsys, "%s:    provider changed", mt->mt_name);
       }
     }
+
+    /* DAB: libdvbdab names the ensemble as provider of its services */
+    if (sprov[0] != '\0' && master && mpegts_mux_is_dab(mm) &&
+        dvb_mux_set_dab_ensemble(mm, sprov))
+      tvhdebug(mt->mt_subsys, "%s:  ensemble %s", mt->mt_name, sprov);
 
     /* Update nice name */
     if (save2) {

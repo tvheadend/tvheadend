@@ -368,6 +368,11 @@ int
 mpegts_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
+  /* a sub-mux (DAB) only on inputs that decapsulate it; without a
+   * mux: the state of the input itself (adapter tree) */
+  if (mm && (mm->mm_type < 0 || mm->mm_type >= 32 ||
+             !(mi->mi_mux_types & (1u << mm->mm_type))))
+    return MI_IS_ENABLED_NEVER;
   if ((flags & SUBSCRIPTION_EPG) != 0 && !mi->mi_ota_epg)
     return MI_IS_ENABLED_NEVER;
   if ((flags & SUBSCRIPTION_USERSCAN) == 0) {
@@ -848,6 +853,7 @@ mpegts_input_open_service
   }
   /* Register PIDs */
   tvh_mutex_lock(&s->s_stream_mutex);
+
   if (s->s_type == STYPE_STD) {
 
     if (s->s_components.set_pmt_pid == SERVICE_PMT_AUTO)
@@ -1212,6 +1218,12 @@ mpegts_input_recv_packets
 
   if (sb->sb_ptr == 0)
     return;
+
+  /* a sub-mux: the stream it carries is made first */
+  if (mmi->mmi_decap && (flags & MPEGTS_DATA_DECAPSULATED) == 0) {
+    mpegts_mux_decap_feed(mmi, sb);
+    return;
+  }
 retry:
   len2 = 0;
   off  = 0;
@@ -1486,6 +1498,10 @@ mpegts_input_process
         tsdebug_check_tspkt(mm, tsb, llen);
       goto done;
     }
+
+    /* Secondary scan callback (DAB probe) */
+    if (mm->mm_secondary_cb)
+      mm->mm_secondary_cb(mm->mm_secondary_ctx, tsb, llen);
 
     /* Find PID */
     if ((mp = mpegts_mux_find_pid(mm, pid, 0))) {
@@ -1896,13 +1912,23 @@ mpegts_input_stream_status
   st->max_weight  = w;
 
   st->pids = mpegts_pid_alloc();
-  RB_FOREACH(mp, &mm->mm_pids, mp_link) {
-    if (mp->mp_pid == MPEGTS_TABLES_PID)
-      continue;
-    if (mp->mp_pid == MPEGTS_FULLMUX_PID)
-      st->pids->all = 1;
-    else
-      mpegts_pid_add(st->pids, mp->mp_pid, 0);
+  /* a sub-mux: the PID of its transponder it is carried in */
+#if ENABLE_MPEGTS_DVB
+  if (mpegts_mux_is_submux(mm)) {
+    const dvb_mux_t *dm = (const dvb_mux_t *)mm;
+    if (dm->lm_tuning.dmc_fe_pid > 0)
+      mpegts_pid_add(st->pids, dm->lm_tuning.dmc_fe_pid, 0);
+  } else
+#endif
+  {
+    RB_FOREACH(mp, &mm->mm_pids, mp_link) {
+      if (mp->mp_pid == MPEGTS_TABLES_PID)
+        continue;
+      if (mp->mp_pid == MPEGTS_FULLMUX_PID)
+        st->pids->all = 1;
+      else
+        mpegts_pid_add(st->pids, mp->mp_pid, 0);
+    }
   }
 
   tvh_mutex_lock(&mmi->tii_stats_mutex);
@@ -2079,6 +2105,7 @@ mpegts_input_create0
   LIST_INSERT_HEAD(&tvh_inputs, (tvh_input_t*)mi, ti_link);
   
   /* Defaults */
+  mi->mi_mux_types            = 1u << MM_TYPE_TS;
   mi->mi_is_enabled           = mpegts_input_is_enabled;
   mi->mi_display_name         = mpegts_input_display_name;
   mi->mi_get_weight           = mpegts_input_get_weight;

@@ -43,6 +43,9 @@ void mpegts_network_scan_queue_del ( mpegts_mux_t *mm );
 void mpegts_network_scan_mux_fail    ( mpegts_mux_t *mm );
 void mpegts_network_scan_mux_done    ( mpegts_mux_t *mm );
 void mpegts_network_scan_mux_partial ( mpegts_mux_t *mm );
+/* the end of a scan that was put off (the DAB probe) */
+void mpegts_network_scan_mux_end     ( mpegts_mux_t *mm,
+                                       mpegts_mux_scan_result_t result, int weight );
 void mpegts_network_scan_mux_cancel  ( mpegts_mux_t *mm, int reinsert );
 void mpegts_network_scan_mux_active  ( mpegts_mux_t *mm );
 int  mpegts_network_scan_mux_reactivate ( mpegts_mux_t *mm );

@@ -67,6 +67,7 @@ mpegts_pid_done(mpegts_apids_t *pids)
   free(pids->pids);
   pids->pids = NULL;
   pids->alloc = pids->count = 0;
+  pids->all = 0;
 }
 
 mpegts_apids_t *

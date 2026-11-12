@@ -28,6 +28,11 @@ typedef struct dvb_network
    * Network type
    */
   dvb_fe_type_t ln_type;
+
+  /*
+   * Search DAB ensembles while scanning (libdvbdab)
+   */
+  int ln_dab_probe;
 } dvb_network_t;
 
 typedef struct dvb_mux
@@ -40,11 +45,22 @@ typedef struct dvb_mux
   dvb_mux_conf_t lm_tuning;
 
   /*
+   * DAB: label of the ensemble (from the scan)
+   */
+  char *lm_dab_ensemble;
+
+  /*
    * Frequencies for Mapping
    */
   uint32_t mm_dvb_satip_dvbt_freq;
   uint32_t mm_dvb_satip_dvbc_freq;
   uint32_t mm_dvb_satip_dvbs_freq;
+
+  /*
+   * A sub-mux (DAB): the uuid of the transponder it is carried in,
+   * whose tuning it follows (dvb_mux_submux_sync())
+   */
+  char *lm_parent;
 } dvb_mux_t;
 
 /*
@@ -81,8 +97,25 @@ dvb_network_t *dvb_network_create0
 dvb_mux_t *dvb_network_find_mux
   ( dvb_network_t *ln, dvb_mux_conf_t *dmc, uint32_t onid, uint32_t tsid, int check, int approx_match );
 
+dvb_mux_t *dvb_network_find_mux_dab_mpe
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc );
+
+dvb_mux_t *dvb_network_find_mux_dab_eti
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc );
+
+dvb_mux_t *dvb_network_find_mux_dab_tsni
+  ( dvb_network_t *ln, const dvb_mux_conf_t *dmc );
+
 const idclass_t *dvb_network_mux_class(mpegts_network_t *mn);
 int dvb_network_get_orbital_pos(mpegts_network_t *mn);
+
+/* the PID a sub-mux is carried in; 0 for a mux that is not a sub-mux */
+uint16_t   dvb_mux_stream_pid    ( mpegts_mux_t *mm );
+
+/* sub-muxes follow the tuning of the transponder they are carried in */
+dvb_mux_t *dvb_mux_submux_parent ( dvb_mux_t *sm );
+void       dvb_mux_submux_link   ( dvb_mux_t *sm, const dvb_mux_t *parent );
+int        dvb_mux_submux_sync   ( dvb_mux_t *sm );
 
 void dvb_network_scanfile_set ( dvb_network_t *ln, const char *id );
 

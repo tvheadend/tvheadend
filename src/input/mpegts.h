@@ -141,6 +141,7 @@ struct mpegts_pcr {
 
 #define MPEGTS_DATA_CC_RESTART		(1<<0)
 #define MPEGTS_DATA_REMOVE_SCRAMBLED	(1<<1)
+#define MPEGTS_DATA_DECAPSULATED	(1<<2) /* the stream of a sub-mux, already made */
 
 typedef int (*mpegts_table_callback_t)
   ( mpegts_table_t*, const uint8_t *buf, int len, int tableid );
@@ -410,6 +411,22 @@ enum mpegts_mux_enable
   MM_ENABLE  =  1,
 };
 
+enum mpegts_mux_type
+{
+  MM_TYPE_TS       = 0,  /* Standard transport stream (default) */
+  MM_TYPE_DAB_MPE  = 2,  /* DAB via MPE (IP multicast in MPE sections) */
+  MM_TYPE_DAB_ETI  = 3,  /* DAB via ETI-NA (direct ETI encapsulation) */
+  MM_TYPE_DAB_TSNI = 6,  /* DAB via TS NI V.11 (incrementing table_id 0x69-0x9A) */
+};
+
+/* a mux carried inside another one (in a PID of its transponder) */
+#define mpegts_mux_is_submux(mm) ((mm)->mm_type != MM_TYPE_TS)
+
+/* a DAB ensemble converted to a TS (libdvbdab) */
+#define mpegts_mux_is_dab(mm) \
+  ((mm)->mm_type == MM_TYPE_DAB_MPE || (mm)->mm_type == MM_TYPE_DAB_ETI || \
+   (mm)->mm_type == MM_TYPE_DAB_TSNI)
+
 enum mpegts_mux_epg_flag
 {
   MM_EPG_DISABLE,
@@ -514,6 +531,17 @@ struct mpegts_mux
   int                         mm_descrambler_flush;
 
   /*
+   * Secondary scanning (DAB/ISI probes)
+   */
+  void                       *mm_secondary_ctx;
+  void (*mm_secondary_cb)(void *ctx, const uint8_t *pkt, int len);
+
+  /*
+   * DAB probe context (for DAB-MPE/ETI detection)
+   */
+  void                       *mm_dab_probe_ctx;
+
+  /*
    * Functions
    */
 
@@ -534,6 +562,7 @@ struct mpegts_mux
    */
   char    *mm_crid_authority;
   int      mm_enabled;
+  int      mm_type;       /* mpegts_mux_type: TS, DAB */
   int      mm_epg;
   char    *mm_epg_module_id;
   char    *mm_charset;
@@ -658,7 +687,26 @@ struct mpegts_mux_instance
 
   int             mmi_start_weight;
   int             mmi_tune_failed;
+
+  void           *mmi_decap;      /* decapsulation of a sub-mux (DAB), see below */
+  sbuf_t          mmi_decap_out;  /* its output: the TS of the sub-mux */
 };
+
+/*
+ * A sub-mux (DAB) is carried in a PID of its transponder: while its instance
+ * runs, the packets the input delivers are turned into the transport stream
+ * of the sub-mux (mpegts_input_recv_packets), for every input alike. The input
+ * only has to ask for the PID of the stream (dvb_mux_stream_pid()).
+ */
+#if ENABLE_DVBDAB
+int  mpegts_mux_decap_start ( mpegts_mux_instance_t *mmi );
+void mpegts_mux_decap_stop  ( mpegts_mux_instance_t *mmi );
+void mpegts_mux_decap_feed  ( mpegts_mux_instance_t *mmi, sbuf_t *sb );
+#else
+#define mpegts_mux_decap_start(mmi)    (0)
+#define mpegts_mux_decap_stop(mmi)     ((void)0)
+#define mpegts_mux_decap_feed(mmi, sb) ((void)0)
+#endif
 
 struct mpegts_mux_sub
 {
@@ -679,6 +727,8 @@ struct mpegts_input
   tvh_input_t;
 
   int mi_enabled;
+  uint32_t mi_mux_types; /* bit per mpegts_mux_type this input delivers
+                            (TS; sub-mux types need the decapsulation) */
 
   int mi_instance;
 
@@ -1189,6 +1239,24 @@ extern LIST_HEAD(mpegts_listeners, mpegts_listener) mpegts_listeners;
  */
 void eit_nit_callback(mpegts_table_t *mt, uint16_t nbid, const char *name, uint32_t priv);
 void eit_sdt_callback(mpegts_table_t *mt, uint32_t priv);
+
+/*
+ * DAB probe (libdvbdab; without it no DAB detection)
+ */
+#if ENABLE_DVBDAB
+void mpegts_dab_probe_start(mpegts_mux_t *mm);
+int  mpegts_dab_probe_complete(mpegts_mux_t *mm, int evaluate);
+int  mpegts_dab_probe_wait(mpegts_mux_t *mm, int result, int weight);
+int  mpegts_dab_probe_waiting(mpegts_mux_t *mm);
+int  dvb_mux_set_dab_ensemble(mpegts_mux_t *mm, const char *label);
+#else
+#define mpegts_dab_probe_start(mm)              ((void)0)
+#define mpegts_dab_probe_complete(mm, evaluate) (0)
+#define mpegts_dab_probe_wait(mm, result, weight) (0)
+#define mpegts_dab_probe_waiting(mm)              (0)
+#define dvb_mux_set_dab_ensemble(mm, label)     (0)
+#endif
+
 
 #endif /* __TVH_MPEGTS_H__ */
 
