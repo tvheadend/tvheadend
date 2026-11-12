@@ -160,7 +160,7 @@ jobs:
             case "${{ matrix.distro }}" in
               ubuntu*|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross libpcre2-dev
+                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper lsb-release libc6-dev-armel-cross libpcre2-dev
                 ;;
               fedora*)
                 dnf -y update
@@ -176,7 +176,7 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             export VUE_FILE_CACHE=/artifacts/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -a '${{ matrix.arch }}l'
+            AUTOBUILD_CONFIGURE_EXTRA="--disable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -a '${{ matrix.arch }}l'
             cp ../tvheadend*.deb /artifacts/
             support/cloudsmith.sh -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v4
