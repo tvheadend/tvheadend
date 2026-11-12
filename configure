@@ -31,6 +31,7 @@ OPTIONS=(
   "hdhomerun_server:yes"
   "hdhomerun_static:yes"
   "iptv:yes"
+  "t2mi:yes"
   "tsfile:yes"
   "dvbscan:yes"
   "timeshift:yes"
