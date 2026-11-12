@@ -370,6 +370,7 @@ SRCS-2 += \
 SRCS-2 += \
 	src/muxer.c \
 	src/muxer/muxer_pass.c \
+	src/muxer/muxer_pass_timeline.c \
 	src/muxer/ebml.c \
 	src/muxer/muxer_mkv.c \
 	src/muxer/muxer_audioes.c
