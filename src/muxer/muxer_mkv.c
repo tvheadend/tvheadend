@@ -318,6 +318,11 @@ mk_build_tracks(mk_muxer_t *mk, streaming_start_t *ss)
       codec_id = "V_VP9";
       mk->cluster_maxsize = 10000000;
       break;
+    case SCT_AV1:
+      tracktype = 1;
+      codec_id = "V_AV1";
+      mk->cluster_maxsize = 10000000;
+      break;
 
     case SCT_THEORA:
       tracktype = 1;
