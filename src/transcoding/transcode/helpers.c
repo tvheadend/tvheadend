@@ -239,8 +239,22 @@ static TVHContextHelper TVHMPEG2VIDEOEncoder = {
 static int
 tvh_h264_meta(TVHContext *self, AVPacket *avpkt, th_pkt_t *pkt)
 {
+#if ENABLE_V4L2M2M
+    int condition = 0;
+    if (self->use_pkt_data_new_extradata) {
+        // when we use AV_PKT_DATA_NEW_EXTRADATA we need to bypass the AV_PKT_FLAG_KEY condition
+        condition = (avpkt->size > 6);
+    }
+    else {
+        condition = ((avpkt->flags & AV_PKT_FLAG_KEY) && (avpkt->size > 6));
+    }
+    if (condition &&
+        (RB32(avpkt->data) == 0x00000001 || RB24(avpkt->data) == 0x000001))
+#else
     if ((avpkt->flags & AV_PKT_FLAG_KEY) && (avpkt->size > 6) &&
-        (RB32(avpkt->data) == 0x00000001 || RB24(avpkt->data) == 0x000001)) {
+        (RB32(avpkt->data) == 0x00000001 || RB24(avpkt->data) == 0x000001))
+#endif
+    {
         const uint8_t *p = avpkt->data;
         const uint8_t *end = p + avpkt->size;
         const uint8_t *nal_start, *nal_end;
