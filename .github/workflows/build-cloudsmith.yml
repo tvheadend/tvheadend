@@ -83,20 +83,10 @@ jobs:
     # Run steps on a matrix
     strategy:
       matrix:
-       # aarch64 is not emulated here: it builds natively on arm64
+       # used for armv6l only, armv7l and aarch64 build natively on arm64
        # runners in build-deb-native below.
-       arch: [ armv7 ]
-       # Add ubuntu26.04 after https://github.com/uraimo/run-on-arch-action/pull/177
-       distro: [ stretch, buster, bullseye, bookworm, trixie, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
-       include:
-         - arch: armv6
-           distro: stretch
-         - arch: armv6
-           distro: buster
-         - arch: armv6
-           distro: bullseye
-         - arch: armv6
-           distro: bookworm
+       arch: [ armv6 ]
+       distro: [ stretch, buster, bullseye, bookworm, trixie ]
 
     steps:
       - uses: actions/checkout@v3
@@ -107,7 +97,7 @@ jobs:
         with:
           name: ${{ needs.vue.outputs.artifact_name }}
           path: artifacts/.vuecache
-      - uses: uraimo/run-on-arch-action@v3
+      - uses: uraimo/run-on-arch-action@515b24c29a476b81c58c5062470385aabef32b51
         name: Build artifact
         id: build
         with:
@@ -170,7 +160,7 @@ jobs:
             case "${{ matrix.distro }}" in
               ubuntu*|stretch|buster|bullseye|bookworm|trixie)
                 apt-get update -y
-                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross libpcre2-dev
+                DEBIAN_FRONTEND=noninteractive apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper lsb-release libc6-dev-armel-cross libpcre2-dev
                 ;;
               fedora*)
                 dnf -y update
@@ -186,9 +176,8 @@ jobs:
           run: |
             git config --global --add safe.directory /home/runner/work/tvheadend/tvheadend || true
             export VUE_FILE_CACHE=/artifacts/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -a '${{ matrix.arch }}l'
+            AUTOBUILD_CONFIGURE_EXTRA="--disable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -a '${{ matrix.arch }}l'
             cp ../tvheadend*.deb /artifacts/
-            if [ '${{ matrix.distro }}' = 'buster' ] && [ '${{ matrix.arch }}' = 'armv7' ]; then update-ca-certificates --fresh; fi
             support/cloudsmith.sh -f '../tvheadend*.deb'
       - uses: actions/upload-artifact@v4
         with:
@@ -209,39 +198,53 @@ jobs:
         # the job names of the QEMU builds they replace, so the required
         # status checks on master keep matching by name.
         container:
-          - ["i386/ubuntu:xenial", "i386-ubuntu-xenial"]
-          - ["ubuntu:xenial", "ubuntu-xenial"]
-          - ["ubuntu:bionic", "ubuntu-bionic"]
-          - ["ubuntu:focal", "ubuntu-focal"]
-          - ["ubuntu:jammy", "ubuntu-jammy"]
-          - ["ubuntu:noble", "ubuntu-noble"]
-          - ["ubuntu:plucky", "ubuntu-plucky"]
-          - ["ubuntu:questing", "ubuntu-questing"]
-          - ["ubuntu:resolute", "ubuntu-resolute"]
+          - ["amd64/debian:stretch", "debian-stretch"]
+          - ["amd64/debian:buster", "debian-buster"]
+          - ["amd64/debian:bullseye", "debian-bullseye"]
+          - ["amd64/debian:bookworm", "debian-bookworm"]
+          - ["amd64/debian:trixie", "debian-trixie"]
+          - ["amd64/debian:sid", "debian-sid"]
+          - ["amd64/ubuntu:xenial", "ubuntu-xenial"]
+          - ["amd64/ubuntu:bionic", "ubuntu-bionic"]
+          - ["amd64/ubuntu:focal", "ubuntu-focal"]
+          - ["amd64/ubuntu:jammy", "ubuntu-jammy"]
+          - ["amd64/ubuntu:noble", "ubuntu-noble"]
+          - ["amd64/ubuntu:plucky", "ubuntu-plucky"]
+          - ["amd64/ubuntu:questing", "ubuntu-questing"]
+          - ["amd64/ubuntu:resolute", "ubuntu-resolute"]
           - ["i386/debian:stretch", "i386-debian-stretch"]
-          - ["debian:stretch", "debian-stretch"]
           - ["i386/debian:buster", "i386-debian-buster"]
-          - ["debian:buster", "debian-buster"]
           - ["i386/debian:bullseye", "i386-debian-bullseye"]
-          - ["debian:bullseye", "debian-bullseye"]
           - ["i386/debian:bookworm", "i386-debian-bookworm"]
-          - ["debian:bookworm", "debian-bookworm"]
           - ["i386/debian:trixie", "i386-debian-trixie"]
-          - ["debian:trixie", "debian-trixie"]
           - ["i386/debian:sid", "i386-debian-sid"]
-          - ["debian:sid", "debian-sid"]
+          - ["i386/ubuntu:xenial", "i386-ubuntu-xenial"]
           - ["arm64v8/debian:stretch", "arm64-debian-stretch", "stretch aarch64"]
           - ["arm64v8/debian:buster", "arm64-debian-buster", "buster aarch64"]
           - ["arm64v8/debian:bullseye", "arm64-debian-bullseye", "bullseye aarch64"]
           - ["arm64v8/debian:bookworm", "arm64-debian-bookworm", "bookworm aarch64"]
+          - ["arm64v8/debian:trixie", "arm64-debian-trixie"]
+          - ["arm64v8/debian:sid", "arm64-debian-sid"]
           - ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial", "ubuntu16.04 aarch64"]
           - ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic", "ubuntu18.04 aarch64"]
           - ["arm64v8/ubuntu:focal", "arm64-ubuntu-focal", "ubuntu20.04 aarch64"]
           - ["arm64v8/ubuntu:jammy", "arm64-ubuntu-jammy", "ubuntu22.04 aarch64"]
           - ["arm64v8/ubuntu:noble", "arm64-ubuntu-noble", "ubuntu24.04 aarch64"]
-          - ["arm64v8/ubuntu:latest", "arm64-ubuntu-latest", "ubuntu_latest aarch64"]
+          - ["arm64v8/ubuntu:resolute", "arm64-ubuntu-resolute", "ubuntu_latest aarch64"]
+          - ["arm32v7/debian:stretch", "armv7-debian-stretch", "stretch armv7"]
+          - ["arm32v7/debian:buster", "armv7-debian-buster", "buster armv7"]
+          - ["arm32v7/debian:bullseye", "armv7-debian-bullseye", "bullseye armv7"]
+          - ["arm32v7/debian:bookworm", "armv7-debian-bookworm", "bookworm armv7"]
+          - ["arm32v7/debian:trixie", "armv7-debian-trixie", "trixie armv7"]
+          - ["arm32v7/debian:sid", "armv7-debian-sid"]
+          - ["arm32v7/ubuntu:xenial", "armv7-ubuntu-xenial", "ubuntu16.04 armv7"]
+          - ["arm32v7/ubuntu:bionic", "armv7-ubuntu-bionic", "ubuntu18.04 armv7"]
+          - ["arm32v7/ubuntu:focal", "armv7-ubuntu-focal", "ubuntu20.04 armv7"]
+          - ["arm32v7/ubuntu:jammy", "armv7-ubuntu-jammy", "ubuntu22.04 armv7"]
+          - ["arm32v7/ubuntu:noble", "armv7-ubuntu-noble", "ubuntu24.04 armv7"]
+          - ["arm32v7/ubuntu:resolute", "armv7-ubuntu-resolute"]
     steps:
-      - name: Workaround for for Docker CVE-2026-31431 mitigation breaking i386
+      - name: Workaround for Docker CVE-2026-31431 mitigation breaking i386
         if: startsWith(matrix.container[0], 'i386')
         run: |  # https://docs.docker.com/engine/release-notes/29/#known-issues
           sudo curl -sSfo /etc/docker/seccomp-profile-v0.2.1.json 'https://raw.githubusercontent.com/moby/profiles/seccomp/v0.2.1/seccomp/default.json'
@@ -301,7 +304,7 @@ jobs:
             mkdir -p .staticlib
             export STATICLIB_CACHE=/workspace/.staticlib
             export VUE_FILE_CACHE=/workspace/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || '' }}
+            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || (startsWith(matrix.container[0], 'arm32v7') && '-a armv7l') || '' }}
         run: docker exec -e PCLOUD_TOKEN build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
