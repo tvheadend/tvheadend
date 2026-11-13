@@ -317,7 +317,7 @@ jobs:
 
     strategy:
       matrix:
-        releasever: ["37", "38", "39", "40", "41", "42", "43", "44", "rawhide"]
+        releasever: ["37", "38", "39", "40", "41", "42", "43", "44", "45", "rawhide"]
     container:
       image: "fedora:${{ matrix.releasever }}"
     steps:
