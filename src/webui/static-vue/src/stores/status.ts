@@ -15,7 +15,7 @@
  *     from the endpoint name.
  *   - No pagination — the response is `{ entries: [...] }` end-to-end.
  *
- * On any matching Comet message we refetch the whole list, but with
+ * On a matching Comet message we refetch the whole list, but with
  * two anti-flicker measures:
  *
  *   1. **Silent refetch** — Comet-driven refetches never set the
@@ -36,12 +36,27 @@
  *      belt-and-suspenders — but it also makes selection survive a
  *      refresh without our `watch(store.entries)` filter ever firing.
  *
- * The ExtJS UI goes one step further with per-tab in-place patching
- * driven by the notification fields directly (no API call at all —
- * the notification carries the changed fields). That eliminates the
- * network round-trip, which matters for installations with hundreds
- * of HTSP clients but is overkill for typical home tvheadend; the
- * full-refetch path here is simpler.
+ * The exception is the `input_status` update. Once a second the
+ * server pushes the full row of each active mux with `update: 1`
+ * (mpegts_input_status_timer). The push and a status/inputs read
+ * build the row the same way, and both read and reset the input
+ * bandwidth counter (mpegts_input_stream_status). A refetch would
+ * therefore measure only the time since the push and cut the next
+ * pushed value short. The store applies such a pushed row to the
+ * row with the same uuid in place, as the ExtJS UI does. It
+ * refetches only when no row has that uuid yet, or while `error`
+ * is set, so the next push retries a failed refetch. Subscriptions
+ * and connections keep the refetch.
+ *
+ * A refetch that still runs (on a reload, for an unknown uuid or
+ * while `error` is set) decides which rows exist and fills the
+ * rows that have not received a push. A row that has received a
+ * push keeps its pushed values, because the reply's bps covers
+ * only the time since that push, and the next push brings the
+ * whole row again. The store remembers pushed rows by row object,
+ * so a row that a refetch drops is forgotten with it. The last
+ * release forgets them all, as the pushes stop with the listener,
+ * so the next consumer's fetch fills every row again.
  *
  * The factory returns a Pinia setup-store. Cached at module scope by
  * `endpoint` so the second mount of the same view gets the same store
@@ -51,10 +66,10 @@
  * The store outlives its views, so the Comet listener is ref-counted:
  * each mounted consumer calls `retain()` and the returned release on
  * unmount. The first retain subscribes, the last release unsubscribes.
- * Without that, one visit to Home or a Status page kept refetching
- * the list on every notification (input_status arrives every second
- * per active mux) from any page. Consumers fetch on mount, which
- * covers the notifications missed while nobody was listening.
+ * Without that, one visit to Home or a Status page kept handling
+ * every notification (input_status arrives every second per active
+ * mux) from any page. Consumers fetch on mount, which covers the
+ * notifications missed while nobody was listening.
  */
 
 import { computed, ref } from 'vue'
@@ -85,9 +100,10 @@ export interface UseStatusStore<Row extends StatusEntry = StatusEntry> {
    * every notification. Default (silent: false) is for initial
    * mount and any user-initiated retry.
    *
-   * A failed silent fetch keeps the current rows and only sets
-   * `error`, which stays until a fetch succeeds. A failed
-   * non-silent fetch clears the rows.
+   * On a successful fetch, a row that has received an input_status
+   * push keeps its values (see the header). A failed silent fetch
+   * keeps the current rows and only sets `error`, which stays until
+   * a fetch succeeds. A failed non-silent fetch clears the rows.
    */
   fetch: (options?: { silent?: boolean }) => Promise<void>
   /*
@@ -125,6 +141,9 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
 
       let reqId = 0
       let refetchTimer: ReturnType<typeof setTimeout> | undefined
+      /* Rows that have received an input_status push. A refetch
+       * leaves them as they are (see the header). */
+      let pushed = new WeakSet<object>()
 
       /*
        * Merge a fresh result list onto the current entries array.
@@ -132,6 +151,7 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
        *     present, mutate its fields with Object.assign — same
        *     object identity, reactive props update one-by-one,
        *     PrimeVue keeps the row DOM mounted, selection holds.
+       *     A row that has received a push is kept as it is.
        *   - For new keys, append the row.
        *   - Rows in the old array whose keys aren't in the new list
        *     are dropped.
@@ -149,7 +169,7 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
           const key = incoming[keyField]
           const existing = byKey.get(key)
           if (existing) {
-            Object.assign(existing, incoming)
+            if (!pushed.has(existing)) Object.assign(existing, incoming)
             out.push(existing)
           } else {
             out.push(incoming)
@@ -192,15 +212,46 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
         }
       }
 
+      /* Only input_status pushes whole rows (see the header). */
+      const applyUpdates = notificationClass === 'input_status'
+
       /*
-       * Comet listener — refetch silently on any notification
-       * carrying `reload`, an `update*` field, or a `delete` array.
-       * Silent mode skips the loading flag, avoiding the
-       * loading-overlay flash on every 2-second bandwidth update.
-       * The status notification shapes vary per class (input_status
-       * uses `update`, subscriptions uses `updateEntry` + `id`, etc.)
-       * so this is a permissive check rather than tight type
-       * narrowing.
+       * Copy a pushed row onto the row with the same key and mark
+       * that row as pushed. The push is the status/inputs row plus
+       * the Comet class and the `update` flag, which are skipped.
+       * Keeping the row object keeps the grid selection and the
+       * bandwidth chart on it, and the reactive fields update one
+       * by one. Returns false when no row has the key.
+       */
+      function applyUpdate(note: NotificationMessage): boolean {
+        const key = note[keyField]
+        if (key === undefined || key === null) return false
+        const row = (entries.value as StatusEntry[]).find((r) => r[keyField] === key)
+        if (!row) return false
+        for (const [field, value] of Object.entries(note)) {
+          if (field === 'notificationClass' || field === 'update') continue
+          row[field] = value
+        }
+        pushed.add(row)
+        return true
+      }
+
+      /*
+       * Comet listener. A `reload` or a non-empty `create`, `change`
+       * or `delete` refetches silently, even when the message also
+       * has `update`. An `updateEntry`, which only subscriptions
+       * send, refetches silently too. Silent mode skips the loading
+       * flag, avoiding the loading-overlay flash on every bandwidth
+       * update. An input_status `update` is applied in place. It
+       * refetches only when no row matches (for example for a mux
+       * that started after the last fetch) or while `error` is set.
+       * The latter retries a failed refetch, such as the one for the
+       * reload sent when a mux stops, as long as another mux still
+       * pushes. With no mux left, the stopped mux's row stays until
+       * the next reload or until a view mounts again. The status
+       * notification shapes vary per class (input_status uses
+       * `update`, subscriptions uses `updateEntry` + `id`, etc.) so
+       * this is a permissive check rather than tight type narrowing.
        */
       function onNotification(msg: NotificationMessage) {
         const note = msg as IdnodeNotification & {
@@ -208,15 +259,16 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
           updateEntry?: unknown
           update?: unknown
         }
-        if (
-          !note.reload &&
-          !note.updateEntry &&
-          !note.update &&
-          (note.create?.length ?? 0) === 0 &&
-          (note.change?.length ?? 0) === 0 &&
-          (note.delete?.length ?? 0) === 0
-        ) {
-          return
+        const structural =
+          !!note.reload ||
+          (note.create?.length ?? 0) > 0 ||
+          (note.change?.length ?? 0) > 0 ||
+          (note.delete?.length ?? 0) > 0
+        if (!structural) {
+          if (!note.update && !note.updateEntry) return
+          /* Only fetch() sets `error`, when the latest read of the
+           * list failed, so the rows may not match the server. */
+          if (note.update && applyUpdates && applyUpdate(note) && !error.value) return
         }
         clearTimeout(refetchTimer)
         refetchTimer = globalThis.setTimeout(() => {
@@ -240,6 +292,9 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
           unsubscribe = undefined
           clearTimeout(refetchTimer)
           refetchTimer = undefined
+          /* Pushes stop with the listener, so the next fetch fills
+           * every row. */
+          pushed = new WeakSet()
         }
       }
 
