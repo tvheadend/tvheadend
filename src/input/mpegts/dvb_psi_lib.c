@@ -167,15 +167,16 @@ mpegts_psi_section_reassemble
   }
 
   if(pusi) {
-    uint8_t len2 = tsb[off++];
-    uint8_t off2 = off;
+    /* pointer_field: the end of the previous section comes first */
+    int len2 = tsb[off++];
+    int off2 = off;
     off += len2;
     if (off > 188)
       goto wrong_state;
-    while (off2 < len2) {
+    while (len2 > 0) {
       r = mpegts_psi_section_reassemble0(mt, logprefix, tsb + off2, len2, 0, crc, cb, opaque);
-      if (r < 0)
-        goto wrong_state;
+      if (r <= 0)
+        break; /* nothing to finish: the new section below still starts */
       off2 += r;
       len2 -= r;
     }
