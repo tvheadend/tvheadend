@@ -66,6 +66,7 @@ typedef struct tsfix {
   int tf_hasvideo;
   int tf_wait_for_video;
   int64_t tf_tsref;
+  int64_t tf_last_dts_norm;
   int64_t tf_start_time;
   int64_t dts_offset;
   int dts_offset_apply;
@@ -97,6 +98,18 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
   }
   return r;
 }
+
+/**
+ * Offset of a timestamp from the 33 bit reference clock, folded into
+ * [0, PTS_MASK]. The wrap of the result is compensated by the
+ * tfs_dts_epoch handling in normalize_ts().
+ */
+static int64_t
+tsfix_ts_offset(int64_t ref, int64_t ts)
+{
+  return (ts - ref) & PTS_MASK;
+}
+
 
 /**
  *
@@ -176,6 +189,7 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
   TAILQ_INIT(&tf->tf_backlog);
 
   tf->tf_tsref = PTS_UNSET;
+  tf->tf_last_dts_norm = 0;
   tf->tf_hasvideo = hasvideo;
   tf->tf_wait_for_video = vwait;
 }
@@ -238,16 +252,25 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   /* Subtract the transport wide start offset */
   if (tf->dts_offset_apply)
-    dts = pts_diff(ref, pkt->pkt_dts + tf->dts_offset);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts + tf->dts_offset);
   else
-    dts = pts_diff(ref, pkt->pkt_dts);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
-    if (dts < 0 || pkt->pkt_err) {
+    /* Timestamps before the reference clock fold to the top of the
+     * range, as does a first packet arriving more than half a cycle
+     * into the session. Resolve the fold relative to the session
+     * position rather than the reference, which also puts a stream
+     * starting in a later cycle in the matching epoch. */
+    d = tf->tf_last_dts_norm +
+        (((dts - tf->tf_last_dts_norm + PTS_MASK / 2 + 1) & PTS_MASK) -
+         (PTS_MASK / 2 + 1));
+    if (d < 0 || pkt->pkt_err) {
       /* Early packet with negative time stamp, drop those */
       tsfix_packet_drop(tfs, pkt, "negative/error");
       return;
     }
+    tfs->tfs_dts_epoch = d - dts;
   } else {
     const int64_t nlimit =      -1; /* allow negative values - rounding errors? */
     int64_t low          =   90000; /* one second */
@@ -289,6 +312,8 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   dts += tfs->tfs_dts_epoch;
   tfs->tfs_last_dts_norm = dts;
+  if (ref == tf->tf_tsref)
+    tf->tf_last_dts_norm = dts;
 
   if(pkt->pkt_pts != PTS_UNSET) {
     /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
