@@ -412,6 +412,8 @@ linuxdvb_en50494_tune
     }
     if (ret != 0) {
       tvherror(LS_EN50494, "error send tune command");
+      /* the sequence ends at 13V, also when the command failed */
+      linuxdvb_diseqc_set_volt(lsp, 0);
       break;
     }
 
