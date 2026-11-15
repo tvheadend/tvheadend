@@ -55,7 +55,9 @@ const access = useAccessStore()
  * Finished's because most fields are computed/read-only on a failed
  * recording. */
 const editList = computed(() =>
-  access.data?.admin ? 'playcount,retention,removal,owner,comment' : 'retention,removal,comment',
+  access.data?.admin
+    ? 'playcount,retention,removal,owner,comment,info_path,video_path'
+    : 'retention,removal,comment',
 )
 
 const { kodiFmt, editingUuid, editingUuids, gridRef, editorLevel, openEditor, closeEditor } = useDvrListView({
