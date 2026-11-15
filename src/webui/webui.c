@@ -2167,9 +2167,20 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
   blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
   htsbuf_append_str(hq, "[");
   tvh_mutex_lock(&global_lock);
+  /* No ?profile=: /stream/channel picks the profile from the requesting
+   * access entry's profile list, or the default profile (profile_find_by_list). */
   CHANNEL_FOREACH(ch) {
     if (!channel_access(ch, perm, 0) || !ch->ch_enabled)
       continue;
+    if (snprintf(url, sizeof(url), "http://%s:%u/stream/channel/%s%s%s",
+                 http_ip,
+                 tvheadend_webui_port,
+                 channel_get_uuid(ch, ubuf),
+                 use_auth ? "?auth=" : "",
+                 use_auth ? perm->aa_auth : "") >= (int)sizeof(url)) {
+      tvherror(LS_WEBUI, "HDHomeRun lineup: stream URL too long, skipping channel");
+      continue;
+    }
     if (!is_first)
       htsbuf_append_str(hq, ", \n");
     name = channel_get_ename(ch, buf1, sizeof(buf1), blank, flags);
@@ -2180,12 +2191,6 @@ hdhomerun_server_lineup(http_connection_t *hc, const char *remain, void *opaque)
     chnum_str = channel_get_number_as_str(ch, chnum, sizeof(chnum));
     htsbuf_append_and_escape_jsonstr(hq, chnum_str ? chnum_str : "0");
     htsbuf_append_str(hq, ", \"URL\" : ");
-    sprintf(url, "http://%s:%u/stream/channel/%s?profile=pass%s%s",
-            http_ip,
-            tvheadend_webui_port,
-            channel_get_uuid(ch, ubuf),
-            use_auth? "&auth=" : "",
-            use_auth ? perm->aa_auth : "");
     htsbuf_append_and_escape_jsonstr(hq, url);
     htsbuf_append_str(hq, "}");
     is_first = 0;
