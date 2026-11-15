@@ -300,6 +300,19 @@ epggrab_channel_autolink( epggrab_channel_t *ec )
 {
   channel_t *ch;
   int chnum = 0;  //Default to not searching channel numbers.
+  /* TVHplayer emits one guide channel per TV channel, using its UUID.
+   * This is an explicit destination, not a name to match against every
+   * channel. In particular, an existing link or a deleted destination must
+   * not fall through to the quadratic heuristic scan under global_lock.
+   */
+  if (ec->id && !strncmp(ec->id, "tvhplayer.", 10) &&
+      strlen(ec->id + 10) == UUID_HEX_SIZE - 1 &&
+      uuid_hexvalid(ec->id + 10)) {
+    ch = channel_find_by_uuid(ec->id + 10);
+    if (epggrab_channel_check(ec, ch))
+      return epggrab_channel_link(ec, ch, NULL);
+    return 0;
+  }
   if (ec->mod->type == EPGGRAB_INT || ec->mod->type == EPGGRAB_EXT)
   {
     chnum = ((epggrab_module_ext_t *)ec->mod)->xmltv_chnum;  //This is the grabber 'Channel numbers (heuristic)' flag.
