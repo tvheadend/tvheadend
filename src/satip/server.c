@@ -51,6 +51,19 @@ int satip_server_match_uuid(const char *uuid)
 }
 
 /*
+ * http_server_ip as a URL host (IPv6 in brackets), NULL if not set
+ */
+static const char *
+satips_url_host(char *buf, size_t buflen)
+{
+  if (http_server_ip && strchr(http_server_ip, ':')) {
+    snprintf(buf, buflen, "[%s]", http_server_ip);
+    return buf;
+  }
+  return http_server_ip;
+}
+
+/*
  * XML description
  */
 
@@ -225,12 +238,12 @@ satip_server_http_xml(http_connection_t *hc)
              tvheadend_webroot ?: "", cs);
   }
 
-  char* own_server_ip = http_server_ip;
+  const char *own_server_ip = satips_url_host(addrbuf, sizeof(addrbuf));
 
   if(own_server_ip == NULL) {
-    tcp_get_str_from_ip(hc->hc_self, addrbuf, sizeof(addrbuf));
+    tcp_get_url_host_from_ip(hc->hc_self, addrbuf, sizeof(addrbuf));
     own_server_ip = addrbuf;
-  } 
+  }
 
   snprintf(buf, sizeof(buf), MSG,
            config_get_server_name(),
@@ -389,7 +402,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
     }
 
     char addrbuf[100];
-    char* own_server_ip = http_server_ip;
+    const char *own_server_ip = satips_url_host(addrbuf, sizeof(addrbuf));
 
     if (!own_server_ip) {
       struct sockaddr_storage dst;
@@ -400,7 +413,7 @@ DEVICEID.SES.COM: %d\r\n\r\n"
       inet_pton(AF_INET, "239.255.255.250", &IP_AS_V4(&dst, addr));
 
       if (udp_get_local_ip_for_dest(&dst, &local) == 0) {
-        tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
+        tcp_get_url_host_from_ip(&local, addrbuf, sizeof(addrbuf));
         own_server_ip = addrbuf;
       } else {
         tvherror(LS_SATIPS, "Unable to determine local IP for SAT>IP announce");
@@ -451,12 +464,12 @@ CONFIGID.UPNP.ORG: 0\r\n"
   }
 
   char addrbuf[100];
-  char* own_server_ip = http_server_ip;
+  const char *own_server_ip = satips_url_host(addrbuf, sizeof(addrbuf));
 
   if (!own_server_ip) {
     struct sockaddr_storage local;
     if (udp_get_local_ip_for_dest(dst, &local) == 0) {
-      tcp_get_str_from_ip(&local, addrbuf, sizeof(addrbuf));
+      tcp_get_url_host_from_ip(&local, addrbuf, sizeof(addrbuf));
       own_server_ip = addrbuf;
     } else {
       tvherror(LS_SATIPS, "Unable to determine local IP for SAT>IP discover reply");
@@ -1030,10 +1043,21 @@ static void satip_server_init_common(const char *prefix, int announce)
   if (satip_server_rtsp_port <= 0)
     return;
 
-  if (http_server_port == 0) {
-    http_server_ip = satip_server_bindaddr ? strdup(satip_server_bindaddr) : NULL;
-    tcp_server_t* srv = http_server;
-    http_server_port = ntohs(IP_PORT(srv->bound));
+  if (http_server_port == 0 && http_server) {
+    struct sockaddr_storage bound;
+    tcp_server_bound(http_server, &bound);
+    if (satip_server_bindaddr) {
+      http_server_ip = strdup(satip_server_bindaddr);
+    } else if (!tcp_server_onall(http_server)) {
+      /* HTTP is bound to one address: advertise that one, not the interface
+       * a discovery request happened to arrive on */
+      char ip[64];
+      tcp_get_str_from_ip(&bound, ip, sizeof(ip));
+      http_server_ip = strdup(ip);
+    } else {
+      http_server_ip = NULL;
+    }
+    http_server_port = ntohs(IP_PORT(bound));
   }
 
   descramble = satip_server_conf.satip_descramble;

@@ -309,7 +309,7 @@ rtsp_check_urlbase(char *u)
       return NULL;
 #endif
   }
-  if (strcmp(u, rtsp_ip)) {
+  if (rtsp_ip != NULL && strcmp(u, rtsp_ip)) {
     if (rtsp_nat_ip == NULL)
       return NULL;
     if (rtsp_is_nat_active()) {
@@ -362,11 +362,11 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
     goto end;
   /* note: it initializes hc->hc_local_ip, too */
   local = http_check_local_ip(hc) > 0;
-  if (local || satip_server_conf.satip_nat_name_force) {
-    used_ip = rtsp_nat_ip;
-    if (rtsp_nat_port > 0)
-      used_port = rtsp_nat_port;
-  }
+  if (!local && !satip_server_conf.satip_nat_name_force)
+    goto end;
+  used_ip = rtsp_nat_ip;
+  if (rtsp_nat_port > 0)
+    used_port = rtsp_nat_port;
 
   if (used_ip == NULL || used_ip[0] == '*' || used_ip[0] == '\0') {
     if (local) {
@@ -378,6 +378,10 @@ rtsp_conn_ip(http_connection_t *hc, char *buf, size_t buflen, int *port)
   }
 
 end:
+  if (used_ip == NULL) {
+    tcp_get_url_host_from_ip(hc->hc_self, buf, buflen);
+    used_ip = buf;
+  }
   *port = used_port > 0 ? used_port : 554;
   return used_ip;
 }
@@ -1388,7 +1392,7 @@ error:
  *
  */
 static void
-rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
+rtsp_describe_header(session_t *rs, htsbuf_queue_t *q, const char *ip)
 {
   unsigned long mono = mclk();
   int dvbt, dvbc;
@@ -1397,8 +1401,8 @@ rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
   htsbuf_qprintf(q, "o=- %lu %lu IN %s %s\r\n",
                  rs ? (unsigned long)rs->nsession : mono - 123,
                  mono,
-                 strchr(rtsp_ip, ':') ? "IP6" : "IP4",
-                 rtsp_ip);
+                 strchr(ip, ':') ? "IP6" : "IP4",
+                 ip);
 
   tvh_mutex_lock(&global_lock);
   htsbuf_qprintf(q, "s=SatIPServer:1 %d",
@@ -1420,7 +1424,7 @@ rtsp_describe_header(session_t *rs, htsbuf_queue_t *q)
 }
 
 static void
-rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
+rtsp_describe_session(session_t *rs, htsbuf_queue_t *q, const char *ip)
 {
   char buf[4096];
 
@@ -1428,7 +1432,7 @@ rtsp_describe_session(session_t *rs, htsbuf_queue_t *q)
     htsbuf_qprintf(q, "a=control:stream=%d\r\n", rs->stream);
   htsbuf_qprintf(q, "a=tool:%s\r\n", config_get_http_server_name());
   htsbuf_append_str(q, "m=video 0 RTP/AVP 33\r\n");
-  if (strchr(rtsp_ip, ':'))
+  if (strchr(ip, ':'))
     htsbuf_append_str(q, "c=IN IP6 ::0\r\n");
   else
     htsbuf_append_str(q, "c=IN IP4 0.0.0.0\r\n");
@@ -1453,8 +1457,8 @@ rtsp_process_describe(http_connection_t *hc)
   char *u = tvh_strdupa(hc->hc_url);
   session_t *rs;
   htsbuf_queue_t q;
-  char buf[96], buf1[46];
-  const char *used_ip = NULL;
+  char buf[128], buf1[64], sdpbuf[64];
+  const char *used_ip = NULL, *sdp_ip;
   int r = HTTP_STATUS_BAD_REQUEST;
   int stream, first = 1, valid, used_port;
 
@@ -1468,6 +1472,17 @@ rtsp_process_describe(http_connection_t *hc)
     goto error;
 
   stream = rtsp_parse_args(hc, u);
+
+  /* without a configured RTSP address, describe the one the client used */
+  sdp_ip = rtsp_ip;
+  if (sdp_ip == NULL) {
+    tcp_get_url_host_from_ip(hc->hc_self, sdpbuf, sizeof(sdpbuf));
+    sdp_ip = sdpbuf;
+    if (sdpbuf[0] == '[') {
+      sdpbuf[strlen(sdpbuf) - 1] = '\0';
+      sdp_ip = sdpbuf + 1;
+    }
+  }
 
   tvh_mutex_lock(&rtsp_lock);
 
@@ -1495,10 +1510,10 @@ rtsp_process_describe(http_connection_t *hc)
         strcmp(hc->hc_peer_ipstr, rs->peer_ipstr))
       continue;
     if (first) {
-      rtsp_describe_header(hc->hc_session ? rs : NULL, &q);
+      rtsp_describe_header(hc->hc_session ? rs : NULL, &q, sdp_ip);
       first = 0;
     }
-    rtsp_describe_session(rs, &q);
+    rtsp_describe_session(rs, &q, sdp_ip);
   }
   tvh_mutex_unlock(&rtsp_lock);
 
@@ -1507,7 +1522,7 @@ rtsp_process_describe(http_connection_t *hc)
       http_error(hc, HTTP_STATUS_BAD_SESSION);
       return 0;
     }
-    rtsp_describe_header(NULL, &q);
+    rtsp_describe_header(NULL, &q, sdp_ip);
   }
 
   http_arg_init(&args);
@@ -1546,7 +1561,7 @@ rtsp_process_play(http_connection_t *hc, int cmd)
 {
   session_t *rs;
   int errcode = HTTP_STATUS_BAD_REQUEST, valid = 0, i, stream, used_port;
-  char buf[256], buf1[46], *u = tvh_strdupa(hc->hc_url);
+  char buf[256], buf1[64], *u = tvh_strdupa(hc->hc_url);
   const char *used_ip = NULL;
   http_arg_list_t args;
 
@@ -1897,8 +1912,7 @@ void satip_server_rtsp_init
     reg = 1;
   }
   s = rtsp_ip;
-  if(bindaddr != NULL)
-    rtsp_ip = strdup(bindaddr);
+  rtsp_ip = bindaddr ? strdup(bindaddr) : NULL;
   free(s);
   rtsp_port = port;
   rtsp_descramble = descramble;
