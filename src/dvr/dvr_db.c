@@ -18,6 +18,7 @@
  */
 
 #include <ctype.h>
+#include <sys/stat.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -3591,6 +3592,36 @@ dvr_entry_class_filename_get(void *o)
 }
 
 static int
+dvr_entry_regular_file_exists(const char *path)
+{
+  struct stat st;
+  return path && *path && !stat(path, &st) && S_ISREG(st.st_mode);
+}
+
+static const void *
+dvr_entry_class_info_path_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  char ubuf[UUID_HEX_SIZE];
+
+  if (hts_settings_buildpath(prop_sbuf, sizeof(prop_sbuf), "dvr/log/%s",
+                             idnode_uuid_as_str(&de->de_id, ubuf)) ||
+      !dvr_entry_regular_file_exists(prop_sbuf))
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
+}
+
+static const void *
+dvr_entry_class_video_path_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  const char *filename = dvr_get_filename(de);
+
+  prop_ptr = dvr_entry_regular_file_exists(filename) ? filename : "";
+  return &prop_ptr;
+}
+
+static int
 dvr_entry_class_channel_set(void *o, const void *v)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
@@ -4829,6 +4860,25 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Filename used by the entry."),
       .get      = dvr_entry_class_filename_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "info_path",
+      .name     = N_("Info file (JSON)"),
+      .desc     = N_("Full path of the JSON file in the configuration "
+                     "directory that stores this entry. Empty if the "
+                     "file does not exist."),
+      .get      = dvr_entry_class_info_path_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_EXPERT,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "video_path",
+      .name     = N_("Video file"),
+      .desc     = N_("Full path of the recorded video file. Empty if "
+                     "the file does not exist."),
+      .get      = dvr_entry_class_video_path_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_EXPERT,
     },
     {
       .type     = PT_STR,
