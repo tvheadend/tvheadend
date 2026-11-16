@@ -8,7 +8,7 @@
  *
  * Adds the Status-specific seams that DataGrid stays agnostic of:
  *   - useStatusStore wiring (single fetch on mount + Comet-driven
- *     re-fetch via `notificationClass`, listened to only while the
+ *     updates via `notificationClass`, listened to only while the
  *     grid is mounted); no pagination. The data
  *     is fully client-held, so the table runs non-lazy
  *     (`:lazy="false"`) and PrimeVue sorts rows client-side on
@@ -154,8 +154,8 @@ function toggleSelect(row: Row) {
  * singleton, same breakpoint as DataGrid. */
 const isPhone = useIsPhone()
 /* Hold the store's Comet listener only while mounted. The store
- * is shared and outlives the view, so without the release every
- * notification kept refetching from any page. */
+ * is shared and outlives the view, so without the release the
+ * store kept handling every notification from any page. */
 let releaseStore: (() => void) | undefined
 onMounted(() => {
   releaseStore = store.retain()
