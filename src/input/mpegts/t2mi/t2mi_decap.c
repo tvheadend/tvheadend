@@ -58,10 +58,12 @@ struct t2mi_decap {
   int      cfg_format;
   int      cfg_plp;
 
-  t2mi_decap_output_cb output;
-  void    *output_aux;
-  t2mi_decap_log_cb log;
-  void    *log_aux;
+  struct {
+    t2mi_decap_output_cb output;
+    void    *output_aux;
+    t2mi_decap_log_cb log;
+    void    *log_aux;
+  } cb;
 
   t2mi_decap_stats_t stats;
 
@@ -71,31 +73,42 @@ struct t2mi_decap {
   int      last_cc;
 
   /* T2-MI packet reassembly */
-  uint8_t  t2buf[T2MI_BUF_SIZE];
-  int      t2len;
-  int      t2sync;
-  int      last_pkt_count;
-  int      t2mi_valid;          /* CRC-valid packets seen (probe counter) */
+  struct {
+    uint8_t buf[T2MI_BUF_SIZE];
+    int     len;
+    int     sync;
+    int     last_pkt_count;
+    int     valid;              /* CRC-valid packets seen (probe counter) */
+  } t2;
 
-  /* baseband frame -> inner TS state (selected PLP) */
-  uint8_t  frag[UP_MAX];
-  int      fraglen;
-  int      frag_valid;
+  /* baseband frame -> inner TS state (selected PLP): a user packet
+   * fragmented across baseband frames */
+  struct {
+    uint8_t buf[UP_MAX];
+    int     len;
+    int     valid;
+  } frag;
 
   /* TS piping state */
-  uint8_t  pipebuf[PIPE_BUF_SIZE];
-  int      pipelen;
-  int      pipesync;
-  int      pipe_run;            /* consecutive stride hits (probe counter) */
+  struct {
+    uint8_t buf[PIPE_BUF_SIZE];
+    int     len;
+    int     sync;
+    int     run;                /* consecutive stride hits (probe counter) */
+  } pipe;
 
   /* format autodetection */
-  uint8_t *probe;
-  int      probe_cnt;
-  int      probing;
+  struct {
+    uint8_t *buf;
+    int      cnt;
+    int      active;
+  } probe;
 
   /* output accumulation */
-  uint8_t  out[OUT_BUF_SIZE];
-  int      outlen;
+  struct {
+    uint8_t buf[OUT_BUF_SIZE];
+    int     len;
+  } out;
 };
 
 /* **************************************************************************
@@ -111,7 +124,8 @@ t2mi_crc_init(void)
 {
   uint32_t c32;
   uint8_t c8;
-  int i, j;
+  int i;
+  int j;
 
   if (t2mi_crc_ready)
     return;
@@ -150,8 +164,16 @@ t2mi_crc8(const uint8_t *data, int len)
  * Logging / output helpers
  * *************************************************************************/
 
+/* format the message here, so the log callback gets plain text */
+#define T2MI_LOG_MAX        256
 #define t2mi_log(td, sev, fmt...) \
-  do { if ((td)->log) (td)->log((td)->log_aux, sev, ##fmt); } while (0)
+  do { \
+    if ((td)->cb.log) { \
+      char _t2mi_msg[T2MI_LOG_MAX]; \
+      snprintf(_t2mi_msg, sizeof(_t2mi_msg), fmt); \
+      (td)->cb.log((td)->cb.log_aux, sev, _t2mi_msg); \
+    } \
+  } while (0)
 
 #define t2mi_log_once(td, flag, sev, fmt...) \
   do { \
@@ -164,10 +186,10 @@ t2mi_crc8(const uint8_t *data, int len)
 static void
 t2mi_decap_out_flush(t2mi_decap_t *td)
 {
-  if (td->outlen > 0) {
-    if (td->output)
-      td->output(td->output_aux, td->out, td->outlen);
-    td->outlen = 0;
+  if (td->out.len > 0) {
+    if (td->cb.output)
+      td->cb.output(td->cb.output_aux, td->out.buf, td->out.len);
+    td->out.len = 0;
   }
 }
 
@@ -175,14 +197,14 @@ static void
 t2mi_decap_out_packet(t2mi_decap_t *td, const uint8_t *hdr, int hdrlen,
                       const uint8_t *data, int datalen)
 {
-  if (td->probing)
+  if (td->probe.active)
     return;
-  if (td->outlen + TS_PKT > OUT_BUF_SIZE)
+  if (td->out.len + TS_PKT > OUT_BUF_SIZE)
     t2mi_decap_out_flush(td);
   if (hdrlen > 0)
-    memcpy(td->out + td->outlen, hdr, hdrlen);
-  memcpy(td->out + td->outlen + hdrlen, data, datalen);
-  td->outlen += hdrlen + datalen;
+    memcpy(td->out.buf + td->out.len, hdr, hdrlen);
+  memcpy(td->out.buf + td->out.len + hdrlen, data, datalen);
+  td->out.len += hdrlen + datalen;
   td->stats.out_packets++;
 }
 
@@ -190,97 +212,178 @@ t2mi_decap_out_packet(t2mi_decap_t *td, const uint8_t *hdr, int hdrlen,
  * Baseband frame processing (T2-MI packet type 0x00)
  * *************************************************************************/
 
+/* how the user packets (the inner TS packets) of a PLP are laid out */
+typedef struct t2mi_up_layout {
+  int size;                     /* bytes per user packet */
+  int hem;                      /* high efficiency mode: sync byte removed */
+  int npd;                      /* null packet deletion: trailing DNP byte */
+} t2mi_up_layout_t;
+
 static void
-t2mi_decap_emit_up(t2mi_decap_t *td, const uint8_t *up, int up_size, int hem,
-                   int npd)
+t2mi_decap_emit_up(t2mi_decap_t *td, const uint8_t *up,
+                   const t2mi_up_layout_t *lay)
 {
   static const uint8_t sync = 0x47;
 
-  if (hem) {
+  if (lay->hem) {
     /* [187 payload bytes][DNP] - sync byte removed upstream */
     t2mi_decap_out_packet(td, &sync, 1, up, TS_PKT - 1);
-    if (npd)
+    if (lay->npd)
       td->stats.dnp_packets += up[TS_PKT - 1];
   } else {
     /* [CRC-8 in sync position][187 payload bytes][ISSY][DNP] */
     t2mi_decap_out_packet(td, &sync, 1, up + 1, TS_PKT - 1);
-    if (npd)
-      td->stats.dnp_packets += up[up_size - 1];
+    if (lay->npd)
+      td->stats.dnp_packets += up[lay->size - 1];
   }
 }
 
-static void
-t2mi_decap_bbframe(t2mi_decap_t *td, const uint8_t *pay, int paylen)
+/* is this baseband frame of the PLP being extracted?  The first frame of
+ * a matching PLP selects it. */
+static int
+t2mi_decap_plp_selected(t2mi_decap_t *td, uint8_t plp_id)
 {
-  const uint8_t *bb, *df;
-  uint8_t plp_id, matype1, mode;
-  int hem, npd, upl, dfl, syncd, df_bytes, up_size, pos, need;
-
-  if (paylen < BBFRAME_SUBHDR + BBHEADER_SIZE)
-    return;
-
-  plp_id = pay[1];
-  td->stats.plp_seen_mask[plp_id >> 5] |= 1U << (plp_id & 31);
-
-  /* PLP selection */
-  if (td->stats.plp < 0) {
-    if (td->cfg_plp != T2MI_DECAP_PLP_AUTO && td->cfg_plp != plp_id)
-      return;
-    if (!td->probing) {
-      td->stats.plp = plp_id;
-      t2mi_log(td, 1, "PLP %d selected", plp_id);
-    }
-  } else if (plp_id != td->stats.plp) {
-    return;
+  if (td->stats.plp >= 0)
+    return plp_id == td->stats.plp;
+  if (td->cfg_plp != T2MI_DECAP_PLP_AUTO && td->cfg_plp != plp_id)
+    return 0;
+  if (!td->probe.active) {
+    td->stats.plp = plp_id;
+    t2mi_log(td, 1, "PLP %d selected", plp_id);
   }
+  return 1;
+}
 
-  bb = pay + BBFRAME_SUBHDR;
-  matype1 = bb[0];
-
-  /* CRC-8 of the first 9 BBHEADER bytes XOR MODE (EN 302 755 5.1.7) */
-  mode = t2mi_crc8(bb, 9) ^ bb[9];
-  if (mode & ~1) {
-    td->stats.crc8_errors++;
-    td->frag_valid = 0;
-    return;
-  }
-  hem = mode == 1;
+/* Read the user packet layout from the BBHEADER.  Returns -1 when the PLP
+ * carries no transport stream or a user packet length that can't be
+ * handled. */
+static int
+t2mi_decap_up_layout(t2mi_decap_t *td, const uint8_t *bb, uint8_t plp_id,
+                     t2mi_up_layout_t *lay)
+{
+  uint8_t matype1 = bb[0];
+  int upl;
+  int dfl;
 
   if ((matype1 >> 6) != 3) {
     /* GFPS/GCS/GSE - no transport stream to extract */
     t2mi_log_once(td, T2MI_LO_NONTS, 2,
                   "PLP %d does not carry a transport stream (TS/GS %d)",
                   plp_id, matype1 >> 6);
+    return -1;
+  }
+  lay->npd = (matype1 >> 2) & 1;
+
+  upl = (bb[2] << 8) | bb[3];
+  dfl = (bb[4] << 8) | bb[5];
+
+  if (!td->probe.active)
+    t2mi_log_once(td, T2MI_LO_MODE, 0,
+                  "PLP %d mode adaptation: %s, %s%sUPL %d, DFL %d bits",
+                  plp_id, lay->hem ? "high efficiency" : "normal",
+                  ((matype1 >> 3) & 1) ? "ISSY, " : "",
+                  lay->npd ? "NPD, " : "", upl, dfl);
+
+  if (lay->hem) {
+    /* sync byte removed; ISSY (if any) is carried in the reused
+     * UPL/SYNC header fields, not in the data field */
+    lay->size = TS_PKT - 1 + (lay->npd ? 1 : 0);
+    return 0;
+  }
+  lay->size = upl / 8;
+  if ((upl & 7) || lay->size < TS_PKT || lay->size > UP_MAX) {
+    t2mi_log_once(td, T2MI_LO_BADUPL, 2,
+                  "unsupported user packet length %d bits", upl);
+    td->frag.valid = 0;
+    return -1;
+  }
+  return 0;
+}
+
+/* a data field where no user packet starts: it only continues the
+ * fragment carried over from the previous baseband frame */
+static void
+t2mi_decap_continue_up(t2mi_decap_t *td, const uint8_t *df, int df_bytes,
+                       const t2mi_up_layout_t *lay)
+{
+  if (!td->frag.valid || td->frag.len <= 0)
+    return;
+  if (td->frag.len + df_bytes > lay->size) {
+    td->frag.valid = 0;
     return;
   }
-  npd = (matype1 >> 2) & 1;
+  memcpy(td->frag.buf + td->frag.len, df, df_bytes);
+  td->frag.len += df_bytes;
+  if (td->frag.len == lay->size) {
+    t2mi_decap_emit_up(td, td->frag.buf, lay);
+    td->frag.len = 0;
+  }
+}
 
-  upl   = (bb[2] << 8) | bb[3];
+/* a data field whose first user packet starts at byte 'pos' */
+static void
+t2mi_decap_data_field(t2mi_decap_t *td, const uint8_t *df, int df_bytes,
+                      int pos, const t2mi_up_layout_t *lay)
+{
+  /* complete the user packet fragmented across baseband frames; with an
+   * inconsistent SYNCD the fragment is dropped silently */
+  if (td->frag.valid && td->frag.len > 0 &&
+      lay->size - td->frag.len == pos) {
+    memcpy(td->frag.buf + td->frag.len, df, pos);
+    t2mi_decap_emit_up(td, td->frag.buf, lay);
+  }
+  td->frag.len = 0;
+  td->frag.valid = 1;
+
+  /* whole user packets */
+  while (pos + lay->size <= df_bytes) {
+    t2mi_decap_emit_up(td, df + pos, lay);
+    pos += lay->size;
+  }
+
+  /* trailing fragment continues in the next baseband frame */
+  if (pos < df_bytes) {
+    td->frag.len = df_bytes - pos;
+    memcpy(td->frag.buf, df + pos, td->frag.len);
+  }
+}
+
+static void
+t2mi_decap_bbframe(t2mi_decap_t *td, const uint8_t *pay, int paylen)
+{
+  const uint8_t *bb;
+  t2mi_up_layout_t lay;
+  uint8_t plp_id;
+  uint8_t mode;
+  int dfl;
+  int syncd;
+  int df_bytes;
+  int pos;
+
+  if (paylen < BBFRAME_SUBHDR + BBHEADER_SIZE)
+    return;
+
+  plp_id = pay[1];
+  td->stats.plp_seen_mask[plp_id >> 5] |= 1U << (plp_id & 31);
+  if (!t2mi_decap_plp_selected(td, plp_id))
+    return;
+
+  bb = pay + BBFRAME_SUBHDR;
+
+  /* CRC-8 of the first 9 BBHEADER bytes XOR MODE (EN 302 755 5.1.7) */
+  mode = t2mi_crc8(bb, 9) ^ bb[9];
+  if (mode & ~1) {
+    td->stats.crc8_errors++;
+    td->frag.valid = 0;
+    return;
+  }
+  lay.hem = mode == 1;
+  if (t2mi_decap_up_layout(td, bb, plp_id, &lay) < 0)
+    return;
+
   dfl   = (bb[4] << 8) | bb[5];
   syncd = (bb[7] << 8) | bb[8];
 
-  if (!td->probing)
-    t2mi_log_once(td, T2MI_LO_MODE, 0,
-                  "PLP %d mode adaptation: %s, %s%sUPL %d, DFL %d bits",
-                  plp_id, hem ? "high efficiency" : "normal",
-                  ((matype1 >> 3) & 1) ? "ISSY, " : "",
-                  npd ? "NPD, " : "", upl, dfl);
-
-  if (hem) {
-    /* sync byte removed; ISSY (if any) is carried in the reused
-     * UPL/SYNC header fields, not in the data field */
-    up_size = TS_PKT - 1 + (npd ? 1 : 0);
-  } else {
-    up_size = upl / 8;
-    if ((upl & 7) || up_size < TS_PKT || up_size > UP_MAX) {
-      t2mi_log_once(td, T2MI_LO_BADUPL, 2,
-                    "unsupported user packet length %d bits", upl);
-      td->frag_valid = 0;
-      return;
-    }
-  }
-
-  df = bb + BBHEADER_SIZE;
   df_bytes = (dfl + 7) / 8;
   if (df_bytes > paylen - BBFRAME_SUBHDR - BBHEADER_SIZE)
     df_bytes = paylen - BBFRAME_SUBHDR - BBHEADER_SIZE;
@@ -289,50 +392,16 @@ t2mi_decap_bbframe(t2mi_decap_t *td, const uint8_t *pay, int paylen)
 
   if (syncd == 0xffff) {
     /* no user packet starts in this data field - pure continuation */
-    if (td->frag_valid && td->fraglen > 0) {
-      if (td->fraglen + df_bytes <= up_size) {
-        memcpy(td->frag + td->fraglen, df, df_bytes);
-        td->fraglen += df_bytes;
-        if (td->fraglen == up_size) {
-          t2mi_decap_emit_up(td, td->frag, up_size, hem, npd);
-          td->fraglen = 0;
-        }
-      } else {
-        td->frag_valid = 0;
-      }
-    }
+    t2mi_decap_continue_up(td, bb + BBHEADER_SIZE, df_bytes, &lay);
     return;
   }
 
   pos = syncd / 8;
   if (pos > df_bytes) {
-    td->frag_valid = 0;
+    td->frag.valid = 0;
     return;
   }
-
-  /* complete the user packet fragmented across baseband frames */
-  if (td->frag_valid && td->fraglen > 0) {
-    need = up_size - td->fraglen;
-    if (need == pos) {
-      memcpy(td->frag + td->fraglen, df, need);
-      t2mi_decap_emit_up(td, td->frag, up_size, hem, npd);
-    }
-    /* else: inconsistent SYNCD, drop the fragment silently */
-  }
-  td->fraglen = 0;
-  td->frag_valid = 1;
-
-  /* whole user packets */
-  while (pos + up_size <= df_bytes) {
-    t2mi_decap_emit_up(td, df + pos, up_size, hem, npd);
-    pos += up_size;
-  }
-
-  /* trailing fragment continues in the next baseband frame */
-  if (pos < df_bytes) {
-    td->fraglen = df_bytes - pos;
-    memcpy(td->frag, df + pos, td->fraglen);
-  }
+  t2mi_decap_data_field(td, bb + BBHEADER_SIZE, df_bytes, pos, &lay);
 }
 
 /* **************************************************************************
@@ -345,13 +414,13 @@ t2mi_decap_t2mi_packet(t2mi_decap_t *td, const uint8_t *pkt, int paylen)
   /* a gap in the T2-MI packet counter invalidates any user packet
    * fragment carried over from a previous baseband frame, even when
    * the lost packet belonged to another PLP or packet type */
-  if (td->last_pkt_count >= 0 &&
-      ((td->last_pkt_count + 1) & 0xff) != pkt[1])
-    td->frag_valid = 0;
-  td->last_pkt_count = pkt[1];
+  if (td->t2.last_pkt_count >= 0 &&
+      ((td->t2.last_pkt_count + 1) & 0xff) != pkt[1])
+    td->frag.valid = 0;
+  td->t2.last_pkt_count = pkt[1];
 
   td->stats.t2mi_packets++;
-  td->t2mi_valid++;
+  td->t2.valid++;
 
   if (pkt[0] == T2MI_TYPE_BBFRAME)
     t2mi_decap_bbframe(td, pkt + T2MI_HEADER_SIZE, paylen);
@@ -360,17 +429,21 @@ t2mi_decap_t2mi_packet(t2mi_decap_t *td, const uint8_t *pkt, int paylen)
 static void
 t2mi_decap_t2mi_reset(t2mi_decap_t *td)
 {
-  td->t2len = 0;
-  td->t2sync = 0;
-  td->frag_valid = 0;
-  td->fraglen = 0;
+  td->t2.len = 0;
+  td->t2.sync = 0;
+  td->frag.valid = 0;
+  td->frag.len = 0;
 }
 
 static void
 t2mi_decap_t2mi_input(t2mi_decap_t *td, const uint8_t *pay, int paylen,
                       int pusi, int cc_error)
 {
-  int pf, start, bits, pb, tot;
+  int pf;
+  int start;
+  int bits;
+  int pb;
+  int tot;
   uint32_t crc;
 
   if (cc_error) {
@@ -387,50 +460,50 @@ t2mi_decap_t2mi_input(t2mi_decap_t *td, const uint8_t *pay, int paylen,
       t2mi_decap_t2mi_reset(td);
       return;
     }
-    if (!td->t2sync) {
+    if (!td->t2.sync) {
       /* drop the tail of the previous (unseen) packet */
       pay += 1 + pf;
       paylen -= 1 + pf;
-      td->t2sync = 1;
-      td->t2len = 0;
+      td->t2.sync = 1;
+      td->t2.len = 0;
     } else {
       /* pointer byte is redundant while in sync */
       pay += 1;
       paylen -= 1;
     }
-  } else if (!td->t2sync) {
+  } else if (!td->t2.sync) {
     return;
   }
 
-  if (td->t2len + paylen > T2MI_BUF_SIZE) {
+  if (td->t2.len + paylen > T2MI_BUF_SIZE) {
     t2mi_decap_t2mi_reset(td);
     return;
   }
-  memcpy(td->t2buf + td->t2len, pay, paylen);
-  td->t2len += paylen;
+  memcpy(td->t2.buf + td->t2.len, pay, paylen);
+  td->t2.len += paylen;
 
   start = 0;
-  while (td->t2len - start >= T2MI_HEADER_SIZE) {
-    bits = (td->t2buf[start + 4] << 8) | td->t2buf[start + 5];
+  while (td->t2.len - start >= T2MI_HEADER_SIZE) {
+    bits = (td->t2.buf[start + 4] << 8) | td->t2.buf[start + 5];
     pb   = (bits + 7) / 8;
     tot  = T2MI_HEADER_SIZE + pb + T2MI_CRC_SIZE;
-    if (start + tot > td->t2len)
+    if (start + tot > td->t2.len)
       break;
-    crc = (td->t2buf[start + 6 + pb] << 24) |
-          (td->t2buf[start + 7 + pb] << 16) |
-          (td->t2buf[start + 8 + pb] << 8) |
-           td->t2buf[start + 9 + pb];
-    if (t2mi_crc32(td->t2buf + start, T2MI_HEADER_SIZE + pb) != crc) {
+    crc = (td->t2.buf[start + 6 + pb] << 24) |
+          (td->t2.buf[start + 7 + pb] << 16) |
+          (td->t2.buf[start + 8 + pb] << 8) |
+           td->t2.buf[start + 9 + pb];
+    if (t2mi_crc32(td->t2.buf + start, T2MI_HEADER_SIZE + pb) != crc) {
       td->stats.crc32_errors++;
       t2mi_decap_t2mi_reset(td);
       return;
     }
-    t2mi_decap_t2mi_packet(td, td->t2buf + start, pb);
+    t2mi_decap_t2mi_packet(td, td->t2.buf + start, pb);
     start += tot;
   }
   if (start > 0) {
-    td->t2len -= start;
-    memmove(td->t2buf, td->t2buf + start, td->t2len);
+    td->t2.len -= start;
+    memmove(td->t2.buf, td->t2.buf + start, td->t2.len);
   }
 }
 
@@ -438,62 +511,77 @@ t2mi_decap_t2mi_input(t2mi_decap_t *td, const uint8_t *pay, int paylen,
  * Plain TS piping layer
  * *************************************************************************/
 
+/* Find the TS packet alignment in the piping buffer: two sync bytes one
+ * packet apart.  Returns 1 when found, else keeps only the bytes that may
+ * still start a packet and returns 0. */
+static int
+t2mi_decap_pipe_resync(t2mi_decap_t *td)
+{
+  int i;
+  int keep;
+
+  for (i = 0; i + TS_PKT < td->pipe.len; i++) {
+    if (td->pipe.buf[i] != 0x47 || td->pipe.buf[i + TS_PKT] != 0x47)
+      continue;
+    td->pipe.sync = 1;
+    td->stats.resyncs++;
+    if (i > 0) {
+      td->pipe.len -= i;
+      memmove(td->pipe.buf, td->pipe.buf + i, td->pipe.len);
+    }
+    return 1;
+  }
+
+  /* keep only the last (unverifiable) packet's worth of bytes */
+  keep = TS_PKT + 1;
+  if (td->pipe.len > keep) {
+    memmove(td->pipe.buf, td->pipe.buf + td->pipe.len - keep, keep);
+    td->pipe.len = keep;
+  }
+  return 0;
+}
+
+/* Output the aligned packets at the head of the piping buffer.  Returns 1
+ * when a whole packet is still buffered: the parser stopped on a byte that
+ * is not a sync byte, so the alignment must be re-acquired. */
+static int
+t2mi_decap_pipe_drain(t2mi_decap_t *td)
+{
+  int i = 0;
+
+  while (i + TS_PKT <= td->pipe.len && td->pipe.buf[i] == 0x47) {
+    t2mi_decap_out_packet(td, NULL, 0, td->pipe.buf + i, TS_PKT);
+    td->pipe.run++;
+    i += TS_PKT;
+  }
+  if (i > 0) {
+    td->pipe.len -= i;
+    memmove(td->pipe.buf, td->pipe.buf + i, td->pipe.len);
+  }
+  return td->pipe.len >= TS_PKT;
+}
+
 static void
 t2mi_decap_pipe_input(t2mi_decap_t *td, const uint8_t *pay, int paylen)
 {
-  int i, keep;
-
   if (paylen <= 0)
     return;
 
-  if (td->pipelen + paylen > PIPE_BUF_SIZE) {
+  if (td->pipe.len + paylen > PIPE_BUF_SIZE) {
     /* should not happen - the parser below always drains the buffer */
-    td->pipelen = 0;
-    td->pipesync = 0;
+    td->pipe.len = 0;
+    td->pipe.sync = 0;
   }
-  memcpy(td->pipebuf + td->pipelen, pay, paylen);
-  td->pipelen += paylen;
+  memcpy(td->pipe.buf + td->pipe.len, pay, paylen);
+  td->pipe.len += paylen;
 
   for (;;) {
-    if (!td->pipesync) {
-      for (i = 0; i + TS_PKT < td->pipelen; i++) {
-        if (td->pipebuf[i] == 0x47 && td->pipebuf[i + TS_PKT] == 0x47) {
-          td->pipesync = 1;
-          td->stats.resyncs++;
-          if (i > 0) {
-            td->pipelen -= i;
-            memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
-          }
-          break;
-        }
-      }
-      if (!td->pipesync) {
-        /* keep only the last (unverifiable) packet's worth of bytes */
-        keep = TS_PKT + 1;
-        if (td->pipelen > keep) {
-          memmove(td->pipebuf, td->pipebuf + td->pipelen - keep, keep);
-          td->pipelen = keep;
-        }
-        return;
-      }
-    }
-
-    i = 0;
-    while (i + TS_PKT <= td->pipelen && td->pipebuf[i] == 0x47) {
-      t2mi_decap_out_packet(td, NULL, 0, td->pipebuf + i, TS_PKT);
-      td->pipe_run++;
-      i += TS_PKT;
-    }
-    if (i > 0) {
-      td->pipelen -= i;
-      memmove(td->pipebuf, td->pipebuf + i, td->pipelen);
-    }
-    /* a whole packet is still buffered: the loop stopped on a byte that
-     * is not a sync byte, so re-acquire the alignment */
-    if (td->pipelen < TS_PKT)
+    if (!td->pipe.sync && !t2mi_decap_pipe_resync(td))
       return;
-    td->pipesync = 0;
-    td->pipe_run = 0;
+    if (!t2mi_decap_pipe_drain(td))
+      return;
+    td->pipe.sync = 0;
+    td->pipe.run = 0;
   }
 }
 
@@ -505,7 +593,11 @@ static void
 t2mi_decap_input_locked(t2mi_decap_t *td, const uint8_t *tsb)
 {
   const uint8_t *pay;
-  int paylen, afc, pusi, cc, cc_error = 0;
+  int paylen;
+  int afc;
+  int pusi;
+  int cc;
+  int cc_error = 0;
 
   afc = (tsb[3] >> 4) & 3;
   if ((afc & 1) == 0)             /* no payload */
@@ -534,7 +626,7 @@ t2mi_decap_input_locked(t2mi_decap_t *td, const uint8_t *tsb)
     t2mi_decap_t2mi_input(td, pay, paylen, pusi, cc_error);
   } else {
     if (cc_error)
-      td->pipesync = 0;
+      td->pipe.sync = 0;
     t2mi_decap_pipe_input(td, pay, paylen);
   }
 }
@@ -542,13 +634,14 @@ t2mi_decap_input_locked(t2mi_decap_t *td, const uint8_t *tsb)
 static void
 t2mi_decap_lock_format(t2mi_decap_t *td, int format)
 {
-  uint8_t *probe = td->probe;
-  int cnt = td->probe_cnt, i;
+  uint8_t *probe = td->probe.buf;
+  int cnt = td->probe.cnt;
+  int i;
 
   td->stats.format = format;
-  td->probing = 0;
-  td->probe = NULL;
-  td->probe_cnt = 0;
+  td->probe.active = 0;
+  td->probe.buf = NULL;
+  td->probe.cnt = 0;
 
   t2mi_log(td, 1, "carrier format detected: %s",
            format == T2MI_DECAP_FORMAT_T2MI ?
@@ -556,10 +649,10 @@ t2mi_decap_lock_format(t2mi_decap_t *td, int format)
 
   /* replay the probe window through the selected parser */
   td->last_cc = -1;
-  td->last_pkt_count = -1;
+  td->t2.last_pkt_count = -1;
   t2mi_decap_t2mi_reset(td);
-  td->pipelen = 0;
-  td->pipesync = 0;
+  td->pipe.len = 0;
+  td->pipe.sync = 0;
 
   if (probe) {
     for (i = 0; i < cnt; i++)
@@ -572,16 +665,20 @@ static void
 t2mi_decap_input_probe(t2mi_decap_t *td, const uint8_t *tsb)
 {
   const uint8_t *pay;
-  int paylen, afc, pusi, cc, cc_error = 0;
+  int paylen;
+  int afc;
+  int pusi;
+  int cc;
+  int cc_error = 0;
 
-  if (td->probe == NULL) {
-    td->probe = malloc(PROBE_PKTS * TS_PKT);
-    if (td->probe == NULL)
+  if (td->probe.buf == NULL) {
+    td->probe.buf = malloc(PROBE_PKTS * TS_PKT);
+    if (td->probe.buf == NULL)
       return;
-    td->probe_cnt = 0;
+    td->probe.cnt = 0;
   }
-  memcpy(td->probe + td->probe_cnt * TS_PKT, tsb, TS_PKT);
-  td->probe_cnt++;
+  memcpy(td->probe.buf + td->probe.cnt * TS_PKT, tsb, TS_PKT);
+  td->probe.cnt++;
 
   /* run both trial parsers */
   afc = (tsb[3] >> 4) & 3;
@@ -600,25 +697,25 @@ t2mi_decap_input_probe(t2mi_decap_t *td, const uint8_t *tsb)
     if (paylen > 0) {
       pusi = (tsb[1] & 0x40) ? 1 : 0;
       t2mi_decap_t2mi_input(td, pay, paylen, pusi, cc_error);
-      if (td->t2mi_valid >= 2) {
+      if (td->t2.valid >= 2) {
         t2mi_decap_lock_format(td, T2MI_DECAP_FORMAT_T2MI);
         return;
       }
       t2mi_decap_pipe_input(td, pay, paylen);
-      if (td->pipe_run >= 5) {
+      if (td->pipe.run >= 5) {
         t2mi_decap_lock_format(td, T2MI_DECAP_FORMAT_PIPE);
         return;
       }
     }
   }
 
-  if (td->probe_cnt >= PROBE_PKTS) {
+  if (td->probe.cnt >= PROBE_PKTS) {
     t2mi_log_once(td, T2MI_LO_NOLOCK, 2,
                   "unable to detect carrier format "
                   "(scrambled or unsupported stream?)");
     /* drop the oldest half of the window and keep trying */
-    td->probe_cnt = PROBE_PKTS / 2;
-    memmove(td->probe, td->probe + (PROBE_PKTS / 2) * TS_PKT,
+    td->probe.cnt = PROBE_PKTS / 2;
+    memmove(td->probe.buf, td->probe.buf + (PROBE_PKTS / 2) * TS_PKT,
             (PROBE_PKTS / 2) * TS_PKT);
   }
 }
@@ -629,7 +726,7 @@ t2mi_decap_input(t2mi_decap_t *td, const uint8_t *tsb)
   td->stats.in_packets++;
 
   if (td->stats.format == T2MI_DECAP_FORMAT_AUTO) {
-    td->probing = 1;
+    td->probe.active = 1;
     t2mi_decap_input_probe(td, tsb);
   } else {
     t2mi_decap_input_locked(td, tsb);
@@ -656,10 +753,10 @@ t2mi_decap_create(int format, int plp,
     return NULL;
   td->cfg_format = format;
   td->cfg_plp = plp;
-  td->output = output;
-  td->output_aux = output_aux;
-  td->log = log;
-  td->log_aux = log_aux;
+  td->cb.output = output;
+  td->cb.output_aux = output_aux;
+  td->cb.log = log;
+  td->cb.log_aux = log_aux;
   t2mi_decap_reset(td);
   return td;
 }
@@ -667,17 +764,17 @@ t2mi_decap_create(int format, int plp,
 void
 t2mi_decap_reset(t2mi_decap_t *td)
 {
-  free(td->probe);
-  td->probe = NULL;
-  td->probe_cnt = 0;
-  td->probing = 0;
+  free(td->probe.buf);
+  td->probe.buf = NULL;
+  td->probe.cnt = 0;
+  td->probe.active = 0;
   td->last_cc = -1;
-  td->last_pkt_count = -1;
-  td->t2mi_valid = 0;
-  td->pipe_run = 0;
-  td->pipelen = 0;
-  td->pipesync = 0;
-  td->outlen = 0;
+  td->t2.last_pkt_count = -1;
+  td->t2.valid = 0;
+  td->pipe.run = 0;
+  td->pipe.len = 0;
+  td->pipe.sync = 0;
+  td->out.len = 0;
   td->log_once = 0;
   t2mi_decap_t2mi_reset(td);
   memset(&td->stats, 0, sizeof(td->stats));
@@ -690,7 +787,7 @@ t2mi_decap_destroy(t2mi_decap_t *td)
 {
   if (td == NULL)
     return;
-  free(td->probe);
+  free(td->probe.buf);
   free(td);
 }
 

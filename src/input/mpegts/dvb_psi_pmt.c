@@ -217,6 +217,20 @@ psi_desc_teletext(elementary_set_t *set, const uint8_t *ptr, int size,
   return r;
 }
 
+#if ENABLE_T2MI
+/**
+ * T2MI_descriptor (EN 300 468, extension tag 0x11) on a private data
+ * stream: the stream is a T2-MI carrier
+ */
+static void
+psi_desc_t2mi(const uint8_t *ptr, int estype,
+              streaming_component_type_t *type)
+{
+  if (ptr[0] == 0x11 && estype == 0x06)
+    *type = SCT_T2MI;
+}
+#endif
+
 /**
  * Parser for supplementary audio descriptor (EN 300 468 6.4.11)
  */
@@ -286,7 +300,8 @@ dvb_psi_parse_pmt
   mpegts_mux_t *mux = mt->mt_mux;
   caid_t *c, *cn;
 #if ENABLE_T2MI
-  int t2mi_cand_pid = -1, t2mi_cand_cnt = 0;
+  int t2mi_cand_pid = -1;
+  int t2mi_cand_cnt = 0;
 #endif
 
   version = (ptr[2] >> 1) & 0x1f;
@@ -488,8 +503,7 @@ dvb_psi_parse_pmt
 
         psi_desc_supplementary_audio(ptr, dlen, &supp_audio_type, &supp_lang);
 #if ENABLE_T2MI
-        if(ptr[0] == 0x11 && estype == 0x06) /* T2MI_descriptor */
-          hts_stream_type = SCT_T2MI;
+        psi_desc_t2mi(ptr, estype, &hts_stream_type);
 #endif
         break;
 

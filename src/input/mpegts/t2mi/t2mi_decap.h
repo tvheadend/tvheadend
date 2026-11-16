@@ -63,9 +63,9 @@ typedef struct t2mi_decap t2mi_decap_t;
 /* Inner TS output: len is always a multiple of 188 */
 typedef void (*t2mi_decap_output_cb)(void *aux, const uint8_t *tsb, int len);
 
-/* Diagnostics: printf-style, severity 0=debug 1=info 2=warning 3=error */
-typedef void (*t2mi_decap_log_cb)(void *aux, int severity, const char *fmt, ...)
-  __attribute__((format(printf, 3, 4)));
+/* Diagnostics: one formatted message; the severity is 0 for debug, 1 for
+ * info, 2 for a warning and 3 for an error */
+typedef void (*t2mi_decap_log_cb)(void *aux, int severity, const char *msg);
 
 typedef struct t2mi_decap_stats {
   uint64_t in_packets;        /* outer carrier TS packets consumed */

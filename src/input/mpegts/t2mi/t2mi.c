@@ -66,18 +66,23 @@ t2mi_service_has_carrier ( mpegts_service_t *s )
 int
 t2mi_mux_compare ( mpegts_mux_t *a, mpegts_mux_t *b )
 {
-  t2mi_mux_t *ta = (t2mi_mux_t *)a, *tb = (t2mi_mux_t *)b;
-  mpegts_mux_t *sa, *sb;
+  const t2mi_mux_t *ta = (const t2mi_mux_t *)a;
+  const t2mi_mux_t *tb = (const t2mi_mux_t *)b;
+  mpegts_mux_t *sa;
+  mpegts_mux_t *sb;
   int r;
 
   if (!idnode_is_instance(&a->mm_network->mn_id, &t2mi_network_class) ||
       !idnode_is_instance(&b->mm_network->mn_id, &t2mi_network_class))
     return 0;
 
-  sa = ta->mm_t2mi_src_mux ? mpegts_mux_find(ta->mm_t2mi_src_mux) : NULL;
-  sb = tb->mm_t2mi_src_mux ? mpegts_mux_find(tb->mm_t2mi_src_mux) : NULL;
-  if (sa && sb && sa != sb && (r = mpegts_mux_compare(sa, sb)) != 0)
-    return r;
+  sa = a->mm_t2mi_src_mux ? mpegts_mux_find(a->mm_t2mi_src_mux) : NULL;
+  sb = b->mm_t2mi_src_mux ? mpegts_mux_find(b->mm_t2mi_src_mux) : NULL;
+  if (sa && sb && sa != sb) {
+    r = mpegts_mux_compare(sa, sb);
+    if (r != 0)
+      return r;
+  }
   if (sa != sb)
     return sa ? -1 : 1;
   return (int)ta->mm_t2mi_src_sid - (int)tb->mm_t2mi_src_sid;
@@ -103,20 +108,23 @@ const idclass_t t2mi_input_class = {
  * the same transponder share one tuner, so each transponder counts once. */
 static int
 t2mi_input_pending_sources
-  ( mpegts_input_t *mi, mpegts_mux_t *mm, mpegts_mux_t *src, int weight )
+  ( mpegts_input_t *mi, const mpegts_mux_t *mm, const mpegts_mux_t *src,
+    int weight )
 {
   mpegts_mux_instance_t *mmi;
-  t2mi_mux_t *other;
-  mpegts_mux_t *osrc, *seen[16];
-  int i, n = 0;
+  const t2mi_mux_t *other;
+  mpegts_mux_t *osrc;
+  mpegts_mux_t *seen[16];
+  int i;
+  int n = 0;
 
   LIST_FOREACH(mmi, &mi->mi_mux_active, mmi_active_link) {
-    other = (t2mi_mux_t *)mmi->mmi_mux;
-    if ((mpegts_mux_t *)other == mm || other->tm_sub == NULL ||
+    other = (const t2mi_mux_t *)mmi->mmi_mux;
+    if (mmi->mmi_mux == mm || other->tm_sub == NULL ||
         other->tm_sub->ths_weight < weight ||
-        other->mm_t2mi_src_mux == NULL)
+        mmi->mmi_mux->mm_t2mi_src_mux == NULL)
       continue;
-    osrc = mpegts_mux_find(other->mm_t2mi_src_mux);
+    osrc = mpegts_mux_find(mmi->mmi_mux->mm_t2mi_src_mux);
     if (osrc == NULL || osrc == src || osrc->mm_active)
       continue;
     for (i = 0; i < n; i++)
@@ -132,7 +140,6 @@ static int
 t2mi_input_is_enabled
   ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int weight )
 {
-  t2mi_mux_t *tm = (t2mi_mux_t *)mm;
   mpegts_mux_t *src;
   mpegts_mux_instance_t *mmi;
   mpegts_input_t *si;
@@ -140,9 +147,9 @@ t2mi_input_is_enabled
   int r = mpegts_input_is_enabled(mi, mm, flags, weight);
   if (r != MI_IS_ENABLED_OK)
     return r;
-  if (tm->mm_t2mi_src_mux == NULL || tm->mm_t2mi_src_mux[0] == '\0')
+  if (mm->mm_t2mi_src_mux == NULL || mm->mm_t2mi_src_mux[0] == '\0')
     return MI_IS_ENABLED_NEVER;
-  src = mpegts_mux_find(tm->mm_t2mi_src_mux);
+  src = mpegts_mux_find(mm->mm_t2mi_src_mux);
   if (src == NULL)
     return MI_IS_ENABLED_NEVER;
 
@@ -158,7 +165,8 @@ t2mi_input_is_enabled
    * live viewing over a scan) still preempts as usual. */
   if (src->mm_active || weight <= 0)
     return MI_IS_ENABLED_OK;
-  int any = 0, nfree = 0;
+  int any = 0;
+  int nfree = 0;
   LIST_FOREACH(mmi, &src->mm_instances, mmi_mux_link) {
     si = mmi->mmi_input;
     r = si->mi_is_enabled(si, src, flags, weight);
@@ -188,7 +196,9 @@ t2mi_input_is_enabled
 static int
 t2mi_input_get_priority ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags )
 {
-  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  const t2mi_network_t *tn = (const t2mi_network_t *)mm->mm_network;
+
+  (void)mi;
   if ((flags & SUBSCRIPTION_STREAMING) && tn->tn_streaming_priority > 0)
     return tn->tn_streaming_priority;
   return tn->tn_priority;
@@ -200,6 +210,10 @@ t2mi_input_get_weight ( mpegts_input_t *mi, mpegts_mux_t *mm, int flags, int wei
   /* the input is virtual and never busy: any number of T2-MI muxes can
    * be active at once (e.g. several carriers of one transponder); the
    * real capacity limit is the source mux subscription underneath */
+  (void)mi;
+  (void)mm;
+  (void)flags;
+  (void)weight;
   return 0;
 }
 
@@ -208,19 +222,24 @@ t2mi_input_warm_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
 {
   /* unlike the default single-tuner implementation, do not stop other
    * active T2-MI muxes when a new one starts */
+  (void)mi;
+  (void)mmi;
   return 0;
 }
 
 static int
 t2mi_input_get_grace ( mpegts_input_t *mi, mpegts_mux_t *mm )
 {
-  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  const t2mi_network_t *tn = (const t2mi_network_t *)mm->mm_network;
+
+  (void)mi;
   return tn->tn_max_timeout ?: 30;
 }
 
 static void
 t2mi_input_display_name ( mpegts_input_t *mi, char *buf, size_t len )
 {
+  (void)mi;
   snprintf(buf, len, "T2-MI");
 }
 
@@ -253,26 +272,24 @@ t2mi_mux_decap_output ( void *aux, const uint8_t *tsb, int len )
 }
 
 static void
-t2mi_mux_decap_log ( void *aux, int severity, const char *fmt, ... )
+t2mi_mux_decap_log ( void *aux, int severity, const char *msg )
 {
-  t2mi_mux_t *tm = aux;
-  char buf[512];
-  va_list args;
+  const t2mi_mux_t *tm = aux;
   static const int sevmap[4] =
     { LOG_DEBUG, LOG_INFO, LOG_WARNING, LOG_ERR };
 
-  va_start(args, fmt);
-  vsnprintf(buf, sizeof(buf), fmt, args);
-  va_end(args);
   tvhlog(sevmap[MINMAX(severity, 0, 3)], LS_T2MI, "%s - %s",
-         tm->mm_nicename, buf);
+         tm->mm_nicename, msg);
 }
 
 static void
 t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
 {
   const streaming_start_component_t *ssc;
-  int i, t2mi_pid = 0, data_pid = 0, data_cnt = 0;
+  int i;
+  int t2mi_pid = 0;
+  int data_pid = 0;
+  int data_cnt = 0;
 
   if (tm->mm_t2mi_src_pid) {
     tm->tm_carrier_pid = tm->mm_t2mi_src_pid;
@@ -291,9 +308,12 @@ t2mi_mux_stream_start ( t2mi_mux_t *tm, const streaming_start_t *ss )
       t2mi_pid = ssc->es_pid;
       break;
     }
-    if (ssc->es_type != SCT_CA && ssc->es_type != SCT_CAT &&
-        ssc->es_type != SCT_PCR && data_cnt++ == 0)
+    if (ssc->es_type == SCT_CA || ssc->es_type == SCT_CAT ||
+        ssc->es_type == SCT_PCR)
+      continue;
+    if (data_cnt == 0)
       data_pid = ssc->es_pid;
+    data_cnt++;
   }
   if (t2mi_pid == 0 && data_cnt == 1)
     t2mi_pid = data_pid;
@@ -448,7 +468,7 @@ t2mi_mux_thread ( void *aux )
  */
 
 static int
-t2mi_mux_subscribe ( t2mi_mux_t *tm, mpegts_input_t *mi, int weight )
+t2mi_mux_subscribe ( t2mi_mux_t *tm, int weight )
 {
   mpegts_mux_t *src;
   mpegts_service_t *svc;
@@ -614,6 +634,8 @@ t2mi_input_update_pids ( mpegts_input_t *mi, mpegts_mux_t *mm )
   mpegts_pid_t *mp;
   int idx = atomic_get(&tm->tm_pidmap_idx) ^ 1;
   uint8_t *map = tm->tm_pidmap[idx];
+
+  (void)mi;
   int fullmux = 0;
 
   lock_assert(&global_lock);
@@ -671,7 +693,7 @@ t2mi_input_start_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi, int weigh
     return SM_CODE_TUNING_FAILED;
   }
 
-  ret = t2mi_mux_subscribe(tm, mi, weight);
+  ret = t2mi_mux_subscribe(tm, weight);
   if (ret) {
     atomic_set(&tm->tm_thread_run, 0);
     tvh_cond_signal(&tm->tm_sq.sq_cond, 0);
@@ -700,7 +722,10 @@ t2mi_kick_source_scan ( t2mi_mux_t *tm )
   mpegts_network_t *mn;
 
   src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
-  if (src == NULL || (mn = src->mm_network) == NULL)
+  if (src == NULL)
+    return;
+  mn = src->mm_network;
+  if (mn == NULL)
     return;
   mtimer_arm_rel(&mn->mn_scan_timer, mpegts_network_scan_timer_cb, mn, 0);
 }
@@ -711,6 +736,7 @@ t2mi_input_stop_mux ( mpegts_input_t *mi, mpegts_mux_instance_t *mmi )
   t2mi_mux_t *tm = (t2mi_mux_t *)mmi->mmi_mux;
   const t2mi_decap_stats_t *st;
 
+  (void)mi;
   mtimer_disarm(&tm->tm_busy_timer);
   t2mi_mux_unsubscribe(tm);
 
@@ -813,10 +839,15 @@ t2mi_src_mux_enum ( void *o, const char *lang )
 {
   mpegts_network_t *mn;
   mpegts_mux_t *mm;
-  htsmsg_t *l, *e;
+  htsmsg_t *l;
+  htsmsg_t *e;
   t2mi_srcmux_ent_t *ents = NULL;
-  int n = 0, alloc = 0, i;
+  int n = 0;
+  int alloc = 0;
+  int i;
   char nbuf[256];
+
+  (void)o;
 
   LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
     if (idnode_is_instance(&mn->mn_id, &t2mi_network_class))
@@ -859,6 +890,8 @@ t2mi_mux_class_format_list ( void *o, const char *lang )
     { N_("T2-MI (TS 102 773)"),        T2MI_DECAP_FORMAT_T2MI },
     { N_("Plain TS data piping"),      T2MI_DECAP_FORMAT_PIPE },
   };
+
+  (void)o;
   return strtab2htsmsg(tab, 1, lang);
 }
 
@@ -867,14 +900,18 @@ static const void *
 t2mi_mux_class_get_scrambled ( void *o )
 {
   static int b;
-  t2mi_mux_t *tm = o;
+  const t2mi_mux_t *tm = o;
   mpegts_mux_t *src;
   mpegts_service_t *svc;
 
   b = 0;
-  if (tm->mm_t2mi_src_sid && tm->mm_t2mi_src_mux &&
-      (src = mpegts_mux_find(tm->mm_t2mi_src_mux)) != NULL &&
-      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL)
+  if (!tm->mm_t2mi_src_sid || !tm->mm_t2mi_src_mux)
+    return &b;
+  src = mpegts_mux_find(tm->mm_t2mi_src_mux);
+  if (src == NULL)
+    return &b;
+  svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+  if (svc)
     b = service_is_encrypted((service_t *)svc);
   return &b;
 }
@@ -966,23 +1003,26 @@ const idclass_t t2mi_mux_class =
  * explicit config PID, else the T2-MI component PID from the source
  * carrier service's PMT (so idle SID-mode muxes still show the PID) */
 static int
-t2mi_mux_carrier_pid ( t2mi_mux_t *tm, mpegts_mux_t *src )
+t2mi_mux_carrier_pid ( const t2mi_mux_t *tm, mpegts_mux_t *src )
 {
   mpegts_service_t *svc;
-  elementary_stream_t *es;
+  const elementary_stream_t *es;
   int pid = 0;
 
   if (tm->tm_carrier_pid > 0)
     return tm->tm_carrier_pid;
   if (tm->mm_t2mi_src_pid)
     return tm->mm_t2mi_src_pid;
-  if (src && tm->mm_t2mi_src_sid &&
-      (svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL)) != NULL) {
-    tvh_mutex_lock(&svc->s_stream_mutex);
-    if ((es = elementary_stream_type_find(&svc->s_components, SCT_T2MI)) != NULL)
-      pid = es->es_pid;
-    tvh_mutex_unlock(&svc->s_stream_mutex);
-  }
+  if (src == NULL || tm->mm_t2mi_src_sid == 0)
+    return 0;
+  svc = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+  if (svc == NULL)
+    return 0;
+  tvh_mutex_lock(&svc->s_stream_mutex);
+  es = elementary_stream_type_find(&svc->s_components, SCT_T2MI);
+  if (es != NULL)
+    pid = es->es_pid;
+  tvh_mutex_unlock(&svc->s_stream_mutex);
   return pid;
 }
 
@@ -1069,7 +1109,7 @@ t2mi_mux_free ( mpegts_mux_t *mm )
 static int
 t2mi_mux_is_epg ( mpegts_mux_t *mm )
 {
-  t2mi_network_t *tn = (t2mi_network_t *)mm->mm_network;
+  const t2mi_network_t *tn = (const t2mi_network_t *)mm->mm_network;
   if (tn && tn->tn_epg_exclude)
     return MM_EPG_DISABLE;
   return mm->mm_epg;
@@ -1078,7 +1118,9 @@ t2mi_mux_is_epg ( mpegts_mux_t *mm )
 static t2mi_mux_t *
 t2mi_mux_create0 ( t2mi_network_t *tn, const char *uuid, htsmsg_t *conf )
 {
-  htsmsg_t *c, *c2, *e;
+  htsmsg_t *c;
+  htsmsg_t *c2;
+  htsmsg_t *e;
   htsmsg_field_t *f;
   char ubuf1[UUID_HEX_SIZE];
   char ubuf2[UUID_HEX_SIZE];
@@ -1184,7 +1226,7 @@ t2mi_network_scan_carrier
   ( t2mi_network_t *tn, mpegts_mux_t *src, uint16_t sid )
 {
   mpegts_mux_t *mm;
-  t2mi_mux_t *tm;
+  const t2mi_mux_t *tm;
   char ubuf[UUID_HEX_SIZE];
 
   /* A purely initial scan only reaches carriers if the network wants one.
@@ -1201,9 +1243,9 @@ t2mi_network_scan_carrier
 
   idnode_uuid_as_str(&src->mm_id, ubuf);
   LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link) {
-    tm = (t2mi_mux_t *)mm;
-    if (tm->mm_t2mi_src_sid != sid || tm->mm_t2mi_src_mux == NULL ||
-        strcmp(tm->mm_t2mi_src_mux, ubuf))
+    tm = (const t2mi_mux_t *)mm;
+    if (tm->mm_t2mi_src_sid != sid || mm->mm_t2mi_src_mux == NULL ||
+        strcmp(mm->mm_t2mi_src_mux, ubuf))
       continue;
     if (mm->mm_active)
       continue;
@@ -1252,36 +1294,44 @@ t2mi_carrier_seen ( struct mpegts_mux *mm, uint16_t sid )
   }
 }
 
+/* delete the automatically created muxes of a T2-MI network that came
+ * from the source mux with UUID 'src_uuid' */
+static void
+t2mi_network_delete_from_source ( mpegts_network_t *mn, const char *src_uuid )
+{
+  mpegts_mux_t *mm = LIST_FIRST(&mn->mn_muxes);
+  const t2mi_mux_t *tm;
+
+  while (mm) {
+    tm = (const t2mi_mux_t *)mm;
+    if (!tm->mm_t2mi_auto || mm->mm_t2mi_src_mux == NULL ||
+        strcmp(mm->mm_t2mi_src_mux, src_uuid)) {
+      mm = LIST_NEXT(mm, mm_network_link);
+      continue;
+    }
+    tvhinfo(LS_T2MI, "source mux removed, removing %s", mm->mm_nicename);
+    mm->mm_delete(mm, 1);
+    /* a carrier nested in the deleted one is deleted with it, and it
+     * could be the next mux: start over from the head */
+    mm = LIST_FIRST(&mn->mn_muxes);
+  }
+}
+
 /* a source mux is being deleted: at a real deletion (delconf) cascade to
  * the inner muxes it produced, otherwise (shutdown) just unlink silently */
 void
 t2mi_source_mux_deleting ( struct mpegts_mux *mm, int delconf )
 {
   mpegts_network_t *mn;
-  mpegts_mux_t *tmm, *tmm_next;
-  t2mi_mux_t *tm;
   char ubuf[UUID_HEX_SIZE];
 
   lock_assert(&global_lock);
 
   if (delconf) {
     idnode_uuid_as_str(&mm->mm_id, ubuf);
-    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link) {
-      if (!idnode_is_instance(&mn->mn_id, &t2mi_network_class))
-        continue;
-      for (tmm = LIST_FIRST(&mn->mn_muxes); tmm; tmm = tmm_next) {
-        tmm_next = LIST_NEXT(tmm, mm_network_link);
-        tm = (t2mi_mux_t *)tmm;
-        if (tm->mm_t2mi_auto && tm->mm_t2mi_src_mux &&
-            !strcmp(tm->mm_t2mi_src_mux, ubuf)) {
-          tvhinfo(LS_T2MI, "source mux removed, removing %s", tmm->mm_nicename);
-          tmm->mm_delete(tmm, 1);
-          /* a carrier nested in the deleted one is deleted with it, and it
-           * can be the mux cached as next: start over from the head */
-          tmm_next = LIST_FIRST(&mn->mn_muxes);
-        }
-      }
-    }
+    LIST_FOREACH(mn, &mpegts_network_all, mn_global_link)
+      if (idnode_is_instance(&mn->mn_id, &t2mi_network_class))
+        t2mi_network_delete_from_source(mn, ubuf);
   }
   idnode_list_destroy(&mm->mm_t2mi_networks, delconf ? mm : NULL);
 }
@@ -1298,7 +1348,8 @@ static int
 t2mi_service_is_carrier ( mpegts_service_t *s )
 {
   elementary_stream_t *es;
-  int t2mi = 0, av = 0;
+  int t2mi = 0;
+  int av = 0;
 
   /* Only a live service is a carrier.  A source mux keeps services that
    * used to be broadcast but are gone after the feed was re-provisioned
@@ -1348,9 +1399,11 @@ t2mi_mux_count_carriers ( mpegts_mux_t *mm )
 static void
 t2mi_reparse_source_pmts ( mpegts_mux_t *mm )
 {
-  mpegts_table_t *mt, *stale[64];
+  mpegts_table_t *mt;
+  mpegts_table_t *stale[64];
   mpegts_service_t *s;
-  int n = 0, i;
+  int n = 0;
+  int i;
 
   tvh_mutex_lock(&mm->mm_tables_lock);
   LIST_FOREACH(mt, &mm->mm_tables, mt_link)
@@ -1482,61 +1535,48 @@ t2mi_discover_source ( t2mi_network_t *tn, mpegts_mux_t *mm )
   return created;
 }
 
+/* Mark a selected source mux as a T2-MI source and apply the network's
+ * private stream policy.  Private data streams without a T2MI descriptor
+ * are scanned as carriers by default (needed for feeds like Abertis); the
+ * network's "ignore private" setting turns that off.  Reparse the PMTs
+ * when the effective policy changes so it takes effect. */
 static void
-t2mi_network_discover ( t2mi_network_t *tn )
+t2mi_network_apply_source_policy ( const t2mi_network_t *tn, mpegts_mux_t *mm )
 {
-  idnode_list_mapping_t *ilm;
-  mpegts_mux_t *mm, *mm_next, *src;
-  mpegts_service_t *s;
-  t2mi_mux_t *tm;
-  int created = 0, retired = 0;
+  int changed = 0;
 
-  lock_assert(&global_lock);
-
-  /* mark all discovered muxes unseen so we can spot the vanished ones */
-  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link)
-    ((t2mi_mux_t *)mm)->tm_seen = 0;
-
-  LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link) {
-    mm = (mpegts_mux_t *)ilm->ilm_in2;
-
-    /* Mark the mux as a T2-MI source and apply the network's private
-     * stream policy.  Private data streams without a T2MI descriptor are
-     * scanned as carriers by default (needed for feeds like Abertis);
-     * the network's "ignore private" setting turns that off.  Reparse
-     * the PMTs when the effective policy changes so it takes effect. */
-    {
-      int changed = 0;
-      if (!mm->mm_t2mi_carriers) {
-        mm->mm_t2mi_carriers = 1;
-        changed = 1;
-      }
-      if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
-        mm->mm_t2mi_ignore_private = tn->tn_ignore_private;
-        changed = 1;
-      }
-      if (changed) {
-        idnode_changed(&mm->mm_id);
-        if (mm->mm_active)
-          t2mi_reparse_source_pmts(mm);
-        else
-          mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
-      }
-    }
-
-    created += t2mi_discover_source(tn, mm);
+  if (!mm->mm_t2mi_carriers) {
+    mm->mm_t2mi_carriers = 1;
+    changed = 1;
   }
+  if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
+    mm->mm_t2mi_ignore_private = tn->tn_ignore_private;
+    changed = 1;
+  }
+  if (!changed)
+    return;
+  idnode_changed(&mm->mm_id);
+  if (mm->mm_active)
+    t2mi_reparse_source_pmts(mm);
+  else
+    mpegts_mux_scan_state_set(mm, MM_SCAN_STATE_PEND);
+}
 
-  /* A carrier can itself carry another carrier: some feeds wrap a T2-MI
-   * (or piped) stream inside a piped transponder stream, e.g. the UHD
-   * services on the Abertis feed.  Treat the network's own carrier muxes
-   * as sources too, so what they carry is found the same way.  New muxes
-   * are put at the head of the list and are not visited in this pass (they
-   * have no services yet); the depth limit keeps a loop from nesting
-   * forever.  Only the private-stream policy is applied here: the carrier
-   * has just been scanned (or will be), so nothing is rescanned. */
-  for (mm = LIST_FIRST(&tn->mn_muxes); mm; mm = mm_next) {
-    mm_next = LIST_NEXT(mm, mm_network_link);
+/* A carrier can itself carry another carrier: some feeds wrap a T2-MI (or
+ * piped) stream inside a piped transponder stream, e.g. the UHD services
+ * on the Abertis feed.  Treat the network's own carrier muxes as sources
+ * too, so what they carry is found the same way.  New muxes are put at the
+ * head of the list and are not visited in this pass (they have no services
+ * yet); the depth limit keeps a loop from nesting forever.  Only the
+ * private-stream policy is applied here: the carrier has just been scanned
+ * (or will be), so nothing is rescanned.  Returns the muxes created. */
+static int
+t2mi_network_discover_nested ( t2mi_network_t *tn )
+{
+  mpegts_mux_t *mm;
+  int created = 0;
+
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link) {
     if (t2mi_mux_depth(mm) >= T2MI_MAX_DEPTH)
       continue;
     if (mm->mm_t2mi_ignore_private != tn->tn_ignore_private) {
@@ -1547,38 +1587,81 @@ t2mi_network_discover ( t2mi_network_t *tn )
     }
     created += t2mi_discover_source(tn, mm);
   }
+  return created;
+}
 
-  /* Retire auto-discovered muxes whose carrier is confirmed gone.  A
-   * carrier is confirmed gone when its source service was deleted, or
-   * disabled by tvheadend's stale-service check because it vanished from
-   * the source PAT/SDT (24h without being seen); a service an
-   * administrator disabled by hand does not count.  This clears phantom
-   * carriers that a transponder no longer emits - or never did, when a
-   * stale service lingered from an earlier feed layout.  A mux whose
-   * source mux has simply not been (re)scanned keeps an enabled service
-   * and is left untouched, so mux/service UUIDs and channel mappings
-   * survive a short carrier outage or feed rotation. */
-  for (mm = LIST_FIRST(&tn->mn_muxes); mm; mm = mm_next) {
-    mm_next = LIST_NEXT(mm, mm_network_link);
-    tm = (t2mi_mux_t *)mm;
-    if (!tm->mm_t2mi_auto || tm->tm_seen)
+/* Is the carrier of an automatically created mux confirmed gone?  It is
+ * when its source service was deleted, or disabled by tvheadend's
+ * stale-service check because it vanished from the source PAT/SDT (24h
+ * without being seen); a service an administrator disabled by hand does
+ * not count, as only the stale-service check marks its disabling
+ * PAT_MISSING.  A mux whose source mux has simply not been (re)scanned
+ * keeps an enabled service and is left untouched, so mux/service UUIDs
+ * and channel mappings survive a short carrier outage or feed rotation. */
+static int
+t2mi_mux_carrier_gone ( mpegts_mux_t *mm )
+{
+  const t2mi_mux_t *tm = (const t2mi_mux_t *)mm;
+  mpegts_mux_t *src;
+  const mpegts_service_t *s;
+
+  if (!tm->mm_t2mi_auto || tm->tm_seen)
+    return 0;
+  src = mm->mm_t2mi_src_mux ? mpegts_mux_find(mm->mm_t2mi_src_mux) : NULL;
+  if (src == NULL)
+    return 0;
+  s = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
+  return s == NULL ||
+         (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING);
+}
+
+/* Retire the automatically created muxes whose carrier is confirmed gone.
+ * This clears phantom carriers that a transponder no longer emits - or
+ * never did, when a stale service lingered from an earlier feed layout.
+ * Returns the muxes retired. */
+static int
+t2mi_network_retire ( t2mi_network_t *tn )
+{
+  mpegts_mux_t *mm = LIST_FIRST(&tn->mn_muxes);
+  int retired = 0;
+
+  while (mm) {
+    if (!t2mi_mux_carrier_gone(mm)) {
+      mm = LIST_NEXT(mm, mm_network_link);
       continue;
-    src = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
-    if (src == NULL)
-      continue;
-    s = mpegts_service_find(src, tm->mm_t2mi_src_sid, 0, 0, NULL);
-    /* a service an administrator disabled by hand is not a vanished one:
-     * only the stale-service check marks its disabling PAT_MISSING */
-    if (s == NULL || (!s->s_enabled && s->s_auto == SERVICE_AUTO_PAT_MISSING)) {
-      tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or stale)",
-              mm->mm_nicename);
-      mm->mm_delete(mm, 1);
-      retired++;
-      /* deleting a carrier also deletes the carriers nested in it, and one
-       * of those can be the mux cached as next: start over from the head */
-      mm_next = LIST_FIRST(&tn->mn_muxes);
     }
+    tvhinfo(LS_T2MI, "retiring carrier %s (source service gone or stale)",
+            mm->mm_nicename);
+    mm->mm_delete(mm, 1);
+    retired++;
+    /* deleting a carrier also deletes the carriers nested in it, and one
+     * of those could be the next mux: start over from the head */
+    mm = LIST_FIRST(&tn->mn_muxes);
   }
+  return retired;
+}
+
+static void
+t2mi_network_discover ( t2mi_network_t *tn )
+{
+  idnode_list_mapping_t *ilm;
+  mpegts_mux_t *mm;
+  int created = 0;
+  int retired;
+
+  lock_assert(&global_lock);
+
+  /* mark all discovered muxes unseen so we can spot the vanished ones */
+  LIST_FOREACH(mm, &tn->mn_muxes, mm_network_link)
+    ((t2mi_mux_t *)mm)->tm_seen = 0;
+
+  LIST_FOREACH(ilm, &tn->tn_src_muxes, ilm_in1_link) {
+    mm = (mpegts_mux_t *)ilm->ilm_in2;
+    t2mi_network_apply_source_policy(tn, mm);
+    created += t2mi_discover_source(tn, mm);
+  }
+  created += t2mi_network_discover_nested(tn);
+  retired = t2mi_network_retire(tn);
 
   if (created || retired)
     tvhinfo(LS_T2MI, "%s: %d carrier(s) added, %d retired",
@@ -1768,6 +1851,7 @@ t2mi_network_create_service
 static const idclass_t *
 t2mi_network_mux_class ( mpegts_network_t *mn )
 {
+  (void)mn;
   return &t2mi_mux_class;
 }
 
@@ -1819,7 +1903,8 @@ t2mi_network_create0 ( const char *uuid, htsmsg_t *conf )
 {
   t2mi_network_t *tn = calloc(1, sizeof(*tn));
   t2mi_mux_t *tm;
-  htsmsg_t *c, *e;
+  htsmsg_t *c;
+  htsmsg_t *e;
   htsmsg_field_t *f;
   char ubuf[UUID_HEX_SIZE];
 
@@ -1866,6 +1951,8 @@ static mpegts_network_t *
 t2mi_network_builder ( const idclass_t *idc, htsmsg_t *conf )
 {
   mpegts_network_t *mn = (mpegts_network_t *)t2mi_network_create0(NULL, conf);
+
+  (void)idc;
   if (mn && t2mi_input)
     mpegts_input_add_network((mpegts_input_t *)t2mi_input, mn);
   return mn;
@@ -1877,7 +1964,8 @@ t2mi_network_builder ( const idclass_t *idc, htsmsg_t *conf )
 
 void t2mi_init ( void )
 {
-  htsmsg_t *c, *e;
+  htsmsg_t *c;
+  htsmsg_t *e;
   htsmsg_field_t *f;
 
   /* Register class + builder */

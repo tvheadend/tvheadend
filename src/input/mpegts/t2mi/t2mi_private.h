@@ -59,7 +59,7 @@ struct t2mi_mux
   /* mm_t2mi_src_mux (UUID of the source mux) is in mpegts_mux_t */
   uint32_t  mm_t2mi_src_sid;      /* carrier service id, 0 = none (raw PID) */
   uint32_t  mm_t2mi_src_pid;      /* carrier PID, 0 = auto */
-  int       mm_t2mi_format;       /* T2MI_DECAP_FORMAT_* */
+  int       mm_t2mi_format;       /* carrier format (T2MI_DECAP_FORMAT) */
   int       mm_t2mi_plp;          /* PLP id, -1 = auto */
   int       mm_t2mi_auto;         /* created by the auto-network */
   int       tm_seen;              /* transient: seen in last discovery */
