@@ -42,6 +42,7 @@ typedef struct eitignore {
   char        *ei_comment;
   int          ei_error;         ///< title regex does not compile
   int          ei_nochannel;     ///< channels given, but none exists
+  htsmsg_t    *ei_nochannel_uuids; ///< those channels, kept so they are saved
 } eitignore_t;
 
 TAILQ_HEAD(eitignore_queue, eitignore);

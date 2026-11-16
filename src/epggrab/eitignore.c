@@ -93,6 +93,7 @@ eitignore_destroy(eitignore_t *ei, int delconf)
   free(ei->ei_name);
   free(ei->ei_lang);
   free(ei->ei_comment);
+  htsmsg_destroy(ei->ei_nochannel_uuids);
   free(ei);
 }
 
@@ -265,13 +266,19 @@ eitignore_class_channel_set(void *o, const void *v)
 {
   eitignore_t *ei = (eitignore_t *)o;
   htsmsg_t *l = (htsmsg_t *)v;
-  int save = idnode_list_set1(&ei->ei_id, &ei->ei_channels,
-                              &channel_class, l,
-                              eitignore_class_channel_set_cb);
+  int nochannel, save = idnode_list_set1(&ei->ei_id, &ei->ei_channels,
+                                         &channel_class, l,
+                                         eitignore_class_channel_set_cb);
   /* An empty list means all channels: never widen a rule whose
-   * channels do not exist */
-  ei->ei_nochannel = l && !htsmsg_is_empty(l) && LIST_EMPTY(&ei->ei_channels);
-  if (ei->ei_nochannel)
+   * channels do not exist. Keep their uuids, so the rule is saved with
+   * them and stays unused after a restart. */
+  nochannel = l && !htsmsg_is_empty(l) && LIST_EMPTY(&ei->ei_channels);
+  if (nochannel != ei->ei_nochannel)
+    save = 1;
+  ei->ei_nochannel = nochannel;
+  htsmsg_destroy(ei->ei_nochannel_uuids);
+  ei->ei_nochannel_uuids = nochannel ? htsmsg_copy(l) : NULL;
+  if (nochannel)
     tvherror(LS_EPGGRAB, "EIT ignore rule '%s': none of its channels exists, rule not used",
              ei->ei_name ?: "");
   return save;
@@ -280,7 +287,11 @@ eitignore_class_channel_set(void *o, const void *v)
 static const void *
 eitignore_class_channel_get(void *o)
 {
-  return idnode_list_get1(&((eitignore_t *)o)->ei_channels);
+  eitignore_t *ei = (eitignore_t *)o;
+
+  if (ei->ei_nochannel_uuids)
+    return htsmsg_copy(ei->ei_nochannel_uuids);
+  return idnode_list_get1(&ei->ei_channels);
 }
 
 static char *
