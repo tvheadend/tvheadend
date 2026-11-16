@@ -45,6 +45,9 @@ const char *lang_code_get ( const char *code );
 const char *lang_code_get2 ( const char *code, size_t len );
 const lang_code_t *lang_code_get3 ( const char *code );
 
+/* A configured language matches the one of a stream ("qaa": qaa..qtz) */
+int lang_code_match ( const char *conf, const char *lang );
+
 const char *lang_code_preferred( void );
 char *lang_code_user( const char *ucode );
 
