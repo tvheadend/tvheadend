@@ -2,22 +2,7 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 import { describe, expect, it } from 'vitest'
-import { eitIgnorePreselect, escapeRegex } from '../eitIgnorePrefill'
-
-describe('escapeRegex', () => {
-  it('leaves plain text unchanged', () => {
-    expect(escapeRegex('No Information')).toBe('No Information')
-  })
-
-  it('escapes every metacharacter', () => {
-    expect(escapeRegex('\\^$.|?*+()[]{}')).toBe('\\\\\\^\\$\\.\\|\\?\\*\\+\\(\\)\\[\\]\\{\\}')
-  })
-
-  it('matches the original text literally', () => {
-    const title = 'News (Late) 24/7 + More? [HD] $1.99'
-    expect(new RegExp(`^${escapeRegex(title)}$`).test(title)).toBe(true)
-  })
-})
+import { eitIgnorePreselect } from '../eitIgnorePrefill'
 
 describe('eitIgnorePreselect', () => {
   it('prefills an enabled rule for the exact title on the channel', () => {
@@ -28,5 +13,11 @@ describe('eitIgnorePreselect', () => {
       title: '^No Information$',
       comment: 'Created from EPG event',
     })
+  })
+
+  it('escapes the title so it matches literally', () => {
+    expect(eitIgnorePreselect('abc123', 'News (Late) + More?').title).toBe(
+      String.raw`^News \(Late\) \+ More\?$`,
+    )
   })
 })

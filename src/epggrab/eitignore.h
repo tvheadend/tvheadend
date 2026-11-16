@@ -54,7 +54,7 @@ eitignore_t *eitignore_create(const char *uuid, htsmsg_t *conf);
 /*
  * Return the first enabled rule matching the event, NULL if none.
  */
-eitignore_t *eitignore_match(struct channel *ch,
+eitignore_t *eitignore_match(const struct channel *ch,
                              const lang_str_t *title,
                              const lang_str_t *summary,
                              const lang_str_t *desc,

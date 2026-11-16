@@ -9,16 +9,12 @@
  * is saved until the admin confirms the form.
  */
 
+import { regexEscape } from '@/utils/regexEscape'
+
 /* Query keys the EPG event drawer sets and the EIT Ignore Rules
  * page reads (and clears). */
 export const EIT_IGNORE_QUERY_CHANNEL = 'ignoreChannel'
 export const EIT_IGNORE_QUERY_TITLE = 'ignoreTitle'
-
-/* Escape every regular-expression metacharacter, so the title
- * matches literally in both POSIX ERE and PCRE. */
-export function escapeRegex(text: string): string {
-  return text.replace(/[\\^$.|?*+()[\]{}]/g, '\\$&')
-}
 
 /* Create-form values: the event's channel and exactly its title. */
 export function eitIgnorePreselect(channel: string, title: string): Record<string, unknown> {
@@ -26,7 +22,7 @@ export function eitIgnorePreselect(channel: string, title: string): Record<strin
     enabled: true,
     name: title,
     channel,
-    title: `^${escapeRegex(title)}$`,
+    title: `^${regexEscape(title)}$`,
     comment: 'Created from EPG event',
   }
 }

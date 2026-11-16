@@ -90,7 +90,7 @@ eitignore_destroy(eitignore_t *ei, int delconf)
  * A rule without any criterion would ignore every event.
  */
 static int
-eitignore_has_criteria(eitignore_t *ei)
+eitignore_has_criteria(const eitignore_t *ei)
 {
   return !strempty(ei->ei_channel) ||
          ei->ei_title != NULL ||
@@ -114,8 +114,26 @@ eitignore_match_text(eitignore_t *ei, const lang_str_t *ls)
   return 0;
 }
 
+/*
+ * The title criterion: the regex matches the title, or with full-text
+ * also the summary or the description. A rule without title passes.
+ */
+static int
+eitignore_match_title(eitignore_t *ei,
+                      const lang_str_t *title,
+                      const lang_str_t *summary,
+                      const lang_str_t *desc)
+{
+  if (ei->ei_title == NULL)
+    return 1;
+  if (eitignore_match_text(ei, title))
+    return 1;
+  return ei->ei_fulltext &&
+         (eitignore_match_text(ei, summary) || eitignore_match_text(ei, desc));
+}
+
 eitignore_t *
-eitignore_match(channel_t *ch,
+eitignore_match(const channel_t *ch,
                 const lang_str_t *title,
                 const lang_str_t *summary,
                 const lang_str_t *desc,
@@ -143,10 +161,7 @@ eitignore_match(channel_t *ch,
       continue;
     if (ei->ei_maxduration > 0 && duration > ei->ei_maxduration)
       continue;
-    if (ei->ei_title &&
-        !eitignore_match_text(ei, title) &&
-        !(ei->ei_fulltext && (eitignore_match_text(ei, summary) ||
-                              eitignore_match_text(ei, desc))))
+    if (!eitignore_match_title(ei, title, summary, desc))
       continue;
     return ei;
   }
