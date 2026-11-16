@@ -72,6 +72,7 @@
 #include "profile.h"
 #include "bouquet.h"
 #include "ratinglabels.h"
+#include "epggrab/eitignore.h"
 #include "tvhtime.h"
 #include "packet.h"
 #include "streaming.h"
@@ -1312,6 +1313,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
   tvhftrace(LS_MAIN, ratinglabel_init);
+  tvhftrace(LS_MAIN, eitignore_init);
   tvhftrace(LS_MAIN, service_init);
   tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
@@ -1426,6 +1428,7 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, channel_done);
   tvhftrace(LS_MAIN, bouquet_done);
   tvhftrace(LS_MAIN, ratinglabel_done);
+  tvhftrace(LS_MAIN, eitignore_done);
   tvhftrace(LS_MAIN, subscription_done);
   tvhftrace(LS_MAIN, access_done);
   tvhftrace(LS_MAIN, epg_done);

@@ -29,6 +29,7 @@
 #include "input/mpegts/dvb_charset.h"
 #include "dvr/dvr.h"
 #include "ratinglabels.h"
+#include "epggrab/eitignore.h"
 
 /* ************************************************************************
  * Opaque
@@ -689,6 +690,7 @@ static int _eit_process_event_one
   uint16_t eid;
   uint8_t running;
   epg_broadcast_t *ebc, _ebc;
+  eitignore_t *ei;
   epg_running_t run;
   epg_changes_t changes = 0;
   char tm1[32], tm2[32];
@@ -708,6 +710,19 @@ static int _eit_process_event_one
 
   if (epg_channel_ignore_broadcast(ch, start))
     return 0;
+
+  ei = eitignore_match(ch, ev->title, ev->summary, ev->desc, start, stop);
+  if (ei) {
+    tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, start=%s,"
+                         " stop=%s, ignored by rule '%s'",
+             svc->s_dvb_svcname ?: "(null)",
+             channel_get_name(ch, channel_blank_name),
+             eid, tableid,
+             gmtime2local(start, tm1, sizeof(tm1)),
+             gmtime2local(stop, tm2, sizeof(tm2)),
+             ei->ei_name ?: ei->ei_title ?: "");
+    return 0;
+  }
 
   /* Find broadcast */
   ebc  = epg_broadcast_find_by_time(ch, mod, start, stop, 1, &save2, &changes);

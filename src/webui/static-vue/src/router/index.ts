@@ -260,6 +260,15 @@ const configRatingLabelsGuard: RouteGuard = () => {
   return { name: 'config-channel-channels' }
 }
 
+/* Config / Channel / EPG / EIT Ignore Rules: gated on `uilevel ===
+ * 'expert'`, like Rating Labels. Same shape as
+ * `configRatingLabelsGuard`. */
+const configEitIgnoreGuard: RouteGuard = () => {
+  const access = useAccessStore()
+  if (access.uilevel === 'expert') return true
+  return { name: 'config-channel-channels' }
+}
+
 /* Config / Stream / ES filter sub-tabs (Video / Audio / Teletext
  * / Subtitle / CA / Other): gated on `uilevel === 'expert'`.
  * Mirrors ExtJS `esfilter.js:7` where the entire ES Filters tab
@@ -544,6 +553,7 @@ const routes: RouteRecordRaw[] = [
           leaf('epg-grabber', 'config-channel-epg-grabber', () => import('@/views/configuration/EpgGrabberView.vue'), 'EPG Grabber', 'admin'),
           leaf('epg-grabber-modules', 'config-channel-epg-grabber-modules', () => import('@/views/configuration/EpgGrabberModulesView.vue'), 'EPG Grabber Modules', 'admin'),
           leaf('rating-labels', 'config-channel-rating-labels', () => import('@/views/configuration/RatingLabelsView.vue'), 'Rating Labels', 'admin', configRatingLabelsGuard),
+          leaf('eit-ignore', 'config-channel-eit-ignore', () => import('@/views/configuration/EitIgnoreView.vue'), 'EIT Ignore Rules', 'admin', configEitIgnoreGuard),
         ],
       },
       {

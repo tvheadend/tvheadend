@@ -40,6 +40,7 @@
  * related / alternative showings after the recording actions.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useDvrEditor } from '@/composables/useDvrEditor'
 import Drawer from 'primevue/drawer'
 import ActionMenu from '@/components/ActionMenu.vue'
@@ -55,6 +56,11 @@ import { openPlay } from '@/utils/playUrl'
 import { useVideoPlayer } from '@/composables/useVideoPlayer'
 import { useStreamProfilesStore } from '@/stores/streamProfiles'
 import { useAccessStore } from '@/stores/access'
+import { levelMatches } from '@/types/idnode'
+import {
+  EIT_IGNORE_QUERY_CHANNEL,
+  EIT_IGNORE_QUERY_TITLE,
+} from '@/views/configuration/eitIgnorePrefill'
 import { useDvrConfigStore } from '@/stores/dvrConfig'
 import { useEpgContentTypeStore } from '@/stores/epgContentTypes'
 import { useI18n } from '@/composables/useI18n'
@@ -618,6 +624,31 @@ function buildPlayAction(ev: EpgEventDetail): ActionDef | null {
   return null
 }
 
+/* "Ignore…" — opens the EIT Ignore Rules page with a create form
+ * prefilled from this event (channel + exact title). Nothing is
+ * saved until the admin confirms the form there, and the event
+ * stays in the EPG. Offered where the target page is reachable:
+ * admin access and the expert UI level (`configEitIgnoreGuard`). */
+const router = useRouter()
+
+function buildIgnoreAction(ev: EpgEventDetail): ActionDef | null {
+  if (!access.data?.admin || !levelMatches('expert', access.uilevel)) return null
+  if (!ev.channelUuid || !ev.title) return null
+  const query = {
+    [EIT_IGNORE_QUERY_CHANNEL]: ev.channelUuid,
+    [EIT_IGNORE_QUERY_TITLE]: ev.title,
+  }
+  return {
+    id: 'eitignore',
+    label: t('Ignore…'),
+    tooltip: t('Create an EIT ignore rule for events with this title on this channel'),
+    onClick: () => {
+      emit('close')
+      router.push({ name: 'config-channel-eit-ignore', query }).catch(() => undefined)
+    },
+  }
+}
+
 /* Other showings — related broadcasts and alternative showings,
  * browse-only (anonymous-access endpoints), so offered to every user
  * regardless of DVR access. It trails the DVR actions on purpose, so
@@ -746,6 +777,8 @@ const actions = computed<ActionDef[]>(() => {
   if (play) out.push(play)
   if (access.data?.dvr) out.push(...buildDvrActions(ev))
   out.push(buildShowingsAction())
+  const ignore = buildIgnoreAction(ev)
+  if (ignore) out.push(ignore)
   return out
 })
 

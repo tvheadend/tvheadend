@@ -128,6 +128,7 @@ const CASES: Array<[string, string, Record<string, unknown>?]> = [
   ['configuration/DvbMuxesView', 'Edit Mux'],
   ['configuration/DvbNetworksView', 'Edit Network'],
   ['configuration/RatingLabelsView', 'Edit Rating Label'],
+  ['configuration/EitIgnoreView', 'Edit EIT Ignore Rule'],
   ['dvr/AutorecsView', 'Edit Autorec'],
   ['dvr/TimersView', 'Edit Timer'],
   ['dvr/UpcomingView', 'Edit Recording'],
@@ -164,6 +165,7 @@ describe('editor title in create mode', () => {
   it.each([
     ['configuration/ChannelTagsView', 'Add Channel Tag'],
     ['configuration/RatingLabelsView', 'Add Rating Label'],
+    ['configuration/EitIgnoreView', 'Add EIT Ignore Rule'],
   ])('%s still titles a new entry Add', async (path, title) => {
     await mountView(path)
     await action('add').onClick?.()

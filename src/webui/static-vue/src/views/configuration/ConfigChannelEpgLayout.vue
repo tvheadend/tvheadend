@@ -51,6 +51,11 @@ const ALL_TABS: L3Tab[] = [
     label: t('Rating Labels'),
     requiredLevel: 'expert',
   },
+  {
+    to: '/configuration/channel-epg/eit-ignore',
+    label: t('EIT Ignore Rules'),
+    requiredLevel: 'expert',
+  },
 ]
 
 const access = useAccessStore()

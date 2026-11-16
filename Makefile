@@ -322,6 +322,7 @@ SRCS-2 = \
 	src/api/api_profile.c \
 	src/api/api_bouquet.c \
 	src/api/api_ratinglabel.c \
+	src/api/api_eitignore.c \
 	src/api/api_language.c \
 	src/api/api_satip.c \
 	src/api/api_timeshift.c \
@@ -340,6 +341,7 @@ SRCS-2 += \
 SRCS-2 += \
 	src/epggrab/module.c \
 	src/epggrab/channel.c \
+	src/epggrab/eitignore.c \
 	src/epggrab/module/xmltv.c
 
 SRCS-2 += \

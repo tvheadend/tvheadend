@@ -165,6 +165,7 @@ void api_init ( void )
   api_channel_init();
   api_bouquet_init();
   api_ratinglabel_init();
+  api_eitignore_init();
   api_epg_init();
   api_epggrab_init();
   api_status_init();
