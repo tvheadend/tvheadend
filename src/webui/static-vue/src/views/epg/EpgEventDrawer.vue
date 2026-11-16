@@ -644,6 +644,8 @@ async function ignoreEvent(ev: EpgEventDetail, channelUuid: string, title: strin
   } catch {
     /* No match information: fall back to the create form. */
   }
+  /* The drawer may have closed or moved to another event meanwhile. */
+  if (props.event?.eventId !== ev.eventId) return
   const query = rules.length
     ? { [EIT_IGNORE_QUERY_RULES]: rules.join(',') }
     : { [EIT_IGNORE_QUERY_CHANNEL]: channelUuid, [EIT_IGNORE_QUERY_TITLE]: title }

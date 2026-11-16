@@ -183,16 +183,25 @@ watch(
   },
   { immediate: true },
 )
+/* A column filter can hide a matching rule: clear the filters once,
+ * the refetch then shows it. */
+let filtersCleared = false
 watch(
-  () => [pendingRules.value, gridStore.entries, gridRef.value] as const,
-  ([uuids, entries, grid]) => {
-    if (!uuids.length || !grid) return
+  () =>
+    [pendingRules.value, gridStore.entries, gridStore.loading, gridRef.value] as const,
+  ([uuids, entries, loading, grid]) => {
+    if (!uuids.length || !grid || loading) return
     const rows = entries.filter((r) => r.uuid && uuids.includes(r.uuid))
-    if (!rows.length) return
+    if (rows.length < uuids.length && gridStore.filter.length && !filtersCleared) {
+      filtersCleared = true
+      gridStore.setFilter([])
+      return
+    }
     /* useEditorMode types gridRef narrowly; IdnodeGrid exposes
      * `selection` (defineExpose). */
     ;(grid as unknown as { selection: BaseRow[] }).selection = rows
     pendingRules.value = []
+    filtersCleared = false
   },
 )
 

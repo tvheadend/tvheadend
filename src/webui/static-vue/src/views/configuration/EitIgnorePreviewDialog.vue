@@ -10,7 +10,7 @@
  * values. The rule acts on incoming EIT only, so this shows what it
  * would have ignored; nothing is removed from the EPG.
  */
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import { apiCall } from '@/api/client'
 import { useI18n } from '@/composables/useI18n'
@@ -55,29 +55,53 @@ function minutes(e: PreviewEvent): string {
   return `${Math.round((e.stop - e.start) / 60)} ${t('min')}`
 }
 
+/* Only the latest request may update the dialog: a slower earlier
+ * preview must not overwrite a newer one. */
+let requestId = 0
+
 async function load(conf: Record<string, unknown>) {
+  const id = ++requestId
   loading.value = true
   error.value = ''
   try {
     const res = await apiCall<PreviewResponse>('eitignore/preview', { conf })
+    if (id !== requestId) return
     entries.value = res.entries ?? []
     total.value = res.total ?? 0
   } catch (e) {
+    if (id !== requestId) return
     entries.value = []
     total.value = 0
     error.value = e instanceof Error ? e.message : String(e)
   } finally {
-    loading.value = false
+    if (id === requestId) loading.value = false
   }
+}
+
+/* Escape closes only this dialog. The editor below closes on Escape
+ * from a document listener; catch the key first (window, capture
+ * phase) while the dialog is open. */
+function onEscape(ev: KeyboardEvent) {
+  if (ev.key !== 'Escape') return
+  ev.stopImmediatePropagation()
+  visible.value = false
 }
 
 watch(
   () => [visible.value, props.conf] as const,
   ([open, conf]) => {
-    if (open && conf) void load(conf)
+    if (open) {
+      window.addEventListener('keydown', onEscape, true)
+      if (conf) void load(conf)
+    } else {
+      window.removeEventListener('keydown', onEscape, true)
+      requestId++
+    }
   },
   { immediate: true },
 )
+
+onBeforeUnmount(() => window.removeEventListener('keydown', onEscape, true))
 </script>
 
 <template>
@@ -85,6 +109,7 @@ watch(
     v-model:visible="visible"
     modal
     :draggable="false"
+    :close-on-escape="false"
     :header="t('Preview EIT Ignore Rule')"
     class="eit-ignore-preview"
   >
