@@ -1419,16 +1419,33 @@ t2mi_network_add_mux ( t2mi_network_t *tn, const char *src_uuid, uint16_t sid )
 static int
 t2mi_mux_depth ( mpegts_mux_t *mm )
 {
-  t2mi_mux_t *tm;
   int depth = 0;
 
   while (mm && idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class)) {
     if (++depth > T2MI_MAX_DEPTH)
       break;
-    tm = (t2mi_mux_t *)mm;
-    mm = tm->mm_t2mi_src_mux ? mpegts_mux_find(tm->mm_t2mi_src_mux) : NULL;
+    mm = mm->mm_t2mi_src_mux ? mpegts_mux_find(mm->mm_t2mi_src_mux) : NULL;
   }
   return depth;
+}
+
+/* The real mux that a mux is received from: follow each T2-MI mux to its
+ * source mux until a mux of a normal network is reached.  A normal mux is
+ * returned as it is.  NULL when the chain is broken (a source mux that is
+ * not set or no longer exists) or deeper than T2MI_MAX_DEPTH. */
+mpegts_mux_t *
+t2mi_mux_root ( mpegts_mux_t *mm )
+{
+  int depth = 0;
+
+  lock_assert(&global_lock);
+
+  while (mm && idnode_is_instance(&mm->mm_network->mn_id, &t2mi_network_class)) {
+    if (++depth > T2MI_MAX_DEPTH)
+      return NULL;
+    mm = mm->mm_t2mi_src_mux ? mpegts_mux_find(mm->mm_t2mi_src_mux) : NULL;
+  }
+  return mm;
 }
 
 /* Look for carrier services on 'mm' and create, or confirm, the T2-MI mux

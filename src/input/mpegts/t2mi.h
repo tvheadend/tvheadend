@@ -36,6 +36,11 @@ int t2mi_mux_count_carriers ( struct mpegts_mux *mm );
  * mux when the mux is being scanned */
 void t2mi_carrier_seen ( struct mpegts_mux *mm, uint16_t sid );
 
+/* the real mux that 'mm' is received from: 'mm' itself for a normal mux,
+ * the transponder under a T2-MI mux (through any nested carriers), or NULL
+ * when a T2-MI mux has lost its source mux.  Call with global_lock held. */
+struct mpegts_mux *t2mi_mux_root ( struct mpegts_mux *mm );
+
 /* order of two muxes of one T2-MI network (0 if they are not such muxes):
  * carriers of one transponder next to each other */
 int t2mi_mux_compare ( struct mpegts_mux *a, struct mpegts_mux *b );

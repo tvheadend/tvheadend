@@ -176,6 +176,9 @@ void tvh_input_instance_clear_stats ( tvh_input_instance_t *tii );
 #endif
 #if ENABLE_T2MI
 #include "input/mpegts/t2mi.h"
+#else
+static inline struct mpegts_mux *t2mi_mux_root ( struct mpegts_mux *mm )
+  { return mm; }
 #endif
 #if ENABLE_LINUXDVB
 #include "input/mpegts/linuxdvb.h"
