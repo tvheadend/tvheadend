@@ -24,7 +24,7 @@
 
 static void
 api_eitignore_grid
-  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf )
+  ( access_t *perm, idnode_set_t *ins, api_idnode_grid_conf_t *conf, htsmsg_t *args )
 {
   eitignore_t *ei;
 

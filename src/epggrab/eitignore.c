@@ -49,6 +49,9 @@ eitignore_create(const char *uuid, htsmsg_t *conf)
   lock_assert(&global_lock);
 
   ei = calloc(1, sizeof(*ei));
+  if (ei == NULL)
+    return NULL;
+  ei->ei_enabled = 1;
   if (idnode_insert(&ei->ei_id, uuid, &eitignore_class, 0)) {
     if (uuid)
       tvherror(LS_EPGGRAB, "invalid EIT ignore rule uuid '%s'", uuid);
