@@ -636,7 +636,22 @@ function buildPlayAction(ev: EpgEventDetail): ActionDef | null {
  * (`configEitIgnoreGuard`). */
 const router = useRouter()
 
+/* Each Ignore request is valid only while the drawer shows the same
+ * event and is mounted: a change of event (also back to the same one)
+ * or unmounting invalidates it. */
+let ignoreRequest = 0
+watch(
+  () => props.event,
+  () => {
+    ignoreRequest++
+  },
+)
+onBeforeUnmount(() => {
+  ignoreRequest++
+})
+
 async function ignoreEvent(ev: EpgEventDetail, channelUuid: string, title: string) {
+  const request = ++ignoreRequest
   let rules: string[] = []
   try {
     rules = (await apiCall<{ entries: string[] }>('eitignore/match', { eventId: ev.eventId }))
@@ -644,8 +659,7 @@ async function ignoreEvent(ev: EpgEventDetail, channelUuid: string, title: strin
   } catch {
     /* No match information: fall back to the create form. */
   }
-  /* The drawer may have closed or moved to another event meanwhile. */
-  if (props.event?.eventId !== ev.eventId) return
+  if (request !== ignoreRequest) return
   const query = rules.length
     ? { [EIT_IGNORE_QUERY_RULES]: rules.join(',') }
     : { [EIT_IGNORE_QUERY_CHANNEL]: channelUuid, [EIT_IGNORE_QUERY_TITLE]: title }
