@@ -196,9 +196,10 @@ static void
 eitignore_class_get_title
   (idnode_t *self, const char *lang, char *dst, size_t dstsize)
 {
-  eitignore_t *ei = (eitignore_t *)self;
+  const eitignore_t *ei = (const eitignore_t *)self;
   const char *s = "";
 
+  (void)lang;
   if (!strempty(ei->ei_name))
     s = ei->ei_name;
   else if (!strempty(ei->ei_title))
@@ -228,8 +229,8 @@ eitignore_class_title_set(void *o, const void *v)
 static char *
 eitignore_class_channel_rend(void *o, const char *lang)
 {
-  eitignore_t *ei = (eitignore_t *)o;
-  channel_t *ch;
+  const eitignore_t *ei = (const eitignore_t *)o;
+  const channel_t *ch;
 
   if (strempty(ei->ei_channel))
     return NULL;
@@ -243,6 +244,9 @@ static htsmsg_t *
 eitignore_class_lang_list(void *o, const char *lang)
 {
   htsmsg_t *m = htsmsg_create_map();
+
+  (void)o;
+  (void)lang;
   htsmsg_add_str(m, "type", "api");
   htsmsg_add_str(m, "uri",  "language/list");
   return m;
@@ -357,7 +361,8 @@ const idclass_t eitignore_class = {
 void
 eitignore_init(void)
 {
-  htsmsg_t *c, *m;
+  htsmsg_t *c;
+  htsmsg_t *m;
   htsmsg_field_t *f;
 
   TAILQ_INIT(&eitignores);

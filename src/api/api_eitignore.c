@@ -28,6 +28,7 @@ api_eitignore_grid
 {
   eitignore_t *ei;
 
+  (void)args;
   TAILQ_FOREACH(ei, &eitignores, ei_link)
     idnode_set_add(ins, (idnode_t*)ei, &conf->filter, perm->aa_lang_ui);
 }
@@ -39,6 +40,9 @@ api_eitignore_create
   htsmsg_t *conf;
   eitignore_t *ei;
 
+  (void)perm;
+  (void)opaque;
+  (void)op;
   if (!(conf = htsmsg_get_map(args, "conf")))
     return EINVAL;
 
@@ -55,7 +59,7 @@ void api_eitignore_init ( void )
 {
   static api_hook_t ah[] = {
     { "eitignore/class",   ACCESS_ADMIN, api_idnode_class, (void*)&eitignore_class },
-    { "eitignore/grid",    ACCESS_ADMIN, api_idnode_grid,  api_eitignore_grid },
+    { "eitignore/grid",    ACCESS_ADMIN, api_idnode_grid,  &api_eitignore_grid },
     { "eitignore/create",  ACCESS_ADMIN, api_eitignore_create, NULL },
     { NULL },
   };
