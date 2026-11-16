@@ -39,6 +39,11 @@ Example: to ignore a station's daily 24-hour "No Information" event, set
 the channel, the title `^No Information$` and a minimum duration of
 12 hours.
 
+**Preview** in the rule form lists the events currently in the EPG that
+the rule, as it is in the form, matches. **Ignore...** on an EPG event
+opens this list with the rules that already match the event selected, or
+a new rule prefilled with the event's channel and title if none does.
+
 Ignored events are logged at trace level (subsystem `tbl-eit`).
 
 ---

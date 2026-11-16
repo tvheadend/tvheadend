@@ -1831,6 +1831,11 @@ onBeforeUnmount(() => {
     </div>
     <template #footer>
       <div class="idnode-editor__footer">
+        <!--
+          Host-view actions on the form as it is now (unsaved
+          values included), e.g. a preview. Rendered before Cancel.
+        -->
+        <slot name="footerActions" :values="currentValues" :busy="loading || saving" />
         <button
           type="button"
           class="idnode-editor__btn idnode-editor__btn--cancel"

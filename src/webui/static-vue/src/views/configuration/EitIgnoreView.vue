@@ -20,7 +20,11 @@
  * "Ignore…" in the EPG event drawer lands here with the event's
  * channel and title in the query (`eitIgnorePrefill.ts`); the
  * create form opens prefilled and nothing is saved until the admin
- * confirms it.
+ * confirms it. When rules already match the event, the drawer passes
+ * their uuids instead and the page selects them.
+ *
+ * "Preview" in the form lists the EPG events the rule, as it is in
+ * the form, matches (`EitIgnorePreviewDialog.vue`).
  */
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -36,8 +40,11 @@ import { useEditorMode } from '@/composables/useEditorMode'
 import { useBulkAction } from '@/composables/useBulkAction'
 import { useI18n } from '@/composables/useI18n'
 import { buildAddEditDeleteActions } from '../dvr/dvrToolbarHelpers'
+import { useGridStore } from '@/stores/grid'
+import EitIgnorePreviewDialog from './EitIgnorePreviewDialog.vue'
 import {
   EIT_IGNORE_QUERY_CHANNEL,
+  EIT_IGNORE_QUERY_RULES,
   EIT_IGNORE_QUERY_TITLE,
   eitIgnorePreselect,
 } from './eitIgnorePrefill'
@@ -161,6 +168,42 @@ watch(
   { immediate: true },
 )
 
+/* Select the rules that already match the event the drawer came
+ * from, once the grid has loaded them; then clear the param. */
+const gridStore = useGridStore<BaseRow>('eitignore/grid')
+const pendingRules = ref<string[]>([])
+watch(
+  () => route.query[EIT_IGNORE_QUERY_RULES],
+  (rules) => {
+    if (typeof rules !== 'string' || !rules) return
+    pendingRules.value = rules.split(',')
+    const rest = { ...route.query }
+    delete rest[EIT_IGNORE_QUERY_RULES]
+    router.replace({ query: rest }).catch(() => { /* nav cancellation is fine */ })
+  },
+  { immediate: true },
+)
+watch(
+  () => [pendingRules.value, gridStore.entries, gridRef.value] as const,
+  ([uuids, entries, grid]) => {
+    if (!uuids.length || !grid) return
+    const rows = entries.filter((r) => r.uuid && uuids.includes(r.uuid))
+    if (!rows.length) return
+    /* useEditorMode types gridRef narrowly; IdnodeGrid exposes
+     * `selection` (defineExpose). */
+    ;(grid as unknown as { selection: BaseRow[] }).selection = rows
+    pendingRules.value = []
+  },
+)
+
+const previewVisible = ref(false)
+const previewConf = ref<Record<string, unknown> | null>(null)
+
+function openPreview(values: Record<string, unknown>) {
+  previewConf.value = { ...values }
+  previewVisible.value = true
+}
+
 const remove = useBulkAction({
   endpoint: 'idnode/delete',
   confirmText: t('Do you really want to delete the selected EIT ignore rules?'),
@@ -218,13 +261,38 @@ function buildActions(selection: BaseRow[], clearSelection: () => void): ActionD
     :title="creatingBase ? t('Add EIT Ignore Rule') : t('Edit EIT Ignore Rule')"
     @close="closeEditor"
     @created="flipToEdit"
-  />
+  >
+    <template #footerActions="{ values, busy }">
+      <button
+        type="button"
+        class="eit-ignore__preview-btn"
+        :disabled="busy"
+        @click="openPreview(values)"
+      >
+        {{ t('Preview') }}
+      </button>
+    </template>
+  </IdnodeEditor>
+  <EitIgnorePreviewDialog v-model:visible="previewVisible" :conf="previewConf" />
 </template>
 
 <style scoped>
 .eit-ignore__grid {
   flex: 1 1 auto;
   min-height: 0;
+}
+
+.eit-ignore__preview-btn {
+  margin-right: auto;
+  background: transparent;
+  color: var(--tvh-text);
+  border: 1px solid var(--tvh-border);
+  border-radius: var(--tvh-radius-sm);
+  padding: 6px 16px;
+  font: inherit;
+  font-size: var(--tvh-text-md);
+  cursor: pointer;
+  min-height: 36px;
 }
 
 .eit-ignore__empty {

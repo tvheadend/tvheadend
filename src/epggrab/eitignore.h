@@ -25,6 +25,7 @@
 #include "tvhregex.h"
 
 struct channel;
+struct epg_broadcast;
 
 typedef struct eitignore {
   idnode_t                ei_id;
@@ -61,6 +62,14 @@ eitignore_t *eitignore_match(const struct channel *ch,
                              const lang_str_t *summary,
                              const lang_str_t *desc,
                              time_t start, time_t stop);
+
+/*
+ * Whether rule ei matches broadcast ebc, regardless of its enabled flag.
+ */
+int eitignore_match_broadcast(eitignore_t *ei, const struct epg_broadcast *ebc);
+
+eitignore_t *eitignore_create_temp(htsmsg_t *conf);
+void eitignore_destroy_temp(eitignore_t *ei);
 
 void eitignore_destroy_by_channel(struct channel *ch, int delconf);
 

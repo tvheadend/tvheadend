@@ -59,6 +59,7 @@ import { useAccessStore } from '@/stores/access'
 import { levelMatches } from '@/types/idnode'
 import {
   EIT_IGNORE_QUERY_CHANNEL,
+  EIT_IGNORE_QUERY_RULES,
   EIT_IGNORE_QUERY_TITLE,
 } from '@/views/configuration/eitIgnorePrefill'
 import { useDvrConfigStore } from '@/stores/dvrConfig'
@@ -624,27 +625,43 @@ function buildPlayAction(ev: EpgEventDetail): ActionDef | null {
   return null
 }
 
-/* "Ignore…" — opens the EIT Ignore Rules page with a create form
- * prefilled from this event (channel + exact title). Nothing is
- * saved until the admin confirms the form there, and the event
- * stays in the EPG. Offered where the target page is reachable:
- * admin access and the expert UI level (`configEitIgnoreGuard`). */
+/* "Ignore…" — opens the EIT Ignore Rules page. When rules (enabled
+ * or not) already match this event (`api/eitignore/match`), the page
+ * selects them: the event is still listed because a rule does not
+ * remove existing events, and a second rule would be a duplicate.
+ * Otherwise the page opens a create form prefilled from this event
+ * (channel + exact title). Nothing is saved until the admin confirms
+ * the form there, and the event stays in the EPG. Offered where the
+ * target page is reachable: admin access and the expert UI level
+ * (`configEitIgnoreGuard`). */
 const router = useRouter()
+
+async function ignoreEvent(ev: EpgEventDetail, channelUuid: string, title: string) {
+  let rules: string[] = []
+  try {
+    rules = (await apiCall<{ entries: string[] }>('eitignore/match', { eventId: ev.eventId }))
+      .entries ?? []
+  } catch {
+    /* No match information: fall back to the create form. */
+  }
+  const query = rules.length
+    ? { [EIT_IGNORE_QUERY_RULES]: rules.join(',') }
+    : { [EIT_IGNORE_QUERY_CHANNEL]: channelUuid, [EIT_IGNORE_QUERY_TITLE]: title }
+  emit('close')
+  router.push({ name: 'config-channel-eit-ignore', query }).catch(() => undefined)
+}
 
 function buildIgnoreAction(ev: EpgEventDetail): ActionDef | null {
   if (!access.data?.admin || !levelMatches('expert', access.uilevel)) return null
-  if (!ev.channelUuid || !ev.title) return null
-  const query = {
-    [EIT_IGNORE_QUERY_CHANNEL]: ev.channelUuid,
-    [EIT_IGNORE_QUERY_TITLE]: ev.title,
-  }
+  const channelUuid = ev.channelUuid
+  const title = ev.title
+  if (!channelUuid || !title) return null
   return {
     id: 'eitignore',
     label: t('Ignore…'),
-    tooltip: t('Create an EIT ignore rule for events with this title on this channel'),
+    tooltip: t('Create an EIT ignore rule for events with this title on this channel, or show the rules that already match'),
     onClick: () => {
-      emit('close')
-      router.push({ name: 'config-channel-eit-ignore', query }).catch(() => undefined)
+      void ignoreEvent(ev, channelUuid, title)
     },
   }
 }

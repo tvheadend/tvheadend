@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "access.h"
 #include "channels.h"
+#include "epg.h"
 #include "dvr/dvr.h"
 #include "epggrab/eitignore.h"
 
@@ -165,6 +166,30 @@ eitignore_match_channel(const eitignore_t *ei, const channel_t *ch)
   return 0;
 }
 
+/*
+ * All criteria of one rule, regardless of its enabled flag.
+ */
+static int
+eitignore_rule_match(eitignore_t *ei,
+                     const channel_t *ch,
+                     const lang_str_t *title,
+                     const lang_str_t *summary,
+                     const lang_str_t *desc,
+                     time_t start, time_t stop)
+{
+  const int64_t duration = stop - start;
+
+  if (ei->ei_error || ei->ei_nochannel || !eitignore_has_criteria(ei))
+    return 0;
+  if (!eitignore_match_channel(ei, ch))
+    return 0;
+  if (ei->ei_minduration > 0 && duration < ei->ei_minduration)
+    return 0;
+  if (ei->ei_maxduration > 0 && duration > ei->ei_maxduration)
+    return 0;
+  return eitignore_match_title(ei, title, summary, desc);
+}
+
 eitignore_t *
 eitignore_match(const channel_t *ch,
                 const lang_str_t *title,
@@ -173,25 +198,57 @@ eitignore_match(const channel_t *ch,
                 time_t start, time_t stop)
 {
   eitignore_t *ei;
-  const int64_t duration = stop - start;
 
   lock_assert(&global_lock);
 
-  TAILQ_FOREACH(ei, &eitignores, ei_link) {
-    if (!ei->ei_enabled || ei->ei_error || ei->ei_nochannel ||
-        !eitignore_has_criteria(ei))
-      continue;
-    if (!eitignore_match_channel(ei, ch))
-      continue;
-    if (ei->ei_minduration > 0 && duration < ei->ei_minduration)
-      continue;
-    if (ei->ei_maxduration > 0 && duration > ei->ei_maxduration)
-      continue;
-    if (!eitignore_match_title(ei, title, summary, desc))
-      continue;
-    return ei;
-  }
+  TAILQ_FOREACH(ei, &eitignores, ei_link)
+    if (ei->ei_enabled &&
+        eitignore_rule_match(ei, ch, title, summary, desc, start, stop))
+      return ei;
   return NULL;
+}
+
+int
+eitignore_match_broadcast(eitignore_t *ei, const epg_broadcast_t *ebc)
+{
+  lock_assert(&global_lock);
+
+  return eitignore_rule_match(ei, ebc->channel, ebc->title, ebc->summary,
+                              ebc->description, ebc->start, ebc->stop);
+}
+
+/*
+ * A rule built from conf that is neither listed, registered nor saved,
+ * so it never affects EIT processing (used to preview a rule).
+ */
+eitignore_t *
+eitignore_create_temp(htsmsg_t *conf)
+{
+  eitignore_t *ei;
+
+  lock_assert(&global_lock);
+
+  ei = calloc(1, sizeof(*ei));
+  if (ei == NULL)
+    return NULL;
+  ei->ei_enabled = 1;
+  LIST_INIT(&ei->ei_channels);
+  ei->ei_id.in_class = &eitignore_class;
+  if (conf)
+    idnode_load(&ei->ei_id, conf);
+  return ei;
+}
+
+void
+eitignore_destroy_temp(eitignore_t *ei)
+{
+  idnode_list_destroy(&ei->ei_channels, NULL);
+  eitignore_regfree(ei);
+  free(ei->ei_name);
+  free(ei->ei_lang);
+  free(ei->ei_comment);
+  htsmsg_destroy(ei->ei_nochannel_uuids);
+  free(ei);
 }
 
 /* **************************************************************************

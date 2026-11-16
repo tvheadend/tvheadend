@@ -15,6 +15,9 @@ import { regexEscape } from '@/utils/regexEscape'
  * page reads (and clears). */
 export const EIT_IGNORE_QUERY_CHANNEL = 'ignoreChannel'
 export const EIT_IGNORE_QUERY_TITLE = 'ignoreTitle'
+/* Comma-separated uuids of existing rules that already match the
+ * event: the page selects them instead of opening a create form. */
+export const EIT_IGNORE_QUERY_RULES = 'ignoreRules'
 
 /* Create-form values: the event's channel and exactly its title. */
 export function eitIgnorePreselect(channel: string, title: string): Record<string, unknown> {
