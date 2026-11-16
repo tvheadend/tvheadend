@@ -265,7 +265,7 @@ static int
 eitignore_class_channel_set(void *o, const void *v)
 {
   eitignore_t *ei = (eitignore_t *)o;
-  htsmsg_t *l = (htsmsg_t *)v;
+  htsmsg_t *l = (htsmsg_t *)v, *kept;
   int nochannel, save = idnode_list_set1(&ei->ei_id, &ei->ei_channels,
                                          &channel_class, l,
                                          eitignore_class_channel_set_cb);
@@ -273,11 +273,12 @@ eitignore_class_channel_set(void *o, const void *v)
    * channels do not exist. Keep their uuids, so the rule is saved with
    * them and stays unused after a restart. */
   nochannel = l && !htsmsg_is_empty(l) && LIST_EMPTY(&ei->ei_channels);
-  if (nochannel != ei->ei_nochannel)
+  kept = nochannel ? htsmsg_copy(l) : NULL;
+  if (htsmsg_cmp(ei->ei_nochannel_uuids, kept))
     save = 1;
-  ei->ei_nochannel = nochannel;
   htsmsg_destroy(ei->ei_nochannel_uuids);
-  ei->ei_nochannel_uuids = nochannel ? htsmsg_copy(l) : NULL;
+  ei->ei_nochannel_uuids = kept;
+  ei->ei_nochannel = nochannel;
   if (nochannel)
     tvherror(LS_EPGGRAB, "EIT ignore rule '%s': none of its channels exists, rule not used",
              ei->ei_name ?: "");
