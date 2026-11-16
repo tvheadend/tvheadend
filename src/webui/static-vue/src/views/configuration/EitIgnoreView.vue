@@ -188,9 +188,16 @@ watch(
 let filtersCleared = false
 watch(
   () =>
-    [pendingRules.value, gridStore.entries, gridStore.loading, gridRef.value] as const,
-  ([uuids, entries, loading, grid]) => {
-    if (!uuids.length || !grid || loading) return
+    [
+      pendingRules.value,
+      gridStore.entries,
+      gridStore.loading,
+      gridStore.error,
+      gridRef.value,
+    ] as const,
+  ([uuids, entries, loading, error, grid]) => {
+    /* A failed load keeps old entries: wait for a successful one. */
+    if (!uuids.length || !grid || loading || error) return
     const rows = entries.filter((r) => r.uuid && uuids.includes(r.uuid))
     if (rows.length < uuids.length && gridStore.filter.length && !filtersCleared) {
       filtersCleared = true
