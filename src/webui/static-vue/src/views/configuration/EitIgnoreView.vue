@@ -44,7 +44,7 @@ import {
 
 const { t } = useI18n()
 
-/* `channel` is a channel uuid on the wire, `language` an ISO 639
+/* `channel` is a list of channel uuids on the wire, `language` an ISO 639
  * code; both match the `.list` callbacks of `eitignore_class`. */
 const CHANNEL_ENUM = {
   type: 'api' as const,
@@ -84,7 +84,7 @@ const cols: ColumnDef[] = [
     field: 'channel',
     sortable: true,
     filterType: 'string',
-    width: 180,
+    width: 220,
     minVisible: 'phone',
     phoneOrder: 1,
     cellComponent: EnumNameCell,

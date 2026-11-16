@@ -77,6 +77,7 @@ typedef struct channel
 
   int                   ch_epgauto;
   idnode_list_head_t    ch_epggrab;                /* 1 = epggrab channel, 2 = channel */
+  idnode_list_head_t    ch_eitignores;             /* 1 = EIT ignore rule, 2 = channel */
 
   /* DVR */
   int                   ch_dvr_extra_time_pre;

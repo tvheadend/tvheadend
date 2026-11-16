@@ -1313,7 +1313,6 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, esfilter_init);
   tvhftrace(LS_MAIN, bouquet_init);
   tvhftrace(LS_MAIN, ratinglabel_init);
-  tvhftrace(LS_MAIN, eitignore_init);
   tvhftrace(LS_MAIN, service_init);
   tvhftrace(LS_MAIN, descrambler_init);
   tvhftrace(LS_MAIN, dvb_init);
@@ -1327,6 +1326,7 @@ main(int argc, char **argv)
 #endif
 #endif
   tvhftrace(LS_MAIN, channel_init);
+  tvhftrace(LS_MAIN, eitignore_init);
   tvhftrace(LS_MAIN, bouquet_service_resolve);
   tvhftrace(LS_MAIN, subscription_init);
   tvhftrace(LS_MAIN, dvr_config_init);

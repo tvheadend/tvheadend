@@ -25,6 +25,9 @@
 
 struct eitignore_queue eitignores;
 
+static int eitignore_has_criteria(const eitignore_t *ei);
+static void eitignore_destroy(eitignore_t *ei, int delconf);
+
 /* **************************************************************************
  * Rule management
  * **************************************************************************/
@@ -52,6 +55,7 @@ eitignore_create(const char *uuid, htsmsg_t *conf)
   if (ei == NULL)
     return NULL;
   ei->ei_enabled = 1;
+  LIST_INIT(&ei->ei_channels);
   if (idnode_insert(&ei->ei_id, uuid, &eitignore_class, 0)) {
     if (uuid)
       tvherror(LS_EPGGRAB, "invalid EIT ignore rule uuid '%s'", uuid);
@@ -61,6 +65,12 @@ eitignore_create(const char *uuid, htsmsg_t *conf)
   TAILQ_INSERT_TAIL(&eitignores, ei, ei_link);
   if (conf)
     idnode_load(&ei->ei_id, conf);
+  /* A new rule without criteria would match nothing; refuse it. */
+  if (uuid == NULL && !eitignore_has_criteria(ei)) {
+    tvherror(LS_EPGGRAB, "EIT ignore rule without channel, title or duration refused");
+    eitignore_destroy(ei, 0);
+    return NULL;
+  }
   return ei;
 }
 
@@ -73,10 +83,10 @@ eitignore_destroy(eitignore_t *ei, int delconf)
   if (delconf)
     hts_settings_remove("epggrab/eitignore/%s", idnode_uuid_as_str(&ei->ei_id, ubuf));
   TAILQ_REMOVE(&eitignores, ei, ei_link);
+  idnode_list_destroy(&ei->ei_channels, ei);
   idnode_unlink(&ei->ei_id);
   eitignore_regfree(ei);
   free(ei->ei_name);
-  free(ei->ei_channel);
   free(ei->ei_lang);
   free(ei->ei_comment);
   free(ei);
@@ -92,7 +102,7 @@ eitignore_destroy(eitignore_t *ei, int delconf)
 static int
 eitignore_has_criteria(const eitignore_t *ei)
 {
-  return !strempty(ei->ei_channel) ||
+  return !LIST_EMPTY(&ei->ei_channels) ||
          ei->ei_title != NULL ||
          ei->ei_minduration > 0 ||
          ei->ei_maxduration > 0;
@@ -132,6 +142,24 @@ eitignore_match_title(eitignore_t *ei,
          (eitignore_match_text(ei, summary) || eitignore_match_text(ei, desc));
 }
 
+/*
+ * The channel criterion: no channels, or ch is one of them.
+ */
+static int
+eitignore_match_channel(const eitignore_t *ei, const channel_t *ch)
+{
+  const idnode_list_mapping_t *ilm;
+
+  if (LIST_EMPTY(&ei->ei_channels))
+    return 1;
+  if (ch == NULL)
+    return 0;
+  LIST_FOREACH(ilm, &ei->ei_channels, ilm_in1_link)
+    if (ilm->ilm_in2 == &ch->ch_id)
+      return 1;
+  return 0;
+}
+
 eitignore_t *
 eitignore_match(const channel_t *ch,
                 const lang_str_t *title,
@@ -140,8 +168,6 @@ eitignore_match(const channel_t *ch,
                 time_t start, time_t stop)
 {
   eitignore_t *ei;
-  char ubuf[UUID_HEX_SIZE];
-  const char *chuuid = NULL;
   const int64_t duration = stop - start;
 
   lock_assert(&global_lock);
@@ -149,14 +175,8 @@ eitignore_match(const channel_t *ch,
   TAILQ_FOREACH(ei, &eitignores, ei_link) {
     if (!ei->ei_enabled || ei->ei_error || !eitignore_has_criteria(ei))
       continue;
-    if (!strempty(ei->ei_channel)) {
-      if (ch == NULL)
-        continue;
-      if (chuuid == NULL)
-        chuuid = idnode_uuid_as_str(&ch->ch_id, ubuf);
-      if (strcmp(ei->ei_channel, chuuid))
-        continue;
-    }
+    if (!eitignore_match_channel(ei, ch))
+      continue;
     if (ei->ei_minduration > 0 && duration < ei->ei_minduration)
       continue;
     if (ei->ei_maxduration > 0 && duration > ei->ei_maxduration)
@@ -226,18 +246,34 @@ eitignore_class_title_set(void *o, const void *v)
   return 1;
 }
 
+static int
+eitignore_class_channel_set_cb(idnode_t *in1, idnode_t *in2, void *origin)
+{
+  eitignore_t *ei = (eitignore_t *)in1;
+  channel_t *ch = (channel_t *)in2;
+  return idnode_list_link(in1, &ei->ei_channels, in2, &ch->ch_eitignores,
+                          origin, 1) ? 1 : 0;
+}
+
+static int
+eitignore_class_channel_set(void *o, const void *v)
+{
+  eitignore_t *ei = (eitignore_t *)o;
+  return idnode_list_set1(&ei->ei_id, &ei->ei_channels,
+                          &channel_class, (htsmsg_t *)v,
+                          eitignore_class_channel_set_cb);
+}
+
+static const void *
+eitignore_class_channel_get(void *o)
+{
+  return idnode_list_get1(&((eitignore_t *)o)->ei_channels);
+}
+
 static char *
 eitignore_class_channel_rend(void *o, const char *lang)
 {
-  const eitignore_t *ei = (const eitignore_t *)o;
-  const channel_t *ch;
-
-  if (strempty(ei->ei_channel))
-    return NULL;
-  ch = channel_find_by_uuid(ei->ei_channel);
-  if (ch == NULL)
-    return strdup(ei->ei_channel);
-  return strdup(channel_get_name(ch, tvh_gettext_lang(lang, channel_blank_name)));
+  return idnode_list_get_csv1(&((eitignore_t *)o)->ei_channels, lang);
 }
 
 static htsmsg_t *
@@ -288,11 +324,13 @@ const idclass_t eitignore_class = {
     },
     {
       .type     = PT_STR,
+      .islist   = 1,
       .id       = "channel",
-      .name     = N_("Channel"),
-      .desc     = N_("The channel to which this rule applies. "
-                     "Leave blank to apply the rule to all channels."),
-      .off      = offsetof(eitignore_t, ei_channel),
+      .name     = N_("Channels"),
+      .desc     = N_("The channels to which this rule applies. "
+                     "Leave empty to apply the rule to all channels."),
+      .set      = eitignore_class_channel_set,
+      .get      = eitignore_class_channel_get,
       .rend     = eitignore_class_channel_rend,
       .list     = channel_class_get_list,
     },
@@ -353,6 +391,21 @@ const idclass_t eitignore_class = {
     {}
   }
 };
+
+void
+eitignore_destroy_by_channel(channel_t *ch, int delconf)
+{
+  idnode_list_mapping_t *ilm;
+  eitignore_t *ei;
+
+  while ((ilm = LIST_FIRST(&ch->ch_eitignores)) != NULL) {
+    ei = (eitignore_t *)ilm->ilm_in1;
+    idnode_list_unlink(ilm, delconf ? ch : NULL);
+    /* A rule limited to channels must not widen to all channels. */
+    if (LIST_EMPTY(&ei->ei_channels))
+      eitignore_destroy(ei, delconf);
+  }
+}
 
 /* **************************************************************************
  * Init / done

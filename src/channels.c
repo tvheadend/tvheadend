@@ -35,6 +35,7 @@
 #include "bouquet.h"
 #include "intlconv.h"
 #include "memoryinfo.h"
+#include "epggrab/eitignore.h"
 
 typedef int (sortfcn_t)(const void *, const void *);
 
@@ -1237,6 +1238,7 @@ channel_create0
   LIST_INIT(&ch->ch_services);
   LIST_INIT(&ch->ch_subscriptions);
   LIST_INIT(&ch->ch_epggrab);
+  LIST_INIT(&ch->ch_eitignores);
   LIST_INIT(&ch->ch_autorecs);
   LIST_INIT(&ch->ch_timerecs);
 
@@ -1319,6 +1321,7 @@ channel_delete ( channel_t *ch, int delconf )
   }
 
   /* EPG */
+  eitignore_destroy_by_channel(ch, delconf);
   epggrab_channel_rem(ch);
   epg_channel_unlink(ch);
   if (ch->ch_epg_parent) {

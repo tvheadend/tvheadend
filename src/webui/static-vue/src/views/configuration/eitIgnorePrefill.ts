@@ -21,7 +21,7 @@ export function eitIgnorePreselect(channel: string, title: string): Record<strin
   return {
     enabled: true,
     name: title,
-    channel,
+    channel: [channel],
     title: `^${regexEscape(title)}$`,
     comment: 'Created from EPG event',
   }

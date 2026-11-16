@@ -52,7 +52,7 @@ api_eitignore_create
     api_idnode_create(resp, &ei->ei_id);
   tvh_mutex_unlock(&global_lock);
 
-  return 0;
+  return ei ? 0 : EINVAL;
 }
 
 void api_eitignore_init ( void )

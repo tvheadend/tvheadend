@@ -19,7 +19,9 @@ or are replaced when the station sends its schedule again.
 
 All criteria you specify must match for an event to be ignored:
 
-* **Channel** - only events of this channel; blank for all channels.
+* **Channels** - only events of these channels, e.g. all channels of a
+  mux; empty for all channels. A rule whose last channel is deleted is
+  deleted too.
 * **Title (regexp)** - a case-insensitive regular expression matched
   against the event title in every language the station sends. With
   **Full-text**, it is also matched against the summary and the
@@ -28,8 +30,10 @@ All criteria you specify must match for an event to be ignored:
 * **Minimum/Maximum duration** - only events of at least/at most this
   length.
 
-A rule without channel, title and durations matches nothing. A rule whose
-regular expression does not compile is not used; the error is logged.
+A new rule needs at least a channel, a title or a duration; a rule
+without any of them is refused (and an existing rule edited that way
+matches nothing). A rule whose regular expression does not compile is not
+used; the error is logged.
 
 Example: to ignore a station's daily 24-hour "No Information" event, set
 the channel, the title `^No Information$` and a minimum duration of

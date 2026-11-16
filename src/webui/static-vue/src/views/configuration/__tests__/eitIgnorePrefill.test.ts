@@ -9,7 +9,7 @@ describe('eitIgnorePreselect', () => {
     expect(eitIgnorePreselect('abc123', 'No Information')).toEqual({
       enabled: true,
       name: 'No Information',
-      channel: 'abc123',
+      channel: ['abc123'],
       title: '^No Information$',
       comment: 'Created from EPG event',
     })

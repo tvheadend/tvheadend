@@ -32,7 +32,7 @@ typedef struct eitignore {
 
   int          ei_enabled;
   char        *ei_name;
-  char        *ei_channel;       ///< channel uuid, empty = all channels
+  idnode_list_head_t ei_channels; ///< channels, empty = all channels
   char        *ei_title;
   tvh_regex_t  ei_title_regex;
   int          ei_fulltext;      ///< match the title regex also against summary/description
@@ -59,6 +59,8 @@ eitignore_t *eitignore_match(const struct channel *ch,
                              const lang_str_t *summary,
                              const lang_str_t *desc,
                              time_t start, time_t stop);
+
+void eitignore_destroy_by_channel(struct channel *ch, int delconf);
 
 void eitignore_init(void);
 void eitignore_done(void);
