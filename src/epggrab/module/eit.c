@@ -121,6 +121,7 @@ typedef struct eit_event
   lang_str_t       *subtitle;
   lang_str_t       *summary;
   lang_str_t       *desc;
+  lang_str_t       *summary0;   ///< summary before per-channel processing, for ignore rules
 
   const char       *default_charset;
 
@@ -711,7 +712,7 @@ static int _eit_process_event_one
   if (epg_channel_ignore_broadcast(ch, start))
     return 0;
 
-  ei = eitignore_match(ch, ev->title, ev->summary, ev->desc, start, stop);
+  ei = eitignore_match(ch, ev->title, ev->summary0, ev->desc, start, stop);
   if (ei) {
     tvhtrace(LS_TBL_EIT, "svc='%s', ch='%s', eid=%5d, tbl=%02x, start=%s,"
                          " stop=%s, ignored by rule '%s'",
@@ -1099,6 +1100,9 @@ static int _eit_process_event
   if (lock)
     tvh_mutex_lock(&global_lock);
   svc = (mpegts_service_t *)service_find_by_uuid0(&ed->svc_uuid);
+  /* Channels may rewrite ev.summary; ignore rules see the original */
+  if (ev.summary && !TAILQ_EMPTY(&eitignores))
+    ev.summary0 = lang_str_copy(ev.summary);
   if (svc && eit_mod->opaque) {
     LIST_FOREACH(ilm, &svc->s_channels, ilm_in1_link) {
       ch = (channel_t *)ilm->ilm_in2;
@@ -1118,6 +1122,7 @@ static int _eit_process_event
   if (ev.title)    lang_str_destroy(ev.title);
   if (ev.subtitle) lang_str_destroy(ev.subtitle);
   if (ev.summary)  lang_str_destroy(ev.summary);
+  if (ev.summary0) lang_str_destroy(ev.summary0);
   if (ev.desc)     lang_str_destroy(ev.desc);
 
   if (ilm)

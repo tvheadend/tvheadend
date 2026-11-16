@@ -41,6 +41,7 @@ typedef struct eitignore {
   int          ei_maxduration;
   char        *ei_comment;
   int          ei_error;         ///< title regex does not compile
+  int          ei_nochannel;     ///< channels given, but none exists
 } eitignore_t;
 
 TAILQ_HEAD(eitignore_queue, eitignore);

@@ -71,6 +71,10 @@ eitignore_create(const char *uuid, htsmsg_t *conf)
     eitignore_destroy(ei, 0);
     return NULL;
   }
+  if (uuid == NULL && ei->ei_nochannel) {
+    eitignore_destroy(ei, 0);
+    return NULL;
+  }
   return ei;
 }
 
@@ -173,7 +177,8 @@ eitignore_match(const channel_t *ch,
   lock_assert(&global_lock);
 
   TAILQ_FOREACH(ei, &eitignores, ei_link) {
-    if (!ei->ei_enabled || ei->ei_error || !eitignore_has_criteria(ei))
+    if (!ei->ei_enabled || ei->ei_error || ei->ei_nochannel ||
+        !eitignore_has_criteria(ei))
       continue;
     if (!eitignore_match_channel(ei, ch))
       continue;
@@ -259,9 +264,17 @@ static int
 eitignore_class_channel_set(void *o, const void *v)
 {
   eitignore_t *ei = (eitignore_t *)o;
-  return idnode_list_set1(&ei->ei_id, &ei->ei_channels,
-                          &channel_class, (htsmsg_t *)v,
-                          eitignore_class_channel_set_cb);
+  htsmsg_t *l = (htsmsg_t *)v;
+  int save = idnode_list_set1(&ei->ei_id, &ei->ei_channels,
+                              &channel_class, l,
+                              eitignore_class_channel_set_cb);
+  /* An empty list means all channels: never widen a rule whose
+   * channels do not exist */
+  ei->ei_nochannel = l && !htsmsg_is_empty(l) && LIST_EMPTY(&ei->ei_channels);
+  if (ei->ei_nochannel)
+    tvherror(LS_EPGGRAB, "EIT ignore rule '%s': none of its channels exists, rule not used",
+             ei->ei_name ?: "");
+  return save;
 }
 
 static const void *

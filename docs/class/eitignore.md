@@ -21,7 +21,7 @@ All criteria you specify must match for an event to be ignored:
 
 * **Channels** - only events of these channels, e.g. all channels of a
   mux; empty for all channels. A rule whose last channel is deleted is
-  deleted too.
+  deleted too; a rule none of whose channels exists is not used.
 * **Title (regexp)** - a case-insensitive regular expression matched
   against the event title in every language the station sends. With
   **Full-text**, it is also matched against the summary and the

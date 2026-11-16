@@ -1425,10 +1425,10 @@ main(int argc, char **argv)
   tvhftrace(LS_MAIN, descrambler_done);
   tvhftrace(LS_MAIN, service_mapper_done);
   tvhftrace(LS_MAIN, service_done);
+  tvhftrace(LS_MAIN, eitignore_done);
   tvhftrace(LS_MAIN, channel_done);
   tvhftrace(LS_MAIN, bouquet_done);
   tvhftrace(LS_MAIN, ratinglabel_done);
-  tvhftrace(LS_MAIN, eitignore_done);
   tvhftrace(LS_MAIN, subscription_done);
   tvhftrace(LS_MAIN, access_done);
   tvhftrace(LS_MAIN, epg_done);
