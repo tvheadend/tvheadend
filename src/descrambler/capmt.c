@@ -130,6 +130,10 @@ typedef struct dmx_filter {
 LIST_HEAD(capmt_service_list, capmt_service);
 LIST_HEAD(capmt_caid_ecm_list, capmt_caid_ecm);
 
+/* CA_SET_DESCR_MODE algo of OSCam's extended_cw_api for VideoGuard ICAM
+ * services: DVB-CSA with the ICAM ecm byte (mapped to CA_ALGO_DVBCSA) */
+#define CA_ALGO_CSA_ALT 3
+
 /*
  * ECM descriptor
  */
@@ -1511,7 +1515,16 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
       tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
     }
-    if (algo < 0 || algo > 2) {
+    /*
+     * OSCam with extended_cw_api sends algo 3 (CSA-ALT) for VideoGuard ICAM
+     * services. The ICAM ecm byte is derived by the descrambler itself from
+     * the ECM (descrambler.c, csa_ecm), so this is plain DVB-CSA here.
+     */
+    if (algo == CA_ALGO_CSA_ALT) {
+      tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE algo 3 (CSA-ALT) mapped to DVB-CSA", capmt_name(capmt));
+      algo = CA_ALGO_DVBCSA;
+    }
+    if (algo < CA_ALGO_DVBCSA || algo > CA_ALGO_AES) {
       tvherror(LS_CAPMT, "%s: Invalid algo %d", capmt_name(capmt), algo);
       return;
     }
