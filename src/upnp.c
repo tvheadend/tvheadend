@@ -96,6 +96,94 @@ upnp_send( htsbuf_queue_t *q, struct sockaddr_storage *storage,
 }
 
 /*
+ * SSDP M-SEARCH parsing, shared by the SAT>IP and HDHomeRun servers
+ */
+#define UPNP_MSEARCH "M-SEARCH * HTTP/1.1"
+
+static int
+upnp_msearch_start_line(char *line, int multicast)
+{
+  char *argv[3];
+
+  if (http_tokenize(line, argv, 3, -1) != 3)
+    return -1;
+  if (!multicast) {
+    if (strcmp(argv[0], "HTTP/1.1") || strcmp(argv[1], "200"))
+      return -1;
+    return 0;
+  }
+  if (strcmp(argv[0], "M-SEARCH") || strcmp(argv[1], "*") ||
+      strcmp(argv[2], "HTTP/1.1"))
+    return -1;
+  return 0;
+}
+
+static void
+upnp_msearch_header(char *line, upnp_msearch_t *msg)
+{
+  char *argv[2], *e;
+
+  if (http_tokenize(line, argv, 2, ':') != 2)
+    return;
+  /* the value is the rest of the line, drop trailing blanks */
+  e = argv[1] + strlen(argv[1]);
+  while (e > argv[1] && (e[-1] == ' ' || e[-1] == '\t'))
+    *--e = '\0';
+  if (strcasecmp(argv[0], "ST") == 0)
+    msg->st = argv[1];
+  else if (strcasecmp(argv[0], "HOST") == 0)
+    msg->host = argv[1];
+  else if (strcasecmp(argv[0], "MAN") == 0)
+    msg->man = argv[1];
+  else if (strcasecmp(argv[0], "SEARCHPORT.UPNP.ORG") == 0)
+    msg->searchport = argv[1];
+  else if (strcasecmp(argv[0], "DEVICEID.SES.COM") == 0)
+    msg->deviceid = argv[1];
+}
+
+static int
+upnp_msearch_validate(upnp_msearch_t *msg)
+{
+  char *argv[2];
+
+  if (msg->searchport && strcmp(msg->searchport, "1900"))
+    return -1;
+  if (msg->st == NULL)
+    return -1;
+  if (msg->man == NULL || strcmp(msg->man, "\"ssdp:discover\""))
+    return -1;
+  if (msg->host == NULL || http_tokenize(msg->host, argv, 2, ':') != 2)
+    return -1;
+  if (strcmp(argv[1], "1900"))
+    return -1;
+  msg->host = argv[0];
+  return 0;
+}
+
+/*
+ * Parse an SSDP M-SEARCH. buf is a writable, NUL-terminated copy of the
+ * datagram; msg points into it. Returns 0 when the start line matches
+ * (for unicast a "HTTP/1.1 200" status line), SEARCHPORT.UPNP.ORG is
+ * absent or 1900, MAN is "ssdp:discover", ST is present and HOST is
+ * <address>:1900.
+ */
+int
+upnp_msearch_parse(char *buf, int multicast, upnp_msearch_t *msg)
+{
+  char *line, *saveptr;
+
+  memset(msg, 0, sizeof(*msg));
+  if (strncmp(buf, UPNP_MSEARCH, sizeof(UPNP_MSEARCH) - 1))
+    return -1;
+  line = strtok_r(buf, "\r\n", &saveptr);
+  if (line == NULL || upnp_msearch_start_line(line, multicast))
+    return -1;
+  while ((line = strtok_r(NULL, "\r\n", &saveptr)) != NULL)
+    upnp_msearch_header(line, msg);
+  return upnp_msearch_validate(msg);
+}
+
+/*
  *
  */
 static void

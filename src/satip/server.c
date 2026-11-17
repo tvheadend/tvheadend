@@ -498,11 +498,8 @@ satips_upnp_discovery_received
   (uint8_t *data, size_t len, udp_connection_t *conn,
    struct sockaddr_storage *storage)
 {
-#define MSEARCH "M-SEARCH * HTTP/1.1"
-
-  char *buf, *ptr, *saveptr;
-  char *argv[10];
-  char *st = NULL, *man = NULL, *host = NULL, *deviceid = NULL, *searchport = NULL;
+  upnp_msearch_t msg;
+  char *buf;
   char buf2[64];
 
   if (satip_server_rtsp_port <= 0)
@@ -511,70 +508,18 @@ satips_upnp_discovery_received
   if (len < 32 || len > 8191)
     return;
 
-  if (strncmp((char *)data, MSEARCH, sizeof(MSEARCH)-1))
-    return;
-
-#undef MSEARCH
-
   buf = alloca(len+1);
   memcpy(buf, data, len);
   buf[len] = '\0';
-  ptr = strtok_r(buf, "\r\n", &saveptr);
-  /* Request decoder */
-  if (ptr) {
-    if (http_tokenize(ptr, argv, 3, -1) != 3)
-      return;
-    if (conn->multicast) {
-      if (strcmp(argv[0], "M-SEARCH"))
-        return;
-      if (strcmp(argv[1], "*"))
-        return;
-      if (strcmp(argv[2], "HTTP/1.1"))
-        return;
-    } else {
-      if (strcmp(argv[0], "HTTP/1.1"))
-        return;
-      if (strcmp(argv[1], "200"))
-        return;
-    }
-    ptr = strtok_r(NULL, "\r\n", &saveptr);
-  }
-  /* Header decoder */
-  while (1) {
-    if (ptr == NULL)
-      break;
-    if (http_tokenize(ptr, argv, 2, ':') == 2) {
-      if (strcmp(argv[0], "ST") == 0)
-        st = argv[1];
-      else if (strcasecmp(argv[0], "HOST") == 0)
-        host = argv[1];
-      else if (strcasecmp(argv[0], "MAN") == 0)
-        man = argv[1];
-      else if (strcmp(argv[0], "DEVICEID.SES.COM") == 0)
-        deviceid = argv[1];
-      else if (strcmp(argv[0], "SEARCHPORT.UPNP.ORG") == 0)
-        searchport = argv[1];
-    }
-    ptr = strtok_r(NULL, "\r\n", &saveptr);
-  }
-  /* Validation */
-  if (searchport && strcmp(searchport, "1900"))
+  if (upnp_msearch_parse(buf, conn->multicast, &msg))
     return;
-  if (st == NULL || strcmp(st, "urn:ses-com:device:SatIPServer:1"))
+  if (strcmp(msg.st, "urn:ses-com:device:SatIPServer:1"))
     return;
-  if (man == NULL || strcmp(man, "\"ssdp:discover\""))
+  if (msg.deviceid && atoi(msg.deviceid) != satip_server_deviceid)
     return;
-  if (deviceid && atoi(deviceid) != satip_server_deviceid)
+  if (conn->multicast && strcmp(msg.host, "239.255.255.250"))
     return;
-  if (host == NULL)
-    return;
-  if (http_tokenize(host, argv, 2, ':') != 2)
-    return;
-  if (strcmp(argv[1], "1900"))
-    return;
-  if (conn->multicast && strcmp(argv[0], "239.255.255.250"))
-    return;
-  if (!conn->multicast && http_server_ip != NULL && strcmp(argv[0], http_server_ip))
+  if (!conn->multicast && http_server_ip != NULL && strcmp(msg.host, http_server_ip))
     return;
 
   if (tvhtrace_enabled()) {
@@ -586,14 +531,14 @@ satips_upnp_discovery_received
 
   /* Check for deviceid collision */
   if (!conn->multicast) {
-    if (deviceid) {
+    if (msg.deviceid) {
       satip_server_deviceid += 1;
       if (satip_server_deviceid >= 254)
         satip_server_deviceid = 1;
       tcp_get_str_from_ip(storage, buf2, sizeof(buf2));
       tvhwarn(LS_SATIPS, "received duplicate SAT>IP DeviceID %s from %s:%d, using %d",
-              deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
-      satips_upnp_send_discover_reply(storage, deviceid, 0);
+              msg.deviceid, buf2, ntohs(IP_PORT(*storage)), satip_server_deviceid);
+      satips_upnp_send_discover_reply(storage, msg.deviceid, 0);
       satips_upnp_send_byebye();
       satips_upnp_send_announce();
     } else {

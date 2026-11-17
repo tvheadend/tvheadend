@@ -2369,6 +2369,23 @@ USN: %s%s%s\r\n\r\n"
 }
 
 /**
+ * Map an M-SEARCH target to the reply target; -1 if it isn't ours.
+ * ssdp:all (*all set) is answered for every target, starting with the root device.
+ */
+static int
+hdhr_server_search_target(const char *st, const char *udn, int *all)
+{
+  *all = strcmp(st, "ssdp:all") == 0;
+  if (*all || strcmp(st, "upnp:rootdevice") == 0)
+    return HDHR_ST_ROOTDEVICE;
+  if (strcmp(st, HDHR_SERVER_DEVICE_TYPE) == 0)
+    return HDHR_ST_DEVICE_TYPE;
+  if (strcasecmp(st, udn) == 0)
+    return HDHR_ST_UUID;
+  return -1;
+}
+
+/**
  * React to a discovery request from a HDHomeRun client.
  * Calls hdhr_server_upnp_send_discover_reply to send a response.
  */
@@ -2377,19 +2394,12 @@ hdhr_server_upnp_discovery_received
   (uint8_t *data, size_t len, udp_connection_t *conn,
    struct sockaddr_storage *storage)
 {
-  if (!config.hdhomerun_server_enable)
-    return;
-
-#define MSEARCH "M-SEARCH * HTTP/1.1"
-
-  char *buf, *ptr, *saveptr;
-  char *argv[10];
-  char *st = NULL, *man = NULL, *host = NULL, *searchport = NULL;
+  upnp_msearch_t msg;
+  char *buf;
   char buf2[64], udn[64];
-  enum hdhr_server_search_target target;
-  int all = 0;
+  int target, all;
 
-  if (tvheadend_webui_port <= 0)
+  if (!config.hdhomerun_server_enable || tvheadend_webui_port <= 0)
     return;
 
   /* Only multicast searches can reach us: the UPnP layer listens on port
@@ -2401,72 +2411,20 @@ hdhr_server_upnp_discovery_received
   if (len < 32 || len > 8191)
     return;
 
-  if (strncmp((char *)data, MSEARCH, sizeof(MSEARCH) - 1))
-    return;
-
-#undef MSEARCH
-
   buf = alloca(len+1);
   memcpy(buf, data, len);
   buf[len] = '\0';
-  ptr = strtok_r(buf, "\r\n", &saveptr);
-  /* Request decoder */
-  if (!ptr)
+  if (upnp_msearch_parse(buf, 1, &msg))
     return;
-  if (http_tokenize(ptr, argv, 3, -1) != 3)
-    return;
-  if (strcmp(argv[0], "M-SEARCH"))
-    return;
-  if (strcmp(argv[1], "*"))
-    return;
-  if (strcmp(argv[2], "HTTP/1.1"))
-    return;
-  ptr = strtok_r(NULL, "\r\n", &saveptr);
-  /* Header decoder */
-  while (ptr) {
-    if (http_tokenize(ptr, argv, 2, ':') == 2) {
-      if (strcasecmp(argv[0], "ST") == 0)
-        st = argv[1];
-      else if (strcasecmp(argv[0], "HOST") == 0)
-        host = argv[1];
-      else if (strcasecmp(argv[0], "MAN") == 0)
-        man = argv[1];
-      else if (strcasecmp(argv[0], "SEARCHPORT.UPNP.ORG") == 0)
-        searchport = argv[1];
-    }
-    ptr = strtok_r(NULL, "\r\n", &saveptr);
-  }
-  /* Validation */
-  if (searchport && strcmp(searchport, "1900"))
-    return;
-  if (st == NULL)
-    return;
-  if (man == NULL || strcmp(man, "\"ssdp:discover\""))
-    return;
-  if (host == NULL)
-    return;
-  if (http_tokenize(host, argv, 2, ':') != 2)
-    return;
-  if (strcmp(argv[1], "1900"))
-    return;
-  if (strcmp(argv[0], "239.255.255.250"))
+  if (strcmp(msg.host, "239.255.255.250"))
     return;
   /* the device id is derived from config.server_name */
   tvh_mutex_lock(&global_lock);
   snprintf(udn, sizeof(udn), HDHR_SERVER_UDN_FMT, hdhomerun_get_deviceid());
   tvh_mutex_unlock(&global_lock);
-  if (strcmp(st, "ssdp:all") == 0) {
-    all = 1;
-    target = HDHR_ST_ROOTDEVICE;
-  } else if (strcmp(st, "upnp:rootdevice") == 0) {
-    target = HDHR_ST_ROOTDEVICE;
-  } else if (strcmp(st, HDHR_SERVER_DEVICE_TYPE) == 0) {
-    target = HDHR_ST_DEVICE_TYPE;
-  } else if (strcasecmp(st, udn) == 0) {
-    target = HDHR_ST_UUID;
-  } else {
+  target = hdhr_server_search_target(msg.st, udn, &all);
+  if (target < 0)
     return;
-  }
 
   if (tvhtrace_enabled()) {
     tcp_get_str_from_ip(storage, buf2, sizeof(buf2));
