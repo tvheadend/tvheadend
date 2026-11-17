@@ -29,6 +29,7 @@
 #include "uuid.h"
 #include "access.h"
 #include "htsbuf.h"
+#include "htsmsg_xml.h"
 #include "spawn.h"
 #include "lock.h"
 #include "profile.h"
@@ -1515,6 +1516,141 @@ config_migrate_v25 ( void )
 }
 
 /*
+ * v25 -> v26 : XMLTV attribute values are now entity decoded (#2316), so
+ *              decode the stored XMLTV channel ids the same way, otherwise
+ *              ids like "Fix&amp;Foxi.at" lose their channel mapping
+ */
+static const char *
+config_migrate_v26_id ( htsmsg_field_t *f )
+{
+  htsmsg_t *e = htsmsg_field_get_map(f);
+
+  return e ? htsmsg_get_str(e, "id") : NULL;
+}
+
+static const char *
+config_migrate_v26_modid ( htsmsg_field_t *f )
+{
+  htsmsg_t *e = htsmsg_field_get_map(f);
+  const char *modid = e ? htsmsg_get_str(e, "modid") : NULL;
+
+  return modid ? modid : "xmltv";
+}
+
+/* The new id of a record, or NULL when it keeps its id */
+static const char *
+config_migrate_v26_rename ( htsmsg_t *t, htsmsg_field_t *f )
+{
+  const char *id = config_migrate_v26_id(f);
+  const char *n = htsmsg_get_str(t, htsmsg_field_name(f));
+
+  if (id == NULL || n == NULL || !strcmp(n, id))
+    return NULL;
+  return n;
+}
+
+static void
+config_migrate_v26_decode ( char *id )
+{
+  char *s;
+
+  if (strchr(id, '&') == NULL)
+    return;
+  htsmsg_xml_decode_attr(id);
+  for (s = id; *s; s++) /* same normalisation as epggrab_channel_find() */
+    if (*s == '/')
+      *s = '#';
+}
+
+/* Does another record of the same module have or get the id n? Renaming
+ * only into ids that are free on disk keeps the ids unique at every step,
+ * even when the migration is interrupted between two saves */
+static int
+config_migrate_v26_taken ( const htsmsg_t *c, htsmsg_t *t, htsmsg_field_t *f,
+                           const char *n )
+{
+  const char *modid = config_migrate_v26_modid(f);
+  const char *n2;
+  const char *id2;
+  htsmsg_field_t *f2;
+
+  HTSMSG_FOREACH(f2, c) {
+    if (f2 == f || strcmp(config_migrate_v26_modid(f2), modid))
+      continue;
+    n2 = htsmsg_get_str(t, htsmsg_field_name(f2));
+    id2 = config_migrate_v26_id(f2);
+    if ((n2 && !strcmp(n2, n)) || (id2 && !strcmp(id2, n)))
+      return 1;
+  }
+  return 0;
+}
+
+/* Keep the old id of each record whose new id would not be unique */
+static void
+config_migrate_v26_block ( htsmsg_t *c, htsmsg_t *t )
+{
+  htsmsg_t *b = htsmsg_create_list();
+  htsmsg_field_t *f;
+  const char *n;
+  const char *uuid;
+
+  HTSMSG_FOREACH(f, c) {
+    n = config_migrate_v26_rename(t, f);
+    if (n == NULL || !config_migrate_v26_taken(c, t, f, n))
+      continue;
+    tvhwarn(LS_CONFIG, "xmltv: channel id '%s' not renamed to '%s', the id would not be unique",
+            config_migrate_v26_id(f), n);
+    htsmsg_add_str(b, NULL, htsmsg_field_name(f));
+  }
+  HTSMSG_FOREACH(f, b) {
+    uuid = htsmsg_field_get_str(f);
+    htsmsg_set_str(t, uuid, htsmsg_get_str(htsmsg_get_map(c, uuid), "id"));
+  }
+  htsmsg_destroy(b);
+}
+
+static void
+config_migrate_v26 ( void )
+{
+  htsmsg_t *c;
+  htsmsg_t *t;
+  htsmsg_field_t *f;
+  const char *id;
+  const char *n;
+  char *d;
+
+  c = hts_settings_load_r(1, "epggrab/xmltv/channels");
+  if (c == NULL)
+    return;
+  /* Decode all ids first, so the result doesn't depend on the order */
+  t = htsmsg_create_map();
+  HTSMSG_FOREACH(f, c) {
+    id = config_migrate_v26_id(f);
+    d = id ? strdup(id) : NULL;
+    if (d == NULL)
+      continue;
+    config_migrate_v26_decode(d);
+    htsmsg_add_str(t, htsmsg_field_name(f), d);
+    free(d);
+  }
+  /* A record that keeps its old id can't block more renames, because
+   * the old ids already count as taken */
+  config_migrate_v26_block(c, t);
+  HTSMSG_FOREACH(f, c) {
+    n = config_migrate_v26_rename(t, f);
+    if (n == NULL)
+      continue;
+    tvhinfo(LS_CONFIG, "xmltv: renaming channel id '%s' to '%s'",
+            config_migrate_v26_id(f), n);
+    htsmsg_set_str(htsmsg_field_get_map(f), "id", n);
+    hts_settings_save(htsmsg_field_get_map(f), "epggrab/xmltv/channels/%s",
+                      htsmsg_field_name(f));
+  }
+  htsmsg_destroy(t);
+  htsmsg_destroy(c);
+}
+
+/*
  * Perform backup
  */
 static void
@@ -1640,7 +1776,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v22,
   config_migrate_v23,
   config_migrate_v24,
-  config_migrate_v25
+  config_migrate_v25,
+  config_migrate_v26
 };
 
 /*
