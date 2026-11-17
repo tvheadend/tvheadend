@@ -201,6 +201,50 @@ xmlns_destroy(xmlns_t *ns)
 }
 
 /**
+ * Decode the predefined entities and character references in a
+ * NUL-terminated attribute value, in place. Anything else, including a
+ * bare '&', is kept as is, so values that imported before still import.
+ * The decoded value is never longer than the source. Returns its length.
+ */
+int
+htsmsg_xml_decode_attr(char *s)
+{
+  static const char *named[] = { "amp;&", "lt;<", "gt;>", "quot;\"", "apos;'" };
+  char *r = s, *w = s, *p, *q;
+  size_t i, l;
+  int c, n;
+
+  while (*r) {
+    n = 0;
+    if (r[0] == '&' && r[1] == '#') {
+      p = r + 2;
+      q = p + (*p == 'x');
+      q += strspn(q, "0");
+      /* At most 7 digits, so decode_character_reference() can't overflow */
+      if (strspn(q, "0123456789abcdefABCDEF") <= 7 &&
+          (c = decode_character_reference(&p)) > 0 && c <= 0x10ffff &&
+          (n = put_utf8(w, c)) > 0)
+        r = p;
+    } else if (r[0] == '&') {
+      for (i = 0; i < ARRAY_SIZE(named) && !n; i++) {
+        l = strlen(named[i]) - 1;
+        if (!strncmp(r + 1, named[i], l)) {
+          *w = named[i][l];
+          r += l + 1;
+          n = 1;
+        }
+      }
+    }
+    if (n)
+      w += n;
+    else
+      *w++ = *r++;
+  }
+  *w = 0;
+  return w - s;
+}
+
+/**
  *
  */
 static char *
@@ -273,6 +317,10 @@ htsmsg_xml_parse_attrib
   src++;
   while(is_xmlws(*src))
     src++;
+
+  /* The closing quote has been consumed, so terminating here is safe */
+  payload[payloadlen] = 0;
+  payloadlen = htsmsg_xml_decode_attr(payload);
 
   if(xmlns_scope_list != NULL &&
      attriblen > 6 && !memcmp(attribname, "xmlns:", 6)) {

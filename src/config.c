@@ -29,6 +29,7 @@
 #include "uuid.h"
 #include "access.h"
 #include "htsbuf.h"
+#include "htsmsg_xml.h"
 #include "spawn.h"
 #include "lock.h"
 #include "profile.h"
@@ -1515,6 +1516,73 @@ config_migrate_v25 ( void )
 }
 
 /*
+ * v25 -> v26 : XMLTV attribute values are now entity decoded (#2316), so
+ *              decode the stored XMLTV channel ids the same way, otherwise
+ *              ids like "Fix&amp;Foxi.at" lose their channel mapping
+ */
+static void
+config_migrate_v26 ( void )
+{
+  htsmsg_t *c, *t, *b, *e, *e2;
+  htsmsg_field_t *f, *f2;
+  const char *id, *n, *modid;
+  char *d, *s;
+  int blocked;
+
+  if ((c = hts_settings_load_r(1, "epggrab/xmltv/channels")) == NULL)
+    return;
+  /* Decode all ids first, so the result doesn't depend on the order */
+  t = htsmsg_create_map();
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f)) || !(id = htsmsg_get_str(e, "id")) ||
+        !(d = strdup(id)))
+      continue;
+    if (strchr(d, '&')) {
+      htsmsg_xml_decode_attr(d);
+      for (s = d; *s; s++) /* same normalisation as epggrab_channel_find() */
+        if (*s == '/') *s = '#';
+    }
+    htsmsg_add_str(t, htsmsg_field_name(f), d);
+    free(d);
+  }
+  /* A channel that would share its new id with another one keeps its old
+   * id, which can block more renames, so repeat until nothing changes */
+  do {
+    b = htsmsg_create_list();
+    HTSMSG_FOREACH(f, c) {
+      if (!(e = htsmsg_field_get_map(f)) || !(id = htsmsg_get_str(e, "id")) ||
+          !(n = htsmsg_get_str(t, htsmsg_field_name(f))) || !strcmp(n, id))
+        continue;
+      modid = htsmsg_get_str(e, "modid") ?: "xmltv";
+      HTSMSG_FOREACH(f2, c)
+        if (f2 != f && (e2 = htsmsg_field_get_map(f2)) &&
+            !strcmp(htsmsg_get_str(t, htsmsg_field_name(f2)) ?: "", n) &&
+            !strcmp(htsmsg_get_str(e2, "modid") ?: "xmltv", modid))
+          break;
+      if (f2) {
+        tvhwarn(LS_CONFIG, "xmltv: channel id '%s' not renamed to '%s', the id would not be unique", id, n);
+        htsmsg_add_str(b, NULL, htsmsg_field_name(f));
+      }
+    }
+    HTSMSG_FOREACH(f, b)
+      htsmsg_set_str(t, htsmsg_field_get_str(f),
+                     htsmsg_get_str(htsmsg_get_map(c, htsmsg_field_get_str(f)), "id"));
+    blocked = HTSMSG_FIRST(b) != NULL;
+    htsmsg_destroy(b);
+  } while (blocked);
+  HTSMSG_FOREACH(f, c) {
+    if (!(e = htsmsg_field_get_map(f)) || !(id = htsmsg_get_str(e, "id")) ||
+        !(n = htsmsg_get_str(t, htsmsg_field_name(f))) || !strcmp(n, id))
+      continue;
+    tvhinfo(LS_CONFIG, "xmltv: renaming channel id '%s' to '%s'", id, n);
+    htsmsg_set_str(e, "id", n);
+    hts_settings_save(e, "epggrab/xmltv/channels/%s", htsmsg_field_name(f));
+  }
+  htsmsg_destroy(t);
+  htsmsg_destroy(c);
+}
+
+/*
  * Perform backup
  */
 static void
@@ -1640,7 +1708,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v22,
   config_migrate_v23,
   config_migrate_v24,
-  config_migrate_v25
+  config_migrate_v25,
+  config_migrate_v26
 };
 
 /*
