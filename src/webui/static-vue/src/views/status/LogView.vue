@@ -142,9 +142,13 @@ function clickClear(): void {
 async function clickDebug(): Promise<void> {
   const ok = await toggleDebug()
   if (!ok) {
+    /* Never about rights: the server accepts the toggle from any
+     * user and only logs that the realtime log is admin-only. It
+     * fails when the server cannot be reached or has dropped this
+     * session's Comet mailbox. */
     toast.error(
       t(
-        'Could not toggle debug — the server returned an error. Check your admin permission.',
+        'Could not toggle debug — the connection to the server was interrupted. Try again in a moment.',
       ),
     )
   }

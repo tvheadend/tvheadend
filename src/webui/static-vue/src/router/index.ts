@@ -947,4 +947,67 @@ router.afterEach((_to, from) => {
   writeLastSubview(typeof from.name === 'string' ? from.name : null)
 })
 
+/*
+ * Reload once when a view's chunk cannot be loaded. The views are
+ * lazily loaded, content-hashed chunks. A tab that stays open while
+ * tvheadend is upgraded keeps running the old bundle, whose chunks
+ * are gone from the new server, so every view the tab has not
+ * loaded yet fails to open and the click does nothing. Loading the
+ * target URL fetches the new index.html and with it the new bundle.
+ *
+ * A production build reports each failed chunk (a failed CSS
+ * preload too) with a `vite:preloadError` event and then rejects
+ * the import with the same error, which reaches `onError` together
+ * with the target route. The event is not cancelled, because the
+ * import would then resolve to nothing. Errors that Vite did not
+ * report, such as a guard that throws, never reload. The dev server
+ * loads modules natively and never fires the event.
+ *
+ * Loop guard: the sessionStorage flag allows one reload until a
+ * navigation succeeds again. If the reloaded page fails the same
+ * way (the chunk is missing from the install itself), it stays put
+ * instead of reloading forever. Without storage there is no guard,
+ * so there is no reload either.
+ */
+const CHUNK_RELOAD_KEY = 'tvh:chunk-reload'
+const chunkErrors = new WeakSet<object>()
+
+globalThis.window.addEventListener('vite:preloadError', (event) => {
+  chunkErrors.add(event.payload)
+})
+
+/* Set the flag unless it is set already. False when the guard has
+ * used up its reload or storage is not available. */
+function claimChunkReload(href: string): boolean {
+  try {
+    if (globalThis.sessionStorage.getItem(CHUNK_RELOAD_KEY) !== null) return false
+    globalThis.sessionStorage.setItem(CHUNK_RELOAD_KEY, href)
+    return true
+  } catch {
+    return false
+  }
+}
+
+router.onError((error, to) => {
+  if (chunkErrors.has(error)) {
+    const href = router.resolve(to).href
+    if (claimChunkReload(href)) {
+      globalThis.location.assign(href)
+      return
+    }
+  }
+  /* With a listener registered the router no longer logs the
+   * error itself. */
+  console.error(error)
+})
+
+router.afterEach((_to, _from, failure) => {
+  if (failure) return
+  try {
+    globalThis.sessionStorage.removeItem(CHUNK_RELOAD_KEY)
+  } catch {
+    /* swallow — without storage there is no flag to clear */
+  }
+})
+
 export default router

@@ -714,7 +714,8 @@ $(LIB_ROOT)/$(FFMPEG)/.tvh_build: \
                 --disable-htmlpages \
                 --disable-manpages \
                 --disable-podpages \
-                --disable-txtpages
+                --disable-txtpages \
+                --arch=$(ARCH)
 	DESTDIR=$(EBUILDIR) \
 		$(MAKE) -C $(LIB_ROOT)/$(FFMPEG) install
 	@touch $@
