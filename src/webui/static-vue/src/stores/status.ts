@@ -76,6 +76,12 @@ export type StatusEntry = Record<string, unknown>
 
 export interface UseStatusStore<Row extends StatusEntry = StatusEntry> {
   entries: Row[]
+  /*
+   * The rest of the last successful response, beside `entries` --
+   * the figures an endpoint reports for the list as a whole, such as
+   * status/caches' budgets. Empty until the first fetch succeeds.
+   */
+  meta: Record<string, unknown>
   loading: boolean
   error: Error | null
   isEmpty: boolean
@@ -100,6 +106,7 @@ export interface UseStatusStore<Row extends StatusEntry = StatusEntry> {
 
 interface StatusResponse<Row> {
   entries?: Row[]
+  [key: string]: unknown
 }
 
 /*
@@ -120,6 +127,7 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
   if (!factory) {
     factory = defineStore(id, () => {
       const entries = ref<Row[]>([])
+      const meta = ref<Record<string, unknown>>({})
       const loading = ref(false)
       const error = ref<Error | null>(null)
 
@@ -175,6 +183,9 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
            * The cast is safe by construction.
            */
           entries.value = mergeByKey(entries.value as Row[], res.entries ?? [])
+          const rest: Record<string, unknown> = { ...res }
+          delete rest.entries
+          meta.value = rest
           error.value = null
         } catch (e) {
           if (myReqId !== reqId) return
@@ -245,7 +256,7 @@ export function useStatusStore<Row extends StatusEntry = StatusEntry>(
 
       const isEmpty = computed(() => !loading.value && entries.value.length === 0)
 
-      return { entries, loading, error, isEmpty, fetch, retain }
+      return { entries, meta, loading, error, isEmpty, fetch, retain }
     })
     storeFactoryCache.set(id, factory)
   }

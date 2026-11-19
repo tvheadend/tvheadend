@@ -36,4 +36,11 @@ void svcts_destroy ( streaming_target_t *pad );
 void svcts_attach ( streaming_target_t *pad, struct service *t );
 void svcts_detach ( streaming_target_t *pad );
 
+/* For the status pages: whether the client timeshifts through a channel
+ * cache, and if so how far behind live it is, in seconds */
+int svcts_behind ( streaming_target_t *pad, int64_t *behind );
+
+/* Whether that client is paused */
+int svcts_paused ( streaming_target_t *pad );
+
 #endif /* __TVH_TIMESHIFT_SVCTS_H__ */

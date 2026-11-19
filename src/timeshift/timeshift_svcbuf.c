@@ -2076,6 +2076,210 @@ svcbuf_span ( svcbuf_t *sb, int64_t *oldest, int64_t *newest )
   return r;
 }
 
+/* **************************************************************************
+ * Status, for the web interface
+ * *************************************************************************/
+
+/* Blocks further apart than this, in seconds, have a gap between them */
+#define SVCBUF_STATUS_GAP 5
+
+static int
+svcbuf_block_loc ( const svcbuf_block_t *b )
+{
+  if (b->data == NULL)
+    return SVCBUF_LOC_DISK;
+  return b->keep_ram ? SVCBUF_LOC_RAM : SVCBUF_LOC_STAGING;
+}
+
+int
+svcbuf_count ( void )
+{
+  return atomic_get(&svcbuf_live);
+}
+
+uint64_t
+svcbuf_staging_used ( void )
+{
+  uint64_t r;
+
+  tvh_mutex_lock(&svcbuf_staging_lock);
+  r = svcbuf_staging_size;
+  tvh_mutex_unlock(&svcbuf_staging_lock);
+  return r;
+}
+
+uint64_t
+svcbuf_staging_limit ( void )
+{
+  return svcbuf_staging_max();
+}
+
+/*
+ * Slot of the map a wall-clock second falls in.  The span is whole seconds
+ * from the oldest block to the newest, inclusive, spread over the slots.
+ */
+static int
+svcbuf_status_slot ( time_t t, time_t oldest, time_t span, int buckets )
+{
+  int64_t i = (int64_t)(t - oldest) * buckets / (span + 1);
+  return (int)MAX(0, MIN((int64_t)buckets - 1, i));
+}
+
+/*
+ * One past the last slot a span ending (exclusively) at `t` reaches.  With
+ * more slots than seconds -- a cache younger than the map is wide -- a second
+ * covers several slots, and all of them must get its data: taking only the
+ * slot of its start left the others looking like gaps.
+ */
+static int
+svcbuf_status_slot_end ( time_t t, time_t oldest, time_t span, int buckets )
+{
+  int64_t i = ((int64_t)(t - oldest) * buckets + span) / (span + 1);
+  return (int)MAX(1, MIN((int64_t)buckets, i));
+}
+
+htsmsg_t *
+svcbuf_status ( svcbuf_t *sb, int buckets )
+{
+  htsmsg_t *m = htsmsg_create_map();
+  htsmsg_t *l;
+  const svcbuf_block_t *b;
+  const svcbuf_block_t *nb;
+  const svcbuf_block_t *last;
+  const svcbuf_reader_t *r;
+  const svcbuf_gate_t *g;
+  const svcbuf_seg_t *seg;
+  uint64_t bytes[4] = { 0, 0, 0, 0 };
+  uint64_t *acc;
+  time_t oldest = 0;
+  time_t newest = 0;
+  time_t span = 0;
+  time_t end;
+  uint64_t share;
+  int segs = 0;
+  int readers = 0;
+  int gates = 0;
+  int i;
+  int i0;
+  int i1;
+  int loc;
+  int best;
+
+  buckets = MAX(1, MIN(1000, buckets));
+  /* per slot, bytes in each of RAM, staging and disk */
+  acc = calloc((size_t)buckets * 3, sizeof(*acc));
+
+  tvh_mutex_lock(&sb->lock);
+
+  b = TAILQ_FIRST(&sb->blocks);
+  last = TAILQ_LAST(&sb->blocks, svcbuf_block_queue);
+  if (b) {
+    oldest = b->wall;
+    newest = last->wall;
+    span = MAX(0, newest - oldest);
+  }
+
+  while (b != NULL) {
+    nb = TAILQ_NEXT(b, link);
+    loc = svcbuf_block_loc(b);
+    bytes[loc] += b->size;
+    /* a block stands for the time up to the next one, unless they are
+       too far apart: then the time between them is a gap */
+    end = b->wall + 1;
+    if (nb && nb->wall > end && nb->wall - b->wall <= SVCBUF_STATUS_GAP)
+      end = nb->wall;
+    i0 = svcbuf_status_slot(b->wall, oldest, span, buckets);
+    i1 = MAX(i0, svcbuf_status_slot_end(end, oldest, span, buckets) - 1);
+    share = MAX(1, b->size / (size_t)(i1 - i0 + 1));
+    for (i = i0; acc != NULL && i <= i1; i++)
+      acc[i * 3 + loc - 1] += share;
+    b = nb;
+  }
+
+  TAILQ_FOREACH(seg, &sb->segs, link)
+    segs++;
+
+  /* only counted: a client watching live has no reader yet, so who is in
+     the cache is told by the subscriptions (see api_status_caches()) */
+  LIST_FOREACH(r, &sb->readers, link)
+    readers++;
+  LIST_FOREACH(g, &sb->gates, link)
+    gates++;
+
+  htsmsg_add_s64(m, "size", sb->size);
+  htsmsg_add_bool(m, "gap", sb->gap);
+  htsmsg_add_bool(m, "write_error", sb->wr_error);
+  htsmsg_add_bool(m, "ram_only", sb->ram_only);
+  htsmsg_add_s64(m, "dropped", sb->limit_dropped);
+
+  tvh_mutex_unlock(&sb->lock);
+
+  htsmsg_add_s64(m, "ram", bytes[SVCBUF_LOC_RAM]);
+  htsmsg_add_s64(m, "staging", bytes[SVCBUF_LOC_STAGING]);
+  htsmsg_add_s64(m, "disk", bytes[SVCBUF_LOC_DISK]);
+  htsmsg_add_s64(m, "segments", segs);
+  htsmsg_add_s64(m, "oldest", oldest);
+  htsmsg_add_s64(m, "newest", newest);
+  htsmsg_add_s64(m, "span", oldest ? span : 0);
+  htsmsg_add_s64(m, "readers", readers);
+  htsmsg_add_s64(m, "gates", gates);
+
+  l = htsmsg_create_list();
+  for (i = 0; acc && oldest && i < buckets; i++) {
+    best = SVCBUF_LOC_NONE;
+    for (loc = SVCBUF_LOC_RAM; loc <= SVCBUF_LOC_DISK; loc++)
+      if (acc[i * 3 + loc - 1] &&
+          (best == SVCBUF_LOC_NONE ||
+           acc[i * 3 + loc - 1] > acc[i * 3 + best - 1]))
+        best = loc;
+    htsmsg_add_s64(l, NULL, best);
+  }
+  htsmsg_add_msg(m, "map", l);
+  free(acc);
+  return m;
+}
+
+void
+svcbuf_bytes_within ( svcbuf_t *sb, const time_t *ranges, int n,
+                      uint64_t bytes[4] )
+{
+  const svcbuf_block_t *b;
+  int i;
+
+  for (i = 0; i < 4; i++)
+    bytes[i] = 0;
+  if (n <= 0)
+    return;
+
+  tvh_mutex_lock(&sb->lock);
+  TAILQ_FOREACH(b, &sb->blocks, link) {
+    for (i = 0; i < n; i++)
+      if (b->wall >= ranges[2 * i] && b->wall <= ranges[2 * i + 1])
+        break;
+    if (i < n)
+      bytes[svcbuf_block_loc(b)] += b->size;
+  }
+  tvh_mutex_unlock(&sb->lock);
+}
+
+int64_t
+svcbuf_gate_behind ( const streaming_target_t *pad )
+{
+  const svcbuf_gate_t *g = (const svcbuf_gate_t *)pad;
+  const svcbuf_block_t *last;
+  svcbuf_t *sb = g->sb;
+  int64_t behind = 0;
+
+  if (sb == NULL)
+    return 0;
+  tvh_mutex_lock(&sb->lock);
+  last = TAILQ_LAST(&sb->blocks, svcbuf_block_queue);
+  if (g->blk && last)
+    behind = MAX(0, last->wall - g->blk->wall);
+  tvh_mutex_unlock(&sb->lock);
+  return behind;
+}
+
 svcbuf_reader_t *
 svcbuf_reader_create ( svcbuf_t *sb )
 {
