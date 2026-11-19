@@ -401,8 +401,11 @@ static int _timeshift_skip
         if (!(tsi = TAILQ_FIRST(&tsf->iframes)))
           tsf = timeshift_filemgr_next(tsf, &end, 0);
       }
+      /* No file holds a frame: fall back to the last one visited, whose
+         reference the step past it gave up -- take it again, or the
+         reader holds a file nothing pins */
       if (!tsf)
-        tsf = tsf_last;
+        tsf = timeshift_file_get(tsf_last);
       end = -1;
     } else {
       tsf = tsf_last = timeshift_filemgr_newest(ts);
@@ -413,7 +416,7 @@ static int _timeshift_skip
           tsf = timeshift_filemgr_prev(tsf, &end, 0);
       }
       if (!tsf)
-        tsf = tsf_last;
+        tsf = timeshift_file_get(tsf_last);
       end = 1;
     }
   }
@@ -735,6 +738,7 @@ void *timeshift_reader ( void *p )
                   timeshift_filemgr_flush(ts, NULL);
                   _seek_reset(seek);
                   ts->full = 0;
+                  ts->full_mono = 0;
                 }
 
                 /* Release */
