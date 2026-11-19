@@ -25,6 +25,16 @@
 /* TVHCodec ================================================================= */
 
 static htsmsg_t *
+tvh_codec_audio_get_asetpts( void *o, const char *lang )
+{
+    static const struct strtab tab[] = {
+        { N_("disabled"),   0 },
+        { N_("enabled"),    1 },
+    };
+    return strtab2htsmsg(tab, 1, lang);
+}
+
+static htsmsg_t *
 tvh_codec_audio_get_list_sample_fmts(TVHAudioCodec *self)
 {
     htsmsg_t *list = NULL, *map = NULL;
@@ -359,6 +369,18 @@ const codec_profile_class_t codec_profile_audio_class = {
                 .off      = offsetof(TVHAudioCodecProfile, channel_layout),
                 .list     = codec_profile_audio_class_channel_layout_list,
                 .def.s64  = 0,
+            },
+            {
+                .type     = PT_INT,
+                .id       = "asetpts",
+                .name     = N_("Normalizes PTS"),
+                .desc     = N_("Normalizes PTS on the audio link (sample rate / time base) by counting samples. [asetpts=N/SR/TB] \n Use only as a last resort, because might generate audio/video desynchronization."),
+                .group    = 4,
+                .opts     = PO_ADVANCED,
+                .get_opts = codec_profile_class_get_opts,
+                .off      = offsetof(TVHAudioCodecProfile, asetpts),
+                .list     = tvh_codec_audio_get_asetpts,
+                .def.i    = 0,
             },
             {}
         }

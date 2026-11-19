@@ -1164,11 +1164,19 @@ int isom_write_hvcc(sbuf_t *pb, const uint8_t *data, int size)
         case HEVC_NAL_VPS:
         case HEVC_NAL_SPS:
         case HEVC_NAL_PPS:
-        case HEVC_NAL_SEI_PREFIX:
-        case HEVC_NAL_SEI_SUFFIX:
+            /* VPS/SPS/PPS are mandatory: a parse failure means we cannot build a
+             * valid hvcC, so bail out. */
             ret = hvcc_add_nal_unit(buf, len, &hvcc);
             if (ret < 0)
                 goto end;
+            break;
+        case HEVC_NAL_SEI_PREFIX:
+        case HEVC_NAL_SEI_SUFFIX:
+            /* SEI is optional in the hvcC. Some encoders (notably hevc_qsv) emit a
+             * tiny SEI NAL that hvcc_add_nal_unit() rejects; that must NOT discard
+             * the whole configuration record (which left an empty hvcC/CodecPrivate
+             * and an undecodable HEVC track). Add it best-effort and ignore errors. */
+            hvcc_add_nal_unit(buf, len, &hvcc);
             break;
         default:
             break;
@@ -1713,6 +1721,11 @@ hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
     parser_set_stream_vparam(st, width, height, d);
 
   if (sps->vui.sar.num && sps->vui.sar.den) {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = sps->vui.sar.num;
+    st->es_sample_aspect_ratio.den = sps->vui.sar.den;
+#endif
     width  *= sps->vui.sar.num;
     height *= sps->vui.sar.den;
     if (width && height) {
@@ -1721,6 +1734,11 @@ hevc_decode_slice_header(parser_es_t *st, bitstream_t *bs, int *pkttype)
       st->es_aspect_den = height / v;
     }
   } else {
+#if ENABLE_LIBAV
+    // save SAR
+    st->es_sample_aspect_ratio.num = 0;
+    st->es_sample_aspect_ratio.den = 1;
+#endif
     st->es_aspect_num = 0;
     st->es_aspect_den = 1;
   }
