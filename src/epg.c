@@ -510,6 +510,15 @@ typedef struct epg_retro_event {
 } epg_retro_event_t;
 
 static LIST_HEAD(, epg_retro_event) epg_retro_events;
+static uint32_t epg_retro_count;
+
+/*
+ * With "Unlimited time" retention the holds below have no expiry of their
+ * own, so bound their number: only the most recent ones can still overlap
+ * what the channel caches actually hold.  Generous enough for a day of
+ * programmes on a large channel list, small next to an EPG database.
+ */
+#define EPG_RETRO_MAX 2048
 
 static void
 _epg_retro_release ( epg_retro_event_t *r )
@@ -518,19 +527,38 @@ _epg_retro_release ( epg_retro_event_t *r )
 
   LIST_REMOVE(r, link);
   free(r);
+  epg_retro_count--;
   ebc->ops->putref(ebc);
 }
 
 static void
 _epg_retro_purge ( void )
 {
-  epg_retro_event_t *r, *next;
+  epg_retro_event_t *r;
+  epg_retro_event_t *next;
+  epg_retro_event_t *oldest;
   time_t now = gclk();
 
-  for (r = LIST_FIRST(&epg_retro_events); r != NULL; r = next) {
+  r = LIST_FIRST(&epg_retro_events);
+  while (r != NULL) {
     next = LIST_NEXT(r, link);
     if (r->expires && r->expires <= now)
       _epg_retro_release(r);
+    r = next;
+  }
+
+  /* over the cap, the programme which ended first goes */
+  while (epg_retro_count > EPG_RETRO_MAX) {
+    oldest = LIST_FIRST(&epg_retro_events);
+    LIST_FOREACH(r, &epg_retro_events, link)
+      if (r->ebc->stop < oldest->ebc->stop)
+        oldest = r;
+    tvhdebug(LS_EPG,
+             "drop retained event %u (%s): %u retained events is the limit",
+             oldest->ebc->id,
+             epg_broadcast_get_title(oldest->ebc, NULL),
+             EPG_RETRO_MAX);
+    _epg_retro_release(oldest);
   }
 }
 
@@ -539,7 +567,8 @@ _epg_retro_hold ( epg_broadcast_t *ebc )
 {
 #if ENABLE_TIMESHIFT
   epg_retro_event_t *r;
-  time_t expires, now;
+  time_t expires;
+  time_t now;
 
   if (!timeshift_conf.enabled || !timeshift_conf.record_cache)
     return;
@@ -587,6 +616,7 @@ _epg_retro_hold ( epg_broadcast_t *ebc )
   r->ebc = ebc;
   r->expires = expires;
   LIST_INSERT_HEAD(&epg_retro_events, r, link);
+  epg_retro_count++;
 
   if (expires)
     tvhdebug(LS_EPG,
@@ -609,14 +639,17 @@ _epg_retro_hold ( epg_broadcast_t *ebc )
 }
 
 static void
-_epg_retro_drop_channel ( channel_t *ch )
+_epg_retro_drop_channel ( const channel_t *ch )
 {
-  epg_retro_event_t *r, *next;
+  epg_retro_event_t *r;
+  epg_retro_event_t *next;
 
-  for (r = LIST_FIRST(&epg_retro_events); r != NULL; r = next) {
+  r = LIST_FIRST(&epg_retro_events);
+  while (r != NULL) {
     next = LIST_NEXT(r, link);
     if (r->ebc->channel == ch)
       _epg_retro_release(r);
+    r = next;
   }
 }
 
@@ -633,6 +666,14 @@ static void _epg_channel_rem_broadcast
   ( channel_t *ch, epg_broadcast_t *ebc, epg_broadcast_t *ebc_new )
 {
   RB_REMOVE(&ch->ch_epg_schedule, ebc, sched_link);
+  /*
+   * RB_REMOVE leaves the removed node's own links alone.  A broadcast held
+   * for retrospective recording outlives the schedule it was in, and
+   * RB_NEXT/RB_PREV on it would follow those links to neighbours that may
+   * since have been freed -- the HTSP event handlers and the DVR both ask
+   * for them.  A cleared entry reports no neighbour instead.
+   */
+  memset(&ebc->sched_link, 0, sizeof(ebc->sched_link));
   if (ch->ch_epg_now  == ebc) ch->ch_epg_now  = NULL;
   if (ch->ch_epg_next == ebc) ch->ch_epg_next = NULL;
   if (ebc_new) {

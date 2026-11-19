@@ -206,12 +206,20 @@ typedef struct htsp_subscription {
   uint32_t hs_data_errors;
 
 #if ENABLE_TIMESHIFT
-  /*
-   * Last shared-timeshift position reported by the server.
-   * shift uses Tvheadend's internal 90 kHz base.
-   */
-  int64_t hs_timeshift_shift;
-  int64_t hs_timeshift_status_mono;
+  /* The client's place in the shared timeshift */
+  struct {
+    /*
+     * The last position the server reported, in Tvheadend's internal
+     * 90 kHz base, and when.  Written from the streaming thread, read from
+     * the HTSP command thread: both go through the atomic accessors, so a
+     * 32-bit build cannot tear them -- the value decides whether
+     * addDvrEntry records historically.
+     */
+    volatile int64_t shift;
+    volatile int64_t status_mono;
+    int64_t skip_mono;   ///< When the client last sought (mclk) ...
+    time_t skip_from;    ///< ... and the wall-clock time it sought from
+  } hs_timeshift;
 #endif
 
 } htsp_subscription_t;
@@ -383,6 +391,109 @@ htsp_image(htsp_connection_t *htsp, const char *image,
   return ret;
 }
 
+#if ENABLE_TIMESHIFT
+
+/*
+ * Where the viewer of this subscription is, in wall clock.
+ *
+ * Watching live is the common case and counts just as much: the viewer is at
+ * the live edge, which in a recording backfilled from the cache is however far
+ * the programme has got.  A position behind live is taken from what svcts
+ * reports, as long as it reported recently enough to be trusted.
+ */
+static int
+htsp_cache_playhead ( htsp_subscription_t *hs, time_t *when )
+{
+  int64_t shift_us = 0;
+  int64_t mono;
+
+  if (hs->hs_s == NULL || hs->hs_s->ths_channel == NULL)
+    return 0;
+
+  mono = atomic_get_s64(&hs->hs_timeshift.status_mono);
+  if (mono && mclk() - mono <= sec2mono(5))
+    shift_us = ts_rescale(atomic_get_s64(&hs->hs_timeshift.shift), 1000000);
+  if (shift_us < 0)
+    shift_us = 0;
+
+  *when = gclk() - (time_t)(shift_us / 1000000);
+  return 1;
+}
+
+/*
+ * Remember inside the recording where the viewer had got to.
+ *
+ * Record pressed half an hour into a film, then the television goes off: the
+ * recording carries on, and the next day the client should resume where the
+ * viewer stopped rather than at the programme's start.  tvheadend already
+ * keeps that as de_playposition and hands it to clients over HTSP -- what was
+ * missing is writing it while the channel cache is what feeds the recording.
+ *
+ * 'only' restricts the update to one entry (just created, so not recording
+ * yet); NULL updates whatever is recording that channel around the playhead.
+ * global_lock held.
+ *
+ * A viewer who only passed through leaves a position a few seconds in, which
+ * is what "resume where I stopped" means for it as much as for a film.
+ */
+static void
+htsp_cache_record_position
+  ( htsp_connection_t *htsp, htsp_subscription_t *hs )
+{
+  dvr_entry_t *de;
+  channel_t *ch;
+  time_t when;
+  time_t file_start;
+  time_t file_stop;
+  int filecount;
+  uint32_t pos;
+
+  lock_assert(&global_lock);
+
+  if (!htsp_cache_playhead(hs, &when))
+    return;
+  ch = hs->hs_s->ths_channel;
+
+  LIST_FOREACH(de, &ch->ch_dvrs, de_channel_link) {
+    if (de->de_sched_state != DVR_RECORDING)
+      continue;
+    /* Watching the channel says nothing about who owns what is being
+     * recorded on it: the position is this connection's to write only on an
+     * entry it may write */
+    if (dvr_entry_verify(de, htsp->htsp_granted_access, 0))
+      continue;
+    /*
+     * Only the upper bound belongs to the schedule.  A recording backfilled
+     * from the cache can begin before the programme's scheduled start, so
+     * the lower bound is the file's own, checked below.
+     */
+    if (when > dvr_entry_get_stop_time(de))
+      continue;
+    /*
+     * The position counts from the start of the file, and a backfilled
+     * recording begins where the cache reached, which is the scheduled start
+     * only when the cache went back that far.  So measure against the file and
+     * write nothing without one: falling back to the scheduled start -- which
+     * can include pre-recording padding the file will never hold -- overshoots
+     * by however much the cache could not supply, and the client then resumes
+     * past the end of what was recorded.
+     */
+    if (dvr_get_files_details(de, &file_start, &file_stop, &filecount) ||
+        filecount != 1 || file_start <= 0 || file_start > when)
+      continue;
+    pos = when - file_start;
+    if (de->de_playposition == pos)
+      continue;
+    de->de_playposition = pos;
+    idnode_changed(&de->de_id);
+    tvhdebug(LS_HTSP, "%s: play position of \"%s\" set to %u s",
+             htsp->htsp_logname, lang_str_get(de->de_title, NULL) ?: "",
+             pos);
+  }
+}
+
+#endif /* ENABLE_TIMESHIFT */
+
 /**
  *
  */
@@ -390,6 +501,11 @@ static void
 htsp_subscription_destroy(htsp_connection_t *htsp, htsp_subscription_t *hs)
 {
   th_subscription_t *ts = hs->hs_s;
+
+#if ENABLE_TIMESHIFT
+  /* the viewer is leaving: keep its place in whatever it was recording */
+  htsp_cache_record_position(htsp, hs);
+#endif
 
   hs->hs_s = NULL;
   mtimer_disarm(&hs->hs_s_bytes_out_timer);
@@ -2052,6 +2168,16 @@ htsp_method_getDvrConfigs(htsp_connection_t *htsp, htsmsg_t *in)
  * subscription which is live/current makes the request ambiguous and we
  * leave normal behaviour untouched.
  */
+/* Whether the viewer sought from inside `e` within the last minute: the
+ * evidence that an event ID naming it is the stale one from before */
+static int
+htsp_sought_from ( const htsp_subscription_t *hs, const epg_broadcast_t *e,
+                   int64_t now_mono )
+{
+  return hs->hs_timeshift.skip_mono && now_mono - hs->hs_timeshift.skip_mono < sec2mono(60) &&
+         hs->hs_timeshift.skip_from >= e->start && hs->hs_timeshift.skip_from < e->stop;
+}
+
 static epg_broadcast_t *
 htsp_cache_record_target ( htsp_connection_t *htsp,
                            epg_broadcast_t *requested,
@@ -2060,17 +2186,22 @@ htsp_cache_record_target ( htsp_connection_t *htsp,
   htsp_subscription_t *hs;
   channel_t *ch;
   epg_broadcast_t *current;
-  int64_t now_mono, shift_us;
-  time_t now, when;
+  int64_t now_mono;
+  int64_t shift_us;
+  int64_t status_mono;
+  time_t now;
+  time_t when;
   int historical = 0;
 
   *cache_full = 0;
 
   if (requested == NULL ||
-      (ch = requested->channel) == NULL ||
+      requested->channel == NULL ||
       !timeshift_conf.enabled ||
       !timeshift_conf.record_cache)
     return requested;
+
+  ch = requested->channel;
 
   now = gclk();
   now_mono = mclk();
@@ -2088,11 +2219,12 @@ htsp_cache_record_target ( htsp_connection_t *htsp,
       continue;
 
     /* svcts sends status once a second and immediately with seek replies. */
-    if (hs->hs_timeshift_status_mono == 0 ||
-        now_mono - hs->hs_timeshift_status_mono > sec2mono(5))
+    status_mono = atomic_get_s64(&hs->hs_timeshift.status_mono);
+    if (status_mono == 0 ||
+        now_mono - status_mono > sec2mono(5))
       continue;
 
-    shift_us = ts_rescale(hs->hs_timeshift_shift, 1000000);
+    shift_us = ts_rescale(atomic_get_s64(&hs->hs_timeshift.shift), 1000000);
 
     /*
      * A second fresh subscription which is live or still inside the
@@ -2107,10 +2239,14 @@ htsp_cache_record_target ( htsp_connection_t *htsp,
       /*
        * The playhead is already inside the current programme.  Kodi can
        * briefly still send the eventId from the programme it was playing
-       * before a seek.  Correct only an already-ended stale event; future
-       * or otherwise deliberate DVR requests keep normal HTSP semantics.
+       * before a seek, the one just before.  Correct only that one, ended,
+       * and only if the viewer did seek from inside it lately; an older
+       * event, a future one or one asked for without a seek keeps normal
+       * HTSP semantics.
        */
-      if (requested != current && requested->stop <= now) {
+      if (requested != current && requested->stop <= now &&
+          requested->stop + 60 >= current->start &&
+          htsp_sought_from(hs, requested, now_mono)) {
         tvhdebug(LS_HTSP,
                  "%s: correcting stale Record event %u to current event %u "
                  "on \"%s\"",
@@ -2131,12 +2267,11 @@ htsp_cache_record_target ( htsp_connection_t *htsp,
      * historical, the server-side playhead is still authoritative and
      * the same full-cache semantics apply.
      */
-    if (requested != current) {
-      if (requested->stop > now ||
-          when + 2 < requested->start ||
-          when >= requested->stop + 2)
-        return requested;
-    }
+    if (requested != current &&
+        (requested->stop > now ||
+         when + 2 < requested->start ||
+         when >= requested->stop + 2))
+      return requested;
 
     historical++;
   }
@@ -2184,7 +2319,8 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
 #endif
 
   {
-    int have_channel, have_event;
+    int have_channel;
+    int have_event;
 
     have_channel = !htsmsg_get_u32(in, "channelId", &u32);
     if (have_channel)
@@ -2239,6 +2375,14 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
   htsmsg_copy_field(conf, "enabled", in, NULL);
   s = htsmsg_get_str(in, "configName");
   dvr_conf = dvr_config_find_by_list(htsp->htsp_granted_access->aa_dvrcfgs, s);
+  /* a cache-only profile records nothing: it is used only when named */
+  if (dvr_conf && dvr_conf->dvr_cache_only && !(s && *s)) {
+    htsmsg_destroy(conf);
+    tvhwarn(LS_HTSP,
+            "%s: addDvrEntry rejected: no recording profile available",
+            htsp->htsp_logname);
+    return htsp_error(htsp, N_("No recording profile available"));
+  }
     if (dvr_conf)
   {
       htsmsg_add_uuid(conf, "config_name", &dvr_conf->dvr_id.in_uuid);
@@ -2320,6 +2464,14 @@ htsp_method_addDvrEntry(htsp_connection_t *htsp, htsmsg_t *in)
     tvhinfo(LS_HTSP,
             "%s: addDvrEntry: DVR entry created, state=%d",
             htsp->htsp_logname, (int)de->de_sched_state);
+
+  /*
+   * Recording what is being watched from the cache records the viewer's place
+   * in it, so a client resumes there instead of at the programme's start.  It
+   * is written when the viewer leaves, in htsp_subscription_destroy(): the
+   * position is measured against the recording's file, and there is none yet
+   * at the moment the entry is created here.
+   */
 
   dvr_status = de != NULL ? de->de_sched_state : DVR_NOSTATE;
 
@@ -3028,6 +3180,11 @@ htsp_method_skip(htsp_connection_t *htsp, htsmsg_t *in)
   if(hs == NULL)
     return htsp_error(htsp, N_("Subscription does not exist"));
 
+  /* where the playhead was, for htsp_cache_record_target() */
+  hs->hs_timeshift.skip_mono = mclk();
+  hs->hs_timeshift.skip_from = gclk() -
+    (time_t)(ts_rescale(atomic_get_s64(&hs->hs_timeshift.shift), 1000000) / 1000000);
+
   abs = htsmsg_get_u32_or_default(in, "absolute", 0);
 
   memset(&skip, 0, sizeof(skip));
@@ -3103,8 +3260,8 @@ htsp_method_live(htsp_connection_t *htsp, htsmsg_t *in)
   skip.type = SMT_SKIP_LIVE;
   tvhtrace(LS_HTSP_SUB, "live");
 #if ENABLE_TIMESHIFT
-  hs->hs_timeshift_shift = 0;
-  hs->hs_timeshift_status_mono = mclk();
+  atomic_set_s64(&hs->hs_timeshift.shift, 0);
+  atomic_set_s64(&hs->hs_timeshift.status_mono, mclk());
 #endif
   subscription_set_skip(hs->hs_s, &skip);
 
@@ -4828,8 +4985,8 @@ htsp_subscription_speed(htsp_subscription_t *hs, int speed)
 static void
 htsp_subscription_timeshift_status(htsp_subscription_t *hs, timeshift_status_t *status)
 {
-  hs->hs_timeshift_shift = status->shift;
-  hs->hs_timeshift_status_mono = mclk();
+  atomic_set_s64(&hs->hs_timeshift.shift, status->shift);
+  atomic_set_s64(&hs->hs_timeshift.status_mono, mclk());
 
   htsmsg_t *m = htsmsg_create_map();
   htsmsg_add_str(m, "method", "timeshiftStatus");
