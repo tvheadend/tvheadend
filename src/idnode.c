@@ -1196,6 +1196,32 @@ idnode_save_queue ( idnode_t *self )
   self->in_save = ise;
 }
 
+/*
+ * Save the nodes that wait to be saved, now. At shutdown, before the
+ * nodes are destroyed: a node saved in its destructor has lost what was
+ * destroyed before it (a channel its services).
+ */
+void
+idnode_save_flush ( void )
+{
+  idnode_save_t *ise;
+  char filename[PATH_MAX];
+  htsmsg_t *m;
+
+  lock_assert(&global_lock);
+
+  while ((ise = TAILQ_FIRST(&idnodes_save)) != NULL) {
+    m = idnode_savefn(ise->ise_node, filename, sizeof(filename));
+    ise->ise_node->in_save = NULL;
+    TAILQ_REMOVE(&idnodes_save, ise, ise_link);
+    free(ise);
+    if (m) {
+      hts_settings_save(m, "%s", filename);
+      htsmsg_destroy(m);
+    }
+  }
+}
+
 void
 idnode_save_check ( idnode_t *self, int weak )
 {
