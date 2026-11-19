@@ -99,6 +99,16 @@ dvr_config_find_by_name_default(const char *name)
  * return the first config from list if name is not valid
  * return the default config if not found
  */
+/* A profile to fall back on: enabled, and one that records -- a
+ * cache-only profile records nothing */
+static dvr_config_t *
+dvr_config_fallback(const char *uuid)
+{
+  dvr_config_t *cfg = dvr_config_find_by_uuid(uuid);
+
+  return cfg && cfg->dvr_enabled && !cfg->dvr_cache_only ? cfg : NULL;
+}
+
 dvr_config_t *
 dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
 {
@@ -116,11 +126,8 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       uuid2 = htsmsg_field_get_str(f) ?: "";
       if (strcmp(uuid, uuid2) == 0)
         return cfg;
-      if (!res) {
-        res = dvr_config_find_by_uuid(uuid2);
-        if (res != NULL && !res->dvr_enabled)
-          res = NULL;
-      }
+      if (!res)
+        res = dvr_config_fallback(uuid2);
     }
   } else {
     if (cfg && cfg->dvr_enabled)
@@ -674,11 +681,13 @@ dvr_config_class_enabled_opts(void *o, uint32_t opts)
 static uint32_t
 dvr_config_class_recording_only_opts(void *o, uint32_t opts)
 {
-  dvr_config_t *cfg = (dvr_config_t *)o;
-
 #if ENABLE_TIMESHIFT
+  const dvr_config_t *cfg = (const dvr_config_t *)o;
+
   if (cfg && cfg->dvr_cache_only)
     return opts | PO_NOUI;
+#else
+  (void)o;
 #endif
 
   return opts;

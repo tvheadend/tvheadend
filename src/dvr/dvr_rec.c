@@ -1771,7 +1771,7 @@ dvr_thread(void *aux)
   th_pkt_t *pkt, *pkt2, *pkt3;
   streaming_start_t *ss = NULL;
   int run = 1, started = 0, muxing = 0, comm_skip, rs;
-  int cache_retro = 0, cache_full = 0;
+  int cache_retro = 0;
   int epg_running = 0, old_epg_running, epg_pause = 0;
   int commercial = COMMERCIAL_UNKNOWN;
   int running_disabled;
@@ -1789,7 +1789,8 @@ dvr_thread(void *aux)
     dvr_entry_get_epg_running(de) <= 0;
   real_start = dvr_entry_get_start_time(de, 0);
   tvhtrace(LS_DVR, "%s - recoding thread started for \"%s\"",
-           idnode_uuid_as_str(&de->de_id, ubuf), lang_str_get(de->de_title, NULL));
+           idnode_uuid_as_str(&de->de_id, ubuf),
+           lang_str_get(de->de_title, NULL) ?: "");
   if (!running_disabled && de->de_bcast) {
     now = gclk();
     switch (de->de_bcast->running) {
@@ -1984,62 +1985,80 @@ dvr_thread(void *aux)
       break;
 
     case SMT_STOP:
-       if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
-	 // Subscription is restarting, wait for SMT_START
-	 if (muxing)
-           tvhtrace(LS_DVR, "%s - source reconfigured", idnode_uuid_as_str(&de->de_id, ubuf));
-	 muxing = 0; // reconfigure muxer
-
-       } else if(sm->sm_code == 0) {
-	 // Recording is completed
-
-	dvr_entry_set_state(de, de->de_sched_state, de->de_rec_state, SM_CODE_OK);
-	tvhinfo(LS_DVR, "Recording completed: \"%s\"",
-	        dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
-
-        goto fin;
-
-      } else if (de->de_last_error != sm->sm_code) {
-	 // Error during recording
-
-	dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
-	tvherror(LS_DVR, "Recording stopped: \"%s\": %s",
-                dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
-                streaming_code2txt(sm->sm_code));
-
-fin:
-        streaming_queue_clear(&backlog);
-
-        /*
-         * A retrospective cache recording ends when the cache gate reaches
-         * its historical stop boundary.  Do not call dvr_stop_recording()
-         * from this thread: that routine joins this very thread.
-         */
-        cache_retro = de->de_cache_retro;
-        cache_full  = de->de_cache_full;
-
-        if (!dvr_thread_global_lock(de, &run))
-          break;
-
-        dvr_thread_epilog(de, postproc);
-
-        if (cache_retro || cache_full)
-          dvr_entry_cache_replay_done(de);
-
-        dvr_thread_global_unlock(de);
-
-	start_time = 0;
-	started = 0;
-	muxing = 0;
-
-	if (ss) {
-	  streaming_start_unref(ss);
-	  ss = NULL;
-        }
-
-        if (cache_retro || cache_full)
-          run = 0;
+      if (sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+        // Subscription is restarting, wait for SMT_START
+        if (muxing)
+          tvhtrace(LS_DVR, "%s - source reconfigured", idnode_uuid_as_str(&de->de_id, ubuf));
+        muxing = 0; // reconfigure muxer
+        break;
       }
+
+      if (sm->sm_code == 0) {
+        // Recording is completed
+        dvr_entry_set_state(de, de->de_sched_state, de->de_rec_state, SM_CODE_OK);
+        tvhinfo(LS_DVR, "Recording completed: \"%s\"",
+                dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL));
+
+      } else if (de->de_last_error != sm->sm_code ||
+                 de->de_cache_retro) {
+        /*
+         * Error during recording.
+         *
+         * A retrospective recording ends on this STOP and on nothing else:
+         * dvr_entry_start_recording() returns before arming a stop timer for
+         * de_cache_retro, so the gate's boundary is the only end there is.
+         * The gate can report a code SMT_SERVICE_STATUS has already set, and
+         * then de_last_error matches and every branch here is skipped, while
+         * the gate, now GATE_DONE, drops whatever follows.
+         *
+         * de_cache_full is deliberately not included.  That recording does
+         * get the ordinary stop timer, so it needs no help ending, and the
+         * flag stays set for its whole run: forcing this branch on it turned
+         * every late transport error -- a lost signal an hour in -- into the
+         * end of the recording, where the thread used to stay and pick the
+         * stream back up on the next SMT_START.
+         */
+        dvr_rec_set_state(de, DVR_RS_ERROR, sm->sm_code);
+        tvherror(LS_DVR, "Recording stopped: \"%s\": %s",
+                 dvr_get_filename(de) ?: lang_str_get(de->de_title, NULL),
+                 streaming_code2txt(sm->sm_code));
+
+      } else {
+        // The same error again: it was reported, keep waiting
+        break;
+      }
+
+      /* Either way, the recording ends here */
+      streaming_queue_clear(&backlog);
+
+      /*
+       * A retrospective cache recording ends when the cache gate reaches
+       * its historical stop boundary.  Do not call dvr_stop_recording()
+       * from this thread: that routine joins this very thread.
+       */
+      cache_retro = de->de_cache_retro;
+
+      if (!dvr_thread_global_lock(de, &run))
+        break;
+
+      dvr_thread_epilog(de, postproc);
+
+      if (cache_retro)
+        dvr_entry_cache_replay_done(de);
+
+      dvr_thread_global_unlock(de);
+
+      start_time = 0;
+      started = 0;
+      muxing = 0;
+
+      if (ss) {
+        streaming_start_unref(ss);
+        ss = NULL;
+      }
+
+      if (cache_retro)
+        run = 0;
       break;
 
     case SMT_SERVICE_STATUS:
