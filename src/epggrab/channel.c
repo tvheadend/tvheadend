@@ -281,6 +281,16 @@ int epggrab_channel_set_number ( epggrab_channel_t *ec, int major, int minor )
   return save;
 }
 
+/* TVHplayer guide channels are named "tvhplayer.<channel uuid>" */
+#define TVHPLAYER_PREFIX     "tvhplayer."
+#define TVHPLAYER_PREFIX_LEN (sizeof(TVHPLAYER_PREFIX) - 1)
+
+static inline int
+epggrab_channel_is_tvhplayer( epggrab_channel_t *ec )
+{
+  return ec->id && !strncmp(ec->id, TVHPLAYER_PREFIX, TVHPLAYER_PREFIX_LEN);
+}
+
 /* Autolink EPG channel to channel */
 static int
 epggrab_channel_autolink_one( epggrab_channel_t *ec, channel_t *ch )
@@ -300,6 +310,20 @@ epggrab_channel_autolink( epggrab_channel_t *ec )
 {
   channel_t *ch;
   int chnum = 0;  //Default to not searching channel numbers.
+  /* TVHplayer emits one guide channel per TV channel, using its UUID.
+   * This is an explicit destination, not a name to match against every
+   * channel. In particular, an existing link or a deleted destination must
+   * not fall through to the quadratic heuristic scan under global_lock.
+   */
+  if (epggrab_channel_is_tvhplayer(ec)) {
+    if (strlen(ec->id + TVHPLAYER_PREFIX_LEN) != UUID_HEX_SIZE - 1 ||
+        !uuid_hexvalid(ec->id + TVHPLAYER_PREFIX_LEN))
+      return 0;
+    ch = channel_find_by_uuid(ec->id + TVHPLAYER_PREFIX_LEN);
+    if (epggrab_channel_check(ec, ch))
+      return epggrab_channel_link(ec, ch, NULL);
+    return 0;
+  }
   if (ec->mod->type == EPGGRAB_INT || ec->mod->type == EPGGRAB_EXT)
   {
     chnum = ((epggrab_module_ext_t *)ec->mod)->xmltv_chnum;  //This is the grabber 'Channel numbers (heuristic)' flag.
@@ -508,12 +532,26 @@ void epggrab_channel_add ( channel_t *ch )
 {
   epggrab_module_t *mod;
   epggrab_channel_t *ec;
+  char ubuf[UUID_HEX_SIZE];
+  char id[TVHPLAYER_PREFIX_LEN + UUID_HEX_SIZE];
 
-  LIST_FOREACH(mod, &epggrab_modules, link)
+  /* A TVHplayer guide channel belongs to the one TV channel its id names:
+   * look that one up, and never match the others by name or number. With
+   * every TV channel's name compared to every guide channel's, a change to
+   * each of many channels held global_lock for a long time, and channels
+   * sharing a name took each other's guides.
+   */
+  snprintf(id, sizeof(id), "%s%s", TVHPLAYER_PREFIX, channel_get_uuid(ch, ubuf));
+
+  LIST_FOREACH(mod, &epggrab_modules, link) {
+    ec = epggrab_channel_find(mod, id, 0, NULL);
+    if (ec && epggrab_channel_check(ec, ch))
+      epggrab_channel_link(ec, ch, NULL);
     RB_FOREACH(ec, &mod->channels, link) {
-      if (!is_paired(ec))
+      if (!is_paired(ec) && !epggrab_channel_is_tvhplayer(ec))
         epggrab_channel_autolink_one(ec, ch);
     }
+  }
 }
 
 void epggrab_channel_rem ( channel_t *ch )
