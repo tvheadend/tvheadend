@@ -163,6 +163,7 @@ const tvh_caps_t tvheadend_capabilities[] = {
 #if ENABLE_SATIP_CLIENT
   { "satip_client", NULL },
 #endif
+  { "componenttag", NULL }, /* HTSP: component tag of the streams */
 #if ENABLE_SATIP_SERVER
   { "satip_server", NULL },
 #endif
