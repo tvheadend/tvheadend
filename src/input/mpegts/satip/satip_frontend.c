@@ -1344,7 +1344,7 @@ satip_frontend_extra_shutdown
   int r, nfds;
   char b[32];
 
-  if (session[0] == '\0' || stream_id <= 0)
+  if (session[0] == '\0' || stream_id < 0)
     return;
 
   efd = tvhpoll_create(1);
@@ -1598,11 +1598,12 @@ satip_frontend_input_thread ( void *aux )
   size_t c;
   tvhpoll_event_t ev[3];
   tvhpoll_t *efd;
-  int changing, ms, fatal, running, play2, exit_flag;
+  int changing, ms, fatal, running, play2, exit_flag, dummy_play, post_setup;
   int rtsp_flags, position, reply;
   uint32_t seq, unc;
   udp_multirecv_t um;
   uint64_t u64, u64_2, fatal_timeout;
+  int64_t dummy_deadline;
   long stream_id;
 
   /* If set - the thread will be cancelled */
@@ -1723,6 +1724,9 @@ new_tune:
   seq         = -1;
   lfe->sf_seq = -1;
   play2       = 1;
+  dummy_play  = 0;
+  post_setup  = 0;
+  dummy_deadline = 0;
   rtsp_flags  = satip_frontend_rtsp_flags(lfe);
 
   if ((rtsp_flags & SATIP_SETUP_TCP) == 0) {
@@ -1915,6 +1919,31 @@ new_tune:
 
     nfds = tvhpoll_wait(efd, ev, 1, ms);
 
+    /* The bare PLAY has its own deadline: RTP/RTCP activity must not
+     * extend it and a pending answer must not block a mux stop. */
+    if (dummy_play == 1 && mclk() > dummy_deadline) {
+      tvherror(LS_SATIP, "%s - no answer to the bare PLAY, restarting RTSP", buf);
+      satip_frontend_tuning_error(lfe, tr);
+      fatal = 1;
+      if (!exit_flag) {
+        /* The unanswered PLAY would block the next SETUP on this connection
+         * (new_tune may reuse it): release the stale session through a
+         * fresh connection and drop this one, new_tune will reconnect.
+         * On shutdown the normal exit path does the cleanup. */
+        satip_frontend_extra_shutdown(lfe, session, stream_id);
+        session[0] = '\0';
+        http_client_close(rtsp);
+        rtsp = NULL;
+        /* same release as the wake: label in satip_frontend_shutdown() */
+        tvh_mutex_lock(&lfe->sf_dvr_lock);
+        satip_frontend_wake_other_waiting(lfe, tr);
+        satip_frontend_request_cleanup(lfe, tr);
+        tvh_mutex_unlock(&lfe->sf_dvr_lock);
+        tr = NULL;
+      }
+      continue;
+    }
+
     if (!tvheadend_is_running() || exit_flag) {
       exit_flag = 1;
       running = 0;
@@ -2014,35 +2043,18 @@ new_tune:
             tvhdebug(LS_SATIP, "%s #%i - new session %s stream id %li",
                         rtsp->hc_host, lfe->sf_number,
                         rtsp->hc_rtsp_session, rtsp->hc_rtsp_stream_id);
-            if (lfe->sf_play2) {
-              r = -12345678;
-              tvh_mutex_lock(&lfe->sf_dvr_lock);
-              if (lfe->sf_req == lfe->sf_req_thread) {
-                lfe->sf_req->sf_weight_tuned = lfe->sf_req->sf_weight;
-                r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
-                                     rtp_port, &lm->lm_tuning,
-                                     rtsp_flags | SATIP_SETUP_PLAY,
-                                     lfe->sf_req->sf_weight);
-              }
-              tvh_mutex_unlock(&lfe->sf_dvr_lock);
-              if (r < 0) {
-                tvherror(LS_SATIP, "%s - failed to tune2 (%i)", buf, r);
-                satip_frontend_tuning_error(lfe, tr);
-                fatal = 1;
-              }
-              reply = 1;
-              continue;
-            } else {
-              if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
-                reply = 1;
-                continue;
-              }
-            }
+            post_setup = 1; /* continued after the switch */
           }
           break;
         case RTSP_CMD_PLAY:
           if (!running)
             break;
+          if (dummy_play == 1) {
+            /* answer to the bare PLAY: code and content ignored */
+            dummy_play = 2;
+            post_setup = 1;
+            break;
+          }
           satip_frontend_wake_other_waiting(lfe, tr);
           if (rtsp->hc_code == 200 && play2) {
             play2 = 0;
@@ -2063,6 +2075,43 @@ new_tune:
           break;
         }
         rtsp->hc_cmd = HTTP_CMD_NONE;
+
+        if (post_setup) {
+          /* SETUP done (and bare PLAY answered, if requested): go on */
+          post_setup = 0;
+          if (lfe->sf_device->sd_dummy_play && dummy_play == 0) {
+            if (satip_rtsp_play_bare(rtsp) < 0) {
+              /* do not go on with the parameterized PLAY without it */
+              tvherror(LS_SATIP, "%s - failed to send the bare PLAY", buf);
+              satip_frontend_tuning_error(lfe, tr);
+              fatal = 1;
+            } else {
+              /* bare PLAY sent: wait for its answer, but not forever */
+              dummy_play = 1;
+              dummy_deadline = mclk() + sec2mono(SATIP_DUMMY_PLAY_TIMEOUT);
+              reply = 1;
+            }
+          } else if (lfe->sf_play2) {
+            r = -12345678;
+            tvh_mutex_lock(&lfe->sf_dvr_lock);
+            if (lfe->sf_req == lfe->sf_req_thread) {
+              lfe->sf_req->sf_weight_tuned = lfe->sf_req->sf_weight;
+              r = satip_rtsp_setup(rtsp, position, lfe->sf_number,
+                                   rtp_port, &lm->lm_tuning,
+                                   rtsp_flags | SATIP_SETUP_PLAY,
+                                   lfe->sf_req->sf_weight);
+            }
+            tvh_mutex_unlock(&lfe->sf_dvr_lock);
+            if (r < 0) {
+              tvherror(LS_SATIP, "%s - failed to tune2 (%i)", buf, r);
+              satip_frontend_tuning_error(lfe, tr);
+              fatal = 1;
+            }
+            reply = 1;
+          } else if (satip_frontend_pid_changed(rtsp, lfe, buf) > 0) {
+            reply = 1;
+          }
+        }
       }
 
       if (!running)
@@ -2267,6 +2316,9 @@ satip_frontend_hacks( satip_frontend_t *lfe )
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     lfe->sf_specinv = 1;
     lfe->sf_pass_weight = 0;
+  } else if (sd->sd_dummy_play) {
+    /* Telestar Digibit Twin: full tuning parameters in the first PLAY */
+    lfe->sf_play2 = 1;
   }
 }
 

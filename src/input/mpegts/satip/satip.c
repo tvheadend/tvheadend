@@ -633,6 +633,10 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids21      = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     sd->sd_fe  = 0;
+  } else if (strstr(sd->sd_info.manufacturer, "Telestar") &&
+             strstr(sd->sd_info.modelname, "TELESTAR DIGIBIT")) {
+    /* DiSEqC switching via src= needs a bare PLAY after SETUP */
+    sd->sd_dummy_play = 1;
   }
 }
 
