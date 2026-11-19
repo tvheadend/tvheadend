@@ -1177,7 +1177,7 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
   time_t t;
   char ubuf[UUID_HEX_SIZE];
   epg_genre_t *genre;
-  int summary_used = 0;
+  int summary_used = 0, i;
 
   if (e) {
     htsmsg_add_u32(conf, "broadcast", e->id);
@@ -1207,6 +1207,9 @@ dvr_entry_create_from_htsmsg(htsmsg_t *conf, epg_broadcast_t *e)
       htsmsg_add_str(conf, "uri", e->episodelink->uri);
     if (e->image)
       htsmsg_add_str(conf, "image", e->image);
+    for (i = 0; i < EPG_IMAGE_TYPE_COUNT; i++)
+      if (e->typed_image[i])
+        htsmsg_add_str(conf, epg_image_types[i].dvr, e->typed_image[i]);
     genre = LIST_FIRST(&e->genre);
     if (genre)
       htsmsg_add_u32(conf, "content_type", genre->code / 16);
@@ -2132,6 +2135,8 @@ dvr_entry_create_by_autorec(int enabled, epg_broadcast_t *e, dvr_autorec_entry_t
 void
 dvr_entry_dec_ref(dvr_entry_t *de)
 {
+  int t;
+
   lock_assert(&global_lock);
 
   if(de->de_refcnt > 1) {
@@ -2167,6 +2172,8 @@ dvr_entry_dec_ref(dvr_entry_t *de)
   free(de->de_channel_name);
   free(de->de_epnum.text);
   free(de->de_image);
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++)
+    free(de->de_typed_image[t]);
   free(de->de_fanart_image);
   free(de->de_uri);
 
@@ -2786,6 +2793,7 @@ void dvr_event_updated(epg_broadcast_t *e)
 {
   dvr_entry_t *de;
   dvr_entry_t *de_next;
+  int t;
 
   if (e->channel == NULL)
     return;
@@ -2798,8 +2806,16 @@ void dvr_event_updated(epg_broadcast_t *e)
     de_next = LIST_NEXT(de, de_bcast_link);
     assert(de->de_bcast == e);
     if (de->de_sched_state == DVR_SCHEDULED)
-      _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
+      de = _dvr_entry_update(de, -1, NULL, e, NULL, NULL, NULL, NULL, NULL,
                         NULL, 0, 0, 0, 0, DVR_PRIO_NOTSET, 0, 0, -1, -1, 0, NULL, NULL);
+    /* Empty snapshots use live EPG artwork, including removals. The update
+     * above can destroy an autorec entry; only notify surviving entries. */
+    for (t = 0; de && t < EPG_IMAGE_TYPE_COUNT; t++)
+      if ((e->image_changes & EPG_CHANGED_TYPED_IMAGE(t)) &&
+          strempty(de->de_typed_image[t])) {
+        htsp_dvr_entry_update(de);
+        break;
+      }
     de = de_next;
   }
   de = LIST_FIRST(&e->channel->ch_dvrs);
@@ -4268,6 +4284,14 @@ dvr_entry_get_fanart_image(const dvr_entry_t *de)
   return de->de_fanart_image;
 }
 
+const char *
+dvr_entry_get_typed_image(const dvr_entry_t *de, epg_image_type_t type)
+{
+  if (de && !strempty(de->de_typed_image[type]))
+    return de->de_typed_image[type];
+  return de && de->de_bcast ? de->de_bcast->typed_image[type] : NULL;
+}
+
 static const void *
 dvr_entry_class_image_get0(dvr_entry_t *de, const char *image)
 {
@@ -4299,6 +4323,34 @@ static void
 dvr_entry_class_fanart_image_notify(void *o, const char *lang)
 {
   (void)imagecache_get_id(dvr_entry_get_fanart_image(o));
+}
+
+/* Property callbacks have no type argument, so generate one pair per type */
+#define DVR_ENTRY_CLASS_TYPED_IMAGE(suffix, itype)                        \
+static const void *                                                       \
+dvr_entry_class_image_##suffix##_get(void *o)                             \
+{                                                                         \
+  return dvr_entry_class_image_get0(o, dvr_entry_get_typed_image(o, itype)); \
+}                                                                         \
+static void                                                               \
+dvr_entry_class_image_##suffix##_notify(void *o, const char *lang)        \
+{                                                                         \
+  (void)imagecache_get_id(dvr_entry_get_typed_image(o, itype));           \
+}
+
+DVR_ENTRY_CLASS_TYPED_IMAGE(poster, EPG_IMAGE_POSTER)
+DVR_ENTRY_CLASS_TYPED_IMAGE(backdrop, EPG_IMAGE_BACKDROP)
+DVR_ENTRY_CLASS_TYPED_IMAGE(still, EPG_IMAGE_STILL)
+
+#define DVR_ENTRY_TYPED_IMAGE_PROP(suffix, itype, title, description) {   \
+  .type     = PT_STR,                                                     \
+  .id       = "image_" #suffix,                                           \
+  .name     = title,                                                      \
+  .desc     = description,                                                \
+  .get      = dvr_entry_class_image_##suffix##_get,                       \
+  .notify   = dvr_entry_class_image_##suffix##_notify,                    \
+  .off      = offsetof(dvr_entry_t, de_typed_image[itype]),               \
+  .opts     = PO_HIDDEN,                                                  \
 }
 
 static const void *
@@ -4652,6 +4704,12 @@ const idclass_t dvr_entry_class = {
       .off      = offsetof(dvr_entry_t, de_image),
       .opts     = PO_HIDDEN,
     },
+    DVR_ENTRY_TYPED_IMAGE_PROP(poster, EPG_IMAGE_POSTER,
+      N_("Programme poster"), N_("Programme poster image.")),
+    DVR_ENTRY_TYPED_IMAGE_PROP(backdrop, EPG_IMAGE_BACKDROP,
+      N_("Programme backdrop"), N_("Programme backdrop image.")),
+    DVR_ENTRY_TYPED_IMAGE_PROP(still, EPG_IMAGE_STILL,
+      N_("Programme still"), N_("Programme still image.")),
     {
       .type     = PT_STR,
       .id       = "fanart_image",
