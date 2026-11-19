@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-GB
+tone_instructions: >-
+  Be brief. Report only problems that should block merging. Do not propose
+  hardening, refactoring, or follow-up work.
+reviews:
+  profile: quiet
+  enable_prompt_for_ai_agents: false
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: false
+  path_instructions:
+    - path: "**"
+      instructions: >-
+        Only report problems introduced by this diff that are reachable in
+        normal use. Do not report problems in code added only to address an
+        earlier review comment unless they are regressions. Do not report
+        pre-existing problems.
+  sequence_diagrams: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  estimate_code_review_effort: false
+  in_progress_fortune: false
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "AGENTS.md"
