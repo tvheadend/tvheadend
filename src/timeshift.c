@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "atomic.h"
 #include "access.h"
+#include "subscriptions.h"
 #include "atomic.h"
 
 #include <sys/types.h>
@@ -136,6 +137,7 @@ static void
 timeshift_conf_class_changed ( idnode_t *self )
 {
   timeshift_fixup();
+  subscription_cache_settings_changed();
 }
 
 /*

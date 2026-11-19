@@ -74,6 +74,32 @@ subgetstate(th_subscription_t *s)
  * Subscription linking
  * *************************************************************************/
 
+/*
+ * A sink for a subscription that must not be fed: every message is freed.
+ * Static, so that falling back to it cannot itself fail to allocate.
+ */
+static void
+subscription_input_drop(void *opaque, streaming_message_t *sm)
+{
+  (void)opaque;
+  streaming_msg_free(sm);
+}
+
+static htsmsg_t *
+subscription_input_drop_info(void *opaque, htsmsg_t *list)
+{
+  (void)opaque;
+  htsmsg_add_str(list, NULL, "dropped: no replay gate");
+  return list;
+}
+
+static streaming_target_t subscription_drop_target = {
+  .st_ops = {
+    .st_cb   = subscription_input_drop,
+    .st_info = subscription_input_drop_info
+  }
+};
+
 /**
  * The service is producing output.
  */
@@ -109,15 +135,44 @@ subscription_link_service(th_subscription_t *s, service_t *t)
                          &s->ths_replaying, &s->ths_backfill_start,
                          s->ths_prch && s->ths_prch->prch_sq_used ?
                            &s->ths_prch->prch_sq : NULL);
-    if (gate)
-      s->ths_output = s->ths_gate = gate;
+    if (gate) {
+      s->ths_gate = gate;
+      s->ths_output = gate;
+      s->ths_replay_bounded = s->ths_backfill_to && !s->ths_backfill_all;
+    } else if (s->ths_backfill_to && !s->ths_backfill_all) {
+      /*
+       * A bounded retrospective recording is given a gate whether or not
+       * there is a cache, so that it fails closed: no gate here means it
+       * could not be allocated.  Nothing live may reach a recording that has
+       * no stop timer and no historical boundary, so its output becomes a
+       * sink.  The stop that ends it goes straight to the queue the DVR
+       * thread reads -- sent down the chain, globalheaders would drop a stop
+       * arriving before any start, as it does for Matroska.
+       */
+      streaming_target_t *end = s->ths_prch && s->ths_prch->prch_sq_used ?
+                                &s->ths_prch->prch_sq.sq_st : s->ths_output;
+      s->ths_output = &subscription_drop_target;
+      streaming_target_deliver2(end,
+                                streaming_msg_create_code(SMT_STOP, SM_CODE_NO_SPACE));
+    }
     s->ths_backfill_from = 0;
     s->ths_backfill_to = 0;
     s->ths_backfill_all = 0;
   }
   /* a client timeshifting through the channel cache */
-  if (s->ths_prch && s->ths_prch->prch_svcts)
+  if (s->ths_prch && s->ths_prch->prch_svcts) {
+    /*
+     * The cache is made when the service starts, so a service already tuned
+     * when "Record from cache" was turned on has none, and svcts would
+     * attach to nothing: every skip answers SMT_SKIP_ERROR and there is no
+     * Classic buffer either, because profile.c routed past it.  Make it here
+     * instead -- svcbuf_service_start() seeds the stream map from the running
+     * service, so the cache simply starts empty and fills from now on.
+     */
+    if (t->s_svcbuf == NULL)
+      svcbuf_service_start(t);
     svcts_attach(s->ths_prch->prch_svcts, t);
+  }
 #endif
 
   if(elementary_set_has_streams(&t->s_components, 1) || t->s_type != STYPE_STD) {
@@ -559,7 +614,26 @@ subscription_input_null(void *opaque, streaming_message_t *sm)
 {
   th_subscription_t *s = opaque;
   if (sm->sm_type == SMT_STOP && subgetstate(s) != SUBSCRIPTION_ZOMBIE) {
-    LIST_INSERT_HEAD(&subscriptions_remove, s, ths_remove_link);
+    /*
+     * A stream-map change on an idle service arrives here as a
+     * reconfiguration stop from service_restart_streams(), and the service
+     * keeps running.  Removing the cache keepalive on that would stop the
+     * now-empty service and disconnect its cache well before the timeout
+     * the setting promises.  Terminal stops still remove it.
+     */
+    if (s->ths_cache_keepalive &&
+        sm->sm_code == SM_CODE_SOURCE_RECONFIGURED) {
+      streaming_msg_free(sm);
+      return;
+    }
+    /*
+     * The cache keepalive is a subscription on an ordinary service, so a
+     * second terminal stop can reach it before the delayed removal has run.
+     * Inserting the same link twice makes it point at itself; the drain
+     * would then free the subscription and keep reading it from the head.
+     */
+    if (LIST_SAFE_ENTRY(s, ths_remove_link))
+      LIST_INSERT_HEAD(&subscriptions_remove, s, ths_remove_link);
     subscription_delayed_reschedule(0);
   }
 
@@ -637,6 +711,22 @@ subscription_input(void *opaque, streaming_message_t *sm)
       s->ths_start_message = sm;
       return;
     }
+
+#if ENABLE_TIMESHIFT
+    /*
+     * A bounded retrospective recording replays the channel cache and never
+     * takes from the live input: moved to another source on that input's
+     * errors, it would lose the gate and the part still to replay, and be
+     * fed live instead, with no stop timer to end it.  It stays on the
+     * service whose cache it reads.  One that joins live afterwards is
+     * tested as any other.
+     */
+    if(sm->sm_type == SMT_SERVICE_STATUS && s->ths_replay_bounded &&
+       (sm->sm_code & (TSS_ERRORS|TSS_CA_CHECK))) {
+      streaming_msg_free(sm);
+      return;
+    }
+#endif
 
     if(sm->sm_type == SMT_SERVICE_STATUS &&
        (sm->sm_code & (TSS_ERRORS|TSS_CA_CHECK))) {
@@ -886,7 +976,7 @@ subscription_create
  */
 static int
 subscription_cache_keepalive_has_real
-  ( service_t *t, th_subscription_t *keep )
+  ( service_t *t, const th_subscription_t *keep )
 {
   th_subscription_t *s;
 
@@ -901,7 +991,8 @@ subscription_cache_keepalive_has_real
 static int64_t
 subscription_cache_keepalive_span ( service_t *t )
 {
-  int64_t oldest, newest;
+  int64_t oldest;
+  int64_t newest;
 
   if (t == NULL || t->s_svcbuf == NULL ||
       !svcbuf_span(t->s_svcbuf, &oldest, &newest) ||
@@ -922,19 +1013,21 @@ subscription_cache_keepalive_timeout ( void *aux );
 static void
 subscription_cache_keepalive_drop_soon ( th_subscription_t *s )
 {
+  s->ths_cache_keepalive_ending = 1;
   mtimer_arm_rel(&s->ths_remove_timer,
                  subscription_cache_keepalive_timeout,
                  s, sec2mono(1));
 }
 
 /*
- * Check the idle keepalive limit without counting 'candidate' itself.
- * Return the shortest existing idle keepalive when the candidate is more
- * valuable and may replace it. Ties keep the existing hold.
+ * Check the idle keepalive limit without counting 'candidate' itself, nor
+ * the holds already going.  Return the shortest existing idle keepalive
+ * when the candidate is more valuable and may replace it. Ties keep the
+ * existing hold.
  */
 static th_subscription_t *
 subscription_cache_keepalive_select_victim
-  ( th_subscription_t *candidate, int64_t span,
+  ( const th_subscription_t *candidate, int64_t span,
     int *admit, int64_t *victim_span )
 {
   th_subscription_t *s;
@@ -951,6 +1044,7 @@ subscription_cache_keepalive_select_victim
   LIST_FOREACH(s, &subscriptions, ths_global_link) {
     if (s == candidate ||
         !s->ths_cache_keepalive ||
+        s->ths_cache_keepalive_ending ||
         s->ths_service == NULL ||
         subscription_cache_keepalive_has_real(s->ths_service, s))
       continue;
@@ -985,6 +1079,7 @@ subscription_cache_keepalive_arm
 {
   int64_t sec;
 
+  s->ths_cache_keepalive_ending = 0;
   if (timeshift_conf.cache_keepalive)
     sec = (int64_t)timeshift_conf.cache_keepalive * 60;
   else
@@ -1039,8 +1134,9 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
   th_subscription_t *s;
   th_subscription_t *keep = NULL;
   th_subscription_t *victim = NULL;
-  service_instance_t *si;
-  int64_t span, victim_span;
+  const service_instance_t *si;
+  int64_t span;
+  int64_t victim_span;
   int admit;
   int error = 0;
 
@@ -1196,6 +1292,24 @@ subscription_cache_keepalive_after_unlink ( service_t *t )
           timeshift_conf.cache_keepalive,
           timeshift_conf.cache_keepalive == 1 ? "" : "s",
           SUBSCRIPTION_PRIO_KEEP);
+}
+
+/*
+ * The timeshift settings changed: with the shared cache or its keepalive
+ * turned off, the channels kept tuned for it are let go.  (global_lock
+ * held)
+ */
+void
+subscription_cache_settings_changed ( void )
+{
+  th_subscription_t *s;
+
+  if (timeshift_conf.enabled && timeshift_conf.record_cache &&
+      timeshift_conf.cache_keepalive)
+    return;
+  LIST_FOREACH(s, &subscriptions, ths_global_link)
+    if (s->ths_cache_keepalive)
+      subscription_cache_keepalive_drop_soon(s);
 }
 
 #endif /* ENABLE_TIMESHIFT */
@@ -1383,6 +1497,7 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   const char *state;
   htsmsg_t *l;
   mpegts_apids_t *pids = NULL;
+  idnode_list_mapping_t *ilm;
 
   htsmsg_add_u32(m, "id", s->ths_id);
   htsmsg_add_u32(m, "start", s->ths_start);
@@ -1422,6 +1537,15 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   
   if (s->ths_channel != NULL)
     htsmsg_add_str(m, "channel", channel_get_name(s->ths_channel, tvh_gettext_lang(lang, channel_blank_name)));
+  else if (s->ths_cache_keepalive && s->ths_service &&
+           (ilm = LIST_FIRST(&s->ths_service->s_channels)) != NULL)
+    /* a channel-cache hold subscribes to the service: name its channel */
+    htsmsg_add_str(m, "channel", channel_get_name((channel_t *)ilm->ilm_in2, tvh_gettext_lang(lang, channel_blank_name)));
+
+  /* why a subscription waiting for a source has none, as the log says */
+  if (s->ths_current_instance == NULL && s->ths_last_error)
+    htsmsg_add_str(m, "error", lang ? tvh_gettext_lang(lang, streaming_code2txt(s->ths_last_error))
+                                    : streaming_code2txt(s->ths_last_error));
   
   if ((t = s->ths_service) != NULL) {
     htsmsg_add_str(m, "service", service_adapter_nicename(t, buf, sizeof(buf)));

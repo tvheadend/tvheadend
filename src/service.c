@@ -318,6 +318,23 @@ service_remove_subscriber(service_t *t, th_subscription_t *s,
   }
 }
 
+/*
+ * Of two service instances of the same weight, whether `si` is the one to
+ * bump rather than `next`.  Of two otherwise equally disposable
+ * channel-cache holds, the input which contains less useful rewind history
+ * goes, then the higher priority; for every other kind of subscription the
+ * input priority decides, as it always has.
+ */
+static int
+service_instance_bump_first
+  ( const service_instance_t *si, const service_instance_t *next )
+{
+  if (si->si_cache_only && next->si_cache_only &&
+      si->si_cache_time != next->si_cache_time)
+    return si->si_cache_time < next->si_cache_time;
+  return si->si_prio > next->si_prio;
+}
+
 /**
  *
  */
@@ -581,26 +598,10 @@ service_find_instance
       if (next == NULL) {
         if (si->si_weight < weight)
           next = si;
-      } else {
-        if (si->si_weight < next->si_weight) {
-          next = si;
-        } else if (si->si_weight == next->si_weight) {
-          /*
-           * Two otherwise equally disposable channel-cache holds:
-           * sacrifice the input which contains less useful rewind
-           * history.  For every other kind of subscription preserve
-           * the existing input-priority behaviour exactly.
-           */
-          if (si->si_cache_only && next->si_cache_only) {
-            if (si->si_cache_time < next->si_cache_time)
-              next = si;
-            else if (si->si_cache_time == next->si_cache_time &&
-                     si->si_prio > next->si_prio)
-              next = si;
-          } else if (si->si_prio > next->si_prio) {
-            next = si;
-          }
-        }
+      } else if (si->si_weight < next->si_weight ||
+                 (si->si_weight == next->si_weight &&
+                  service_instance_bump_first(si, next))) {
+        next = si;
       }
     }
     si = next;

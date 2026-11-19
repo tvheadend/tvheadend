@@ -401,7 +401,8 @@ mpegts_input_cache_retention ( mpegts_input_t *mi, int *cache_only )
   service_t *t;
   th_subscription_t *ths;
   int any = 0;
-  int64_t oldest, newest;
+  int64_t oldest;
+  int64_t newest;
   int64_t total = 0;
 
   *cache_only = 1;
@@ -413,8 +414,7 @@ mpegts_input_cache_retention ( mpegts_input_t *mi, int *cache_only )
 
       LIST_FOREACH(ths, &t->s_subscriptions, ths_service_link) {
         any = 1;
-        if (!ths->ths_cache_keepalive)
-          *cache_only = 0;
+        *cache_only = *cache_only && ths->ths_cache_keepalive;
       }
 
       /*
@@ -498,6 +498,8 @@ mpegts_service_enlist_raw
 #if ENABLE_TIMESHIFT
     si->si_cache_time =
       mpegts_input_cache_retention(mi, &si->si_cache_only);
+#else
+    (void)si;
 #endif
     added++;
   }

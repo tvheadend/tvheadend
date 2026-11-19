@@ -116,9 +116,11 @@ typedef struct th_subscription {
   time_t ths_backfill_to;            ///< Stop there; 0 means catch up to live
   int ths_backfill_all;              ///< Start at oldest available cache block
   int ths_replaying;                 ///< Fed from the channel cache, not live
+  int ths_replay_bounded;            ///< ... and never joining live
   time_t ths_backfill_start;         ///< Where the replayed data begins
 
   int ths_cache_keepalive;       ///< Internal shared-cache tuner hold
+  int ths_cache_keepalive_ending; ///< ... which goes in a second
 
   int ths_flags;
   int ths_timeout;
@@ -241,6 +243,8 @@ void subscription_dummy_join(const char *id, int first);
 void subscription_add_bytes_in(th_subscription_t *s, size_t in);
 
 void subscription_add_bytes_out(th_subscription_t *s, size_t out);
+
+void subscription_cache_settings_changed(void);
 
 static inline int subscriptions_active(void)
   { return LIST_FIRST(&subscriptions) != NULL; }
