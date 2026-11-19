@@ -43,6 +43,17 @@ import { useI18n } from '@/composables/useI18n'
 
 const { t } = useI18n()
 
+const fmtBer = (v: unknown, row: Record<string, unknown>) => {
+  const tc = Number(row.tc_bit)
+  if (!tc) return typeof v === 'number' ? String(v) : ''
+  return String(Number(row.ec_bit) / tc)
+}
+
+const fmtPer = (_v: unknown, row: Record<string, unknown>) => {
+  const tc = Number(row.tc_block)
+  return tc ? String(Number(row.ec_block) / tc) : ''
+}
+
 const fmtKbps = (v: unknown) => (typeof v === 'number' ? Math.round(v / 1024).toString() : '')
 
 const fmtPids = (v: unknown) => {
@@ -119,6 +130,8 @@ const cols: ColumnDef[] = [
     width: 170,
     cellComponent: SignalBarCell,
   },
+  { field: 'ber', label: t('BER'), sortable: true, minVisible: 'desktop', format: fmtBer },
+  { field: 'tc_block', label: t('PER'), sortable: true, minVisible: 'desktop', format: fmtPer },
   { field: 'unc', label: t('Uncorrected Blocks'), sortable: true, minVisible: 'desktop' },
   { field: 'te', label: t('Transport Errors'), sortable: true, minVisible: 'desktop' },
   { field: 'cc', label: t('Continuity Errors'), sortable: true, minVisible: 'desktop' },
