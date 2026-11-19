@@ -49,6 +49,7 @@
 #define SVCTS_PREROLL     2000000   ///< us parsed before a target (keyframe)
 #define SVCTS_CALIB_BACK  4000000   ///< us back from live to replay on entry
 #define SVCTS_REWIND_STEP 1000000   ///< us stepped back for a keyframe
+#define SVCTS_AUDIO_STEP  500000    ///< us between rewind points with no video
 #define SVCTS_EXPIRED_GAP 10000000  ///< us ahead of the oldest data after an
                                     ///< expiry, as both then move at 1x
 #define SVCTS_NSTREAMS    256
@@ -80,7 +81,6 @@ TAILQ_HEAD(svcts_pkt_queue, svcts_pkt);
 typedef struct svcts {
   streaming_target_t   input;
   streaming_target_t  *output;
-  int64_t              max_time;    ///< us the client may go back
   tvh_mutex_t          lock;
   tvh_cond_t           cond;
   pthread_t            thread;
@@ -133,10 +133,15 @@ typedef struct svcts {
   uint64_t             replay_prev_seq;
   streaming_target_t   sink;
   int                  at_head;
+  int                  read_failed; ///< ... reached on a failed read
   int                  reanchor;    ///< Restart the pacing on the next one
   int64_t              skip_to;     ///< us: drop until a keyframe from here
+  int                  skip_pending; ///< ... which is a position, not a flag:
+                                     ///< a seek to 0 is a seek like any other
   int                  skip_back;   ///< ... or the last one before, going back
   streaming_message_t *skip_reply;  ///< Answered with the first packet
+  int64_t              skip_seen;   ///< us: the newest packet dropped meanwhile
+  int64_t              skip_seen_kf; ///< ... and the newest keyframe, or 0
   svcts_pkt_t         *rw_pkt;      ///< Rewind: next keyframe to show
   int64_t              mono_status;
 } svcts_t;
@@ -166,10 +171,21 @@ svcts_pkt_time ( const th_pkt_t *pkt )
 }
 
 static int
-svcts_key ( th_pkt_t *pkt, svcts_key_t *k )
+svcts_key ( th_pkt_t *pkt, svcts_key_t *k, int audio_too )
 {
   size_t len = pktbuf_len(pkt->pkt_payload);
-  if (!SCT_ISVIDEO(pkt->pkt_type) || len < 64 || pkt->pkt_dts == PTS_UNSET)
+  if (len < 64 || pkt->pkt_dts == PTS_UNSET)
+    return 0;
+  /*
+   * Video frames are the distinctive ones, and keeping audio out of the ring
+   * leaves every slot for them.  A service with no video has none to put
+   * there, though, and without a fingerprint it never calibrates: pause
+   * answers speed 100 and every seek answers SMT_SKIP_ERROR.  The key
+   * carries the component index, so an audio frame can only ever match
+   * another frame of the same component.
+   */
+  if (!SCT_ISVIDEO(pkt->pkt_type) &&
+      !(audio_too && SCT_ISAUDIO(pkt->pkt_type)))
     return 0;
   k->index = pkt->pkt_componentindex;
   k->len   = len;
@@ -334,10 +350,8 @@ static void
 svcts_queue_clear ( svcts_t *st )
 {
   svcts_pkt_t *p;
-  svcts_pkt_t *n;
 
-  for (p = TAILQ_FIRST(&st->q); p != NULL; p = n) {
-    n = TAILQ_NEXT(p, link);
+  while ((p = TAILQ_FIRST(&st->q)) != NULL) {
     TAILQ_REMOVE(&st->q, p, link);
     svcts_pkt_drop(p);
   }
@@ -348,17 +362,50 @@ svcts_queue_clear ( svcts_t *st )
   }
 }
 
-/* Oldest time (us, client base) the client may go back to, 0 if none */
+/* Oldest time (us, client base) the client may go back to, 0 if none.
+ *
+ * Bounded by what the cache actually holds, not by the configured timeshift
+ * period.  Retention is svcbuf_expire()'s business, and it deliberately keeps
+ * blocks a reader still needs however old they are, so a cache feeding a
+ * recording reaches back to the programme's start whatever the period says.
+ * Applying the period again here would hide exactly the data that exception
+ * preserved, and the same bytes are served without complaint when the
+ * in-progress recording is played back instead.
+ *
+ * The cache can also reach further back than this subscription has existed,
+ * when another viewer tuned the channel first or the keepalive held it.  That
+ * part sits before the client's own zero, so offering it means answering with
+ * negative timestamps, which a player that cannot order them renders as a
+ * frozen picture with sound until playback reaches the moment the viewer tuned
+ * in.  Clamped away by default; offered when "Cache seek before tune-in" is
+ * set, for clients that do handle negative positions.
+ *
+ * Recording from the cache is not affected: the DVR replays it on a time base
+ * of its own, which is what lets a recording still start at the programme's
+ * start.
+ */
+/* Whether a seekable range exists at all, whatever its bounds.  Kept apart
+ * from svcts_oldest(), which answers 0 both for "no cache" and for a range
+ * clamped to the client's own zero -- two things that mean the opposite to a
+ * client, so the presence of a range cannot be read from its value. */
+static int
+svcts_span ( svcts_t *st, int64_t *oldest, int64_t *newest )
+{
+  return st->sb != NULL && st->live_time != 0 &&
+         svcbuf_span(st->sb, oldest, newest);
+}
+
 static int64_t
 svcts_oldest ( svcts_t *st )
 {
-  int64_t oldest, newest, t;
-  if (st->sb == NULL || st->live_time == 0 ||
-      !svcbuf_span(st->sb, &oldest, &newest))
+  int64_t oldest;
+  int64_t newest;
+  int64_t t;
+  if (!svcts_span(st, &oldest, &newest))
     return 0;
   t = st->live_time - (st->live_mono - oldest) + SVCTS_PREROLL;
-  if (st->max_time && t < st->live_time - st->max_time)
-    t = st->live_time - st->max_time;
+  if (!timeshift_conf.cache_seek_tunein && t < 0)
+    t = 0;
   return MIN(t, st->live_time);
 }
 
@@ -366,12 +413,13 @@ static void
 svcts_fill_status ( svcts_t *st, timeshift_status_t *status )
 {
   int64_t cur = st->state == SVCTS_LIVE ? st->live_time : st->last_time;
-  int64_t start = svcts_oldest(st);
+  int64_t oldest;
+  int64_t newest;
 
   status->full = 0;
   status->shift = ts_rescale_inv(MAX(0, st->live_time - cur), 1000000);
-  if (start) {
-    status->pts_start = ts_rescale_inv(start, 1000000);
+  if (svcts_span(st, &oldest, &newest)) {
+    status->pts_start = ts_rescale_inv(svcts_oldest(st), 1000000);
     status->pts_end   = ts_rescale_inv(st->live_time, 1000000);
   } else {
     status->pts_start = PTS_UNSET;
@@ -434,7 +482,10 @@ svcts_live_rebase ( svcts_t *st, streaming_message_t *sm )
 {
   th_pkt_t *pkt = sm->sm_data;
   th_pkt_t *n;
-  int64_t clock, adjusted, last_clock, target;
+  int64_t clock;
+  int64_t adjusted;
+  int64_t last_clock;
+  int64_t target;
 
   if (st->live_rebase_pending) {
 
@@ -569,7 +620,7 @@ svcts_live_seen ( svcts_t *st, th_pkt_t *pkt )
     }
   }
   k = &st->ring[st->ring_pos];
-  if (svcts_key(pkt, k)) {
+  if (svcts_key(pkt, k, !svcts_start_has_video(st->live_start))) {
     k->dts = pkt->pkt_dts;
     st->ring_pos = (st->ring_pos + 1) % SVCTS_RING;
   }
@@ -713,7 +764,7 @@ svcts_calibrate ( svcts_t *st, th_pkt_t *pkt )
   const svcts_key_t *match = NULL;
   int i;
 
-  if (!svcts_key(pkt, &k))
+  if (!svcts_key(pkt, &k, !svcts_start_has_video(st->rd_start)))
     return;
   for (i = 0; i < SVCTS_RING; i++) {
     const svcts_key_t *r = &st->ring[i];
@@ -734,7 +785,11 @@ svcts_calibrate ( svcts_t *st, th_pkt_t *pkt )
 static void
 svcts_replay_rebase ( svcts_t *st, const th_pkt_t *pkt )
 {
-  int64_t clock, raw, adjusted, target, rebased;
+  int64_t clock;
+  int64_t raw;
+  int64_t adjusted;
+  int64_t target;
+  int64_t rebased;
 
   if (!st->replay_rebase_pending)
     return;
@@ -802,7 +857,8 @@ svcts_sink ( void *opaque, streaming_message_t *sm )
 {
   svcts_t *st = opaque;
   streaming_start_t *ss;
-  th_pkt_t *pkt, *n;
+  th_pkt_t *pkt;
+  th_pkt_t *n;
   svcts_pkt_t *p;
 
   if (sm->sm_type == SMT_START) {
@@ -838,7 +894,8 @@ svcts_sink ( void *opaque, streaming_message_t *sm )
   if (st->calibrated &&
       st->rd_start &&
       pkt->pkt_dts != PTS_UNSET) {
-    n = pkt_copy_shallow(pkt);
+    if ((n = pkt_copy_shallow(pkt)) == NULL)
+      goto done;
 
     n->pkt_dts =
       svcts_unwrap((pkt->pkt_dts & PTS_MASK) - st->off, st->expect);
@@ -854,7 +911,10 @@ svcts_sink ( void *opaque, streaming_message_t *sm )
     if (n->pkt_dts != PTS_UNSET && n->pkt_type != SCT_TELETEXT)
       st->replay_last_dts = n->pkt_dts;
 
-    p = calloc(1, sizeof(*p));
+    if ((p = calloc(1, sizeof(*p))) == NULL) {
+      pkt_ref_dec(n);
+      goto done;
+    }
     p->pkt = n;
     p->time = svcts_pkt_time(n);
     p->start = st->rd_start;
@@ -864,6 +924,7 @@ svcts_sink ( void *opaque, streaming_message_t *sm )
     TAILQ_INSERT_TAIL(&st->q, p, link);
   }
 
+done:
   tvh_mutex_unlock(&st->lock);
   streaming_msg_free(sm);
 }
@@ -871,6 +932,7 @@ svcts_sink ( void *opaque, streaming_message_t *sm )
 static htsmsg_t *
 svcts_sink_info ( void *opaque, htsmsg_t *list )
 {
+  (void)opaque;
   htsmsg_add_str(list, NULL, "channel cache timeshift replay");
   return list;
 }
@@ -910,6 +972,7 @@ svcts_replay_drop ( svcts_t *st )
   st->off = 0;
 
   st->skip_to = 0;
+  st->skip_pending = 0;
   st->skip_back = 0;
   st->reanchor = 0;
 
@@ -963,6 +1026,7 @@ svcts_replay_open ( svcts_t *st, int64_t time )
   svcts_start_set(&st->rd_start, NULL);
 
   st->at_head = 0;
+  st->read_failed = 0;
   st->replay_prev_seq = prev_seq;
   st->read_start_seq = 0;
   st->rd_start_seq = 0;
@@ -971,8 +1035,22 @@ svcts_replay_open ( svcts_t *st, int64_t time )
   st->replay_last_dts = PTS_UNSET;
   st->expect = PTS_UNSET;
 
+  /*
+   * svcts_fill() releases st->lock, so svcts_attach() can have pointed
+   * st->sb at another service's cache since the reader was made.  Keeping
+   * it would seek the previous cache and feed the client the previous
+   * channel's MPEG-TS, so drop it and read the one we are attached to.
+   */
+  if (st->rd != NULL && st->rd_service != svcbuf_service(sb)) {
+    svcbuf_reader_destroy(st->rd);
+    st->rd = NULL;
+    st->rd_service = NULL;
+  }
+
   if (st->rd == NULL) {
     st->rd = svcbuf_reader_create(sb);
+    if (st->rd == NULL)
+      return 0;
     st->rd_service = svcbuf_service(sb);
   }
 
@@ -1004,6 +1082,16 @@ svcts_replay_open ( svcts_t *st, int64_t time )
   return parser != NULL;
 }
 
+/* What a read got, given up: it no longer follows on */
+static void
+svcts_fill_drop ( pktbuf_t *pb, streaming_start_t *ss )
+{
+  if (pb)
+    pktbuf_ref_dec(pb);
+  if (ss)
+    streaming_start_unref(ss);
+}
+
 /* Parse one more chunk of the cache (lock held, released meanwhile).
  * 1 when data was parsed, 0 at the head, -1 on error, 2 when the position
  * expired under the reader (nothing parsed: the data no longer follows) */
@@ -1029,13 +1117,11 @@ svcts_fill ( svcts_t *st )
   r = svcbuf_reader_read_map
         (rd, &pb, &ss, &seq, &block_mono);
 
-  if (r > 0 && svcbuf_reader_lost(rd)) {
-    pktbuf_ref_dec(pb);
-    if (ss)
-      streaming_start_unref(ss);
-    r = 2;
+  /* lost even with nothing read: a pending seek must not wait on it */
+  if (r >= 0 && svcbuf_reader_lost(rd)) {
+    svcts_fill_drop(pb, ss);
     tvh_mutex_lock(&st->lock);
-    return r;
+    return 2;
   }
 
   if (r <= 0) {
@@ -1138,28 +1224,29 @@ static void
 svcts_skip_back_select ( svcts_t *st )
 {
   svcts_pkt_t *p;
-  svcts_pkt_t *n;
-  svcts_pkt_t *kf = NULL;
+  const svcts_pkt_t *kf = NULL;
+  const int64_t oldest = svcts_oldest(st);
 
   st->skip_back = 0;
 
+  /* parse on until the queue reaches past the target, or cannot */
   for (;;) {
     p = TAILQ_LAST(&st->q, svcts_pkt_queue);
-    if ((p && p->time > st->skip_to) || st->reset)
-      break;
-    if (svcts_fill(st) != 1)
+    if ((p && p->time > st->skip_to) || st->reset || svcts_fill(st) != 1)
       break;
   }
 
+  /* none at or after where the client may go back to: searched forwards
+     from the target, as going forwards is */
   TAILQ_FOREACH(p, &st->q, link)
-    if (p->time <= st->skip_to && svcts_is_keyframe(p->pkt))
+    if (p->time <= st->skip_to && p->time >= oldest &&
+        svcts_is_keyframe(p->pkt))
       kf = p;
 
   if (kf == NULL)
     return;
 
-  for (p = TAILQ_FIRST(&st->q); p != kf; p = n) {
-    n = TAILQ_NEXT(p, link);
+  while ((p = TAILQ_FIRST(&st->q)) != kf) {
     TAILQ_REMOVE(&st->q, p, link);
     svcts_pkt_drop(p);
   }
@@ -1175,19 +1262,33 @@ svcts_head ( svcts_t *st )
 {
   svcts_pkt_t *p = TAILQ_FIRST(&st->q);
   svcts_pkt_t *n;
+  /*
+   * svcts_is_keyframe() answers for video only, so a generation carrying no
+   * video has no keyframe to land on: requiring one would drop every packet
+   * and leave the seek with nothing to show.
+   */
+  const int have_video = svcts_start_has_video(st->rd_start);
 
   while (p != NULL &&
-         ((st->skip_to &&
-           !(svcts_is_keyframe(p->pkt) && p->time >= st->skip_to)) ||
-          (st->keyframe_mode && !svcts_is_keyframe(p->pkt)))) {
+         ((st->skip_pending &&
+           !((!have_video || svcts_is_keyframe(p->pkt)) &&
+             p->time >= st->skip_to)) ||
+          (st->keyframe_mode && have_video && !svcts_is_keyframe(p->pkt)))) {
+    if (st->skip_pending) {
+      st->skip_seen = p->time;
+      if (svcts_is_keyframe(p->pkt))
+        st->skip_seen_kf = p->time;
+    }
     n = TAILQ_NEXT(p, link);
     TAILQ_REMOVE(&st->q, p, link);
     svcts_pkt_drop(p);
     p = n;
   }
 
-  if (p != NULL)
+  if (p != NULL) {
     st->skip_to = 0;
+    st->skip_pending = 0;
+  }
 
   return p;
 }
@@ -1200,7 +1301,7 @@ svcts_next ( svcts_t *st )
   svcts_pkt_t *p;
   int r;
 
-  if (st->skip_back && st->skip_to)
+  if (st->skip_back && st->skip_pending)
     svcts_skip_back_select(st);
   for (;;) {
     if (st->reset)
@@ -1218,14 +1319,17 @@ svcts_next ( svcts_t *st )
         return NULL;
       svcts_out_reset(st);
       st->skip_to = t;
+      st->skip_pending = 1;
       st->reanchor = 1;
       continue;
     }
     if (r <= 0) {
       st->at_head = 1;
+      st->read_failed = r < 0;
       return NULL;
     }
     st->at_head = 0;
+    st->read_failed = 0;
   }
 }
 
@@ -1288,6 +1392,32 @@ svcts_go_live ( svcts_t *st )
   svcts_speed_notify(st);
 }
 
+/*
+ * Whether two STARTs announce the same components, enabled alike: the
+ * replay's globalheaders may have disabled one that the live map, for the
+ * same raw generation, keeps.
+ */
+static int
+svcts_start_same ( const streaming_start_t *a, const streaming_start_t *b )
+{
+  const streaming_start_component_t *x;
+  const streaming_start_component_t *y;
+  int i;
+
+  if (a == b)
+    return 1;
+  if (a == NULL || b == NULL || a->ss_num_components != b->ss_num_components)
+    return 0;
+  for (i = 0; i < a->ss_num_components; i++) {
+    x = &a->ss_components[i];
+    y = &b->ss_components[i];
+    if (x->es_index != y->es_index || x->es_type != y->es_type ||
+        x->ssc_disabled != y->ssc_disabled)
+      return 0;
+  }
+  return 1;
+}
+
 static void
 svcts_sync_live_start ( svcts_t *st )
 {
@@ -1304,7 +1434,8 @@ svcts_sync_live_start ( svcts_t *st )
    */
   seq = st->live_start_seq;
 
-  if (seq && st->out_start_seq == seq) {
+  if (seq && st->out_start_seq == seq &&
+      svcts_start_same(st->out_start, st->live_start)) {
     tvhdebug(LS_TIMESHIFT,
              "svcts: live map generation %"PRId64
              " already delivered by replay; keeping decoder state",
@@ -1326,6 +1457,43 @@ svcts_sync_live_start ( svcts_t *st )
   svcts_output_start(st, st->live_start, seq);
 }
 
+/* A seek that read up to the head of the cache without finding where it
+ * asked for -- a point newer than the cache holds yet, or one the replay's
+ * time base does not reach -- asked for live: answered so, as a seek past
+ * the live point is (lock held) */
+static void
+svcts_skip_to_live ( svcts_t *st )
+{
+  streaming_message_t *ctrl = st->skip_reply;
+  streaming_skip_t *skip = ctrl->sm_data;
+
+  if (st->read_failed) {
+    /* not the head: what was asked for could not be read */
+    tvhwarn(LS_TIMESHIFT, "svcts: skip to %"PRId64" failed: the cache "
+            "could not be read", st->skip_to);
+    st->skip_reply = NULL;
+    st->skip_pending = 0;
+    st->skip_to = 0;
+    skip->type = SMT_SKIP_ERROR;
+    streaming_target_deliver2(st->output, ctrl);
+    return;
+  }
+
+  tvhdebug(LS_TIMESHIFT, "svcts: skip to %"PRId64" reached the head "
+           "(newest packet %"PRId64", keyframe %"PRId64", %s); live",
+           st->skip_to, st->skip_seen, st->skip_seen_kf,
+           svcts_start_has_video(st->rd_start) ? "video" : "no video");
+  st->skip_reply = NULL;
+  st->skip_pending = 0;
+  st->skip_to = 0;
+  svcts_go_live(st);
+  skip->type = SMT_SKIP_ABS_TIME;
+  skip->time = ts_rescale_inv(st->live_time, 1000000);
+  svcts_fill_status(st, &skip->timeshift);
+  streaming_target_deliver2(st->output, ctrl);
+  svcts_sync_live_start(st);
+}
+
 /* Start of the cache reached going back: pause there */
 static void
 svcts_at_start ( svcts_t *st )
@@ -1338,14 +1506,60 @@ svcts_at_start ( svcts_t *st )
   svcts_speed_notify(st);
 }
 
+/* Whether going back may stop at this packet: a keyframe -- or, in a
+ * generation with no video, any packet SVCTS_AUDIO_STEP back, as going back
+ * a frame at a time would re-parse the cache for every one of them.  Judged
+ * by the packet's own map: the replay's is reset when it is opened. */
+static int
+svcts_rewind_candidate ( const svcts_t *st, const svcts_pkt_t *p )
+{
+  if (svcts_start_has_video(p->start))
+    return svcts_is_keyframe(p->pkt);
+  return p->time < st->last_time - SVCTS_AUDIO_STEP;
+}
+
+/* Parse from where the replay was opened up to last_time, keeping the last
+ * packet going back may stop at and dropping everything else, and anything
+ * before `oldest`, which may be the client's tune-in (lock held) */
+static svcts_pkt_t *
+svcts_rewind_scan ( svcts_t *st, int64_t oldest )
+{
+  svcts_pkt_t *p = TAILQ_FIRST(&st->q);
+  svcts_pkt_t *n;
+  svcts_pkt_t *kf = NULL;
+
+  for (;;) {
+    if (p == NULL && !st->reset && svcts_fill(st) == 1) {
+      p = TAILQ_FIRST(&st->q);
+      continue;
+    }
+    if (p == NULL || st->reset || p->time >= st->last_time)
+      break;
+
+    n = TAILQ_NEXT(p, link);
+    TAILQ_REMOVE(&st->q, p, link);
+
+    if (p->time < oldest || !svcts_rewind_candidate(st, p)) {
+      svcts_pkt_drop(p);
+    } else {
+      if (kf)
+        svcts_pkt_drop(kf);
+      kf = p;
+    }
+
+    p = n;
+  }
+  return kf;
+}
+
 /* Rewind: find the last keyframe before last_time (lock held) */
 static svcts_pkt_t *
 svcts_rewind_find ( svcts_t *st )
 {
-  svcts_pkt_t *p;
-  svcts_pkt_t *n;
   svcts_pkt_t *kf;
-  int64_t step = SVCTS_REWIND_STEP, from, oldest;
+  int64_t step = SVCTS_REWIND_STEP;
+  int64_t from;
+  int64_t oldest;
   int at_start;
 
   for (;;) {
@@ -1359,36 +1573,7 @@ svcts_rewind_find ( svcts_t *st )
     if (!svcts_replay_open(st, from + SVCTS_PREROLL))
       return NULL;
 
-    kf = NULL;
-    p = TAILQ_FIRST(&st->q);
-
-    for (;;) {
-      if (st->reset)
-        break;
-
-      if (p == NULL) {
-        if (svcts_fill(st) != 1)
-          break;
-        p = TAILQ_FIRST(&st->q);
-        continue;
-      }
-
-      if (p->time >= st->last_time)
-        break;
-
-      n = TAILQ_NEXT(p, link);
-      TAILQ_REMOVE(&st->q, p, link);
-
-      if (svcts_is_keyframe(p->pkt)) {
-        if (kf)
-          svcts_pkt_drop(kf);
-        kf = p;
-      } else {
-        svcts_pkt_drop(p);
-      }
-
-      p = n;
-    }
+    kf = svcts_rewind_scan(st, oldest);
 
     if (kf || at_start || st->reset)
       return kf;
@@ -1397,40 +1582,77 @@ svcts_rewind_find ( svcts_t *st )
   }
 }
 
+/* The next packet to play, or NULL and in *wait how long to wait first:
+ * backwards, the keyframe before the last one shown, stopping at the start
+ * of the cache; forwards, the head of the queue, going live at the head of
+ * the cache (lock held) */
+static svcts_pkt_t *
+svcts_play_next ( svcts_t *st, int64_t *wait )
+{
+  svcts_pkt_t *p;
+
+  *wait = 0;
+  if (st->speed < 0) {
+    /* a seek while going back lands as any seek does, on the frame found
+       at its target -- the first one there is, at the start of what may be
+       reached -- and is answered with it; going back carries on from it */
+    if (st->skip_pending) {
+      if (st->rw_pkt) {
+        svcts_pkt_drop(st->rw_pkt);
+        st->rw_pkt = NULL;
+      }
+      p = svcts_next(st);
+      if (p == NULL && st->at_head && st->skip_reply && !st->reset)
+        svcts_skip_to_live(st);
+      else if (p == NULL && !st->reset)
+        *wait = ms2mono(100);
+      return p;
+    }
+    if (st->rw_pkt != NULL)
+      return st->rw_pkt;
+    st->rw_pkt = svcts_rewind_find(st);
+    if (st->reset)
+      return NULL;
+    if (st->rw_pkt == NULL)
+      svcts_at_start(st);
+    return st->rw_pkt;
+  }
+
+  p = svcts_next(st);
+  if (st->reset || st->state != SVCTS_PLAY)
+    return NULL;
+  if (p == NULL && st->at_head && st->skip_reply) {
+    svcts_skip_to_live(st);
+  } else if (p == NULL && st->at_head) {
+    svcts_go_live(st);
+    svcts_sync_live_start(st);
+  } else if (p == NULL) {
+    *wait = ms2mono(100);
+  }
+  return p;
+}
+
 /* PLAY: hand over what is due; returns how long to wait (lock held) */
 static int64_t
 svcts_play ( svcts_t *st )
 {
   svcts_pkt_t *p;
-  int64_t now, deliver, w;
+  int64_t now;
+  int64_t deliver;
+  int64_t w;
 
   for (;;) {
     now = mclk();
 
-    if (st->speed < 0) {
-      if (st->rw_pkt == NULL) {
-        st->rw_pkt = svcts_rewind_find(st);
-        if (st->reset)
-          return 0;
-        if (st->rw_pkt == NULL) {
-          svcts_at_start(st);
-          return 0;
-        }
-      }
-      p = st->rw_pkt;
-    } else {
-      p = svcts_next(st);
-      if (st->reset || st->state != SVCTS_PLAY)
-        return 0;
-      if (p == NULL) {
-        if (st->at_head && st->skip_reply == NULL) {
-          svcts_go_live(st);
-          svcts_sync_live_start(st);
-          return 0;
-        }
-        return ms2mono(100);
-      }
-    }
+    /* back to the thread for a request, or for the status that is due: a
+       client that is behind -- going back on a slow CPU -- may never catch
+       up, and its seeks would wait for it to */
+    if (!TAILQ_EMPTY(&st->ctrl) || now >= st->mono_status + sec2mono(1))
+      return 0;
+
+    p = svcts_play_next(st, &w);
+    if (p == NULL)
+      return w;
 
     if (st->skip_reply)
       svcts_skip_answer(st, p);
@@ -1466,6 +1688,8 @@ static void
 svcts_pause_skip ( svcts_t *st )
 {
   svcts_pkt_t *p = svcts_next(st);
+  if (p == NULL && st->at_head && st->skip_reply && !st->reset)
+    svcts_skip_to_live(st);
   if (p == NULL || st->reset)
     return;
   svcts_skip_answer(st, p);
@@ -1507,6 +1731,9 @@ svcts_reposition ( svcts_t *st )
 {
   int i;
 
+  /* a seek not yet answered has the queue from its own target */
+  if (st->skip_reply)
+    return;
   if (svcts_replay_open(st, st->last_time)) {
     /* the client has the frame on screen: carry on after it, with the
      * other streams from there */
@@ -1514,6 +1741,7 @@ svcts_reposition ( svcts_t *st )
       if (!st->is_video[i])
         st->out_dts[i] = PTS_UNSET;
     st->skip_to = st->last_time;
+    st->skip_pending = 1;
     st->skip_back = 0;
   }
 }
@@ -1521,7 +1749,8 @@ svcts_reposition ( svcts_t *st )
 static void
 svcts_speed ( svcts_t *st, streaming_message_t *ctrl )
 {
-  int speed = ctrl->sm_code, kf;
+  int speed = ctrl->sm_code;
+  int kf;
 
   if (speed > 3200)  speed = 3200;
   if (speed < -3200) speed = -3200;
@@ -1561,7 +1790,9 @@ static void
 svcts_skip ( svcts_t *st, streaming_message_t *ctrl )
 {
   streaming_skip_t *skip = ctrl->sm_data;
-  int64_t t, oldest, cur;
+  int64_t t;
+  int64_t oldest;
+  int64_t cur;
   int sync_live;
 
   switch (skip->type) {
@@ -1615,7 +1846,10 @@ svcts_skip ( svcts_t *st, streaming_message_t *ctrl )
     goto error;
   svcts_out_reset(st);
   st->skip_to = t;
+  st->skip_pending = 1;
   st->skip_back = t < cur;
+  st->skip_seen = 0;
+  st->skip_seen_kf = 0;
   if (st->skip_reply)
     streaming_msg_free(st->skip_reply);
   st->skip_reply = ctrl;
@@ -1646,7 +1880,8 @@ svcts_thread ( void *aux )
 {
   svcts_t *st = aux;
   streaming_message_t *ctrl;
-  int64_t wait, now;
+  int64_t wait;
+  int64_t now;
 
   tvh_mutex_lock(&st->lock);
   while (st->run) {
@@ -1687,12 +1922,11 @@ svcts_thread ( void *aux )
  * *************************************************************************/
 
 streaming_target_t *
-svcts_create ( streaming_target_t *out, time_t max_period )
+svcts_create ( streaming_target_t *out )
 {
   svcts_t *st = calloc(1, sizeof(*st));
 
   st->output   = out;
-  st->max_time = (int64_t)max_period * 1000000;
   st->state    = SVCTS_LIVE;
   st->speed    = 100;
   st->run      = 1;
@@ -1716,7 +1950,7 @@ svcts_destroy ( streaming_target_t *pad )
 {
   svcts_t *st = (svcts_t *)pad;
   streaming_message_t *sm;
-  streaming_message_t *next;
+
 
   tvh_mutex_lock(&st->lock);
   st->run = 0;
@@ -1724,8 +1958,7 @@ svcts_destroy ( streaming_target_t *pad )
   tvh_mutex_unlock(&st->lock);
   pthread_join(st->thread, NULL);
 
-  for (sm = TAILQ_FIRST(&st->ctrl); sm != NULL; sm = next) {
-    next = TAILQ_NEXT(sm, sm_link);
+  while ((sm = TAILQ_FIRST(&st->ctrl)) != NULL) {
     TAILQ_REMOVE(&st->ctrl, sm, sm_link);
     streaming_msg_free(sm);
   }

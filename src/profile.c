@@ -1242,9 +1242,10 @@ profile_htsp_work(profile_chain_t *prch,
 
 #if ENABLE_TIMESHIFT
   /* one cache per channel: timeshift through it when there is one */
-  if (timeshift_period > 0 && svcts_enabled())
-    dst = prch->prch_svcts = svcts_create(dst, timeshift_period);
-  else if (timeshift_period > 0)
+  if (timeshift_period > 0 && svcts_enabled()) {
+    prch->prch_svcts = svcts_create(dst);
+    dst = prch->prch_svcts;
+  } else if (timeshift_period > 0)
     dst = prch->prch_timeshift = timeshift_create(dst, timeshift_period);
 #endif
 
