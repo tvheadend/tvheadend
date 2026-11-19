@@ -78,6 +78,7 @@ typedef struct muxer_config {
       int              m_rewrite_sdt;
       int              m_rewrite_nit;
       int              m_rewrite_eit;
+      int              m_continuous_timeline;
       char            *m_cmdline;
       char            *m_mime;
       int              m_killsig;
