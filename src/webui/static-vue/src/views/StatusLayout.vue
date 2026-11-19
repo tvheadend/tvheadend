@@ -23,6 +23,7 @@ import { t } from '@/composables/useI18n'
 const tabs = [
   { to: '/status/streams', label: t('Stream') },
   { to: '/status/subscriptions', label: t('Subscriptions') },
+  { to: '/status/caches', label: t('Timeshift') },
   { to: '/status/connections', label: t('Connections') },
   { to: '/status/service-mapper', label: t('Service Mapper') },
   { to: '/status/log', label: t('Log') },

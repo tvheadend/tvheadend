@@ -16,13 +16,23 @@
  * BandwidthChartDrawer with the selected subscriptions' in/out
  * series. Drawer tracks selection live.
  *
+ * Toolbar action: Show channel caches — opens CachePanel with the
+ * caches the selected subscriptions use, their positions in them,
+ * and what all caches held over the last minutes. The Channel cache
+ * column says what each subscription has to do with its channel's
+ * cache (server field `cache_role`); both read the caches store,
+ * which CachePanel retains — it stays mounted, open or not, as
+ * BandwidthChartView does.
+ *
  * Column choices mirror the ExtJS list (status.js:84-208). The Id
  * column there renders as zero-padded uppercase hex; we keep the
  * same look so admins recognize the IDs in logs.
  */
 import StatusGrid from '@/components/StatusGrid.vue'
 import BandwidthChartView from '@/components/BandwidthChartView.vue'
-import { ChartLine } from 'lucide-vue-next'
+import CachePanel from '@/components/CachePanel.vue'
+import SubscriptionCacheCell from '@/components/SubscriptionCacheCell.vue'
+import { ChartLine, Layers } from 'lucide-vue-next'
 import type { ColumnDef } from '@/types/column'
 import { fmtDate } from '@/utils/formatTime'
 import { toBitsPerSecond } from '@/utils/formatBitrate'
@@ -68,10 +78,14 @@ const fmtPids = (v: unknown) => {
  * profile / pids / descramble / errors / input-bitrate stay
  * desktop-only — diagnostics rather than headline information.
  */
+/* An internal subscription -- a recording, a channel-cache hold -- has no
+ * client to name: a dash rather than an empty cell. */
+const dash = (v: unknown) => (v === undefined || v === null || v === '' ? '—' : String(v))
+
 const cols: ColumnDef[] = [
   { field: 'id', label: t('ID'), sortable: true, minVisible: 'desktop', format: fmtHexId },
-  { field: 'hostname', label: t('Hostname'), sortable: true, minVisible: 'desktop' },
-  { field: 'username', label: t('Username'), sortable: true, minVisible: 'desktop' },
+  { field: 'hostname', label: t('Hostname'), sortable: true, minVisible: 'desktop', format: dash },
+  { field: 'username', label: t('Username'), sortable: true, minVisible: 'desktop', format: dash },
   {
     field: 'title',
     label: t('Title'),
@@ -102,6 +116,19 @@ const cols: ColumnDef[] = [
     sortable: true,
     minVisible: 'phone',
     phoneOrder: 4,
+    /* waiting for a source, the reason the server gives */
+    format: (v, row) => {
+      const e = (row as Record<string, unknown>).error
+      return typeof e === 'string' && e ? t('{0} — {1}', String(v ?? ''), e) : String(v ?? '')
+    },
+  },
+  {
+    field: 'cache_role',
+    label: t('Channel cache'),
+    sortable: true,
+    minVisible: 'desktop',
+    width: 190,
+    cellComponent: SubscriptionCacheCell,
   },
   { field: 'pids', label: t('PID list'), sortable: false, minVisible: 'desktop', width: 200, format: fmtPids },
   { field: 'descramble', label: t('Descramble'), sortable: true, minVisible: 'desktop' },
@@ -132,7 +159,30 @@ function loadShowChart(): boolean {
     return false
   }
 }
+/* The cache panel, persisted the same way. One docked panel at a
+ * time: opening either closes the other, so the grid keeps room. */
+const SHOW_CACHE_KEY = 'tvh-cache-show:status-subscriptions'
+const showCache = ref<boolean>(loadFlag(SHOW_CACHE_KEY))
+if (showChart.value && showCache.value) showCache.value = false
+function loadFlag(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === '1'
+  } catch {
+    return false
+  }
+}
+watch(showCache, (v) => {
+  if (v) showChart.value = false
+  try {
+    if (v) localStorage.setItem(SHOW_CACHE_KEY, '1')
+    else localStorage.removeItem(SHOW_CACHE_KEY)
+  } catch {
+    /* localStorage unavailable — silent fail. */
+  }
+})
+
 watch(showChart, (v) => {
+  if (v) showCache.value = false
   try {
     if (v) localStorage.setItem(SHOW_CHART_KEY, '1')
     else localStorage.removeItem(SHOW_CHART_KEY)
@@ -194,6 +244,26 @@ function rowLabel(row: Record<string, unknown>): string {
         >
           <ChartLine :size="16" :stroke-width="2" />
         </button>
+        <button
+          v-if="!ph"
+          v-tooltip.bottom="
+            showCache
+              ? t('Hide channel caches')
+              : t('Show channel caches')
+          "
+          type="button"
+          class="status-view__chart-toggle"
+          :class="{ 'status-view__chart-toggle--active': showCache }"
+          :aria-label="
+            showCache
+              ? t('Hide channel caches')
+              : t('Show channel caches')
+          "
+          :aria-pressed="showCache"
+          @click="showCache = !showCache"
+        >
+          <Layers :size="16" :stroke-width="2" />
+        </button>
       </template>
     </StatusGrid>
     <BandwidthChartView
@@ -204,6 +274,10 @@ function rowLabel(row: Record<string, unknown>): string {
       units="bytes"
       :row-label="rowLabel"
       :noun="t('subscription')"
+    />
+    <CachePanel
+      v-model:visible="showCache"
+      :rows="() => (gridRef?.selection ?? []) as Record<string, unknown>[]"
     />
   </div>
 </template>

@@ -23,6 +23,7 @@ import SubscriptionsView from '../SubscriptionsView.vue'
 import StatusGrid from '@/components/StatusGrid.vue'
 import { fmtDate } from '@/utils/formatTime'
 import type { ColumnDef } from '@/types/column'
+import SubscriptionCacheCell from '@/components/SubscriptionCacheCell.vue'
 
 function gridColumns(): ColumnDef[] {
   const wrapper = mount(SubscriptionsView, {
@@ -30,6 +31,7 @@ function gridColumns(): ColumnDef[] {
       stubs: {
         StatusGrid: true,
         BandwidthChartView: true,
+        CachePanel: true,
       },
     },
   })
@@ -67,5 +69,13 @@ describe('SubscriptionsView — column formatting', () => {
       const col = cols.find((c) => c.field === field)
       expect(col?.format?.(1_000_000, {})).toBe('8000')
     }
+  })
+})
+
+describe('SubscriptionsView — channel cache column', () => {
+  it('renders cache_role with the subscription cache cell, desktop only', () => {
+    const col = gridColumns().find((c) => c.field === 'cache_role')
+    expect(col?.cellComponent).toBe(SubscriptionCacheCell)
+    expect(col?.minVisible).toBe('desktop')
   })
 })

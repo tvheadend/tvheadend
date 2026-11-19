@@ -1994,6 +1994,33 @@ svcts_attach ( streaming_target_t *pad, service_t *t )
   tvh_mutex_unlock(&st->lock);
 }
 
+int
+svcts_behind ( streaming_target_t *pad, int64_t *behind )
+{
+  svcts_t *st = (svcts_t *)pad;
+  int64_t cur;
+  int r;
+
+  tvh_mutex_lock(&st->lock);
+  r = st->sb != NULL;
+  cur = st->state == SVCTS_LIVE ? st->live_time : st->last_time;
+  *behind = MAX(0, st->live_time - cur) / 1000000;
+  tvh_mutex_unlock(&st->lock);
+  return r;
+}
+
+int
+svcts_paused ( streaming_target_t *pad )
+{
+  svcts_t *st = (svcts_t *)pad;
+  int r;
+
+  tvh_mutex_lock(&st->lock);
+  r = st->state == SVCTS_PAUSE;
+  tvh_mutex_unlock(&st->lock);
+  return r;
+}
+
 void
 svcts_detach ( streaming_target_t *pad )
 {

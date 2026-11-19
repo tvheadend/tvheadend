@@ -28,6 +28,16 @@
 #include "input.h"
 #include "epggrab.h"  //Needed to get the next EPG grab times
 #include "dvr/dvr.h"  //Needed to get the next schedule dvr time
+#include "channels.h"
+#include "imagecache.h"
+#include "service.h"
+#if ENABLE_TIMESHIFT
+#include "timeshift.h"
+#include "timeshift/private.h"
+#include "timeshift/timeshift_svcbuf.h"
+#include "timeshift/timeshift_svcts.h"
+#include "profile.h"
+#endif
 
 static int
 api_status_inputs
@@ -85,6 +95,256 @@ api_status_subscriptions
 
   return 0;
 }
+
+#if ENABLE_TIMESHIFT
+/*
+ * The recording a subscription makes, if any.  A recording that started
+ * live reads the cache through no replay gate, so only its DVR entry says
+ * what it is.  A cache-only warmup writes no file, and is not one.
+ * (global_lock held)
+ */
+static dvr_entry_t *
+api_status_cache_recording ( const th_subscription_t *s )
+{
+  dvr_entry_t *de;
+
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (de->de_s == s)
+      return de->de_cache_only ? NULL : de;
+  return NULL;
+}
+
+/* A hold on an idle channel, and how long it has left (global_lock held) */
+static void
+api_status_cache_keepalive ( htsmsg_t *e, const th_subscription_t *s )
+{
+  htsmsg_add_bool(e, "keepalive", 1);
+  if (s->ths_remove_timer.mti_expire && s->ths_remove_timer.mti_callback)
+    htsmsg_add_s64(e, "keepalive_expires",
+                   MAX(0, mono2sec(s->ths_remove_timer.mti_expire - mclk())));
+}
+
+/*
+ * The channel a cache is of, as the guide shows it: its name, its number
+ * and its icon, the imagecache path to it.
+ */
+static void
+api_status_cache_channel ( htsmsg_t *e, channel_t *ch, const char *blank )
+{
+  char num[32], icon[512];
+  const char *s;
+
+  htsmsg_add_str(e, "channel", channel_get_name(ch, blank));
+  if (channel_get_number(ch) > 0 &&
+      channel_get_number_as_str(ch, num, sizeof(num)))
+    htsmsg_add_str(e, "channel_number", num);
+  s = channel_get_icon(ch);
+  if (!strempty(s) && (s = imagecache_get_propstr(s, icon, sizeof(icon))) != NULL)
+    htsmsg_add_str(e, "channel_icon", s);
+}
+
+/*
+ * A recording's programme, padding included, as a [start, stop] pair into
+ * `recorded`, and into `ranges` while there is room: past that many
+ * recordings of one channel at once, the rest go uncounted in the bytes.
+ * The tuner's warm-up before that is not part of it: the recorder writes
+ * nothing before the padded start.
+ */
+static void
+api_status_cache_recorded ( htsmsg_t *recorded, dvr_entry_t *de,
+                            time_t *ranges, int room, int *nranges )
+{
+  htsmsg_t *range = htsmsg_create_list();
+  time_t start = dvr_entry_get_start_time(de, 0);
+  time_t stop = dvr_entry_get_stop_time(de);
+
+  htsmsg_add_s64(range, NULL, start);
+  htsmsg_add_s64(range, NULL, stop);
+  htsmsg_add_msg(recorded, NULL, range);
+  if (*nranges < room) {
+    ranges[2 * *nranges] = start;
+    ranges[2 * *nranges + 1] = stop;
+    (*nranges)++;
+  }
+}
+
+/*
+ * Who is in a cache, from the subscriptions rather than the cache's readers:
+ * a client watching live has no reader until it seeks back, and it is in
+ * the cache all the same.  Each says how far behind live it is, as in the
+ * subscriptions' own cache fields, and whether a viewer is paused; a
+ * recording also says the wall-clock span of its programme (padding
+ * included), the part of the cache it is made of, added to `ranges`.  A hold
+ * on an idle channel says how long it has left.  One that plays the channel
+ * live past the cache -- an HTTP stream, which does not timeshift -- is
+ * listed apart, in `live`, by who it is.
+ */
+static void
+api_status_cache_client ( htsmsg_t *list, th_subscription_t *s )
+{
+  char buf[256];
+
+  /* who it is, to tell viewers apart: the client (or user) and where it
+     connects from */
+  snprintf(buf, sizeof(buf), "%s%s%s%s",
+           s->ths_client ?: s->ths_username ?: "",
+           s->ths_hostname ? " (" : "",
+           s->ths_hostname ?: "",
+           s->ths_hostname ? ")" : "");
+  htsmsg_add_str(list, NULL, buf);
+}
+
+static void
+api_status_cache_members
+  ( htsmsg_t *e, service_t *t, time_t *ranges, int room, int *nranges )
+{
+  htsmsg_t *viewers = htsmsg_create_list();
+  htsmsg_t *paused = htsmsg_create_list();
+  htsmsg_t *clients = htsmsg_create_list();
+  htsmsg_t *recordings = htsmsg_create_list();
+  htsmsg_t *recorded = htsmsg_create_list();
+  htsmsg_t *live = htsmsg_create_list();
+  th_subscription_t *s;
+  dvr_entry_t *de;
+  int64_t behind;
+  int others = 0;
+
+  *nranges = 0;
+  LIST_FOREACH(s, &t->s_subscriptions, ths_service_link) {
+    if (s->ths_cache_keepalive) {
+      api_status_cache_keepalive(e, s);
+      continue;
+    }
+    others++;
+    de = api_status_cache_recording(s);
+    if (de)
+      api_status_cache_recorded(recorded, de, ranges, room, nranges);
+    if (s->ths_gate || de) {
+      /* a gate replays the cache; without one, the recording is live */
+      htsmsg_add_s64(recordings, NULL,
+                     s->ths_gate ? svcbuf_gate_behind(s->ths_gate) : 0);
+    } else if (s->ths_prch && s->ths_prch->prch_svcts &&
+               svcts_behind(s->ths_prch->prch_svcts, &behind)) {
+      htsmsg_add_s64(viewers, NULL, behind);
+      htsmsg_add_bool(paused, NULL, svcts_paused(s->ths_prch->prch_svcts));
+      api_status_cache_client(clients, s);
+    } else if (s->ths_weight != SUBSCRIPTION_PRIO_CACHE_WARMUP) {
+      api_status_cache_client(live, s);
+    }
+  }
+  htsmsg_add_msg(e, "viewers", viewers);
+  htsmsg_add_msg(e, "paused", paused);
+  htsmsg_add_msg(e, "clients", clients);
+  htsmsg_add_msg(e, "recordings", recordings);
+  htsmsg_add_msg(e, "recorded", recorded);
+  htsmsg_add_msg(e, "live", live);
+  htsmsg_add_s64(e, "subscriptions", others);
+}
+
+/* How much of a cache its recordings are made of, and where; added up in
+ * `rec` for the budgets */
+static void
+api_status_cache_recorded_bytes
+  ( htsmsg_t *e, svcbuf_t *sb, const time_t *ranges, int nranges,
+    uint64_t *rec )
+{
+  uint64_t bytes[4];
+  htsmsg_t *rb = htsmsg_create_map();
+
+  svcbuf_bytes_within(sb, ranges, nranges, bytes);
+  htsmsg_add_s64(rb, "ram", bytes[SVCBUF_LOC_RAM]);
+  htsmsg_add_s64(rb, "staging", bytes[SVCBUF_LOC_STAGING]);
+  htsmsg_add_s64(rb, "disk", bytes[SVCBUF_LOC_DISK]);
+  htsmsg_add_msg(e, "recorded_bytes", rb);
+  rec[SVCBUF_LOC_RAM]     += bytes[SVCBUF_LOC_RAM];
+  rec[SVCBUF_LOC_STAGING] += bytes[SVCBUF_LOC_STAGING];
+  rec[SVCBUF_LOC_DISK]    += bytes[SVCBUF_LOC_DISK];
+}
+
+/* The budgets the caches draw on, and what their recordings take of them */
+static htsmsg_t *
+api_status_cache_budget ( const uint64_t *rec )
+{
+  htsmsg_t *b = htsmsg_create_map();
+
+  htsmsg_add_bool(b, "enabled", timeshift_conf.enabled && timeshift_conf.record_cache);
+  htsmsg_add_bool(b, "ram_only", timeshift_conf.ram_only);
+  htsmsg_add_bool(b, "unlimited", timeshift_conf.unlimited_size);
+  htsmsg_add_s64(b, "size_used", timeshift_size_used());
+  htsmsg_add_s64(b, "size_max", timeshift_conf.ram_only ?
+                                  timeshift_conf.ram_size : timeshift_conf.max_size);
+  htsmsg_add_s64(b, "ram_used", timeshift_ram_used());
+  htsmsg_add_s64(b, "ram_max", timeshift_conf.ram_size);
+  htsmsg_add_s64(b, "staging_used", svcbuf_staging_used());
+  htsmsg_add_s64(b, "staging_max", svcbuf_staging_limit());
+  /* of all that, what the caches' recordings are made of */
+  htsmsg_add_s64(b, "rec_ram", rec[SVCBUF_LOC_RAM]);
+  htsmsg_add_s64(b, "rec_staging", rec[SVCBUF_LOC_STAGING]);
+  htsmsg_add_s64(b, "rec_disk", rec[SVCBUF_LOC_DISK]);
+  htsmsg_add_s64(b, "keepalive", timeshift_conf.cache_keepalive);
+  /* the time a cache grows to, so a young one can be drawn as filling it */
+  htsmsg_add_s64(b, "period", timeshift_conf.unlimited_period ? 0 :
+                              (int64_t)timeshift_conf.max_period * 60);
+  return b;
+}
+
+/*
+ * The shared channel caches: one entry per service holding one, keyed by
+ * the service, plus the budgets they draw on.  `buckets` sets how finely
+ * each cache's span is mapped (default 120).
+ */
+static int
+api_status_caches
+  ( access_t *perm, void *opaque, const char *op, htsmsg_t *args, htsmsg_t **resp )
+{
+  int c = 0;
+  int buckets = htsmsg_get_s32_or_default(args, "buckets", 120);
+  htsmsg_t *l;
+  htsmsg_t *e;
+  service_t *t;
+  svcbuf_t *sb;
+  idnode_list_mapping_t *ilm;
+  const char *blank = tvh_gettext_lang(perm->aa_lang_ui, channel_blank_name);
+  int nranges;
+  /* recordings' programmes on one cache, as start, stop pairs */
+  time_t ranges[2 * 16];
+  uint64_t rec[4] = { 0, 0, 0, 0 };
+  char buf[256];
+
+  (void)opaque;
+  (void)op;
+  l = htsmsg_create_list();
+  tvh_mutex_lock(&global_lock);
+  TAILQ_FOREACH(t, &service_all, s_all_link) {
+    tvh_mutex_lock(&t->s_stream_mutex);
+    sb = svcbuf_acquire(t);
+    tvh_mutex_unlock(&t->s_stream_mutex);
+    if (sb == NULL)
+      continue;
+    e = svcbuf_status(sb, buckets);
+
+    htsmsg_add_uuid(e, "uuid", &t->s_id.in_uuid);
+    htsmsg_add_str(e, "service", service_adapter_nicename(t, buf, sizeof(buf)));
+    ilm = LIST_FIRST(&t->s_channels);
+    if (ilm)
+      api_status_cache_channel(e, (channel_t *)ilm->ilm_in2, blank);
+
+    api_status_cache_members(e, t, ranges, (int)ARRAY_SIZE(ranges) / 2, &nranges);
+    api_status_cache_recorded_bytes(e, sb, ranges, nranges, rec);
+    svcbuf_release(sb);
+
+    htsmsg_add_msg(l, NULL, e);
+    c++;
+  }
+  tvh_mutex_unlock(&global_lock);
+
+  *resp = htsmsg_create_map();
+  htsmsg_add_msg(*resp, "entries", l);
+  htsmsg_add_u32(*resp, "totalCount", c);
+  htsmsg_add_msg(*resp, "budget", api_status_cache_budget(rec));
+  return 0;
+}
+#endif
 
 static int
 api_status_connections
@@ -247,6 +507,9 @@ void api_status_init ( void )
   static api_hook_t ah[] = {
     { "status/connections",   ACCESS_ADMIN, api_status_connections, NULL },
     { "status/subscriptions", ACCESS_ADMIN, api_status_subscriptions, NULL },
+#if ENABLE_TIMESHIFT
+    { "status/caches",        ACCESS_ADMIN, api_status_caches, NULL },
+#endif
     { "status/inputs",        ACCESS_ADMIN, api_status_inputs, NULL },
     { "status/inputclrstats", ACCESS_ADMIN, api_status_input_clear_stats, NULL },
     { "status/activity",      ACCESS_ADMIN, api_status_activity, NULL },

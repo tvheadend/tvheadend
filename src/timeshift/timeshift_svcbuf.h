@@ -21,6 +21,7 @@
 #define __TVH_TIMESHIFT_SVCBUF_H__
 
 #include "streaming.h"
+#include "htsmsg.h"
 
 struct service;
 
@@ -54,6 +55,27 @@ svcbuf_t *svcbuf_acquire ( struct service *t );
 struct service *svcbuf_service ( svcbuf_t *sb );
 uint64_t svcbuf_start_seq ( svcbuf_t *sb );
 int svcbuf_span ( svcbuf_t *sb, int64_t *oldest, int64_t *newest );
+
+/* For the status pages.  svcbuf_status() describes one cache: where its
+ * bytes live, the time it spans, how many readers and gates it has, and a
+ * map of the span in `buckets` slots, each the place most of that slot's
+ * data lives (SVCBUF_LOC_*).  svcbuf_gate_behind() is how far a recording's
+ * replay is behind the newest cached data, 0 once it has caught up. */
+#define SVCBUF_LOC_NONE    0    ///< Nothing cached for that slot: a gap
+#define SVCBUF_LOC_RAM     1    ///< Kept in the timeshift RAM budget
+#define SVCBUF_LOC_STAGING 2    ///< In RAM, waiting for the disk writer
+#define SVCBUF_LOC_DISK    3    ///< Only in a segment file
+htsmsg_t *svcbuf_status ( svcbuf_t *sb, int buckets );
+
+/* The bytes of a cache whose blocks arrived within any of n wall-clock
+ * ranges, given as start, stop pairs: by where they live (SVCBUF_LOC_*),
+ * a block in several ranges counted once.  What recordings are made of. */
+void svcbuf_bytes_within ( svcbuf_t *sb, const time_t *ranges, int n,
+                           uint64_t bytes[4] );
+int64_t svcbuf_gate_behind ( const streaming_target_t *pad );
+uint64_t svcbuf_staging_used ( void );
+uint64_t svcbuf_staging_limit ( void );
+int svcbuf_count ( void );
 svcbuf_reader_t *svcbuf_reader_create ( svcbuf_t *sb );
 void svcbuf_reader_destroy ( svcbuf_reader_t *r );
 int64_t svcbuf_reader_seek ( svcbuf_reader_t *r, int64_t mono );

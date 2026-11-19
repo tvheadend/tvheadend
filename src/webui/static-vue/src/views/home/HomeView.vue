@@ -36,6 +36,7 @@ import RecordingNow from './RecordingNow.vue'
 import ThisWeekStrip from './ThisWeekStrip.vue'
 import RecentlyRecorded from './RecentlyRecorded.vue'
 import HealthLine from './HealthLine.vue'
+import ChannelCaches from './ChannelCaches.vue'
 import HomeSearchCard from './HomeSearchCard.vue'
 
 const { t, tn } = useI18n()
@@ -269,6 +270,7 @@ async function onCardAction(actionId: string): Promise<void> {
       <section v-if="serverCards.length || showHealth" class="home__tier">
         <h2 class="home__tier-title">{{ t('Server') }}</h2>
         <HealthLine v-if="showHealth" class="home__health" />
+        <ChannelCaches v-if="showHealth" class="home__health" />
         <div v-if="serverCards.length" class="home__cards">
           <HomeCardComponent
             v-for="card in serverCards"

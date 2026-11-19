@@ -33,6 +33,7 @@
 #include "timeshift.h"
 #include "timeshift/timeshift_svcbuf.h"
 #include "timeshift/timeshift_svcts.h"
+#include "dvr/dvr.h"
 #endif
 
 struct th_subscription_list subscriptions;
@@ -1483,6 +1484,64 @@ subscription_create_from_file(const char *name,
 
 static mtimer_t subscription_status_timer;
 
+#if ENABLE_TIMESHIFT
+/*
+ * What a subscription has to do with its channel's cache, for the status
+ * pages: a viewer timeshifting through it (and whether it is paused), a
+ * recording replaying it or made live from it, a scheduled warmup filling
+ * it, the hold keeping an idle channel tuned so that it survives, or else
+ * one that plays live past it -- an HTTP stream, which does not timeshift
+ * -- on a channel whose cache it keeps filling (global_lock held).
+ */
+static int
+subscription_cache_records ( const th_subscription_t *s )
+{
+  dvr_entry_t *de;
+
+  /* a recording that started on time reads live, through no gate: only
+     its DVR entry says what it is */
+  LIST_FOREACH(de, &dvrentries, de_global_link)
+    if (de->de_s == s)
+      return !de->de_cache_only;
+  return 0;
+}
+
+static void
+subscription_cache_msg ( th_subscription_t *s, htsmsg_t *m )
+{
+  const char *role = NULL;
+  int64_t behind = 0;
+  int paused = 0;
+
+  if (s->ths_cache_keepalive) {
+    role = "keepalive";
+    if (s->ths_remove_timer.mti_callback == &subscription_cache_keepalive_timeout)
+      htsmsg_add_s64(m, "cache_expires",
+                     MAX(0, mono2sec(s->ths_remove_timer.mti_expire - mclk())));
+  } else if (s->ths_gate) {
+    role = "recording";
+    behind = svcbuf_gate_behind(s->ths_gate);
+  } else if (s->ths_weight == SUBSCRIPTION_PRIO_CACHE_WARMUP) {
+    role = "warmup";
+  } else if (s->ths_prch && s->ths_prch->prch_svcts &&
+             svcts_behind(s->ths_prch->prch_svcts, &behind)) {
+    role = "viewer";
+    paused = svcts_paused(s->ths_prch->prch_svcts);
+  } else if (subscription_cache_records(s)) {
+    role = "recording";
+  } else if (s->ths_service && s->ths_service->s_svcbuf) {
+    role = "live";
+  }
+  if (role == NULL || s->ths_service == NULL)
+    return;
+  htsmsg_add_str(m, "cache_role", role);
+  htsmsg_add_s64(m, "cache_behind", behind);
+  if (paused)
+    htsmsg_add_bool(m, "cache_paused", 1);
+  htsmsg_add_uuid(m, "cache", &s->ths_service->s_id.in_uuid);
+}
+#endif
+
 /*
  * Serialize info about subscription
  */
@@ -1596,6 +1655,10 @@ subscription_create_msg(th_subscription_t *s, const char *lang)
   htsmsg_add_s64(m, "total_in", atomic_get_u64(&s->ths_total_bytes_in));
   htsmsg_add_s64(m, "total_out", atomic_get_u64(&s->ths_total_bytes_out));
 
+#if ENABLE_TIMESHIFT
+  subscription_cache_msg(s, m);
+#endif
+
   return m;
 }
 
@@ -1631,6 +1694,27 @@ subscription_status_callback ( void *p )
     old_count = count;
     dbus_emit_signal_s64("/status", "subscriptions", count);
   }
+
+#if ENABLE_TIMESHIFT
+  /*
+   * The cache status page refetches on these: every two seconds while
+   * there is a cache, and once more after the last one goes so that the
+   * page empties.  Admin connections only, as the page is.
+   */
+  {
+    static int caches_tick;
+    static int caches_old;
+    int caches = svcbuf_count();
+    if (caches || caches_old)
+      caches_tick++;
+    if ((caches || caches_old) && (caches_tick % 2 == 0 || !caches)) {
+      htsmsg_t *n = htsmsg_create_map();
+      htsmsg_add_u32(n, "reload", 1);
+      notify_by_msg("caches", n, 1, 0);
+    }
+    caches_old = caches;
+  }
+#endif
 }
 
 /**

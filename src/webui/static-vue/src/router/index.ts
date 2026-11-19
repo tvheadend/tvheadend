@@ -355,6 +355,7 @@ const statusChildren: RouteRecordRaw[] = [
   { path: '', name: 'status', redirect: () => ({ name: readLastSubview('status') ?? 'status-streams' }) },
   leaf('streams', 'status-streams', () => import('@/views/status/StreamView.vue'), N_('Stream'), 'admin'),
   leaf('subscriptions', 'status-subscriptions', () => import('@/views/status/SubscriptionsView.vue'), N_('Subscriptions'), 'admin'),
+  leaf('caches', 'status-caches', () => import('@/views/status/CachesView.vue'), N_('Timeshift'), 'admin'),
   leaf('connections', 'status-connections', () => import('@/views/status/ConnectionsView.vue'), N_('Connections'), 'admin'),
   leaf('service-mapper', 'status-service-mapper', () => import('@/views/status/ServiceMapperView.vue'), N_('Service Mapper'), 'admin'),
   leaf('log', 'status-log', () => import('@/views/status/LogView.vue'), N_('Log'), 'admin'),

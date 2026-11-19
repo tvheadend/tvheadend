@@ -130,6 +130,19 @@ describe('useStatusStore', () => {
     expect(store.entries[0].name).toBe('Alpha')
   })
 
+  it('keeps the rest of the response beside the entries as meta', async () => {
+    apiMock.mockResolvedValueOnce({
+      entries: [{ uuid: 'a', name: 'A' }],
+      totalCount: 1,
+      budget: { size_used: 10 },
+    })
+    const store = useStatusStore<Row>('test/meta', 'test_meta', 'uuid')
+    expect(store.meta).toEqual({})
+    await store.fetch()
+    expect(store.meta).toEqual({ totalCount: 1, budget: { size_used: 10 } })
+    expect(store.entries).toHaveLength(1)
+  })
+
   it('preserves row object identity across refetch (merge by key)', async () => {
     apiMock.mockResolvedValueOnce({
       entries: [
