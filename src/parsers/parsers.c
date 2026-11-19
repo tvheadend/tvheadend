@@ -124,6 +124,15 @@ parser_update_service(parser_es_t *st)
     es = elementary_stream_find(&st->es_service->s_components, st->es_pid);
     if (es == NULL)
       return;
+    /*
+     * That lookup is by PID, and replayed data can predate a PID change:
+     * the live stream on this PID may be another type entirely.  Filling it
+     * from this one would write, say, video dimensions into an audio stream
+     * -- whose es_sri is 0, so the test below would not stop it -- and
+     * restart the streams under every subscriber.
+     */
+    if (es->es_type != st->es_type)
+      return;
     if (SCT_ISVIDEO(es->es_type) ? es->es_width && es->es_height
                                  : es->es_sri != 0)
       return;
