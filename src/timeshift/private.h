@@ -67,6 +67,7 @@ typedef struct timeshift_file
   int64_t                       ram_size; ///< RAM area size in bytes
 
   uint8_t                       bad;      ///< File is broken
+  uint8_t                       closed;   ///< Writing finished, EOF marker written
 
   int                           refcount; ///< Reader ref count
 
@@ -118,6 +119,9 @@ typedef struct timeshift {
   tvh_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     exit;        ///< Exit from the main input thread
   uint8_t                     full;        ///< Buffer is full
+  int64_t                     full_mono;   ///< When the shared size budget
+                                           ///< stopped buffering; 0 when full
+                                           ///< is a real write failure
 
   timeshift_seek_t            seek;       ///< Seek into buffered data
   

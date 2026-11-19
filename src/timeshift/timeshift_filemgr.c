@@ -294,7 +294,20 @@ int timeshift_filemgr_makedirs ( int index, char *buf, size_t len )
 void timeshift_filemgr_close ( timeshift_file_t *tsf )
 {
   uint8_t *ram;
-  ssize_t r = timeshift_write_eof(tsf);
+  ssize_t r;
+
+  /*
+   * Closing twice is easy to reach: the writer closes a segment it gives up
+   * on, and the period check closes the tail and may leave it in the list
+   * with ts->full set; either way the next rotation closes it again.  A
+   * second EOF marker goes to a closed descriptor on disk, or past the first
+   * one in RAM, so the second close does nothing.
+   */
+  if (tsf->closed)
+    return;
+  tsf->closed = 1;
+
+  r = timeshift_write_eof(tsf);
   if (r < 0)
     tvhwarn(LS_TIMESHIFT,
             "unable to write timeshift EOF marker: %s",
@@ -400,7 +413,13 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
   /* Store to file */
   tsf_tl = TAILQ_LAST(&ts->files, timeshift_file_list);
   time = mono2sec(start_time) / TIMESHIFT_FILE_PERIOD;
-  if (!tsf_tl || tsf_tl->time < time ||
+  /*
+   * A segment the writer gave up on is closed, and nothing reopens it: a
+   * retry inside the same minute would be handed that segment back and skip
+   * buffering until the period rolled.  Rotate instead -- ts->full is clear
+   * here, so a bad tail means the writer is retrying after a transient stop.
+   */
+  if (!tsf_tl || tsf_tl->time < time || tsf_tl->bad ||
       (tsf_tl->ram && tsf_tl->woff >= timeshift_conf.ram_segment_size)) {
     tsf_hd = TAILQ_FIRST(&ts->files);
 
@@ -417,8 +436,11 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
           timeshift_filemgr_remove(ts, tsf_hd, 0);
           tsf_hd = NULL;
         } else {
+          /* The oldest file is pinned by a reader, so the buffer cannot
+             shrink yet; that passes, so let the writer retry */
           tvhdebug(LS_TIMESHIFT, "ts %d buffer full", ts->id);
           ts->full = 1;
+          ts->full_mono = mclk();
         }
       }
     }
@@ -438,8 +460,13 @@ timeshift_file_t *timeshift_filemgr_get ( timeshift_t *ts, int64_t start_time )
 
       /* Full */
       } else {
+        /* Nothing can be freed right now: the oldest file is the one being
+           written or a reader holds it, or the shared size budget is spent
+           on another service's cache.  All of those pass, so record when
+           buffering stopped and let the writer try again. */
         tvhdebug(LS_TIMESHIFT, "ts %d buffer full", ts->id);
         ts->full = 1;
+        ts->full_mono = mclk();
       }
     }
 

@@ -202,31 +202,30 @@ _timeshift_record_begin ( timeshift_file_t *tsf, uint64_t size )
   timeshift_t *ts = tsf->owner;
   timeshift_file_t *oldest;
 
-  for (;;) {
-    if (timeshift_size_reserve(size))
-      return 1;
-
-    if (ts == NULL)
-      break;
-
+  while (!timeshift_size_reserve(size)) {
     /*
      * Preserve the rolling-buffer behaviour even when the combined
      * Classic + shared limit becomes full between file rotations.
      * Never remove the file currently being written or one held by a
      * reader.
      */
-    oldest = TAILQ_FIRST(&ts->files);
+    oldest = ts ? TAILQ_FIRST(&ts->files) : NULL;
 
     if (oldest == NULL ||
         oldest == tsf ||
-        oldest->refcount)
-      break;
+        oldest->refcount) {
+      /*
+       * The shared size budget is exhausted, not the filesystem: the cache
+       * of another service can release space again, so let the caller
+       * tell this apart from a write that really failed.
+       */
+      errno = EAGAIN;
+      return 0;
+    }
 
     timeshift_filemgr_remove(ts, oldest, 0);
   }
-
-  errno = ENOSPC;
-  return 0;
+  return 1;
 }
 
 static ssize_t
@@ -516,14 +515,34 @@ static void _process_msg
         if (sm->sm_type == SMT_PACKET)
           timeshift_packet_log("liv", ts, sm);
       }
+      /*
+       * Give buffering another go a second after a shared-budget stop.  The
+       * write path rolled back and released its reservation, so the files
+       * are consistent and the next one simply rotates.
+       */
+      if (ts->full && ts->full_mono &&
+          mclk() - ts->full_mono >= sec2mono(1)) {
+        ts->full = 0;
+        ts->full_mono = 0;
+      }
+
       /* do buffering, but without teletext packets */
       if (ts->dobuf && !teletext) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
           if (tsf->wfd >= 0 || tsf->ram) {
             if ((err = _process_msg0(ts, tsf, sm)) < 0) {
+              /*
+               * EAGAIN is the shared size budget, which the cache of another
+               * service can release; anything else is a write that failed.
+               * Remember which, because the only other reset of ts->full is
+               * a SMT_SKIP_LIVE from a client that is not live, so a viewer
+               * who never time-shifts would lose buffering for good.
+               */
+              const int transient = (errno == EAGAIN);
               timeshift_filemgr_close(tsf);
               tsf->bad = 1;
               ts->full = 1; ///< Stop any more writing
+              ts->full_mono = transient ? mclk() : 0;
             } else {
               timeshift_packet_log("sav", ts, sm);
             }

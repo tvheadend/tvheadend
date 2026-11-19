@@ -46,6 +46,7 @@ streaming_target_t *svcbuf_gate_create
 streaming_target_t *svcbuf_gate_stop ( streaming_target_t *pad );
 /* Free a stopped gate, s_stream_mutex not held */
 void svcbuf_gate_destroy ( streaming_target_t *pad );
+void svcbuf_gate_set_stop ( streaming_target_t *pad, time_t to );
 
 /* Readers, for clients timeshifting through the cache.  svcbuf_acquire()
  * takes a reference (s_stream_mutex held), svcbuf_release() drops it. */
