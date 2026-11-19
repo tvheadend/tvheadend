@@ -242,6 +242,8 @@ void subscription_add_bytes_in(th_subscription_t *s, size_t in);
 
 void subscription_add_bytes_out(th_subscription_t *s, size_t out);
 
+void subscription_cache_settings_changed(void);
+
 static inline int subscriptions_active(void)
   { return LIST_FIRST(&subscriptions) != NULL; }
 
