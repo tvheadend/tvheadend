@@ -28,7 +28,7 @@
 #include "dbus.h"
 
 #include <arpa/inet.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #if defined(PLATFORM_FREEBSD) || ENABLE_ANDROID
 #include <sys/types.h>
@@ -566,11 +566,12 @@ const idclass_t satip_device_class =
 static void
 satip_device_calc_bin_uuid( uint8_t *uuid, const char *satip_uuid )
 {
-  SHA_CTX sha1;
+  EVP_MD_CTX *sha1 = EVP_MD_CTX_new();
 
-  SHA1_Init(&sha1);
-  SHA1_Update(&sha1, (void*)satip_uuid, strlen(satip_uuid));
-  SHA1_Final(uuid, &sha1);
+  EVP_DigestInit_ex(sha1, EVP_sha1(), NULL);
+  EVP_DigestUpdate(sha1, (void*)satip_uuid, strlen(satip_uuid));
+  EVP_DigestFinal_ex(sha1, uuid, NULL);
+  EVP_MD_CTX_free(sha1);
 }
 
 static void

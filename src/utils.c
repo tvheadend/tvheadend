@@ -31,8 +31,6 @@
 #include <net/if.h>
 #include <errno.h>
 
-#include <openssl/sha.h>
-
 #include "tvheadend.h"
 #include "tvh_endian.h"
 #include "sbuf.h"
@@ -973,14 +971,15 @@ sha1_calc(uint8_t *dst,
           const uint8_t *d1, size_t d1_len,
           const uint8_t *d2, size_t d2_len)
 {
-  SHA_CTX shactx;
+  EVP_MD_CTX *shactx = EVP_MD_CTX_new();
 
-  SHA1_Init(&shactx);
+  EVP_DigestInit_ex(shactx, EVP_sha1(), NULL);
   if (d1)
-    SHA1_Update(&shactx, d1, d1_len);
+    EVP_DigestUpdate(shactx, d1, d1_len);
   if (d2)
-    SHA1_Update(&shactx, d2, d2_len);
-  SHA1_Final(dst, &shactx);
+    EVP_DigestUpdate(shactx, d2, d2_len);
+  EVP_DigestFinal_ex(shactx, dst, NULL);
+  EVP_MD_CTX_free(shactx);
 }
 
 uint32_t

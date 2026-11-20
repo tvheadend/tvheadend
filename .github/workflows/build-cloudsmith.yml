@@ -87,7 +87,7 @@ jobs:
        # runners in build-deb-native below.
        arch: [ armv7 ]
        # Add ubuntu26.04 after https://github.com/uraimo/run-on-arch-action/pull/177
-       distro: [ stretch, buster, bullseye, bookworm, trixie, ubuntu16.04, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
+       distro: [ stretch, buster, bullseye, bookworm, trixie, ubuntu18.04, ubuntu20.04, ubuntu22.04, ubuntu24.04 ]
        include:
          - arch: armv6
            distro: stretch
@@ -209,8 +209,6 @@ jobs:
         # the job names of the QEMU builds they replace, so the required
         # status checks on master keep matching by name.
         container:
-          - ["i386/ubuntu:xenial", "i386-ubuntu-xenial"]
-          - ["ubuntu:xenial", "ubuntu-xenial"]
           - ["ubuntu:bionic", "ubuntu-bionic"]
           - ["ubuntu:focal", "ubuntu-focal"]
           - ["ubuntu:jammy", "ubuntu-jammy"]
@@ -234,7 +232,6 @@ jobs:
           - ["arm64v8/debian:buster", "arm64-debian-buster", "buster aarch64"]
           - ["arm64v8/debian:bullseye", "arm64-debian-bullseye", "bullseye aarch64"]
           - ["arm64v8/debian:bookworm", "arm64-debian-bookworm", "bookworm aarch64"]
-          - ["arm64v8/ubuntu:xenial", "arm64-ubuntu-xenial", "ubuntu16.04 aarch64"]
           - ["arm64v8/ubuntu:bionic", "arm64-ubuntu-bionic", "ubuntu18.04 aarch64"]
           - ["arm64v8/ubuntu:focal", "arm64-ubuntu-focal", "ubuntu20.04 aarch64"]
           - ["arm64v8/ubuntu:jammy", "arm64-ubuntu-jammy", "ubuntu22.04 aarch64"]

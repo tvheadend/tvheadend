@@ -28,7 +28,7 @@
 #include "tvhdhomerun_private.h"
 
 #include <arpa/inet.h>
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 
 #include "config.h"
 
@@ -265,11 +265,12 @@ tvhdhomerun_discovery_destroy(tvhdhomerun_discovery_t *d, int unlink)
 static void
 tvhdhomerun_device_calc_bin_uuid( uint8_t *uuid, const uint32_t device_id )
 {
-  SHA_CTX sha1;
+  EVP_MD_CTX *sha1 = EVP_MD_CTX_new();
 
-  SHA1_Init(&sha1);
-  SHA1_Update(&sha1, (void*)&device_id, sizeof(device_id));
-  SHA1_Final(uuid, &sha1);
+  EVP_DigestInit_ex(sha1, EVP_sha1(), NULL);
+  EVP_DigestUpdate(sha1, (void*)&device_id, sizeof(device_id));
+  EVP_DigestFinal_ex(sha1, uuid, NULL);
+  EVP_MD_CTX_free(sha1);
 }
 
 static void
