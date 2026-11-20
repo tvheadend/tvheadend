@@ -1231,7 +1231,11 @@ _eit_callback
   /* Begin */
   r = dvb_table_begin((mpegts_psi_table_t *)mt, ptr, len,
                       tableid, extraid, 11, &st, &sect, &last, &ver, 0);
-  if (r == 0) goto complete;
+  /* Present/following is parsed on every repeat, also once the table
+   * is complete: it keeps reporting the running state of the broadcast
+   * on air while the mux is tuned, and the channel timer treats a
+   * state that stops being reported as stale */
+  if (r == 0 && tableid != 0x4e) goto complete;
   if (r < 0) return r;
   if (tableid != 0x4e && r != 1) return r;
   if (st && r > 0) {
