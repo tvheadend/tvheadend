@@ -15,7 +15,7 @@ Contents                                          | Description
 Tvheadend is a lightweight, easily-configured, general-purpose TV/video
 streaming server and recorder (PVR/DVR) for GNU/Linux, FreeBSD and Android.
 
-![Tvheadend interface](static/img/doc/introduction/screenshot.png)
+![Tvheadend interface](static/img/doc/epg/tab.png)
 
 It supports input from a number of sources such as DVB-T, DVB-S and more, see 
 [Features](#features) for a full list.
@@ -279,8 +279,8 @@ Drop (displayed) connections             | Drop the currently-shown active conne
 View Level                               | Show/Hide more advanced options.
 Help                                     | Display the help page.
                                          | **Icon-only buttons**
-!["Right Arrow"](static/img/doc/icons/arrow_right.png) (Next)  | Display/Jump to the next associated item, channel or EPG event.
-!["Left Arrow"](static/img/doc/icons/arrow_left.png) (Previous)   | Display/Jump to the previous associated item, channel or EPG event.
+!["Right Arrow"](static/icons/arrow_right.png) (Next)          | Display/Jump to the next associated item, channel or EPG event.
+!["Left Arrow"](static/icons/arrow_left.png) (Previous)           | Display/Jump to the previous associated item, channel or EPG event.
 
 Some of these buttons are only displayed in selected tabs/panels (noted in bold underneath).
 For items not listed above, refer to the associated Help page.

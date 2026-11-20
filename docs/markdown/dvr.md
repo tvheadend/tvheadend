@@ -23,13 +23,13 @@ Gives a quick overview as to the status of each entry:
 
 Icon                                                      | Description
 ----------------------------------------------------------|-------------
-![Clock icon](static/img/doc/icons/scheduled.png)         | The program is scheduled (upcoming).
-![Recording icon](static/img/doc/icons/rec.png)           | Recording of the program is active and underway (current).
-![Information icon](static/img/doc/icons/information.png) | Click to display detailed information about the selected recording.
-![Exclamation icon](static/img/doc/icons/exclamation.png) | The program failed to record.
-![Accept icon](static/img/doc/icons/accept.png)           | The program recorded successfully.
+![Clock icon](static/icons/scheduled.png)                 | The program is scheduled (upcoming).
+![Recording icon](static/icons/rec.png)                   | Recording of the program is active and underway (current).
+![Information icon](static/icons/information.png)         | Click to display detailed information about the selected recording.
+![Exclamation icon](static/icons/exclamation.png)         | The program failed to record.
+![Accept icon](static/icons/accept.png)                   | The program recorded successfully.
 
-**Play** / ![Play icon](static/img/doc/icons/control_play.png)
+**Play** / ![Play icon](static/icons/control_play.png)
 : 
 Play the selected entry. Downloads an m3u, or opens the m3u in your default media player. **Finished/Failed Recordings tabs only.**
 
