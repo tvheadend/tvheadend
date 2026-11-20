@@ -184,6 +184,7 @@ tvhlog_subsys_t tvhlog_subsystems[] = {
 #endif
   [LS_UDP]           = { "udp",           N_("UDP Streamer") },
   [LS_RATINGLABELS]  = { "ratinglabels",  N_("Rating Labels") },
+  [LS_TLS]           = { "tls",           N_("TLS Server") },
 
 };
 

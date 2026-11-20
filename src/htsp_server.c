@@ -43,6 +43,7 @@
 #endif
 
 #include "settings.h"
+#include "tls_server.h"
 #include "epggrab.h"  //Needed to be able to test for epggrab_conf.epgdb_processparentallabels
 
 /* **************************************************************************
@@ -120,6 +121,7 @@ typedef struct htsp_connection {
   LIST_ENTRY(htsp_connection) htsp_link;
 
   int htsp_fd;
+  tls_conn_t *htsp_tls;      /* TLS session after startTLS, or NULL */
   struct sockaddr_storage *htsp_peer;
 
   uint32_t htsp_version;
@@ -146,6 +148,9 @@ typedef struct htsp_connection {
   pthread_t htsp_writer_thread;
 
   int htsp_writer_run;
+  int htsp_writer_busy;      /* a message is being written */
+  int htsp_writer_hold;      /* startTLS: do not write */
+  int htsp_tls_required;     /* "Require encryption" when connected */
 
   struct htsp_msg_q_queue htsp_active_output_queues;
 
@@ -1486,7 +1491,7 @@ htsp_build_event
 static htsmsg_t *
 htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
 {
-  htsmsg_t *r;
+  htsmsg_t *r, *caps;
   uint32_t v;
   const char *name, *lang;
 
@@ -1514,7 +1519,10 @@ htsp_method_hello(htsp_connection_t *htsp, htsmsg_t *in)
     htsmsg_add_str(r, "language", lang);
 
   /* Capabilities */
-  htsmsg_add_msg(r, "servercapability", tvheadend_capabilities_list(1));
+  caps = tvheadend_capabilities_list(1);
+  if (config.htsp_tls_enabled && htsp->htsp_tls == NULL)
+    htsmsg_add_str(caps, NULL, "starttls");
+  htsmsg_add_msg(r, "servercapability", caps);
   htsmsg_add_u32(r, "api_version", TVH_API_VERSION);
 
   /* Set version to lowest num */
@@ -3333,8 +3341,11 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   uint8_t data[4];
   void *buf;
 
-  v = timeout ? tcp_read_timeout(htsp->htsp_fd, data, 4, timeout) :
-                tcp_read(htsp->htsp_fd, data, 4);
+  if (htsp->htsp_tls)
+    v = tls_conn_read(htsp->htsp_tls, data, 4);
+  else
+    v = timeout ? tcp_read_timeout(htsp->htsp_fd, data, 4, timeout) :
+                  tcp_read(htsp->htsp_fd, data, 4);
 
   if(v != 0)
     return v;
@@ -3345,8 +3356,11 @@ htsp_read_message(htsp_connection_t *htsp, htsmsg_t **mp, int timeout)
   if((buf = malloc(len)) == NULL)
     return ENOMEM;
 
-  v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) :
-                tcp_read(htsp->htsp_fd, buf, len);
+  if (htsp->htsp_tls)
+    v = tls_conn_read(htsp->htsp_tls, buf, len);
+  else
+    v = timeout ? tcp_read_timeout(htsp->htsp_fd, buf, len, timeout) :
+                  tcp_read(htsp->htsp_fd, buf, len);
 
   if(v != 0) {
     free(buf);
@@ -3371,7 +3385,7 @@ htsp_server_status ( void *opaque, htsmsg_t *m )
   htsp_connection_t *htsp = opaque;
   access_t *aa;
   char buf[128];
-  htsmsg_add_str(m, "type", "HTSP");
+  htsmsg_add_str(m, "type", htsp->htsp_tls ? "HTSPS" : "HTSP");
   if (htsp->htsp_username) {
     aa = htsp->htsp_granted_access;
     if (!strcmp(htsp->htsp_username, aa->aa_username ?: ""))
@@ -3404,6 +3418,89 @@ htsp_method_streams(const char *method, htsmsg_t *in)
   if (tvh_strbegins(file, "dvr/"))
     return 1;
   return tvh_strbegins(file, "dvrfile/") != NULL;
+}
+
+/**
+ * Encryption is required and not active: only hello and startTLS
+ */
+static int
+htsp_tls_missing(htsp_connection_t *htsp)
+{
+  return htsp->htsp_tls_required && htsp->htsp_tls == NULL;
+}
+
+/**
+ * startTLS: switch the connection to TLS
+ *
+ * The reply is sent in plain text, then the TLS handshake runs on the
+ * socket while the writer thread is held.
+ *
+ * Returns -1 when the connection cannot continue.
+ */
+static int
+htsp_start_tls(htsp_connection_t *htsp, htsmsg_t *in)
+{
+  const char *err = NULL;
+  char *cert, *key;
+  tls_conn_t *tc;
+  int idle;
+
+  tvh_mutex_lock(&global_lock);
+  if (htsp->htsp_tls)
+    err = N_("TLS is already active");
+  else if (!config.htsp_tls_enabled)
+    err = N_("TLS is not enabled");
+  else if (htsp->htsp_async_mode || LIST_FIRST(&htsp->htsp_subscriptions) ||
+           LIST_FIRST(&htsp->htsp_files))
+    err = N_("startTLS must precede other requests");
+  cert = config.htsp_tls_cert ? strdup(config.htsp_tls_cert) : NULL;
+  key  = config.htsp_tls_key ? strdup(config.htsp_tls_key) : NULL;
+  tvh_mutex_unlock(&global_lock);
+
+  /* pick up a changed or renewed certificate */
+  if (err == NULL && tls_server_check(cert, key))
+    err = N_("TLS is not available (no usable certificate)");
+  free(cert);
+  free(key);
+
+  if (err) {
+    htsp_reply(htsp, in, htsp_error(htsp, err));
+    return 0;
+  }
+  htsp_reply(htsp, in, htsp_success());
+
+  /* The reply has to leave in plain text before the handshake. Other
+   * messages cannot be queued meanwhile: async mode, subscriptions and
+   * files are refused above and this thread handles the requests. */
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
+  while (1) {
+    idle = !htsp->htsp_writer_busy &&
+           TAILQ_FIRST(&htsp->htsp_active_output_queues) == NULL;
+    if (idle || !htsp->htsp_writer_run)
+      break;
+    tvh_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
+  }
+  if (idle && htsp->htsp_writer_run)
+    htsp->htsp_writer_hold = 1;
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
+  if (!htsp->htsp_writer_hold)
+    return -1;
+
+  tc = tls_server_accept(htsp->htsp_fd, htsp->htsp_peername);
+  if (tc == NULL)
+    return -1;
+
+  tvh_mutex_lock(&global_lock);
+  htsp->htsp_tls = tc;
+  tvh_mutex_unlock(&global_lock);
+
+  tvh_mutex_lock(&htsp->htsp_out_mutex);
+  htsp->htsp_writer_hold = 0;
+  tvh_cond_signal(&htsp->htsp_out_cond, 1);
+  tvh_mutex_unlock(&htsp->htsp_out_mutex);
+
+  tvhinfo(LS_HTSP, "%s: TLS started", htsp->htsp_logname);
+  return 0;
 }
 
 /**
@@ -3447,8 +3544,26 @@ readmsg:
     if((r = htsp_read_message(htsp, &m, 0)) != 0)
       break;
 
+    method = htsmsg_get_str(m, "method");
+    if (method && !strcmp(method, "startTLS")) {
+      tvhtrace(LS_HTSP, "%s - method %s", htsp->htsp_logname, method);
+      r = htsp_start_tls(htsp, m);
+      htsmsg_destroy(m);
+      if (r)
+        break;
+      continue;
+    }
+
     tvh_mutex_lock(&global_lock);
-    if (htsp_authenticate(htsp, m)) {
+    if (htsp_tls_missing(htsp)) {
+      /* no credentials and no requests before the encryption */
+      if (method == NULL || strcmp(method, "hello")) {
+        reply = htsp_error(htsp, N_("Encryption required, use startTLS"));
+        htsmsg_add_u32(reply, "noaccess", 1);
+        htsmsg_add_u32(reply, "tlsrequired", 1);
+        goto send_reply_with_unlock;
+      }
+    } else if (htsp_authenticate(htsp, m)) {
       tcp_connection_land(tcp_id);
       tcp_id = tcp_connection_launch(htsp->htsp_fd, streaming, htsp_server_status,
                                      htsp->htsp_granted_access);
@@ -3542,7 +3657,9 @@ htsp_write_scheduler(void *aux)
 
   while(htsp->htsp_writer_run) {
 
-    if((hmq = TAILQ_FIRST(&htsp->htsp_active_output_queues)) == NULL) {
+    hmq = htsp->htsp_writer_hold ? NULL :
+          TAILQ_FIRST(&htsp->htsp_active_output_queues);
+    if(hmq == NULL) {
       /* Nothing to be done, go to sleep */
       tvh_cond_wait(&htsp->htsp_out_cond, &htsp->htsp_out_mutex);
       continue;
@@ -3563,20 +3680,27 @@ htsp_write_scheduler(void *aux)
       }
     }
 
+    htsp->htsp_writer_busy = 1;
     tvh_mutex_unlock(&htsp->htsp_out_mutex);
 
     if (htsmsg_binary_serialize(hm->hm_msg, &dptr, &dlen, INT32_MAX) != 0) {
       tvhwarn(LS_HTSP, "%s: failed to serialize data", htsp->htsp_logname);
       htsp_msg_destroy(hm);
       tvh_mutex_lock(&htsp->htsp_out_mutex);
+      htsp->htsp_writer_busy = 0;
       continue;
     }
 
     htsp_msg_destroy(hm);
 
-    r = tvh_write(htsp->htsp_fd, dptr, dlen);
+    r = htsp->htsp_tls ? tls_conn_write(htsp->htsp_tls, dptr, dlen) :
+                         tvh_write(htsp->htsp_fd, dptr, dlen);
     free(dptr);
     tvh_mutex_lock(&htsp->htsp_out_mutex);
+    htsp->htsp_writer_busy = 0;
+    /* startTLS waits until everything is sent */
+    if (TAILQ_FIRST(&htsp->htsp_active_output_queues) == NULL)
+      tvh_cond_signal(&htsp->htsp_out_cond, 1);
 
     if (r) {
       tvhinfo(LS_HTSP, "%s: Write error -- %s",
@@ -3586,6 +3710,10 @@ htsp_write_scheduler(void *aux)
   }
   // Shutdown socket to make receive thread terminate entire HTSP connection
 
+  htsp->htsp_writer_run = 0;
+  tvh_cond_signal(&htsp->htsp_out_cond, 1);
+  if (htsp->htsp_tls && !htsp->htsp_writer_hold)
+    tls_conn_close(htsp->htsp_tls);
   shutdown(htsp->htsp_fd, SHUT_RDWR);
   tvh_mutex_unlock(&htsp->htsp_out_mutex);
   return NULL;
@@ -3601,6 +3729,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp_connection_t htsp;
   char buf[50];
   htsp_subscription_t *s;
+  tls_conn_t *tc;
 
   // Note: global_lock held on entry
 
@@ -3622,6 +3751,7 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   htsp_update_logname(&htsp);
 
   htsp.htsp_fd = fd;
+  htsp.htsp_tls_required = config.htsp_tls_enabled && config.htsp_tls_required;
   htsp.htsp_peer = source;
   htsp.htsp_writer_run = 1;
 
@@ -3688,6 +3818,12 @@ htsp_serve(int fd, void **opaque, struct sockaddr_storage *source,
   while((hf = LIST_FIRST(&htsp.htsp_files)) != NULL)
     htsp_file_destroy(hf);
 
+  /* the cancel callback reads htsp_tls under global_lock */
+  tvh_mutex_lock(&global_lock);
+  tc = htsp.htsp_tls;
+  htsp.htsp_tls = NULL;
+  tvh_mutex_unlock(&global_lock);
+  tls_conn_destroy(tc);
   close(fd);
 
   /* Free memory (leave lock in place, for parent method) */
@@ -3709,8 +3845,56 @@ htsp_server_cancel ( void *opaque )
 {
   htsp_connection_t *htsp = opaque;
 
-  if (htsp)
+  if (htsp) {
+    if (htsp->htsp_tls)
+      tls_conn_close(htsp->htsp_tls);
     shutdown(htsp->htsp_fd, SHUT_RDWR);
+  }
+}
+
+/*
+ * STARTTLS configuration (Configuration > General > Base)
+ */
+static int htsp_registered;
+
+/* Load the certificate when encryption is enabled */
+void
+htsp_tls_reconfigure(void)
+{
+  lock_assert(&global_lock);
+
+  if (!htsp_registered || !config.htsp_tls_enabled)
+    return;
+  if (tls_server_check(config.htsp_tls_cert, config.htsp_tls_key))
+    tvherror(LS_HTSP, "no usable certificate, STARTTLS is not available");
+}
+
+const char *
+htsp_tls_status(void)
+{
+  lock_assert(&global_lock);
+
+  if (!config.htsp_tls_enabled)
+    return N_("Disabled");
+  if (tls_server_check(config.htsp_tls_cert, config.htsp_tls_key))
+    return N_("No usable certificate (see the log)");
+  if (config.htsp_tls_required)
+    return N_("Enabled, encryption required");
+  return N_("Enabled");
+}
+
+void
+htsp_tls_fingerprint(char *dst, size_t dstsize)
+{
+  lock_assert(&global_lock);
+
+  if (!config.htsp_tls_enabled) {
+    if (dstsize)
+      *dst = '\0';
+    return;
+  }
+  tls_server_check(config.htsp_tls_cert, config.htsp_tls_key);
+  tls_server_fingerprint(dst, dstsize);
 }
 
 /**
@@ -3729,6 +3913,7 @@ htsp_init(const char *bindaddr)
     htsp_server = tcp_server_create(LS_HTSP, "HTSP", bindaddr, tvheadend_htsp_port, &ops, NULL);
   if (tvheadend_htsp_port_extra > 0)
     htsp_server_2 = tcp_server_create(LS_HTSP, "HTSP2", bindaddr, tvheadend_htsp_port_extra, &ops, NULL);
+  tls_server_init();
 }
 
 /*
@@ -3741,6 +3926,9 @@ htsp_register(void)
     tcp_server_register(htsp_server);
   if (htsp_server_2)
     tcp_server_register(htsp_server_2);
+  /* the certificate needs the configuration, loaded after htsp_init() */
+  htsp_registered = 1;
+  htsp_tls_reconfigure();
 }
 
 /**
@@ -3754,7 +3942,9 @@ htsp_done(void)
     tcp_server_delete(htsp_server_2);
   if (htsp_server)
     tcp_server_delete(htsp_server);
+  htsp_registered = 0;
   tvh_mutex_unlock(&global_lock);
+  tls_server_done();
 }
 
 /* **************************************************************************

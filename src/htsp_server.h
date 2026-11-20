@@ -33,6 +33,10 @@ void htsp_init(const char *bindaddr);
 void htsp_register(void);
 void htsp_done(void);
 
+void htsp_tls_reconfigure(void);
+const char *htsp_tls_status(void);
+void htsp_tls_fingerprint(char *dst, size_t dstsize);
+
 void htsp_channel_update_nownext(channel_t *ch);
 
 void htsp_channel_add(channel_t *ch);
