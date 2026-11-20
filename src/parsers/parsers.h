@@ -82,6 +82,8 @@ struct parser {
 
   service_t *prs_service;
 
+  int prs_replay;   ///< Fed from the channel cache, outside any subscription
+
   /* Elementary streams */
   elementary_set_t prs_components;
 
@@ -124,6 +126,8 @@ getpts(const uint8_t *p)
 }
 
 streaming_target_t * parser_create(streaming_target_t *output, struct th_subscription *ts);
+
+streaming_target_t * parser_create_replay(streaming_target_t *output, service_t *t);
 
 void parser_destroy(streaming_target_t *pad);
 

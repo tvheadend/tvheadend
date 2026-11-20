@@ -52,6 +52,7 @@ typedef TAILQ_HEAD(timeshift_index_data_list,timeshift_index_data) timeshift_ind
  */
 typedef struct timeshift_file
 {
+  struct timeshift             *owner;    ///< Owning classic timeshift
   int                           wfd;      ///< Write descriptor
   int                           rfd;      ///< Read descriptor
   char                          *path;    ///< Full path to file
@@ -66,6 +67,7 @@ typedef struct timeshift_file
   int64_t                       ram_size; ///< RAM area size in bytes
 
   uint8_t                       bad;      ///< File is broken
+  uint8_t                       closed;   ///< Writing finished, EOF marker written
 
   int                           refcount; ///< Reader ref count
 
@@ -117,6 +119,9 @@ typedef struct timeshift {
   tvh_mutex_t             state_mutex; ///< Protect state changes
   uint8_t                     exit;        ///< Exit from the main input thread
   uint8_t                     full;        ///< Buffer is full
+  int64_t                     full_mono;   ///< When the shared size budget
+                                           ///< stopped buffering; 0 when full
+                                           ///< is a real write failure
 
   timeshift_seek_t            seek;       ///< Seek into buffered data
   
@@ -146,6 +151,19 @@ typedef struct timeshift {
  */
 extern uint64_t timeshift_total_size;
 extern uint64_t timeshift_total_ram_size;
+
+/*
+ * Shared logical size budget used by classic timeshift and the service
+ * cache. A successful reservation is released when the retained data is
+ * removed.
+ */
+uint64_t timeshift_size_used ( void );
+int timeshift_size_reserve ( uint64_t size );
+void timeshift_size_release ( uint64_t size );
+
+uint64_t timeshift_ram_used ( void );
+int timeshift_ram_reserve ( uint64_t size );
+void timeshift_ram_release ( uint64_t size );
 
 void timeshift_packet_log0
   ( const char *prefix, timeshift_t *ts, streaming_message_t *sm );
@@ -182,6 +200,7 @@ void timeshift_play_start_set ( timeshift_t *ts, streaming_start_t *ss );
  */
 void timeshift_filemgr_init     ( void );
 void timeshift_filemgr_term     ( void );
+int  timeshift_filemgr_get_root ( char *buf, size_t len );
 int  timeshift_filemgr_makedirs ( int ts_index, char *buf, size_t len );
 
 static inline void timeshift_file_get0 ( timeshift_file_t *tsf )

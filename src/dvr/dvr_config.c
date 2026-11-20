@@ -99,6 +99,16 @@ dvr_config_find_by_name_default(const char *name)
  * return the first config from list if name is not valid
  * return the default config if not found
  */
+/* A profile to fall back on: enabled, and one that records -- a
+ * cache-only profile records nothing */
+static dvr_config_t *
+dvr_config_fallback(const char *uuid)
+{
+  dvr_config_t *cfg = dvr_config_find_by_uuid(uuid);
+
+  return cfg && cfg->dvr_enabled && !cfg->dvr_cache_only ? cfg : NULL;
+}
+
 dvr_config_t *
 dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
 {
@@ -116,11 +126,8 @@ dvr_config_find_by_list(htsmsg_t *uuids, const char *name)
       uuid2 = htsmsg_field_get_str(f) ?: "";
       if (strcmp(uuid, uuid2) == 0)
         return cfg;
-      if (!res) {
-        res = dvr_config_find_by_uuid(uuid2);
-        if (res != NULL && !res->dvr_enabled)
-          res = NULL;
-      }
+      if (!res)
+        res = dvr_config_fallback(uuid2);
     }
   } else {
     if (cfg && cfg->dvr_enabled)
@@ -671,6 +678,19 @@ dvr_config_class_enabled_opts(void *o, uint32_t opts)
   return 0;
 }
 
+static uint32_t
+dvr_config_class_recording_only_opts(void *o, uint32_t opts)
+{
+  const dvr_config_t *cfg = (const dvr_config_t *)o;
+
+#if ENABLE_TIMESHIFT
+  if (cfg && cfg->dvr_cache_only)
+    return opts | PO_NOUI;
+#endif
+
+  return opts;
+}
+
 static int
 dvr_config_class_name_set(void *o, const void *v)
 {
@@ -1023,8 +1043,23 @@ const idclass_t dvr_config_class = {
       .rend     = dvr_config_class_profile_rend,
       .list     = profile_class_get_list,
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
+#if ENABLE_TIMESHIFT
+    {
+      .type     = PT_BOOL,
+      .id       = "cache_only",
+      .name     = N_("Timeshift cache only"),
+      .desc     = N_("Use this DVR configuration only to warm the shared "
+                     "timeshift cache. No recording file is created. "
+                     "Pre- and post-recording padding define how long "
+                     "the cache warmup runs before and after the event."),
+      .off      = offsetof(dvr_config_t, dvr_cache_only),
+      .opts     = PO_ADVANCED,
+      .group    = 1,
+    },
+#endif
     {
       .type     = PT_U32,
       .id       = "pri",
@@ -1035,6 +1070,7 @@ const idclass_t dvr_config_class = {
       .def.i    = DVR_PRIO_NORMAL,
       .off      = offsetof(dvr_config_t, dvr_pri),
       .opts     = PO_SORTKEY | PO_ADVANCED | PO_DOC_NLIST,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1046,6 +1082,7 @@ const idclass_t dvr_config_class = {
       .def.u32  = DVR_RET_ONREMOVE,
       .list     = dvr_config_class_retention_list,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1057,6 +1094,7 @@ const idclass_t dvr_config_class = {
       .def.u32  = DVR_RET_REM_FOREVER,
       .list     = dvr_config_class_removal_list,
       .opts     = PO_DOC_NLIST,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1076,6 +1114,7 @@ const idclass_t dvr_config_class = {
       .def.u32  = 0,
       .list     = dvr_config_class_remove_after_playback_list,
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1114,6 +1153,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_clone),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1124,6 +1164,7 @@ const idclass_t dvr_config_class = {
                      "schedule a re-record (if possible)."),
       .off      = offsetof(dvr_config_t, dvr_rerecord_errors),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1136,6 +1177,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_max_data_errors),
       .opts     = PO_ADVANCED,
       .def.u32  = DVR_MAX_DATA_ERRORS,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1153,6 +1195,7 @@ const idclass_t dvr_config_class = {
                      "requires extra overhead so is disabled by default."),
       .off      = offsetof(dvr_config_t, dvr_complex_scheduling),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 1,
     },
     {
@@ -1164,6 +1207,7 @@ const idclass_t dvr_config_class = {
                      "you to specify your authorized key in the options below."),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 8,
     },
     {
@@ -1180,6 +1224,7 @@ const idclass_t dvr_config_class = {
                     ),
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork_allow_unknown),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 8,
     },
     {
@@ -1192,6 +1237,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_fetch_artwork_options),
       .doc      = prop_doc_dvrconfig_fanart,
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 8,
     },
     {
@@ -1210,6 +1256,7 @@ const idclass_t dvr_config_class = {
                      "components of the path do not exist, "
                      "Tvheadend will try to create them."),
       .off      = offsetof(dvr_config_t, dvr_storage),
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1220,6 +1267,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_free),
       .def.i    = 1000,
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1230,6 +1278,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_cleanup_threshold_used),
       .def.i    = 0,
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1240,6 +1289,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_directory_permissions),
       .opts     = PO_EXPERT,
       .def.u32  = 0775,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1250,6 +1300,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_muxcnf.m_file_permissions),
       .opts     = PO_EXPERT,
       .def.u32  = 0664,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1262,6 +1313,7 @@ const idclass_t dvr_config_class = {
       .list     = dvr_config_class_charset_list,
       .opts     = PO_EXPERT,
       .def.s    = "UTF-8",
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1275,6 +1327,7 @@ const idclass_t dvr_config_class = {
       .set      = dvr_config_class_pathname_set,
       .off      = offsetof(dvr_config_t, dvr_pathname),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1289,6 +1342,7 @@ const idclass_t dvr_config_class = {
       .def.i    = MC_CACHE_DONTKEEP,
       .list     = dvr_config_class_cache_list,
       .opts     = PO_EXPERT | PO_DOC_NLIST,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 2,
     },
     {
@@ -1301,6 +1355,7 @@ const idclass_t dvr_config_class = {
                      "of the directory will be ISO standard YYYY-MM-DD."),
       .off      = offsetof(dvr_config_t, dvr_dir_per_day),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 3,
     },
     {
@@ -1313,6 +1368,7 @@ const idclass_t dvr_config_class = {
                      "will be the parent of the per-channel directory."),
       .off      = offsetof(dvr_config_t, dvr_channel_dir),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 3,
     },
     {
@@ -1325,6 +1381,7 @@ const idclass_t dvr_config_class = {
                      "will be parents of this directory."),
       .off      = offsetof(dvr_config_t, dvr_title_dir),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 3,
     },
     {
@@ -1339,6 +1396,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_format_tvmovies_subdir),
       .def.s    = "tvmovies",
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 3,
     },
     {
@@ -1353,6 +1411,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_format_tvshows_subdir),
       .def.s    = "tvshows",
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 3,
     },
     {
@@ -1364,6 +1423,7 @@ const idclass_t dvr_config_class = {
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_channel_in_title),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 4,
     },
     {
@@ -1375,6 +1435,7 @@ const idclass_t dvr_config_class = {
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_date_in_title),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 4,
     },
     {
@@ -1386,6 +1447,7 @@ const idclass_t dvr_config_class = {
                      "stored in the file and to the filename itself."),
       .off      = offsetof(dvr_config_t, dvr_time_in_title),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 4,
     },
     {
@@ -1396,6 +1458,7 @@ const idclass_t dvr_config_class = {
                      "title (if available)."),
       .off      = offsetof(dvr_config_t, dvr_episode_in_title),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 4,
     },
     {
@@ -1406,6 +1469,7 @@ const idclass_t dvr_config_class = {
                      "title (if available)."),
       .off      = offsetof(dvr_config_t, dvr_subtitle_in_title),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 4,
     },
     {
@@ -1415,6 +1479,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("Don't include the title in the filename."),
       .off      = offsetof(dvr_config_t, dvr_omit_title),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1427,6 +1492,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_dvrconfig_unsafe,
       .off      = offsetof(dvr_config_t, dvr_clean_title),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1437,6 +1503,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_dvrconfig_whitespace,
       .off      = offsetof(dvr_config_t, dvr_whitespace_in_title),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1449,6 +1516,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_dvrconfig_windows,
       .off      = offsetof(dvr_config_t, dvr_windows_compatible_filenames),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1460,6 +1528,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_tag_files),
       .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1470,6 +1539,7 @@ const idclass_t dvr_config_class = {
                      "based on the EPG start/stop times when available."),
       .off      = offsetof(dvr_config_t, dvr_create_scene_markers),
       .def.i    = 1,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 5,
     },
     {
@@ -1495,6 +1565,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_running),
       .opts     = PO_ADVANCED,
       .def.u32  = 1,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 6,
     },
     {
@@ -1505,6 +1576,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_autorec_max_count),
       .opts     = PO_ADVANCED,
       .def.i    = 50,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 6,
     },
     {
@@ -1514,6 +1586,7 @@ const idclass_t dvr_config_class = {
       .desc     = N_("The maximum number of recordings that can be scheduled."),
       .off      = offsetof(dvr_config_t, dvr_autorec_max_sched_count),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 6,
     },
     {
@@ -1526,6 +1599,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_autorec_dedup),
       .list     = dvr_autorec_entry_class_record_list,
       .opts     = PO_ADVANCED | PO_DOC_NLIST | PO_HIDDEN,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 6,
     },
     {
@@ -1539,6 +1613,7 @@ const idclass_t dvr_config_class = {
       .off      = offsetof(dvr_config_t, dvr_skip_commercials),
       .opts     = PO_ADVANCED,
       .def.i    = 1,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 6,
     },
     {
@@ -1550,6 +1625,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_preprocessor,
       .off      = offsetof(dvr_config_t, dvr_preproc),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 7,
     },
     {
@@ -1560,6 +1636,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_postprocessor,
       .off      = offsetof(dvr_config_t, dvr_postproc),
       .opts     = PO_ADVANCED,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 7,
     },
     {
@@ -1570,6 +1647,7 @@ const idclass_t dvr_config_class = {
       .doc      = prop_doc_postremove,
       .off      = offsetof(dvr_config_t, dvr_postremove),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 7,
     },
     {
@@ -1582,6 +1660,7 @@ const idclass_t dvr_config_class = {
                      "and/or send garbage data at the beginning. "),
       .off      = offsetof(dvr_config_t, dvr_warm_time),
       .opts     = PO_EXPERT,
+      .get_opts = dvr_config_class_recording_only_opts,
       .group    = 7,
       .def.u32  = 30
     },
