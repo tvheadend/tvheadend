@@ -171,6 +171,26 @@ subscription_unlink_service(th_subscription_t *s, int reason)
   subscription_unlink_service0(s, reason, 0);
 }
 
+/*
+ * A service is destroyed: the subscriptions that still name it forget it.
+ * One whose client was told to stop (the forced stop of its mux) but has
+ * not unsubscribed yet would be started on the destroyed service by the
+ * next run of the scheduler, and touch it when it unsubscribes. A
+ * subscription made for the service itself has nothing to start any more;
+ * one for a channel goes on with the other services of the channel.
+ */
+void
+subscription_service_destroyed(service_t *t)
+{
+  th_subscription_t *s;
+
+  lock_assert(&global_lock);
+  LIST_FOREACH(s, &subscriptions, ths_global_link)
+    if (s->ths_service == t && s->ths_raw_service != t &&
+        s->ths_current_instance == NULL)
+      s->ths_service = NULL;
+}
+
 /* **************************************************************************
  * Scheduling
  * *************************************************************************/

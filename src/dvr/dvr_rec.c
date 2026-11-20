@@ -1579,7 +1579,9 @@ static void
 dvr_streaming_restart(dvr_entry_t *de, int *run)
 {
   if (dvr_thread_global_lock(de, run)) {
-    service_restart(de->de_s->ths_service);
+    /* not when its service was destroyed meanwhile */
+    if (de->de_s->ths_service)
+      service_restart(de->de_s->ths_service);
     dvr_thread_global_unlock(de);
   }
 }
