@@ -4,7 +4,7 @@
 /*
  * SignalBarCell — Signal / SNR rendering for the Status → Stream grid
  * (issue #2197). Verifies the scale-driven modes: relative (1) → bar +
- * raw value with classic ProgressColumn colour thresholds, decibel
+ * percentage (raw value as tooltip) with classic ProgressColumn colour thresholds, decibel
  * (2) → dB(m) text only, other → nothing.
  */
 import { describe, expect, it } from 'vitest'
@@ -20,12 +20,12 @@ function mountCell(
 }
 
 describe('SignalBarCell', () => {
-  it('renders a bar with the raw value for the relative scale', () => {
+  it('renders a bar with the percentage for the relative scale, like the classic UI', () => {
     const w = mountCell(45000, { signal_scale: 1 })
     expect(w.find('.signal-bar-cell__track').exists()).toBe(true)
-    expect(w.find('.signal-bar-cell__text').text()).toBe('45000')
     /* 45000 / 65535 ≈ 68.7% */
-    expect(w.find('.signal-bar-cell').attributes('title')).toBe('69%')
+    expect(w.find('.signal-bar-cell__text').text()).toBe('69%')
+    expect(w.find('.signal-bar-cell').attributes('title')).toBe('45000 / 65535')
     expect(w.find('.signal-bar-cell__fill').attributes('style')).toContain('68.6')
   })
 

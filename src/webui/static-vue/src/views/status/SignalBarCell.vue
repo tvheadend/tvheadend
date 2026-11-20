@@ -11,10 +11,10 @@
  * The input feed reports each metric with a scale discriminator
  * (`signal_scale` / `snr_scale`, DVBv5 semantics):
  *   - 1 (relative)  — dimensionless 0..65535. Rendered as a coloured
- *     bar filled to value/65535 with the raw value beside it and the
- *     percentage as the hover tooltip. Colour thresholds follow the
- *     classic ProgressColumn: green above 2/3, amber above 1/3, red
- *     below.
+ *     bar filled to value/65535 with the percentage beside it, as the
+ *     classic ProgressColumn does, and the raw value as the hover
+ *     tooltip. Colour thresholds follow the classic ProgressColumn:
+ *     green above 2/3, amber above 1/3, red below.
  *   - 2 (decibel)   — value ×0.001 is dB (SNR) / dBm (signal).
  *     Rendered as text only: a bar against the relative ceiling would
  *     be meaningless for dB values (the classic UI draws one anyway —
@@ -71,19 +71,21 @@ const tone = computed<'good' | 'mid' | 'low'>(() => {
   return 'low'
 })
 
+/* Classic ProgressColumn text: the percentage, rounded to an integer. */
+const pctLabel = computed(() => `${Math.round(pct.value)}%`)
+
 const text = computed<string>(() => {
   if (num.value === null) return ''
-  if (scale.value === 1) return String(num.value)
+  if (scale.value === 1) return pctLabel.value
   return `${(num.value * 0.001).toFixed(1)} ${isSnr.value ? 'dB' : 'dBm'}`
 })
 
-/* Hover tooltip on the bar variant — the percentage gives new users
- * the "out of how much?" context the raw 0..65535 value lacks. */
-const pctLabel = computed(() => `${Math.round(pct.value)}%`)
+/* Hover tooltip on the bar variant: the raw driver reading. */
+const rawLabel = computed(() => `${num.value ?? 0} / ${CEILING}`)
 </script>
 
 <template>
-  <span v-if="mode === 'bar'" class="signal-bar-cell" :title="pctLabel">
+  <span v-if="mode === 'bar'" class="signal-bar-cell" :title="rawLabel">
     <span class="signal-bar-cell__track" aria-hidden="true">
       <span
         class="signal-bar-cell__fill"
@@ -132,7 +134,7 @@ const pctLabel = computed(() => `${Math.round(pct.value)}%`)
   background: var(--tvh-error);
 }
 
-/* Raw value beside the bar — tabular digits so the column doesn't
+/* Percentage beside the bar — tabular digits so the column doesn't
  * jitter as readings tick. */
 .signal-bar-cell__text {
   flex: 0 0 auto;
