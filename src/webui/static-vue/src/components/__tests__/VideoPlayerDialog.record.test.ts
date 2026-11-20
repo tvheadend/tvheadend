@@ -71,6 +71,8 @@ function mountDialog() {
         PlayerRecordButton: RecordStub,
         Dialog: DIALOG_PASSTHROUGH_STUB,
         Select: true,
+        /* The Status → Log link, tested in VideoPlayerDialog.test.ts. */
+        'router-link': true,
       },
       /* The profile select's warning icon has a tooltip. */
       directives: { tooltip: TOOLTIP_DIRECTIVE_STUB },
