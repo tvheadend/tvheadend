@@ -14,10 +14,12 @@
  *   - selected = 0, total > entries (filt) → `{Label}: M / N`
  *   - selected = 0, no filter              → `{Label}: N`
  *
- * Every form leaves the noun uninflected by the count. The label is
- * a plural noun ("recordings"), so "N {label}" read "1 recordings"
- * for a single row, and useI18n has no plural forms (Czech needs
- * three). "Recordings: 1" is right for any count and any language.
+ * The `{Label}` forms leave the noun uninflected by the count. The
+ * label is a plural noun ("recordings") chosen by the caller, so
+ * "N {label}" would read "1 recordings" for a single row, while
+ * "Recordings: 1" is right for any count and any language. The
+ * selection forms are whole messages, and `M of N selected` takes
+ * the plural form for M.
  *
  * `total` is the server-side total when known (paginator-off
  * mode loads all rows, so `total === entries` in steady state;
@@ -25,6 +27,8 @@
  * subset out of a larger loaded set). Pass `undefined` when the
  * caller has no separate total to surface — the function then
  * never renders the `M / N` split form. */
+import { t, tn } from '@/composables/useI18n'
+
 export interface GridSummaryInput {
   /** Number of rows currently in `entries` (visible / loaded). */
   entries: number
@@ -47,14 +51,14 @@ function capitalise(label: string): string {
 export function summaryText(input: GridSummaryInput): string {
   if (input.selected > 0) {
     if (input.allVisibleSelected) {
-      return `All selected: ${input.entries}`
+      return t('All selected: {0}', input.entries)
     }
-    return `${input.selected} of ${input.entries} selected`
+    return tn('{0} of {1} selected', '{0} of {1} selected', input.selected, input.selected, input.entries)
   }
   const count =
     input.total !== undefined && input.total > input.entries
       ? `${input.entries} / ${input.total}`
       : `${input.entries}`
-  const label = input.label ?? 'entries'
+  const label = input.label ?? t('entries')
   return label ? `${capitalise(label)}: ${count}` : count
 }

@@ -39,6 +39,7 @@ import { computed, nextTick, ref } from 'vue'
 import { Eye, EyeOff, Maximize2, Minimize2 } from 'lucide-vue-next'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 
 interface AnchorRect {
   left: number
@@ -50,6 +51,7 @@ interface AnchorRect {
 }
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 const props = withDefaults(
   defineProps<{
@@ -259,10 +261,10 @@ function toggleExpand() {
         :class="{ 'ifld__expand--expanded': expanded }"
         :style="expanded ? expandedButtonStyle : undefined"
         :title="
-          expanded ? 'Collapse to single-line editor' : 'Expand to multi-line editor'
+          expanded ? t('Collapse to single-line editor') : t('Expand to multi-line editor')
         "
         :aria-label="
-          expanded ? 'Collapse to single-line editor' : 'Expand to multi-line editor'
+          expanded ? t('Collapse to single-line editor') : t('Expand to multi-line editor')
         "
         @mousedown.prevent
         @click.stop="toggleExpand"
@@ -309,8 +311,8 @@ function toggleExpand() {
         v-if="!isReadonly"
         type="button"
         class="ifld__pwd-toggle"
-        :aria-label="showPassword ? 'Hide password' : 'Show password'"
-        :title="showPassword ? 'Hide password' : 'Show password'"
+        :aria-label="showPassword ? t('Hide password') : t('Show password')"
+        :title="showPassword ? t('Hide password') : t('Show password')"
         @click="showPassword = !showPassword"
       >
         <component :is="showPassword ? EyeOff : Eye" :size="16" />

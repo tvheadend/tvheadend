@@ -17,17 +17,6 @@ import { defineComponent, h, inject, ref, type Ref } from 'vue'
 import { mount, flushPromises, type VueWrapper } from '@vue/test-utils'
 import type { Option } from '@/components/idnode-fields/deferredEnum'
 
-vi.mock('@/composables/useI18n', () => {
-  const tFn = (s: string, ...args: Array<string | number>) =>
-    s.replace(/\{(\d+)\}/g, (_m, i) => String(args[Number(i)] ?? _m))
-  return {
-    /* `t` is also imported as a free function by some shared
-     * components (SettingsPopover etc.) — mock both surfaces. */
-    t: tFn,
-    useI18n: () => ({ t: tFn }),
-  }
-})
-
 /* The drawer's discard-unsaved-changes guard uses
  * `useConfirmDialog` which under the hood calls PrimeVue's
  * `useConfirm` — that needs the ConfirmationService plugin

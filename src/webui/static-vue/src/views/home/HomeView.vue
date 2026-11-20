@@ -38,7 +38,7 @@ import RecentlyRecorded from './RecentlyRecorded.vue'
 import HealthLine from './HealthLine.vue'
 import HomeSearchCard from './HomeSearchCard.vue'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const router = useRouter()
 const toast = useToastNotify()
 const wizard = useWizardStore()
@@ -103,8 +103,7 @@ onMounted(async () => {
 const greetingText = computed(() => {
   const n = greetingChannelCount.value
   if (n === null) return t('Setup complete')
-  if (n === 1) return t('Setup complete — 1 channel ready')
-  return t('Setup complete — {0} channels ready', n)
+  return tn('Setup complete — {0} channel ready', 'Setup complete — {0} channels ready', n)
 })
 
 /* Filter the registry against the current state x capabilities, then

@@ -22,7 +22,7 @@ import { fmtDate } from '@/utils/formatTime'
 import { localDayDiff, startOfLocalDayMs } from '@/utils/localDay'
 import type { PickerColumn, PickerRow } from '@/types/picker'
 
-const { t } = useI18n()
+const { t, tn } = useI18n()
 const dvr = useDvrEntriesStore()
 const access = useAccessStore()
 const entityEditor = useEntityEditor()
@@ -136,7 +136,7 @@ function openDay(day: DayCell): void {
           v-if="day.count > 0"
           type="button"
           class="this-week__day-count this-week__day-count--button"
-          :aria-label="t('{0} recordings on {1}', day.count, day.label)"
+          :aria-label="tn('{0} recording on {1}', '{0} recordings on {1}', day.count, day.count, day.label)"
           @click="openDay(day)"
         >
           {{ day.count }}

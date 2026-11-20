@@ -29,6 +29,7 @@
  */
 
 import { ref } from 'vue'
+import { t } from '@/composables/useI18n'
 
 export interface ErrorDialogOptions {
   /** Modal header. Defaults to "Error". Pass a context-specific
@@ -63,7 +64,7 @@ function show(opts: ErrorDialogOptions): Promise<void> {
     pendingResolve = null
   }
   state.value = {
-    title: opts.title ?? 'Error',
+    title: opts.title ?? t('Error'),
     message: opts.message,
     detail: opts.detail ?? null,
   }

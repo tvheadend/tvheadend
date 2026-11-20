@@ -13,12 +13,15 @@ import type { PermissionKey } from '@/types/access'
 import { useAccessStore } from '@/stores/access'
 import { useCapabilitiesStore } from '@/stores/capabilities'
 import { readLastView } from '@/composables/epgPositionStorage'
+import { N_ } from '@/composables/useI18n'
 import { readLastSubview, writeLastSubview } from './lastSubview'
 
 /*
- * Routes use ExtJS-identical English labels in `meta.title` so the
- * eventual i18n hookup reuses translations already present in
- * intl/js/*.po. See brief §9.1.
+ * Routes use ExtJS-identical English labels in `meta.title`, so the
+ * Vue catalog (seeded from intl/js/*.po) already translates most of
+ * them. This module loads before the catalog, so the titles are only
+ * marked with `N_()` for `make intl` and translated where they are
+ * shown (the command palette). See brief §9.1.
  *
  * meta.permission is the single source of truth for "who can see this
  * route". Both the router beforeEach guard (defense-in-depth UX redirect)
@@ -160,7 +163,7 @@ function genericWizardStep(name: 'login' | 'network' | 'muxes' | 'mapping'): Rou
     path: name,
     name: `wizard-${name}`,
     component: () => import('@/views/wizard/WizardStepGeneric.vue'),
-    meta: { title: 'Setup Wizard', isWizard: true },
+    meta: { title: N_('Setup Wizard'), isWizard: true },
     props: { step: name },
   }
 }
@@ -337,12 +340,12 @@ const dvrChildren: RouteRecordRaw[] = [
    * the cold-start default when no last-visited value is recorded
    * or the saved name is stale. */
   { path: '', name: 'dvr', redirect: () => ({ name: readLastSubview('dvr') ?? 'dvr-upcoming' }) },
-  leaf('upcoming', 'dvr-upcoming', () => import('@/views/dvr/UpcomingView.vue'), 'Upcoming / Current Recordings', 'dvr'),
-  leaf('finished', 'dvr-finished', () => import('@/views/dvr/FinishedView.vue'), 'Finished Recordings', 'dvr'),
-  leaf('failed', 'dvr-failed', () => import('@/views/dvr/FailedView.vue'), 'Failed Recordings', 'dvr'),
-  leaf('removed', 'dvr-removed', () => import('@/views/dvr/RemovedView.vue'), 'Removed Recordings', 'dvr', dvrRemovedGuard),
-  leaf('autorecs', 'dvr-autorecs', () => import('@/views/dvr/AutorecsView.vue'), 'Autorecs', 'dvr'),
-  leaf('timers', 'dvr-timers', () => import('@/views/dvr/TimersView.vue'), 'Timers', 'dvr'),
+  leaf('upcoming', 'dvr-upcoming', () => import('@/views/dvr/UpcomingView.vue'), N_('Upcoming / Current Recordings'), 'dvr'),
+  leaf('finished', 'dvr-finished', () => import('@/views/dvr/FinishedView.vue'), N_('Finished Recordings'), 'dvr'),
+  leaf('failed', 'dvr-failed', () => import('@/views/dvr/FailedView.vue'), N_('Failed Recordings'), 'dvr'),
+  leaf('removed', 'dvr-removed', () => import('@/views/dvr/RemovedView.vue'), N_('Removed Recordings'), 'dvr', dvrRemovedGuard),
+  leaf('autorecs', 'dvr-autorecs', () => import('@/views/dvr/AutorecsView.vue'), N_('Autorecs'), 'dvr'),
+  leaf('timers', 'dvr-timers', () => import('@/views/dvr/TimersView.vue'), N_('Timers'), 'dvr'),
 ]
 
 // prettier-ignore
@@ -350,11 +353,11 @@ const statusChildren: RouteRecordRaw[] = [
   /* Last-visited Status sub-view restore. Same shape as the
    * dvr redirect above — see comment there. */
   { path: '', name: 'status', redirect: () => ({ name: readLastSubview('status') ?? 'status-streams' }) },
-  leaf('streams', 'status-streams', () => import('@/views/status/StreamView.vue'), 'Stream', 'admin'),
-  leaf('subscriptions', 'status-subscriptions', () => import('@/views/status/SubscriptionsView.vue'), 'Subscriptions', 'admin'),
-  leaf('connections', 'status-connections', () => import('@/views/status/ConnectionsView.vue'), 'Connections', 'admin'),
-  leaf('service-mapper', 'status-service-mapper', () => import('@/views/status/ServiceMapperView.vue'), 'Service Mapper', 'admin'),
-  leaf('log', 'status-log', () => import('@/views/status/LogView.vue'), 'Log', 'admin'),
+  leaf('streams', 'status-streams', () => import('@/views/status/StreamView.vue'), N_('Stream'), 'admin'),
+  leaf('subscriptions', 'status-subscriptions', () => import('@/views/status/SubscriptionsView.vue'), N_('Subscriptions'), 'admin'),
+  leaf('connections', 'status-connections', () => import('@/views/status/ConnectionsView.vue'), N_('Connections'), 'admin'),
+  leaf('service-mapper', 'status-service-mapper', () => import('@/views/status/ServiceMapperView.vue'), N_('Service Mapper'), 'admin'),
+  leaf('log', 'status-log', () => import('@/views/status/LogView.vue'), N_('Log'), 'admin'),
 ]
 
 /* ---------------------------------------------------------------- */
@@ -384,7 +387,7 @@ const routes: RouteRecordRaw[] = [
    * placeholder above (which stays a default-tab redirect).
    * Reachable via the nav rail; not yet the default landing.
    */
-  leaf('/home', 'dashboard', () => import('@/views/home/HomeView.vue'), 'Home'),
+  leaf('/home', 'dashboard', () => import('@/views/home/HomeView.vue'), N_('Home')),
   {
     /*
      * /epg is a parent layout (PageTabs + nested router-view); the
@@ -397,7 +400,7 @@ const routes: RouteRecordRaw[] = [
      */
     path: '/epg',
     component: () => import('@/views/epg/EpgLayout.vue'),
-    meta: { title: 'Electronic Program Guide' },
+    meta: { title: N_('Electronic Program Guide') },
     // prettier-ignore
     children: [
       /* Empty-path child redirects to whichever sub-view the
@@ -409,9 +412,9 @@ const routes: RouteRecordRaw[] = [
        * helper and keeps its own storage shape because it
        * also persists day + scroll-time + top channel. */
       { path: '', name: 'epg', redirect: () => ({ name: `epg-${readLastView() ?? 'timeline'}` }) },
-      leaf('timeline', 'epg-timeline', () => import('@/views/epg/TimelineView.vue'), 'EPG Timeline'),
-      leaf('magazine', 'epg-magazine', () => import('@/views/epg/MagazineView.vue'), 'EPG Magazine'),
-      leaf('table', 'epg-table', () => import('@/views/epg/TableView.vue'), 'EPG Table'),
+      leaf('timeline', 'epg-timeline', () => import('@/views/epg/TimelineView.vue'), N_('EPG Timeline')),
+      leaf('magazine', 'epg-magazine', () => import('@/views/epg/MagazineView.vue'), N_('EPG Magazine')),
+      leaf('table', 'epg-table', () => import('@/views/epg/TableView.vue'), N_('EPG Table')),
     ],
   },
   {
@@ -425,7 +428,7 @@ const routes: RouteRecordRaw[] = [
      */
     path: '/dvr',
     component: () => import('@/views/DvrLayout.vue'),
-    meta: { title: 'Digital Video Recorder', permission: 'dvr' },
+    meta: { title: N_('Digital Video Recorder'), permission: 'dvr' },
     children: dvrChildren,
   },
   {
@@ -443,7 +446,7 @@ const routes: RouteRecordRaw[] = [
     path: '/configuration',
     component: () => import('@/views/ConfigurationLayout.vue'),
     meta: {
-      title: 'Configuration',
+      title: N_('Configuration'),
       permission: 'admin',
       fullBleed: true,
       hasL2: true,
@@ -472,13 +475,13 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'general',
         component: () => import('@/views/configuration/ConfigGeneralLayout.vue'),
-        meta: { title: 'General', permission: 'admin' },
+        meta: { title: N_('General'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-general', redirect: { name: 'config-general-base' } },
-          leaf('base', 'config-general-base', () => import('@/views/configuration/ConfigGeneralBaseView.vue'), 'Base', 'admin'),
-          leaf('image-cache', 'config-general-image-cache', () => import('@/views/configuration/ConfigGeneralImageCacheView.vue'), 'Image cache', 'admin'),
-          leaf('satip-server', 'config-general-satip-server', () => import('@/views/configuration/ConfigGeneralSatipServerView.vue'), 'SAT>IP Server', 'admin', configSatipServerGuard),
+          leaf('base', 'config-general-base', () => import('@/views/configuration/ConfigGeneralBaseView.vue'), N_('Base'), 'admin'),
+          leaf('image-cache', 'config-general-image-cache', () => import('@/views/configuration/ConfigGeneralImageCacheView.vue'), N_('Image Cache'), 'admin'),
+          leaf('satip-server', 'config-general-satip-server', () => import('@/views/configuration/ConfigGeneralSatipServerView.vue'), N_('SAT>IP Server'), 'admin', configSatipServerGuard),
         ],
       },
       {
@@ -492,13 +495,13 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'users',
         component: () => import('@/views/configuration/ConfigUsersLayout.vue'),
-        meta: { title: 'Users', permission: 'admin' },
+        meta: { title: N_('Users'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-users', redirect: { name: 'config-users-access' } },
-          leaf('access', 'config-users-access', () => import('@/views/configuration/ConfigUsersAccessEntriesView.vue'), 'Access Entries', 'admin'),
-          leaf('passwords', 'config-users-passwords', () => import('@/views/configuration/ConfigUsersPasswordsView.vue'), 'Passwords', 'admin'),
-          leaf('ip-blocking', 'config-users-ip-blocking', () => import('@/views/configuration/ConfigUsersIpBlockingView.vue'), 'IP Blocking', 'admin'),
+          leaf('access', 'config-users-access', () => import('@/views/configuration/ConfigUsersAccessEntriesView.vue'), N_('Access Entries'), 'admin'),
+          leaf('passwords', 'config-users-passwords', () => import('@/views/configuration/ConfigUsersPasswordsView.vue'), N_('Passwords'), 'admin'),
+          leaf('ip-blocking', 'config-users-ip-blocking', () => import('@/views/configuration/ConfigUsersIpBlockingView.vue'), N_('IP Blocking'), 'admin'),
         ],
       },
       {
@@ -508,15 +511,15 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'dvb',
         component: () => import('@/views/configuration/DvbInputsLayout.vue'),
-        meta: { title: 'DVB Inputs', permission: 'admin' },
+        meta: { title: N_('DVB Inputs'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-dvb', redirect: { name: 'config-dvb-adapters' } },
-          leaf('adapters', 'config-dvb-adapters', () => import('@/views/configuration/TvAdaptersView.vue'), 'TV Adapters', 'admin', dvbAdaptersGuard),
-          leaf('networks', 'config-dvb-networks', () => import('@/views/configuration/DvbNetworksView.vue'), 'Networks', 'admin'),
-          leaf('muxes', 'config-dvb-muxes', () => import('@/views/configuration/DvbMuxesView.vue'), 'Muxes', 'admin'),
-          leaf('services', 'config-dvb-services', () => import('@/views/configuration/DvbServicesView.vue'), 'Services', 'admin'),
-          leaf('mux-sched', 'config-dvb-mux-sched', () => import('@/views/configuration/DvbMuxSchedView.vue'), 'Mux Schedulers', 'admin', dvbMuxSchedGuard),
+          leaf('adapters', 'config-dvb-adapters', () => import('@/views/configuration/TvAdaptersView.vue'), N_('TV adapters'), 'admin', dvbAdaptersGuard),
+          leaf('networks', 'config-dvb-networks', () => import('@/views/configuration/DvbNetworksView.vue'), N_('Networks'), 'admin'),
+          leaf('muxes', 'config-dvb-muxes', () => import('@/views/configuration/DvbMuxesView.vue'), N_('Muxes'), 'admin'),
+          leaf('services', 'config-dvb-services', () => import('@/views/configuration/DvbServicesView.vue'), N_('Services'), 'admin'),
+          leaf('mux-sched', 'config-dvb-mux-sched', () => import('@/views/configuration/DvbMuxSchedView.vue'), N_('Mux Schedulers'), 'admin', dvbMuxSchedGuard),
         ],
       },
       {
@@ -533,17 +536,17 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'channel-epg',
         component: () => import('@/views/configuration/ConfigChannelEpgLayout.vue'),
-        meta: { title: 'Channel / EPG', permission: 'admin' },
+        meta: { title: N_('Channel / EPG'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-channel-epg', redirect: { name: 'config-channel-channels' } },
-          leaf('channels', 'config-channel-channels', () => import('@/views/configuration/ChannelsView.vue'), 'Channels', 'admin'),
-          leaf('tags', 'config-channel-tags', () => import('@/views/configuration/ChannelTagsView.vue'), 'Channel Tags', 'admin'),
-          leaf('bouquets', 'config-channel-bouquets', () => import('@/views/configuration/BouquetsView.vue'), 'Bouquets', 'admin'),
-          leaf('epg-grabber-channels', 'config-channel-epg-grabber-channels', () => import('@/views/configuration/EpgGrabberChannelsView.vue'), 'EPG Grabber Channels', 'admin'),
-          leaf('epg-grabber', 'config-channel-epg-grabber', () => import('@/views/configuration/EpgGrabberView.vue'), 'EPG Grabber', 'admin'),
-          leaf('epg-grabber-modules', 'config-channel-epg-grabber-modules', () => import('@/views/configuration/EpgGrabberModulesView.vue'), 'EPG Grabber Modules', 'admin'),
-          leaf('rating-labels', 'config-channel-rating-labels', () => import('@/views/configuration/RatingLabelsView.vue'), 'Rating Labels', 'admin', configRatingLabelsGuard),
+          leaf('channels', 'config-channel-channels', () => import('@/views/configuration/ChannelsView.vue'), N_('Channels'), 'admin'),
+          leaf('tags', 'config-channel-tags', () => import('@/views/configuration/ChannelTagsView.vue'), N_('Channel Tags'), 'admin'),
+          leaf('bouquets', 'config-channel-bouquets', () => import('@/views/configuration/BouquetsView.vue'), N_('Bouquets'), 'admin'),
+          leaf('epg-grabber-channels', 'config-channel-epg-grabber-channels', () => import('@/views/configuration/EpgGrabberChannelsView.vue'), N_('EPG Grabber Channels'), 'admin'),
+          leaf('epg-grabber', 'config-channel-epg-grabber', () => import('@/views/configuration/EpgGrabberView.vue'), N_('EPG Grabber'), 'admin'),
+          leaf('epg-grabber-modules', 'config-channel-epg-grabber-modules', () => import('@/views/configuration/EpgGrabberModulesView.vue'), N_('EPG Grabber Modules'), 'admin'),
+          leaf('rating-labels', 'config-channel-rating-labels', () => import('@/views/configuration/RatingLabelsView.vue'), N_('Rating Labels'), 'admin', configRatingLabelsGuard),
         ],
       },
       {
@@ -560,18 +563,18 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'stream',
         component: () => import('@/views/configuration/ConfigStreamLayout.vue'),
-        meta: { title: 'Stream', permission: 'admin' },
+        meta: { title: N_('Stream'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-stream', redirect: { name: 'config-stream-profiles' } },
-          leaf('profiles', 'config-stream-profiles', () => import('@/views/configuration/ConfigStreamProfilesView.vue'), 'Stream Profiles', 'admin'),
-          leaf('codec-profiles', 'config-stream-codec-profiles', () => import('@/views/configuration/CodecProfilesView.vue'), 'Codec Profiles', 'admin', codecProfilesGuard),
-          leaf('video', 'config-stream-video', () => import('@/views/configuration/EsfilterVideoView.vue'), 'Video Stream Filters', 'admin', configStreamFiltersGuard),
-          leaf('audio', 'config-stream-audio', () => import('@/views/configuration/EsfilterAudioView.vue'), 'Audio Stream Filters', 'admin', configStreamFiltersGuard),
-          leaf('teletext', 'config-stream-teletext', () => import('@/views/configuration/EsfilterTeletextView.vue'), 'Teletext Stream Filters', 'admin', configStreamFiltersGuard),
-          leaf('subtit', 'config-stream-subtit', () => import('@/views/configuration/EsfilterSubtitView.vue'), 'Subtitle Stream Filters', 'admin', configStreamFiltersGuard),
-          leaf('ca', 'config-stream-ca', () => import('@/views/configuration/EsfilterCaView.vue'), 'CA Stream Filters', 'admin', configStreamFiltersGuard),
-          leaf('other', 'config-stream-other', () => import('@/views/configuration/EsfilterOtherView.vue'), 'Other Stream Filters', 'admin', configStreamFiltersGuard),
+          leaf('profiles', 'config-stream-profiles', () => import('@/views/configuration/ConfigStreamProfilesView.vue'), N_('Stream Profiles'), 'admin'),
+          leaf('codec-profiles', 'config-stream-codec-profiles', () => import('@/views/configuration/CodecProfilesView.vue'), N_('Codec Profiles'), 'admin', codecProfilesGuard),
+          leaf('video', 'config-stream-video', () => import('@/views/configuration/EsfilterVideoView.vue'), N_('Video Stream Filters'), 'admin', configStreamFiltersGuard),
+          leaf('audio', 'config-stream-audio', () => import('@/views/configuration/EsfilterAudioView.vue'), N_('Audio Stream Filters'), 'admin', configStreamFiltersGuard),
+          leaf('teletext', 'config-stream-teletext', () => import('@/views/configuration/EsfilterTeletextView.vue'), N_('Teletext Stream Filters'), 'admin', configStreamFiltersGuard),
+          leaf('subtit', 'config-stream-subtit', () => import('@/views/configuration/EsfilterSubtitView.vue'), N_('Subtitle Stream Filters'), 'admin', configStreamFiltersGuard),
+          leaf('ca', 'config-stream-ca', () => import('@/views/configuration/EsfilterCaView.vue'), N_('CA Stream Filters'), 'admin', configStreamFiltersGuard),
+          leaf('other', 'config-stream-other', () => import('@/views/configuration/EsfilterOtherView.vue'), N_('Other Stream Filters'), 'admin', configStreamFiltersGuard),
         ],
       },
       {
@@ -587,16 +590,16 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'recording',
         component: () => import('@/views/configuration/ConfigRecordingLayout.vue'),
-        meta: { title: 'Recording', permission: 'admin' },
+        meta: { title: N_('Recording'), permission: 'admin' },
         // prettier-ignore
         children: [
           { path: '', name: 'config-recording', redirect: { name: 'config-recording-dvr-profiles' } },
-          leaf('dvr-profiles', 'config-recording-dvr-profiles', () => import('@/views/configuration/ConfigRecordingDvrProfilesView.vue'), 'DVR Profiles', 'admin'),
-          leaf('timeshift', 'config-recording-timeshift', () => import('@/views/configuration/ConfigRecordingTimeshiftView.vue'), 'Timeshift', 'admin', configRecordingTimeshiftGuard),
+          leaf('dvr-profiles', 'config-recording-dvr-profiles', () => import('@/views/configuration/ConfigRecordingDvrProfilesView.vue'), N_('DVR Profiles'), 'admin'),
+          leaf('timeshift', 'config-recording-timeshift', () => import('@/views/configuration/ConfigRecordingTimeshiftView.vue'), N_('Timeshift'), 'admin', configRecordingTimeshiftGuard),
         ],
       },
       // prettier-ignore
-      leaf('cas', 'config-cas', () => import('@/views/configuration/ConfigCasView.vue'), 'CAs', 'admin', configCaClientsGuard),
+      leaf('cas', 'config-cas', () => import('@/views/configuration/ConfigCasView.vue'), N_('CAs'), 'admin', configCaClientsGuard),
       {
         /*
          * Debugging is a layout — sub-tabs mirror ExtJS Classic
@@ -612,13 +615,13 @@ const routes: RouteRecordRaw[] = [
          */
         path: 'debugging',
         component: () => import('@/views/configuration/ConfigDebuggingLayout.vue'),
-        meta: { title: 'Debugging', permission: 'admin' },
+        meta: { title: N_('Debugging'), permission: 'admin' },
         beforeEnter: configDebuggingGuard,
         // prettier-ignore
         children: [
           { path: '', name: 'config-debugging', redirect: { name: 'config-debugging-config' } },
-          leaf('config', 'config-debugging-config', () => import('@/views/configuration/ConfigDebuggingConfigView.vue'), 'Configuration', 'admin'),
-          leaf('memoryinfo', 'config-debugging-memoryinfo', () => import('@/views/configuration/ConfigDebuggingMemoryInfoView.vue'), 'Memory Information', 'admin', configDebuggingMemoryInfoGuard),
+          leaf('config', 'config-debugging-config', () => import('@/views/configuration/ConfigDebuggingConfigView.vue'), N_('Configuration'), 'admin'),
+          leaf('memoryinfo', 'config-debugging-memoryinfo', () => import('@/views/configuration/ConfigDebuggingMemoryInfoView.vue'), N_('Memory Information'), 'admin', configDebuggingMemoryInfoGuard),
         ],
       },
     ],
@@ -633,14 +636,14 @@ const routes: RouteRecordRaw[] = [
      */
     path: '/status',
     component: () => import('@/views/StatusLayout.vue'),
-    meta: { title: 'Status', permission: 'admin' },
+    meta: { title: N_('Status'), permission: 'admin' },
     children: statusChildren,
   },
   {
     path: '/about',
     name: 'about',
     component: () => import('@/views/AboutView.vue'),
-    meta: { title: 'About' },
+    meta: { title: N_('About') },
   },
   /*
    * Setup wizard. Pre-empts the regular UI when active —
@@ -657,7 +660,7 @@ const routes: RouteRecordRaw[] = [
     path: '/wizard',
     name: 'wizard',
     component: () => import('@/views/wizard/WizardLayout.vue'),
-    meta: { title: 'Setup Wizard', isWizard: true },
+    meta: { title: N_('Setup Wizard'), isWizard: true },
     children: [
       /* Hello / Status / Channels use bespoke step components;
        * login / network / muxes / mapping share WizardStepGeneric
@@ -670,7 +673,7 @@ const routes: RouteRecordRaw[] = [
         path: 'hello',
         name: 'wizard-hello',
         component: () => import('@/views/wizard/WizardStepHello.vue'),
-        meta: { title: 'Setup Wizard', isWizard: true },
+        meta: { title: N_('Setup Wizard'), isWizard: true },
       },
       genericWizardStep('login'),
       genericWizardStep('network'),
@@ -679,14 +682,14 @@ const routes: RouteRecordRaw[] = [
         path: 'status',
         name: 'wizard-status',
         component: () => import('@/views/wizard/WizardStepStatus.vue'),
-        meta: { title: 'Setup Wizard', isWizard: true },
+        meta: { title: N_('Setup Wizard'), isWizard: true },
       },
       genericWizardStep('mapping'),
       {
         path: 'channels',
         name: 'wizard-channels',
         component: () => import('@/views/wizard/WizardStepChannels.vue'),
-        meta: { title: 'Setup Wizard', isWizard: true },
+        meta: { title: N_('Setup Wizard'), isWizard: true },
       },
     ],
   },
