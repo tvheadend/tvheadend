@@ -1633,6 +1633,8 @@ void service_save ( service_t *t, htsmsg_t *m )
       htsmsg_add_u32(sub, "audio_type", st->es_audio_type);
       if (st->es_audio_version)
         htsmsg_add_u32(sub, "audio_version", st->es_audio_version);
+      if (st->es_receiver_mix)
+        htsmsg_add_u32(sub, "receivermix", 1);
     }
 
     if(st->es_type == SCT_CA) {
@@ -1826,6 +1828,9 @@ void service_load ( service_t *t, htsmsg_t *c )
         if(!htsmsg_get_u32(c, "audio_version", &u32))
           st->es_audio_version = u32;
       }
+
+      if(SCT_ISAUDIO(type) && !htsmsg_get_u32(c, "receivermix", &u32))
+        st->es_receiver_mix = u32 != 0;
 
       if(!htsmsg_get_u32(c, "position", &u32))
         st->es_position = u32;
