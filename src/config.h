@@ -82,6 +82,10 @@ typedef struct config {
   uint32_t hdhomerun_server_tuner_count;
   char *hdhomerun_server_model_name;
   int hdhomerun_server_enable;
+  int htsp_tls_enabled;
+  int htsp_tls_required;
+  char *htsp_tls_cert;
+  char *htsp_tls_key;
 #if ENABLE_VAAPI
   int enable_vainfo;
   #endif

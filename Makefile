@@ -244,6 +244,7 @@ SRCS-1 = \
 	src/subscriptions.c \
 	src/service.c \
 	src/htsp_server.c \
+	src/tls_server.c \
 	src/htsmsg.c \
 	src/htsmsg_binary.c \
 	src/htsmsg_binary2.c \
