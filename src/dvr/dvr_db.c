@@ -3590,6 +3590,41 @@ dvr_entry_class_filename_get(void *o)
   return &prop_ptr;
 }
 
+/*
+ * The path getters run for every entry of a grid request while
+ * global_lock is held, so they must not touch the file system.
+ */
+static const void *
+dvr_entry_class_info_path_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  char ubuf[UUID_HEX_SIZE];
+
+  if (hts_settings_buildpath(prop_sbuf, sizeof(prop_sbuf), "dvr/log/%s",
+                             idnode_uuid_as_str(&de->de_id, ubuf)))
+    prop_sbuf[0] = '\0';
+  return &prop_sbuf_ptr;
+}
+
+static const void *
+dvr_entry_class_video_path_get(void *o)
+{
+  dvr_entry_t *de = (dvr_entry_t *)o;
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+  const char *s = NULL;
+
+  /* The VFS manager keeps the size of each file up to date and drops
+   * it when the file is missing; dvr_entry_is_finished() relies on
+   * the same to find removed recordings. */
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (m = htsmsg_field_get_map(f)) != NULL &&
+      htsmsg_get_s64_or_default(m, "size", -1) >= 0)
+    s = htsmsg_get_str(m, "filename");
+  prop_ptr = s ?: "";
+  return &prop_ptr;
+}
+
 static int
 dvr_entry_class_channel_set(void *o, const void *v)
 {
@@ -4829,6 +4864,24 @@ const idclass_t dvr_entry_class = {
       .desc     = N_("Filename used by the entry."),
       .get      = dvr_entry_class_filename_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_NOUI,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "info_path",
+      .name     = N_("Info file (JSON)"),
+      .desc     = N_("Full path of the JSON file in the configuration "
+                     "directory that stores this entry."),
+      .get      = dvr_entry_class_info_path_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_EXPERT,
+    },
+    {
+      .type     = PT_STR,
+      .id       = "video_path",
+      .name     = N_("Video file"),
+      .desc     = N_("Full path of the recorded video file. Empty if "
+                     "the file does not exist."),
+      .get      = dvr_entry_class_video_path_get,
+      .opts     = PO_RDONLY | PO_NOSAVE | PO_EXPERT,
     },
     {
       .type     = PT_STR,

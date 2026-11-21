@@ -784,7 +784,7 @@ tvheadend.dvr_finished = function(panel, index) {
         tabIndex: index,
         edit: {
             params: {
-                list: tvheadend.admin ? "disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment" :
+                list: tvheadend.admin ? "disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment,info_path,video_path" :
                                         "retention,removal,comment"
             }
         },
@@ -905,7 +905,7 @@ tvheadend.dvr_failed = function(panel, index) {
         titleP: _('Failed Recordings'),
         iconCls: 'exclamation',
         tabIndex: index,
-        edit: { params: { list: tvheadend.admin ? "playcount,retention,removal,owner,comment" : "retention,removal,comment" } },
+        edit: { params: { list: tvheadend.admin ? "playcount,retention,removal,owner,comment,info_path,video_path" : "retention,removal,comment" } },
         del: true,
         delquestion: _('Do you really want to delete the selected recordings?') + '<br/><br/>' +
                      _('The associated file will be removed from storage.'),
@@ -986,7 +986,7 @@ tvheadend.dvr_removed = function(panel, index) {
         iconCls: 'remove',
         tabIndex: index,
         uilevel: 'expert',
-        edit: { params: { list: tvheadend.admin ? "retention,owner,disp_title,disp_extratext,episode_disp,comment" : "retention,comment" } },
+        edit: { params: { list: tvheadend.admin ? "retention,owner,disp_title,disp_extratext,episode_disp,comment,info_path,video_path" : "retention,comment" } },
         del: true,
         list: 'disp_title,disp_extratext,episode_disp,channel,channelname,image,' +
               'copyright_year,start_real,stop_real,duration,status,' +

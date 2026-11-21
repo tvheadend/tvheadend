@@ -56,7 +56,7 @@ const access = useAccessStore()
 /* Edit list — admin-aware, matches dvr.js:989 verbatim. */
 const editList = computed(() =>
   access.data?.admin
-    ? 'retention,owner,disp_title,disp_extratext,episode_disp,comment'
+    ? 'retention,owner,disp_title,disp_extratext,episode_disp,comment,info_path,video_path'
     : 'retention,comment',
 )
 
