@@ -7647,7 +7647,7 @@ msgstr "Verbindungen auf diesen Typ beschränken"
 
 #: src/webui/comet.c:338
 msgid "Restricted log mode (no administrator)"
-msgstr ""
+msgstr "Eingeschränkter Protokollmodus (kein Administrator)"
 
 #: src/input/mpegts/iptv/iptv_mux.c:145
 msgid "Retransmission URL"
@@ -7671,10 +7671,14 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
+"EIT-Pakete (Event Information Table) so umschreiben, dass sie nur "
+"Informationen über den aktuell gestreamten Service enthalten. Die "
+"Umschreibung kann nur deaktiviert werden, wenn 'Rewrite Service ID' auf Null"
+" gesetzt ist."
 
 #: src/profile.c:1348 src/profile.c:1598 src/profile.c:2511
 msgid "Rewrite MPEG-TS SI Table(s) Settings"
-msgstr ""
+msgstr "Einstellungen für MPEG-TS-SI-Tabelle(n) neu schreiben"
 
 #: src/profile.c:1414 src/profile.c:1704 src/profile.c:2561
 msgid "Rewrite NIT"
@@ -7686,6 +7690,10 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
+"NIT-Pakete (Network Information Table) so umschreiben, dass sie nur "
+"Informationen über den aktuell gestreamten Service enthalten. Die "
+"Umschreibung kann nur deaktiviert werden, wenn 'Rewrite Service ID' auf Null"
+" gesetzt ist."
 
 #: src/profile.c:1384 src/profile.c:1674
 msgid "Rewrite PAT"
@@ -7697,6 +7705,10 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
+"PAT-Pakete (Program Association Table) so umschreiben, dass sie nur "
+"Informationen über den aktuell gestreamten Service enthalten. Die "
+"Umschreibung kann nur deaktiviert werden, wenn 'Rewrite Service ID' auf Null"
+" gesetzt ist."
 
 #: src/profile.c:1369 src/profile.c:1659 src/profile.c:2546
 #: src/satip/server.c:926
@@ -7709,12 +7721,17 @@ msgid ""
 "the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
+"PMT-Pakete (Program Map Table) so umschreiben, dass sie nur Informationen "
+"über den aktuell ausgestrahlten Service enthalten. Die Umschreibung kann nur"
+" deaktiviert werden, wenn 'Rewrite Service ID' auf Null gesetzt ist."
 
 #: src/satip/server.c:927
 msgid ""
 "Rewrite Program Map Table (PMT) packets to only include information about "
 "the currently streamed service."
 msgstr ""
+"Umschreiben von PMT-Paketen (Program Map Table), um nur Informationen zum "
+"aktuell gestreamten Service zu enthalten."
 
 #: src/profile.c:1399 src/profile.c:1689
 msgid "Rewrite SDT"
@@ -7726,6 +7743,10 @@ msgid ""
 "about the currently-streamed service. Rewrite can be unset only if 'Rewrite "
 "Service ID' is set to zero."
 msgstr ""
+"SDT-Pakete (Service Description Table) so umschreiben, dass sie nur "
+"Informationen über den aktuell gestreamten Service enthalten. Die "
+"Umschreibung kann nur deaktiviert werden, wenn 'Rewrite Service ID' auf Null"
+" gesetzt ist."
 
 #: src/profile.c:1357 src/profile.c:1647 src/profile.c:2533
 msgid "Rewrite Service ID"
@@ -7736,6 +7757,8 @@ msgid ""
 "Rewrite service identifier (SID) using the specified value (usually 1). Zero"
 " means no rewrite."
 msgstr ""
+"Die Service-Kennung (SID) wird mit dem angegebenen Wert (in der Regel 1) "
+"überschrieben. Der Wert Null bedeutet, dass keine Überschreibung erfolgt."
 
 #: src/profile.c:2534
 msgid ""
@@ -7743,6 +7766,9 @@ msgid ""
 " means no rewrite; preserving MPEG-TS original network and transport stream "
 "IDs"
 msgstr ""
+"Die Service-Kennung (SID) wird mit dem angegebenen Wert (in der Regel 1) "
+"überschrieben. Der Wert 0 bedeutet, dass keine Überschreibung erfolgt; die "
+"ursprünglichen MPEG-TS-Netzwerk- und Transportstrom-IDs bleiben erhalten."
 
 #: src/access.c:1534
 msgid "Rights"
@@ -7815,7 +7841,7 @@ msgstr "SAT>IP DVB-T Frequenz (Hz)"
 
 #: src/input/mpegts/satip/satip_frontend.c:621
 msgid "SAT>IP ISDB-T Frontend"
-msgstr ""
+msgstr "SAT>IP ISDB-T Frontend"
 
 #: src/main.c:913
 msgid ""
@@ -7835,7 +7861,7 @@ msgstr "SAT>IP Server"
 
 #: src/tvhlog.c:124
 msgid "SAT>IP Server SI Tables"
-msgstr ""
+msgstr "SAT>IP-Server-SI-Tabellen"
 
 #: src/input/mpegts/mpegts_network.c:305
 msgid "SAT>IP source number"
@@ -7897,7 +7923,7 @@ msgstr "SIGUSR2"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:229
 msgid "SNR multiplier"
-msgstr ""
+msgstr "SNR-Multiplikator"
 
 #: src/bouquet.c:1284 src/input/mpegts/iptv/iptv.c:989
 msgid "SSL verify peer"
@@ -7916,6 +7942,8 @@ msgid ""
 "Same as above, but for the maximum allowed port. Note that each stream "
 "requires two ports."
 msgstr ""
+"Wie oben, jedoch für den maximal zulässigen Port. Beachten, dass jeder "
+"Stream zwei Ports benötigt."
 
 #: src/transcoding/codec/profile_audio_class.c:330
 msgid "Sample format"
@@ -7951,7 +7979,7 @@ msgstr "Satellit Longitude"
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:160
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:177
 msgid "Satellite longitude (like 9.0 (east) or -33.0 (west))."
-msgstr ""
+msgstr "Satellitenlängengrad (z. B. 9,0 (Ost) oder -33,0 (West))."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:129
 msgid "Satellite position."
@@ -7971,35 +7999,43 @@ msgstr "Speichern in Beschreibung"
 
 #: src/dvr/dvr_db.c:5113
 msgid "Saved Rating Authority"
-msgstr ""
+msgstr "Gespeicherte Bewertungsstelle"
 
 #: src/dvr/dvr_db.c:5121
 msgid "Saved Rating Country"
-msgstr ""
+msgstr "Gespeicherte Bewertung Land"
 
 #: src/dvr/dvr_db.c:5105
 msgid "Saved Rating Icon Path"
-msgstr ""
+msgstr "Pfad zum Icon für die gespeicherte Bewertung"
 
 #: src/dvr/dvr_db.c:5097
 msgid "Saved Rating Label"
-msgstr ""
+msgstr "Gespeichertes Bewertungslabel"
 
 #: src/dvr/dvr_db.c:5114
 msgid "Saved parental rating authority for once recording is complete."
 msgstr ""
+"Die von den Eltern festgelegte Altersfreigabe wurde nach Abschluss der "
+"Erfassung gespeichert."
 
 #: src/dvr/dvr_db.c:5122
 msgid "Saved parental rating country for once recording is complete."
 msgstr ""
+"Das Land der Altersfreigabe wurde nach Abschluss der ersten Aufzeichnung "
+"gespeichert."
 
 #: src/dvr/dvr_db.c:5098
 msgid "Saved parental rating for once recording is complete."
 msgstr ""
+"Die von den Eltern festgelegte Altersfreigabe wird nach Abschluss der "
+"Aufnahme gespeichert."
 
 #: src/dvr/dvr_db.c:5106
 msgid "Saved parental rating icon for once recording is complete."
 msgstr ""
+"Icon für die Altersfreigabe wird gespeichert, sobald die Aufnahme "
+"abgeschlossen ist."
 
 #: src/transcoding/codec/profile_video_class.c:281
 msgid "Scaling mode"
@@ -8011,7 +8047,7 @@ msgstr "Scan nach Erstellen"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:250
 msgid "Scan grace period (seconds)"
-msgstr ""
+msgstr "Scan-Karenzzeit (Sekunden)"
 
 #: src/input/mpegts/mpegts_network.c:357
 msgid "Scan queue length"
@@ -8066,6 +8102,8 @@ msgid ""
 "Scheme to generate the channel icon names (all lower-case, service name "
 "picons etc.)."
 msgstr ""
+"Schema zum Generieren der Kanal-Icon-Namen (alle Kleinbuchstaben, Service-"
+"Name-Picons usw.)."
 
 #: src/epg.c:2012
 msgid "School programs"
@@ -8081,39 +8119,43 @@ msgstr "Science-Fiction"
 
 #: src/epggrab/module.c:294
 msgid "Scrape Episode"
-msgstr ""
+msgstr "Extrahiere Folge"
 
 #: src/epggrab/module.c:315
 msgid "Scrape Subtitle"
-msgstr ""
+msgstr "Extrahiere Unertitel"
 
 #: src/epggrab/module.c:328
 msgid "Scrape Summary"
-msgstr ""
+msgstr "Extrahiere Zusammenfassung"
 
 #: src/epggrab/module.c:302
 msgid "Scrape Title"
-msgstr ""
+msgstr "Extrahiere Titel"
 
 #: src/epggrab/module.c:257
 msgid "Scrape behaviour"
-msgstr ""
+msgstr "Extrahiere Verhalten"
 
 #: src/epggrab/module/xmltv.c:1418
 msgid "Scrape credits and extra information"
-msgstr ""
+msgstr "Extrahiere Credits und zusätzliche Informationen"
 
 #: src/epggrab/module.c:277
 msgid "Scraper configuration to use"
-msgstr ""
+msgstr "Zu verwendende Scraper-Konfiguration"
 
 #: src/dvr/dvr_config.c:1529
 msgid "Script/program to run when a recording completes."
 msgstr ""
+"Skript / Programm, das ausgeführt wird, wenn eine Aufzeichnung abgeschlossen"
+" ist."
 
 #: src/dvr/dvr_config.c:1539
 msgid "Script/program to run when a recording gets removed."
 msgstr ""
+"Skript / Programm, das ausgeführt wird, wenn eine Aufzeichnung entfernt "
+"wird."
 
 #: src/dvr/dvr_config.c:1518
 msgid ""
@@ -8143,6 +8185,10 @@ msgid ""
 " the Description is empty, save, append and prepend will replace the "
 "Description."
 msgstr ""
+"Wähle aus, wie mit dem vom Sender bereitgestellten Untertitel verfahren "
+"werden soll: Keine; In der Beschreibung speichern; An die Beschreibung "
+"anhängen; Vor die Beschreibung setzen. Ist die Beschreibung leer, wird sie "
+"durch die Optionen Speichern, Anhängen und Voransetzen ersetzt."
 
 #: src/wizard.c:587
 msgid "Select an available network type for this tuner."
@@ -8151,6 +8197,8 @@ msgstr "Einen vorhandenen Netzwerktyp für diesen Tuner auswählen."
 #: src/profile.c:2600
 msgid "Select audio codec profile to use for transcoding."
 msgstr ""
+"Wähle das Audio-Codec-Profil aus, das für die Transkodierung verwendet "
+"werden soll."
 
 #: src/wizard.c:210
 msgid "Select high priority (default) EPG language."
@@ -8159,6 +8207,8 @@ msgstr "Wählen Sie die EPG-Sprache mit hoher Priorität (Standardeinstellung)."
 #: src/satip/server.c:745
 msgid "Select how Tvheadend should handle muxes. See Help for details."
 msgstr ""
+"Wähle aus, wie Tvheadend mit Muxes umgehen soll. Weitere Informationen "
+"finden sich in der Hilfe."
 
 #: src/wizard.c:230
 msgid "Select low priority EPG language."
@@ -8173,22 +8223,32 @@ msgid ""
 "Select scheme to generate the picon names (standard, force service type to "
 "1)"
 msgstr ""
+"Schema zur Generierung der Picon-Namen auswählen (Standard, Service-Typ auf "
+"1 erzwingen)"
 
 #: src/profile.c:2622
 msgid "Select subtitle codec profile to use for transcoding."
 msgstr ""
+"Wähle das Untertitel-Codec-Profil aus, das für die Transkodierung verwendet "
+"werden soll."
 
 #: src/wizard.c:198
 msgid ""
 "Select the default user interface language. This can be overridden later in "
 "\"Access Entries\" on a per-user basis."
 msgstr ""
+"Wähle die Standardsprache für die Benutzeroberfläche aus. Diese Einstellung "
+"kann später unter \"Zugriffseinträge\" für jeden Benutzer individuell "
+"überschrieben werden."
 
 #: src/config.c:2464
 msgid ""
 "Select the list of languages (in order of priority) to be used for supplying"
 " EPG information to clients that don't provide their own configuration."
 msgstr ""
+"Wähle die Liste der Sprachen (in der Reihenfolge ihrer Priorität) aus, die "
+"für die Bereitstellung von EPG-Informationen an Clients verwendet werden "
+"sollen, die keine eigene Konfiguration bereitstellen."
 
 #: src/input/mpegts/satip/satip_frontend.c:495
 #: src/input/mpegts/satip/satip_frontend.c:536
@@ -8200,18 +8260,30 @@ msgid ""
 "slave one and Tvheadend will assure that this tuner will not use "
 "incompatible parameters (position, polarization, lo-hi)."
 msgstr ""
+"Wähle den Master-Tuner aus. Das Signal vom Standard-Universal-LNB kann "
+"mithilfe eines einfachen Koaxial-Splitters (kein Multischalter) auf mehrere "
+"Ausgänge aufgeteilt werden. In diesem Fall müssen die Einstellungen für "
+"Position, Polarisation und Lo-Hi-Band identisch sein. Wenn ein anderer Tuner"
+" als Master festgelegt wird, fungiert dieser Tuner als Slave, und Tvheadend "
+"stellt sicher, dass dieser Tuner keine inkompatiblen Parameter (Position, "
+"Polarisation, Lo-Hi) verwendet."
 
 #: src/input/mpegts/satip/satip_frontend.c:483
 msgid ""
 "Select the number of satellite positions supported by the SAT>IP hardware "
 "and your coaxial cable wiring."
 msgstr ""
+"Wählen Sie die Anzahl der Satellitenpositionen aus, die von der SAT>IP-"
+"Hardware und Ihrer Koaxialkabelverkabelung unterstützt werden."
 
 #: src/config.c:2847
 msgid ""
 "Select the path to use for DVB scan configuration files. Typically dvb-apps "
 "stores these in /usr/share/dvb/. Leave blank to use the internal file set."
 msgstr ""
+"Wählen Sie den Pfad aus, der für DVB-Scan-Konfigurationsdateien verwendet "
+"werden soll. In der Regel speichert dvb-apps diese in /usr/share/dvb/. "
+"Lassen Sie dieses Feld leer, um den internen Dateisatz zu verwenden."
 
 #: src/satip/server.c:757
 msgid ""
@@ -8219,14 +8291,18 @@ msgid ""
 " Some implementations like ffmpeg and VideoLAN have maximum limit 7896 "
 "bytes. The recommended value for tvheadend is 16356 or 32712 bytes."
 msgstr ""
+"Wählen Sie die Nutzdatengröße für RTP-Inhalte aus, die im eingebetteten TCP-"
+"Datenmodus verwendet werden. Einige Implementierungen wie ffmpeg und "
+"VideoLAN haben ein maximales Limit von 7896 Bytes. Der empfohlene Wert für "
+"tvheadend ist 16356 oder 32712 Byte."
 
 #: src/transcoding/codec/codecs/libs/libx26x.c:87
 msgid "Select the quality for constant quality mode [0-51]."
-msgstr ""
+msgstr "Wähle die Qualität für den Modus Konstante Qualität aus [0-51]."
 
 #: src/transcoding/codec/codecs/libs/libvpx.c:96
 msgid "Select the quality for constant quality mode [0-63]."
-msgstr ""
+msgstr "Wähle die Qualität für den Modus Konstante Qualität aus [0-63]."
 
 #: src/input/mpegts/mpegts_network.c:325
 msgid "Select the time offset for EIT events."
@@ -8234,7 +8310,7 @@ msgstr "Wählen Sie den Zeitversatz für EIT-Ereignisse."
 
 #: src/input/mpegts/satip/satip_frontend.c:261
 msgid "Select the transport used for this tuner."
-msgstr ""
+msgstr "Wähle den für diesen Tuner verwendeten Transport aus."
 
 #: src/dvr/dvr_autorec.c:1244
 msgid "Select type of broadcast."
@@ -8243,6 +8319,8 @@ msgstr "Boradcast Typ auswählen"
 #: src/profile.c:2578
 msgid "Select video codec profile to use for transcoding."
 msgstr ""
+"Wähle das Video-Codec-Profil aus, das für die Transkodierung verwendet "
+"werden soll."
 
 #: src/imagecache.c:91
 msgid ""
@@ -8260,7 +8338,7 @@ msgstr "Wählen Sie Ausgewählte Dienste für die Zuordnung aus."
 
 #: src/descrambler/dvbcam.c:870
 msgid "Selection method for CAID."
-msgstr ""
+msgstr "Auswahlverfahren für CAID."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_ca.c:692
 msgid "Send CAPMT OK query before descrambling."
@@ -8272,7 +8350,7 @@ msgstr "Sende CAPMT Anfrage"
 
 #: src/input/mpegts/iptv/iptv_mux.c:138
 msgid "Send RTCP status reports"
-msgstr ""
+msgstr "RTCP-Statusberichte senden"
 
 #: src/input/mpegts/satip/satip_frontend.c:290
 msgid "Send full PLAY cmd"
@@ -8283,10 +8361,13 @@ msgid ""
 "Send previous stream frames to upper layers (before frame start is signalled"
 " in the stream). It may cause issues with some clients / players."
 msgstr ""
+"Senden Sie vorherige Stream-Frames an die oberen Ebenen (bevor der Frame-"
+"Start im Stream signalisiert wird). Dies kann bei einigen Clients / Playern "
+"zu Problemen führen."
 
 #: src/input/mpegts/satip/satip.c:362
 msgid "Send rolloff settings for DVB-S2"
-msgstr ""
+msgstr "Rolloff-Einstellungen für DVB-S2 senden"
 
 #: src/input/mpegts/satip/satip_frontend.c:291
 msgid ""
@@ -8311,11 +8392,11 @@ msgstr "Serienverknüpfung-ID"
 
 #: src/epggrab/module/xmltv.c:1463
 msgid "SeriesLink XPath"
-msgstr ""
+msgstr "SeriesLink XPath"
 
 #: src/epggrab/module/xmltv.c:1477
 msgid "SeriesLink XPath fallback"
-msgstr ""
+msgstr "SeriesLink XPath Ausweichlösung"
 
 #: src/epg.c:1943
 msgid "Serious"
@@ -8404,6 +8485,9 @@ msgid ""
 "Service priority. Enter a value between -10 and 10. A higher value indicates"
 " a higher preference. See Help for more info."
 msgstr ""
+"Servicepriorität. Geben Sie einen Wert zwischen -10 und 10 ein. Ein höherer "
+"Wert zeigt eine höhere Präferenz an. Weitere Informationen finden Sie in der"
+" Hilfe."
 
 #: src/service.c:243
 msgid "Service raw"
@@ -8441,10 +8525,14 @@ msgstr "Als Standard-Profil festlegen."
 #: src/access.c:1831
 msgid "Set the default start-up tab.  'EPG' is the default tab."
 msgstr ""
+"Legen Sie die Standardregisterkarte beim Start fest. 'EPG' ist die "
+"Standardregisterkarte."
 
 #: src/config.c:2434
 msgid "Set the default start-up tab.  'EPG' is the system default tab."
 msgstr ""
+"Legen Sie die Standardregisterkarte beim Start fest. 'EPG' ist die vom "
+"System voreingestellte Registerkarte."
 
 #: src/input/mpegts/satip/satip_satconf.c:362
 msgid "Set the display name."
@@ -8452,7 +8540,7 @@ msgstr "Anzeigenamen festlegen"
 
 #: src/transcoding/codec/codecs/libs/libx26x.c:183
 msgid "Set the encoding preset (cf. x264 --fullhelp)."
-msgstr ""
+msgstr "Legen Sie die Codierungsvoreinstellung fest (vgl. x264 --fullhelp)."
 
 #: src/input/mpegts/satip/satip.c:315
 msgid "Set the maxiumum packet identifiers your SAT>IP server supports."
@@ -8469,6 +8557,8 @@ msgstr ""
 #: src/config.c:2789
 msgid "Set the number of threads for IPTV to split load across more CPUs."
 msgstr ""
+"Legen Sie die Anzahl der Threads für IPTV fest, um die Last auf mehrere CPUs"
+" zu verteilen."
 
 #: src/input/mpegts/satip/satip_satconf.c:370
 msgid "Set the priority of this configuration."
@@ -8478,11 +8568,15 @@ msgstr "Setze die Priorität dieser Einstellungen."
 msgid ""
 "Set the short EIT destription to given target (subtitle, summary or both)."
 msgstr ""
+"Legen Sie die kurze EIT-Beschreibung entsprechend dem vorgegebenen Ziel fest"
+" (Untertitel, Zusammenfassung oder beides)."
 
 #: src/transcoding/codec/codecs/libs/libx26x.c:98
 #: src/transcoding/codec/codecs/libs/libvpx.c:143
 msgid "Sets the Group of Pictures (GOP) size in frame (default 0 is 3 sec.)"
 msgstr ""
+"Legt die Größe der Bildgruppe (GOP) in Frames fest (Standardwert 0 "
+"entspricht 3 Sekunden)."
 
 #: src/tvhlog.c:102
 msgid "Settings"
@@ -8524,6 +8618,10 @@ msgid ""
 "existing seconds can not be edited and new entries will have seconds set to "
 "zero."
 msgstr ""
+"Sekunden im Dialogfenster zum Hinzufügen/Bearbeiten von DVR-Einträgen "
+"anzeigen. Ist diese Option deaktiviert, können vorhandene Sekunden nicht "
+"bearbeitet werden, und bei neuen Einträgen werden die Sekunden auf Null "
+"gesetzt."
 
 #: src/main.c:884
 msgid "Show this page"
@@ -8547,11 +8645,11 @@ msgstr "Signal-Einstellungen"
 
 #: src/satip/server.c:816
 msgid "Signal level for IPTV sources (0-240)."
-msgstr ""
+msgstr "Signalpegel für IPTV-Quellen (0-240)."
 
 #: src/input/mpegts/linuxdvb/linuxdvb_frontend.c:219
 msgid "Signal multiplier"
-msgstr ""
+msgstr "Signalvervielfacher"
 
 #: src/streaming.c:487
 msgid "Signal quality too poor"
@@ -8683,6 +8781,9 @@ msgid ""
 "my_key_from_website'. These can be specified here. See Help for full "
 "details."
 msgstr ""
+"Einige Anbieter von Bildmaterial erfordern zusätzliche Argumente wie "
+"beispielsweise '--tmdb-key my_key_from_website'. Diese können hier angegeben"
+" werden. Ausführliche Informationen finden Sie in der Hilfe."
 
 #: src/service_mapper.c:649
 msgid ""
@@ -8691,6 +8792,12 @@ msgid ""
 " Note that xmltv settings may try and match by channel name so changing a "
 "channel name may require manual xmltv mapping."
 msgstr ""
+"Einige Sender unterscheiden ihre Kanäle durch die Hinzufügung von "
+"Bezeichnungen wie HD. Diese Option entfernt diese Bezeichnungen, sodass "
+"'Channel 4 HD' beispielsweise als 'Channel 4' bezeichnet würde. Beachten "
+"Sie, dass die xmltv-Einstellungen möglicherweise versuchen, die Kanäle "
+"anhand des Kanalnamens abzugleichen. Eine Änderung des Kanalnamens kann "
+"daher eine manuelle Zuordnung in xmltv erforderlich machen."
 
 #: src/epggrab/module/xmltv.c:1443
 msgid ""
@@ -8701,6 +8808,13 @@ msgid ""
 "this option is not ticked then we continue to map xmltv categories to genres"
 " and supply both to clients."
 msgstr ""
+"Einige XMTV-Anbieter stellen mehrere Kategorie-Tags bereit, allerdings ist "
+"die Zuordnung zu Genres ungenau, und für viele Kategorien gibt es überhaupt "
+"keine Genre-Zuordnung. Einige Frontends leiten Kategorien nur dann "
+"unverändert weiter, wenn kein Genre vorhanden ist; daher können wir bei "
+"diesen die Genre-Zuordnungen vermeiden und ausschließlich Kategorien "
+"verwenden. Ist diese Option nicht aktiviert, ordnen wir die XMTV-Kategorien "
+"weiterhin Genres zu und stellen den Clients beides zur Verfügung."
 
 #: src/channels.c:1783
 msgid "Sort index"
@@ -8748,11 +8862,11 @@ msgstr "Südliche Hemisphäre (Latitude Richtung)"
 
 #: src/tvhlog.c:93
 msgid "Spawn"
-msgstr ""
+msgstr "Spawn"
 
 #: src/profile.c:1594
 msgid "Spawn Settings"
-msgstr ""
+msgstr "Spawn Einstellungen"
 
 #: src/epg.c:1991
 msgid "Special events (Olympic Games, World Cup, etc.)"
@@ -8904,6 +9018,14 @@ msgid ""
 "9983, then tuner 0 will talk to port 9983, tuner 1 will talk to port 9984, "
 "tuner 2 will talk to port 9985, and tuner 3 will talk to port 9986."
 msgstr ""
+"Start-Portnummer der UDP-Listener. Die Listener warten auf Datenverkehr von "
+"den HDHomerun-Tunern. Dies ist erforderlich, wenn Sie Tvheadend in einem "
+"Container ausführen und von einem HDHomerun streamen möchten, ohne das Host-"
+"Netzwerk für den Container zu aktivieren. Setzen Sie diesen Wert auf 0, wenn"
+" die Portnummern dynamisch zugewiesen werden sollen. Wenn Sie mehrere Tuner "
+"haben, ist dies der Anfang des Portbereichs. Wenn Sie beispielsweise 4 Tuner"
+" haben und diesen Wert auf 9983 setzen, kommuniziert Tuner 0 mit Port 9983, "
+"Tuner 1 mit Port 9984, Tuner 2 mit Port 9985 und Tuner 3 mit Port 9986."
 
 #: src/dvr/dvr_db.c:5013 src/descrambler/caclient.c:327
 msgid "Status"
@@ -8919,7 +9041,7 @@ msgstr "Status-Verbindungen"
 
 #: src/config.c:2202
 msgid "Status-Service Mapper"
-msgstr ""
+msgstr "Status-Service Mapper"
 
 #: src/config.c:2199
 msgid "Status-Stream"
@@ -8927,7 +9049,7 @@ msgstr "Status-Stream"
 
 #: src/config.c:2200
 msgid "Status-Subscriptions"
-msgstr ""
+msgstr "Status-Abonnements"
 
 #: src/dvr/dvr_timerec.c:593
 msgid "Stop"
@@ -8947,35 +9069,35 @@ msgstr "Speicherplatz"
 
 #: src/transcoding/codec/profile_class.c:224
 msgid "Stream - Codec Profiles"
-msgstr ""
+msgstr "Stream - Codec-Profile"
 
 #: src/profile.c:287
 msgid "Stream - Stream Profiles"
-msgstr ""
+msgstr "Stream - Stream-Profile"
 
 #: src/esfilter.c:715
 msgid "Stream Filters - Audio"
-msgstr ""
+msgstr "Stream-Filter - Audio"
 
 #: src/esfilter.c:1002
 msgid "Stream Filters - CA"
-msgstr ""
+msgstr "Stream-Filter - CA"
 
 #: src/esfilter.c:1110
 msgid "Stream Filters - Other"
-msgstr ""
+msgstr "Stream-Filter - Andere"
 
 #: src/esfilter.c:907
 msgid "Stream Filters - Subtitles"
-msgstr ""
+msgstr "Stream-Filter - Untertitel"
 
 #: src/esfilter.c:811
 msgid "Stream Filters - Teletext"
-msgstr ""
+msgstr "Stream-Filter - Video-Text"
 
 #: src/esfilter.c:620
 msgid "Stream Filters - Video"
-msgstr ""
+msgstr "Stream-Filter - Video"
 
 #: src/input/mpegts/mpegts_mux_dvb.c:954
 msgid "Stream ID"
@@ -9017,6 +9139,9 @@ msgid ""
 "(e.g, direct service or mux links), HTSP protocol streaming (e.g, Kodi (via "
 "pvr.hts) or Movian."
 msgstr ""
+"Streaming-Flags, HTTP-Streaming zulassen / nicht zulassen, erweitertes HTTP-"
+"Streaming (z. B. direkte Dienst- oder Mux-Links), HTSP-Protokoll-Streaming "
+"(z. B. Kodi (über pvr.hts) oder Movian."
 
 #: src/input/mpegts/mpegts_input.c:259 src/input/mpegts/iptv/iptv.c:856
 #: src/input/mpegts/iptv/iptv_mux.c:122
@@ -9029,15 +9154,15 @@ msgstr "Streamingprofil"
 
 #: src/dvr/dvr_config.c:933
 msgid "Subdirectory Settings"
-msgstr ""
+msgstr "Einstellungen für Unterverzeichnisse"
 
 #: src/dvr/dvr_config.c:1303
 msgid "Subdirectory for tvmovies for $q format specifier"
-msgstr ""
+msgstr "Unterverzeichnis für Fernsehfilme für den Formatbezeichner $q"
 
 #: src/dvr/dvr_config.c:1317
 msgid "Subdirectory for tvshows for $q format specifier"
-msgstr ""
+msgstr "Unterverzeichnis für Fernsehserien für den Formatbezeichner $q"
 
 #: src/dvr/dvr_config.c:1304
 msgid ""
@@ -9045,6 +9170,10 @@ msgid ""
 "contain any alphanumeric characters (A-Za-z0-9). Other characters may be "
 "supported depending on your OS and filesystem."
 msgstr ""
+"Unterverzeichnis, das bei Verwendung des Bezeichners $q für Fernsehfilme "
+"verwendet werden soll. Es darf beliebige alphanumerische Zeichen (A-Za-z0-9)"
+" enthalten. Je nach Betriebssystem und Dateisystem werden möglicherweise "
+"auch andere Zeichen unterstützt."
 
 #: src/dvr/dvr_config.c:1318
 msgid ""
@@ -9052,6 +9181,10 @@ msgid ""
 "contain any alphanumeric characters (A-Za-z0-9). Other characters may be "
 "supported depending on your OS and filesystem."
 msgstr ""
+"Unterverzeichnis, das bei Verwendung des Bezeichners $q für Fernsehserien "
+"verwendet werden soll. Es darf beliebige alphanumerische Zeichen (A-Za-z0-9)"
+" enthalten. Je nach Betriebssystem und Dateisystem werden möglicherweise "
+"auch andere Zeichen unterstützt."
 
 #: src/main.c:964
 msgid "Subscribe to a service permanently"
@@ -9080,7 +9213,7 @@ msgstr "Substitute formatters"
 
 #: src/tvhlog.c:839
 msgid "Subsystem Output Settings"
-msgstr ""
+msgstr "Ausgabeeinstellungen für Subsysteme"
 
 #: src/dvr/dvr_db.c:4685 src/dvr/dvr_db.c:4693 src/epggrab/module/eit.c:1762
 msgid "Subtitle"
@@ -9277,7 +9410,7 @@ msgstr "TV Adapters - SatConfig - EN50607/UniCable II"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:147
 msgid "TV Adapters - SatConfig - External Rotor"
-msgstr ""
+msgstr "TV-Adapter - SatConfig - Außenrotor"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_rotor.c:123
 msgid "TV Adapters - SatConfig - GOTOX Rotor"
@@ -9408,6 +9541,8 @@ msgid ""
 "The EPG grabber to use on the mux. The 'EPG scan' field must be set to "
 "'manual'."
 msgstr ""
+"Der EPG-Grabber, der für den Mux verwendet werden soll. Das Feld 'EPG-Scan' "
+"muss auf 'manuell' eingestellt sein."
 
 #: src/epggrab/module.c:162
 msgid "The EPG grabber type."
@@ -9462,6 +9597,8 @@ msgid ""
 "The SNR level reported by the driver is multiplied with this value and "
 "divided by 100."
 msgstr ""
+"Der vom Treiber gemeldete SNR-Wert wird mit diesem Wert multipliziert und "
+"durch 100 geteilt."
 
 #: src/channels.c:464
 msgid ""
@@ -9481,6 +9618,9 @@ msgid ""
 "XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "series.  Root node = 'programme'."
 msgstr ""
+"Der XPath-ähnliche Ausdruck, der zum Extrahieren einer SeriesLink-Kennung "
+"aus den XMLTV-Daten verwendet wird. Diese Kennung dient dazu, mehrere "
+"Vorkommen derselben Serie zu identifizieren. Wurzelknoten = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1458
 msgid ""
@@ -9488,6 +9628,10 @@ msgid ""
 " XMLTV data.  This ID is used to match existing EPG events so that they can "
 "be updated rather than replaced. Root node = 'programme'."
 msgstr ""
+"Der XPath-ähnliche Ausdruck, der zum Extrahieren einer eindeutigen Ereignis-"
+"ID aus den XMLTV-Daten verwendet wird. Diese ID dient dazu, bestehende EPG-"
+"Ereignisse abzugleichen, damit diese aktualisiert und nicht ersetzt werden. "
+"Wurzelknoten = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1472
 msgid ""
@@ -9495,12 +9639,17 @@ msgid ""
 " XMLTV data.  This ID is used to identify multiple occurrences of the same "
 "episode.  Root node = 'programme'."
 msgstr ""
+"Der XPath-ähnliche Ausdruck, der zum Extrahieren einer 'EpisodeLink'-Kennung"
+" aus den XMLTV-Daten verwendet wird. Diese Kennung dient dazu, mehrere "
+"Vorkommen derselben Folge zu identifizieren. Wurzelknoten = 'programme'."
 
 #: src/epggrab/module/xmltv.c:1453
 msgid ""
 "The XPath-like expression used to extract the category ETSI code from the "
 "XMLTV data. Root node = 'category'."
 msgstr ""
+"Der XPath-ähnliche Ausdruck, der zum Extrahieren des ETSI-Codes der "
+"Kategorie aus den XMLTV-Daten verwendet wird. Wurzelknoten = 'category'."
 
 #: src/dvr/dvr_db.c:5090
 msgid "The age rating of the program."
@@ -9544,6 +9693,13 @@ msgid ""
 "selection list is empty then it means your provider does not supply "
 "programme categories."
 msgstr ""
+"Die Kategorie der Sendung, nach der Sie suchen möchten. Die XMTV-Anbieter "
+"stellen häufig detaillierte Kategorien wie Sitcom, Film, Leichtathletik usw."
+" zur Verfügung. So können Sie aus den Kategorien für aktuelle Sendungen "
+"auswählen. Diese Auswahl wird dann (mit UND) mit anderen Feldern kombiniert,"
+" um die Ergebnisse auf Sendungen einzugrenzen, die allen Kategorien "
+"entsprechen. Ist diese Auswahlliste leer, bedeutet dies, dass Ihr Anbieter "
+"keine Programmkategorien bereitstellt."
 
 #: src/dvr/dvr_db.c:4620
 msgid "The channel name the entry will record from."
@@ -9551,7 +9707,7 @@ msgstr "Name des Kanals, der für die Aufnahme genutzt wird."
 
 #: src/input/mpegts/mpegts_mux_dvb.c:685
 msgid "The channel on the cable provider's network."
-msgstr ""
+msgstr "Der Sender im Netz des Kabelanbieters."
 
 #: src/dvr/dvr_autorec.c:1219
 msgid ""
