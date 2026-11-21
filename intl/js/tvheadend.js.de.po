@@ -1538,6 +1538,8 @@ msgid ""
 "Please take a look at the other Help pages (Table of Contents), if you still"
 " can't find what you're "
 msgstr ""
+"Bitte schaue in die anderen Hilfe-Seiten (Inhaltsverzeichnis), wenn du immer"
+" noch nicht findest was du suchst."
 
 #: src/webui/static/app/tvheadend.js:827
 msgid "Premiere"
@@ -1561,7 +1563,7 @@ msgstr "Vorheriger Tag"
 
 #: src/webui/static/app/dvr.js:550
 msgid "Previously recorded"
-msgstr ""
+msgstr "Zuvor aufgezeichnet"
 
 #: src/webui/static/app/status.js:137
 msgid "Profile"
@@ -1577,19 +1579,19 @@ msgstr "Fortschritt"
 
 #: src/webui/static/app/status.js:752
 msgid "Proxy Address"
-msgstr ""
+msgstr "Proxy Adresse"
 
 #: src/webui/static/app/epg.js:872
 msgid "Rating"
-msgstr ""
+msgstr "Bewertung"
 
 #: src/webui/static/app/ratinglabels.js:6
 msgid "Rating Label"
-msgstr ""
+msgstr "Altersfreigabe"
 
 #: src/webui/static/app/ratinglabels.js:7
 msgid "Rating Labels"
-msgstr ""
+msgstr "Altersfreigaben"
 
 #: src/webui/static/app/config.js:93 src/webui/static/app/config.js:95
 msgid "Re-fetch images"
@@ -1619,11 +1621,11 @@ msgstr "Wiederverbunden mit Tvheadend"
 
 #: src/webui/static/app/comet.js:19
 msgid "Reconnecting to Tvheadend..."
-msgstr ""
+msgstr "Verbindung wiederherstellen mit Tvheadend..."
 
 #: src/webui/static/app/epg.js:427
 msgid "Record"
-msgstr ""
+msgstr "Aufnehmen"
 
 #: src/webui/static/app/epg.js:434
 msgid "Record series"
@@ -1651,11 +1653,11 @@ msgstr "Aktualisieren"
 
 #: src/webui/static/app/epgevent.js:146
 msgid "Related Showings"
-msgstr ""
+msgstr "Wiederholungen"
 
 #: src/webui/static/app/epgevent.js:192
 msgid "Related broadcasts"
-msgstr ""
+msgstr "Ähnliche Sendungen"
 
 #: src/webui/static/app/dvr.js:713
 msgid "Remove"
@@ -1723,19 +1725,19 @@ msgstr "Alle Filter zurücksetzen (zeige alle)"
 
 #: src/webui/static/app/tvhlog.js:117
 msgid "Restore Debug"
-msgstr ""
+msgstr "Debug wiederherstellen"
 
 #: src/webui/static/app/tvhlog.js:125
 msgid "Restore Trace"
-msgstr ""
+msgstr "Trace wiederherstellen"
 
 #: src/webui/static/app/tvhlog.js:118
 msgid "Restore the debug subsystems to their initial state."
-msgstr ""
+msgstr "Debug-Teilsysteme in ihren Ausgangzustand zurücksetzen."
 
 #: src/webui/static/app/tvhlog.js:126
 msgid "Restore the trace subsystems to their initial state."
-msgstr ""
+msgstr "Trace-Teilsysteme in ihren Ausgangszustand zurücksetzen."
 
 #: src/webui/static/app/idnode.js:1845 src/webui/static/app/idnode.js:2356
 #: src/webui/static/app/idnode.js:2903
@@ -1752,7 +1754,7 @@ msgstr "SNR"
 
 #: src/webui/static/app/tvheadend.js:829
 msgid "Same day"
-msgstr ""
+msgstr "Selber Tag"
 
 #: src/webui/static/app/i18n-post.js:99
 msgid "Sat"
@@ -1790,11 +1792,11 @@ msgstr "Suche Titel..."
 
 #: src/webui/static/app/mpegts.js:230
 msgid "Section"
-msgstr ""
+msgstr "Abschnitt"
 
 #: src/webui/static/app/tvhlog.js:34 src/webui/static/app/tvhlog.js:332
 msgid "Select Subsystems"
-msgstr ""
+msgstr "Wähle Teilsysteme"
 
 #: src/webui/static/app/tvheadend.js:886
 msgid "Select channel..."
@@ -1806,7 +1808,7 @@ msgstr "Streamprofil auswählen..."
 
 #: src/webui/static/app/tvhlog.js:32
 msgid "Select trace/debug options from a list of subsystems."
-msgstr ""
+msgstr "Wähle trace/debug Optionen aus einer Liste von Teilsystemen."
 
 #: src/webui/static/app/idnode.js:478 src/webui/static/app/idnode.js:729
 msgid "Select {0} ..."
@@ -1826,11 +1828,11 @@ msgstr "September"
 
 #: src/webui/static/app/status.js:740
 msgid "Server Address"
-msgstr ""
+msgstr "Server Adresse"
 
 #: src/webui/static/app/status.js:746
 msgid "Server Port"
-msgstr ""
+msgstr "Server Port"
 
 #: src/webui/static/app/mpegts.js:387 src/webui/static/app/status.js:130
 msgid "Service"
@@ -1883,7 +1885,7 @@ msgstr "Bewertung"
 
 #: src/webui/static/app/tvheadend.js:402
 msgid "Starring"
-msgstr ""
+msgstr "Hauptdarsteller/-in"
 
 #: src/webui/static/app/epg.js:864 src/webui/static/app/epg.js:865
 msgid "Stars"
@@ -1946,7 +1948,7 @@ msgstr "Stream"
 
 #: src/webui/static/app/esfilter.js:11
 msgid "Stream Filters"
-msgstr ""
+msgstr "Stream-Filter"
 
 #: src/webui/static/app/profile.js:55 src/webui/static/app/profile.js:62
 msgid "Stream Profile"
@@ -1974,7 +1976,7 @@ msgstr "Abonnements"
 
 #: src/webui/static/app/tvhlog.js:170
 msgid "Subsystem"
-msgstr ""
+msgstr "Teilsystem"
 
 #: src/webui/static/app/esfilter.js:77
 msgid "Subtitle Stream Filter"
@@ -2006,7 +2008,7 @@ msgstr "Tausche die Nummern der zwei ausgewählten Kanäle"
 
 #: src/webui/static/app/status.js:711
 msgid "TCP"
-msgstr ""
+msgstr "TCP"
 
 #: src/webui/static/app/tvadapters.js:6
 msgid "TV adapters"
@@ -2081,6 +2083,8 @@ msgid ""
 "There's no documentation available, or there was a problem loading the page.\n"
 "\n"
 msgstr ""
+"Es ist keine Dokumentation verfügbar, oder es ist ein Problem beim Laden der Seite aufgetreten.\n"
+"\n"
 
 #: src/webui/static/app/tvhlog.js:371
 msgid "They will be lost when the application next restarts."
@@ -2151,7 +2155,7 @@ msgstr "Neu-Aufnahme-Funktionalität umschalten"
 
 #: src/webui/static/app/dvr.js:548
 msgid "Toggle the previously recorded state."
-msgstr ""
+msgstr "Den zuvor gespeicherten Zustand umschalten."
 
 #: src/webui/static/app/tvheadend.js:1425
 msgid "Total"
@@ -2159,7 +2163,7 @@ msgstr "Gesamt"
 
 #: src/webui/static/app/tvhlog.js:164
 msgid "Trace"
-msgstr ""
+msgstr "Trace-Verfolgung"
 
 #: src/webui/static/app/status.js:471
 msgid "Transport Errors"
@@ -2198,7 +2202,7 @@ msgstr "Typ"
 
 #: src/webui/static/app/status.js:714
 msgid "UDP"
-msgstr ""
+msgstr "UDP"
 
 #: src/webui/static/app/epg.js:293
 msgid "UHDTV"
@@ -2255,7 +2259,7 @@ msgstr "Video Streamfilter"
 #: src/webui/static/app/status.js:221 src/webui/static/app/status.js:556
 #: src/webui/static/app/status.js:779 src/webui/static/app/servicemapper.js:54
 msgid "View help docs."
-msgstr ""
+msgstr "Zeige Hilfe-Doku."
 
 #: src/webui/static/app/idnode.js:638
 msgid "View level"
@@ -2291,7 +2295,7 @@ msgstr "Gewichtung"
 
 #: src/webui/static/app/dvr.js:731
 msgid "When enabled, group the recordings by the selected column."
-msgstr ""
+msgstr "Wenn aktiviert, gruppiere die Aufnahmen nach der ausgewählten Spalte."
 
 #: src/webui/static/app/epg.js:303
 msgid "Widescreen"
@@ -2307,7 +2311,7 @@ msgstr "Assistent - Seite \"{0}\" nicht gefunden"
 
 #: src/webui/static/app/tvheadend.js:404
 msgid "Writer"
-msgstr ""
+msgstr "Drehbuchautor/-in"
 
 #: src/webui/static/app/i18n-post.js:112 src/webui/static/app/i18n-post.js:258
 msgid "Yes"
@@ -2329,7 +2333,7 @@ msgstr "Sie müssen einen Eintrag in dieser Gruppe auswählen"
 
 #: src/webui/static/app/status.js:172 src/webui/static/app/status.js:437
 msgid "all"
-msgstr ""
+msgstr "Alle"
 
 #: src/webui/static/app/dvr.js:72
 msgid "because it is a rerun of:"
@@ -2369,6 +2373,8 @@ msgid ""
 "looking for please see the "
 "[documentation](http://docs.tvheadend.org/documentation) "
 msgstr ""
+"Suchst du danach, schaue bitte in die "
+"[Dokumentation](http://docs.tvheadend.org/documentation)"
 
 #: src/webui/static/app/i18n-post.js:229
 msgid "m/d/Y#DateColumn"
@@ -2409,6 +2415,8 @@ msgid ""
 "or join the [IRC channel on "
 "libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
 msgstr ""
+"oder betrete den [IRC-Raum auf "
+"Libera](https://web.libera.chat/?nick=tvhhelp|?#hts)."
 
 #: src/webui/static/app/i18n-post.js:217
 msgid "true"
