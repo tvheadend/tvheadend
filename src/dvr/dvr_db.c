@@ -18,7 +18,6 @@
  */
 
 #include <ctype.h>
-#include <sys/stat.h>
 
 #include "tvheadend.h"
 #include "settings.h"
@@ -3591,13 +3590,10 @@ dvr_entry_class_filename_get(void *o)
   return &prop_ptr;
 }
 
-static int
-dvr_entry_regular_file_exists(const char *path)
-{
-  struct stat st;
-  return path && *path && !stat(path, &st) && S_ISREG(st.st_mode);
-}
-
+/*
+ * The path getters run for every entry of a grid request while
+ * global_lock is held, so they must not touch the file system.
+ */
 static const void *
 dvr_entry_class_info_path_get(void *o)
 {
@@ -3605,8 +3601,7 @@ dvr_entry_class_info_path_get(void *o)
   char ubuf[UUID_HEX_SIZE];
 
   if (hts_settings_buildpath(prop_sbuf, sizeof(prop_sbuf), "dvr/log/%s",
-                             idnode_uuid_as_str(&de->de_id, ubuf)) ||
-      !dvr_entry_regular_file_exists(prop_sbuf))
+                             idnode_uuid_as_str(&de->de_id, ubuf)))
     prop_sbuf[0] = '\0';
   return &prop_sbuf_ptr;
 }
@@ -3615,9 +3610,18 @@ static const void *
 dvr_entry_class_video_path_get(void *o)
 {
   dvr_entry_t *de = (dvr_entry_t *)o;
-  const char *filename = dvr_get_filename(de);
+  htsmsg_field_t *f;
+  htsmsg_t *m;
+  const char *s = NULL;
 
-  prop_ptr = dvr_entry_regular_file_exists(filename) ? filename : "";
+  /* The VFS manager keeps the size of each file up to date and drops
+   * it when the file is missing; dvr_entry_is_finished() relies on
+   * the same to find removed recordings. */
+  if ((f = htsmsg_field_last(de->de_files)) != NULL &&
+      (m = htsmsg_field_get_map(f)) != NULL &&
+      htsmsg_get_s64_or_default(m, "size", -1) >= 0)
+    s = htsmsg_get_str(m, "filename");
+  prop_ptr = s ?: "";
   return &prop_ptr;
 }
 
@@ -4866,8 +4870,7 @@ const idclass_t dvr_entry_class = {
       .id       = "info_path",
       .name     = N_("Info file (JSON)"),
       .desc     = N_("Full path of the JSON file in the configuration "
-                     "directory that stores this entry. Empty if the "
-                     "file does not exist."),
+                     "directory that stores this entry."),
       .get      = dvr_entry_class_info_path_get,
       .opts     = PO_RDONLY | PO_NOSAVE | PO_EXPERT,
     },
