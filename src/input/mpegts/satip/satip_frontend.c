@@ -1462,6 +1462,14 @@ satip_frontend_close_rtsp
   http_client_close(rtsp);
 }
 
+static void
+satip_frontend_apply_rtsp_timeout( satip_frontend_t *lfe, http_client_t *rtsp )
+{
+  int max_timeout = lfe->sf_device->sd_rtsp_timeout;
+  if (max_timeout > 0 && rtsp->hc_rtp_timeout > max_timeout)
+    rtsp->hc_rtp_timeout = max_timeout;
+}
+
 static int
 satip_frontend_rtp_decode
   ( satip_frontend_t *lfe, uint32_t *_seq, uint32_t *_unc,
@@ -1693,7 +1701,8 @@ new_tune:
           rtsp_options_decode(rtsp);
           break;
         case RTSP_CMD_SETUP:
-          rtsp_setup_decode(rtsp, 1);
+          if (rtsp_setup_decode(rtsp, 1) >= 0)
+            satip_frontend_apply_rtsp_timeout(lfe, rtsp);
           break;
         default:
           break;
@@ -2007,6 +2016,7 @@ new_tune:
             fatal = 1;
             continue;
           } else {
+            satip_frontend_apply_rtsp_timeout(lfe, rtsp);
             strlcpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
             stream_id = rtsp->hc_rtsp_stream_id;
             tvhdebug(LS_SATIP, "%s #%i - new session %s stream id %li",
