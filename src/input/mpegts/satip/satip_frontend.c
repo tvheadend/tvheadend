@@ -1862,7 +1862,7 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
   switch (lfe->sf_device->sd_default_rolloff) {
   case SATIP_DEFAULT_ROLLOFF_20:
-    rtsp_flags |= SATIP_SETUP_ROLLOFF_25;
+    rtsp_flags |= SATIP_SETUP_ROLLOFF_20;
     break;
   case SATIP_DEFAULT_ROLLOFF_25:
     rtsp_flags |= SATIP_SETUP_ROLLOFF_25;
