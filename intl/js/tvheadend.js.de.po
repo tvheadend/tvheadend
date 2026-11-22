@@ -1653,7 +1653,7 @@ msgstr "Aktualisieren"
 
 #: src/webui/static/app/epgevent.js:146
 msgid "Related Showings"
-msgstr "Wiederholungen"
+msgstr "Ähnliche Sendungen"
 
 #: src/webui/static/app/epgevent.js:192
 msgid "Related broadcasts"
