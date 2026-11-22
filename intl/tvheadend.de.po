@@ -7947,7 +7947,7 @@ msgstr ""
 
 #: src/transcoding/codec/profile_audio_class.c:330
 msgid "Sample format"
-msgstr "Beispielformat"
+msgstr "Abtastformat"
 
 #: src/transcoding/codec/profile_audio_class.c:342
 msgid "Sample rate"
