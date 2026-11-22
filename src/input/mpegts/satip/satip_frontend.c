@@ -1960,9 +1960,7 @@ new_tune:
       continue;
     }
 
-    if (nfds < 1) continue;
-
-    if (ev[0].ptr == rtsp) {
+    if (nfds > 0 && ev[0].ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
         if (rtsp->hc_code == 404 && session[0]) {
@@ -2070,12 +2068,22 @@ new_tune:
     }
 
     /* We need to keep the session alive */
-    if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
+    if (running && !fatal && rtsp && rtsp->hc_rtsp_session &&
+        rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
-      rtsp_options(rtsp);
+      r = rtsp_options(rtsp);
+      if (r < 0) {
+        tvherror(LS_SATIP, "%s - RTSP OPTIONS send error %d (%s)",
+                 buf, r, strerror(-r));
+        satip_frontend_tuning_error(lfe, tr);
+        fatal = 1;
+        continue;
+      }
       tvhtrace(LS_SATIP, "%s - OPTIONS request", buf);
       reply = 1;
     }
+
+    if (nfds < 1) continue;
 
     if (ev[0].ptr == rtcp) {
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
