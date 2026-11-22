@@ -1144,7 +1144,7 @@ msgstr "Letzte Seite"
 
 #: src/webui/static/app/epg.js:307
 msgid "Lines"
-msgstr "Linien"
+msgstr "Zeilen"
 
 #: src/webui/static/app/mpegts.js:233
 msgid "Link"
