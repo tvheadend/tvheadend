@@ -9,7 +9,10 @@ case "$1" in
 purge)
     if getent passwd "$HTS_USER" >/dev/null; then
         rm -rf "$(getent passwd "$HTS_USER" | cut -d':' -f6)"
-        deluser --system "$HTS_USER"
+        userdel "$HTS_USER"
+    fi
+    if getent group "$HTS_USER" >/dev/null; then
+        groupdel "$HTS_USER"
     fi
     db_purge
    ;;
