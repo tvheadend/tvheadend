@@ -5048,6 +5048,10 @@ msgid ""
 "TCP/TLS handshake for many images) instead of opening a new connection per "
 "image. Disable only if a server misbehaves with persistent connections."
 msgstr ""
+"Utrzymuj połączenie HTTP z serwerem obrazów między kolejnymi pobraniami "
+"(jedno uzgadnianie protokołu TCP/TLS dla wielu obrazów), zamiast otwierać "
+"nowe połączenie dla każdego z nich. Wyłącz tę opcję tylko w przypadku, gdy "
+"serwer nieprawidłowo obsługuje połączenia trwałe."
 
 #: src/timeshift.c:287
 msgid ""
@@ -7624,7 +7628,7 @@ msgstr "Ponownie użyj EPG od"
 
 #: src/imagecache.c:114
 msgid "Reuse HTTP connection"
-msgstr ""
+msgstr "Powtórne użycie połączenia HTTP"
 
 #: src/channels.c:589
 msgid "Reuse the EPG from another channel."
