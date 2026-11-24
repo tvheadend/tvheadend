@@ -78,6 +78,7 @@ $(LIB_ROOT)/$(LIBHDHR)/libhdhomerun.a: $(OBJS)
 
 $(LIB_ROOT)/$(LIBHDHR)/.tvh_download:
 	$(call DOWNLOAD,$(LIBHDHR_URL),$(LIB_ROOT)/$(LIBHDHR_TB),$(LIBHDHR_SHA1))
+	rm -rf $(LIB_ROOT)/libhdhomerun
 	$(call UNTAR,$(LIBHDHR_TB),z)
 	ln -sf libhdhomerun $(LIB_ROOT)/$(LIBHDHR)
 	$(call PATCH,$(LIBHDHR),$(LIB_DIFFS))
