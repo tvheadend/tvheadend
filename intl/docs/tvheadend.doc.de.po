@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-28 02:21+0000\n"
+"POT-Creation-Date: 2026-11-23 02:09+0000\n"
 "PO-Revision-Date: 2023-12-11 10:56+0000\n"
 "Last-Translator: Thomas Becker, 2026\n"
 "Language-Team: German (https://app.transifex.com/tvheadend/teams/43381/de/)\n"
@@ -9534,12 +9534,18 @@ msgid ""
 "When merging fields, each field is prefixed with a specific code so that "
 "search terms can be applied to a specific field."
 msgstr ""
+"Beim Zusammenführen von Feldern wird jedem Feld ein bestimmter Code "
+"vorangestellt, damit Suchbegriffe auf ein bestimmtes Feld angewendet werden "
+"können."
 
 #: src/docs_inc.c:4584
 msgid ""
 "When the rating labels module encounters a new country and age combination, "
 "it will create a placeholder entry in the rating labels table as follows:"
 msgstr ""
+"Wenn das Modul für Altersfreigabe-Bezeichnungen auf eine neue Kombination "
+"aus Land und Alter stößt, legt es wie folgt einen Platzhaltereintrag in der "
+"Tabelle für Altersfreigabe-Bezeichnungen an:"
 
 #: src/docs_inc.c:1108
 msgid ""
@@ -9547,6 +9553,9 @@ msgid ""
 "map a path through all those variables to ask a particular tuner to go and "
 "get the signal for you."
 msgstr ""
+"Wenn Sie den Kanal auswählen, den Sie sehen oder aufnehmen möchten, kann "
+"Tvheadend dann anhand all dieser Variablen einen Pfad festlegen, um einen "
+"bestimmten Tuner anzuweisen, das Signal für Sie zu empfangen."
 
 #: src/docs_inc.c:4936
 msgid ""
@@ -9557,50 +9566,66 @@ msgid ""
 "application) and the actual write itself (to the disc/storage) as changes "
 "are buffered to be written in one go."
 msgstr ""
+"Wann immer Sie Daten aus den Dateisystemen lesen oder in diese schreiben, "
+"werden diese Informationen für eine gewisse Zeit im Arbeitsspeicher "
+"zwischengespeichert (im Cache). Das bedeutet, dass regelmäßig aufgerufene "
+"Dateien schnell verfügbar sind, ohne dass erneut auf die Festplatte "
+"zugegriffen werden muss; es bedeutet aber auch, dass beim Schreiben eine "
+"Verzögerung zwischen der Schreibanforderung (durch die Anwendung) und dem "
+"eigentlichen Schreibvorgang (auf die Festplatte/den Speicher) entsteht, da "
+"die Änderungen zwischengespeichert werden, um in einem Durchgang geschrieben"
+" zu werden."
 
 #: src/docs_inc.c:84
 msgid "Where you configure adapters"
-msgstr ""
+msgstr "Wo Sie Adapter konfigurieren"
 
 #: src/docs_inc.c:92
 msgid "Where you configure multiplexes"
-msgstr ""
+msgstr "Wo Sie Multiplexe konfigurieren"
 
 #: src/docs_inc.c:100
 msgid ""
 "Where you configure mux schedulers - schedule Tvheadend to tune to a "
 "specific mux to receive different types of data, EMMs, EIT etc"
 msgstr ""
+"Hier konfigurieren Sie die Mux-Scheduler - legen Sie fest, dass Tvheadend "
+"auf einen bestimmten Mux umschaltet, um verschiedene Arten von Daten wie "
+"EMMs, EIT usw. zu empfangen."
 
 #: src/docs_inc.c:88
 msgid "Where you configure networks"
-msgstr ""
+msgstr "Wo Sie Netzwerke konfigurieren"
 
 #: src/docs_inc.c:2553
 msgid "Where you configure the frontend, whether or not it's enabled etc."
 msgstr ""
+"Wo Sie das Frontend konfigurieren, ob es aktiviert ist oder nicht usw."
 
 #: src/docs_inc.c:2601
 msgid "Where you configure various settings related to your DVB-S tuners."
 msgstr ""
+"Hier können Sie verschiedene Einstellungen für Ihre DVB-S-Tuner vornehmen."
 
 #: src/docs_inc.c:5812
 msgid ""
 "Whereas the number 2 variant forces the recording to be formatted as a tv "
 "series."
 msgstr ""
+"Die Variante Nr. 2 hingegen erzwingt, dass die Aufzeichnung als Fernsehserie"
+" formatiert wird."
 
 #: src/docs_inc.c:5904 src/docs_inc.c:6012 src/docs_inc.c:6112
 msgid "Who created this recording"
-msgstr ""
+msgstr "Wer hat diese Aufnahme erstellt?"
 
 #: src/docs_inc.c:1104
 msgid "Why the Complexity?"
-msgstr ""
+msgstr "Warum diese Komplexität?"
 
 #: src/docs_inc.c:5208
 msgid "Wikipedia for a detailed look into Cron."
-msgstr ""
+msgstr "Wikipedia bietet einen detaillierten Einblick in Cron."
 
 #: src/docs_inc.c:3063
 msgid ""
@@ -9609,22 +9634,31 @@ msgid ""
 "accounts are matched using the network prefix _(Allowed networks)_ , acting "
 "similar to a username."
 msgstr ""
+"Wildcard (anonyme) Konten (für die weder Benutzername noch Passwort "
+"erforderlich sind), können durch Eingabe eines Sternchens `*` in das Feld "
+"für Benutzername/Passwort erstellt werden. Diese Konten werden anhand des "
+"Netzwerkpräfixes _(Zulässige Netzwerke)_ abgeglichen, das ähnlich wie ein "
+"Benutzername funktioniert."
 
 #: src/docs_inc.c:4484
 msgid ""
 "Wildcard (anonymous) accounts don't actually need a password, but it's "
 "recommended you add one anyway (enter an asterisk `*`)."
 msgstr ""
+"Wildcard (anonyme) Konten benötigen eigentlich kein Passwort, es wird jedoch"
+" empfohlen, trotzdem eines festzulegen (geben Sie ein Sternchen `*` ein)."
 
 #: src/docs_inc.c:1663
 msgid "Will generate:"
-msgstr ""
+msgstr "Erzeugt:"
 
 #: src/docs_inc.c:2044
 msgid ""
 "With no arguments it auto-detects everything from Tvheadend itself, so on "
 "the server it is simply:"
 msgstr ""
+"Ohne Argumente erkennt es alles automatisch über Tvheadend selbst, sodass "
+"auf dem Server lediglich Folgendes erforderlich ist:"
 
 #: src/docs_inc.c:5844
 msgid ""
@@ -9632,6 +9666,10 @@ msgid ""
 "$A/$2B-$u$n.$x` would produce a recording named "
 "`/path/to/recordings/Bones/Season 2/06-The Girl in Suite 2103.ts`."
 msgstr ""
+"Bei ausreichend genauen EPG-Daten würde die Formatierungszeichenfolge "
+"`$t/Staffel $A/$2B-$u$n.$x` eine Aufnahme mit dem Namen "
+"`/Pfad/zu/Aufnahmen/Bones/Staffel 2/06-Das Mädchen in Suite 2103.ts` "
+"erzeugen."
 
 #: src/docs_inc.c:5426 src/docs_inc.c:5490
 msgid ""
@@ -9639,6 +9677,10 @@ msgid ""
 " grab cycle, making the EPG flip between a detailed schedule (from actual-"
 "TS) and a coarser placeholder (from other-TS)."
 msgstr ""
+"Ohne eine Prioritätsregel können sich die beiden Quellen bei jedem "
+"Abrufzyklus gegenseitig überschreiben, wodurch der EPG zwischen einem "
+"detaillierten Programmplan (aus actual-TS) und einem groben Platzhalter (aus"
+" other-TS) hin- und herwechselt."
 
 #: src/docs_inc.c:654
 msgid "Wizard"
@@ -9646,7 +9688,7 @@ msgstr "Assistent"
 
 #: src/docs_inc.c:1971
 msgid "Work-in-progress notes"
-msgstr ""
+msgstr "Anmerkungen zur laufenden Arbeit"
 
 #: src/docs_inc.c:3269
 msgid "Wrapper (capmt_ca.so)"
@@ -9654,7 +9696,7 @@ msgstr "Wrapper (capmt_ca.so)"
 
 #: src/docs_inc.c:3929 src/docs_inc.c:3937 src/docs_inc.c:4604
 msgid "XMLTV"
-msgstr ""
+msgstr "XMLTV"
 
 #: src/docs_inc.c:3771
 msgid "XMLTV EPG Import"
@@ -9662,7 +9704,7 @@ msgstr "XMLTV EPG Import"
 
 #: src/docs_inc.c:3983
 msgid "XMLTV XPath Examples and Notes"
-msgstr ""
+msgstr "XMLTV-XPath-Beispiele und Hinweise"
 
 #: src/docs_inc.c:5064
 msgid "XMLTV output format"
@@ -9674,11 +9716,11 @@ msgstr "Ja"
 
 #: src/docs_inc.c:5582
 msgid "Yes, because no components are ignored."
-msgstr ""
+msgstr "Ja, denn es werden keine Komponenten ignoriert."
 
 #: src/docs_inc.c:5594
 msgid "Yes, but only if the second-from-last component"
-msgstr ""
+msgstr "Ja, aber nur, wenn die vorletzte Komponente"
 
 #: src/docs_inc.c:607
 msgid ""
@@ -9686,6 +9728,10 @@ msgid ""
 "usually hidden for a reason and are often used for things such as encrypted "
 "guide data for set-top boxes, interactive services, and so on."
 msgstr ""
+"Ja, nicht alle Services erhalten von den Anbietern einen Namen. Diese "
+"Services sind in der Regel aus gutem Grund verborgen und werden häufig für "
+"Zwecke wie verschlüsselte Programmdaten für Set-Top-Boxen, interaktive "
+"Services und Ähnliches genutzt."
 
 #: src/docs_inc.c:4596
 msgid ""
@@ -9696,14 +9742,21 @@ msgid ""
 "only needs to be done once for each label, all other programmes with that "
 "label will be automatically adjusted."
 msgstr ""
+"Sie müssen diesen Platzhaltereintrag manuell bearbeiten, um den "
+"entsprechenden Bewertungstext für die Anzeige anzugeben. Den korrekten Text "
+"finden Sie, indem Sie in einer anderen EPG-Quelle nach der jeweiligen "
+"Sendung suchen oder die Einstufungsrichtlinien für den betreffenden Standort"
+" (das betreffende Land) einholen. Dies muss für jede Bezeichnung nur einmal "
+"erfolgen; alle anderen Sendungen mit dieser Bezeichnung werden automatisch "
+"angepasst."
 
 #: src/docs_inc.c:834
 msgid "You can also use"
-msgstr ""
+msgstr "Sie können auch Folgendes verwenden:"
 
 #: src/docs_inc.c:496
 msgid "You can change or delete the autorec rules in the __"
-msgstr ""
+msgstr "Sie können die Autorec-Regeln im __ ändern oder löschen."
 
 #: src/docs_inc.c:370
 msgid ""
@@ -9711,22 +9764,30 @@ msgid ""
 "selecting _‘(Clear filter)’_ as appropriate on all except the title filter. "
 "If you want to clear all filters, just press the _[Reset All]_ button."
 msgstr ""
+"Sie können einen einzelnen Filter löschen, indem Sie einfach dessen Inhalt "
+"löschen oder – mit Ausnahme des Titelfilters – bei allen anderen Filtern die"
+" Option _'(Filter löschen)'_ auswählen. Wenn Sie alle Filter löschen "
+"möchten, klicken Sie einfach auf die Schaltfläche _[Alle zurücksetzen]_."
 
 #: src/docs_inc.c:4159 src/docs_inc.c:4482
 msgid "You can enter whatever you like in the comment field."
-msgstr ""
+msgstr "Sie können in das Kommentarfeld eingeben, was Sie möchten."
 
 #: src/docs_inc.c:4480
 msgid ""
 "You can have multiple passwords matching a single _Access Entry_ if you "
 "wish."
 msgstr ""
+"Sie können, wenn Sie möchten, mehrere Passwörter zu einem einzelnen "
+"_Zugriffseintrag_ hinterlegen."
 
 #: src/docs_inc.c:1607
 msgid ""
 "You can include documentation/items in other markdown files by using the "
 "tvh_class_doc, tvh_include and tvh_class_items tags."
 msgstr ""
+"Sie können Dokumentation/Elemente aus anderen Markdown-Dateien einbinden, "
+"indem Sie die Tags tvh_class_doc, tvh_include und tvh_class_items verwenden."
 
 #: src/docs_inc.c:3293
 msgid ""
@@ -9738,16 +9799,30 @@ msgid ""
 "instead, you can do so by removing the /play/ path from the URL - see URL "
 "Syntax for more info."
 msgstr ""
+"Sie können einen Stream abspielen, indem Sie auf das Wiedergabe-Icon "
+"klicken. Dadurch wird automatisch ein geeigneter Player gestartet; "
+"andernfalls müssen Sie die Wiedergabeliste manuell öffnen, um die Wiedergabe"
+" zu starten (in der Regel durch einen Doppelklick auf die heruntergeladene "
+"Datei). Beachten Sie bitte, dass die Links nicht auf den eigentlichen Stream"
+" verweisen, sondern auf eine Wiedergabeliste zur Verwendung mit Mediaplayern"
+" wie VLC. Wenn Sie stattdessen lieber den Rohstream empfangen möchten, "
+"können Sie dies tun, indem Sie den Pfad /play/ aus der URL entfernen - "
+"weitere Informationen finden Sie unter URL-Syntax."
 
 #: src/docs_inc.c:2866
 msgid "You can play a stream/file by clicking the play icon !"
 msgstr ""
+"Sie können einen Stream oder eine Datei abspielen, indem Sie auf das "
+"Wiedergabe-Icon klicken!"
 
 #: src/docs_inc.c:4698
 msgid ""
 "You can put a custom M3U playlist (which will be advertised to clients) in "
 "your Tvheadend configuration directory - filename _satip.m3u_ ."
 msgstr ""
+"Sie können eine benutzerdefinierte M3U-Wiedergabeliste (die den Clients "
+"angeboten wird) in Ihrem Tvheadend-Konfigurationsverzeichnis ablegen - "
+"Dateiname: _satip.m3u_."
 
 #: src/docs_inc.c:2793
 msgid ""
@@ -9755,10 +9830,15 @@ msgid ""
 " the menu bar in the _Upcoming / Current Recordings_ tab. You must enter a "
 "title, a start (and an end) time, and pick a channel."
 msgstr ""
+"Sie können eine einmalige Aufnahme planen, indem Sie in der Menüleiste auf "
+"der Registerkarte _Bevorstehende / Aktuelle Aufzeichnungen_ auf die "
+"Schaltfläche [Hinzufügen] klicken. Sie müssen einen Titel, eine Startzeit "
+"(und eine Endzeit) eingeben und einen Kanal auswählen."
 
 #: src/docs_inc.c:1645
 msgid "You can't have have properly indented paragraphs within list items."
 msgstr ""
+"In Listenelementen lassen sich keine korrekt eingerückten Absätze erstellen."
 
 #: src/docs_inc.c:5204
 msgid ""
