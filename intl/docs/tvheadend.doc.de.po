@@ -9395,7 +9395,7 @@ msgstr "Videostream-Filter."
 
 #: src/docs_inc.c:1398 src/docs_inc.c:1422 src/docs_inc.c:1540
 msgid "View Level"
-msgstr "Ansichtsebene"
+msgstr "Ansichtsmodus"
 
 #: src/docs_inc.c:1434
 msgid "View level"
@@ -10636,12 +10636,18 @@ msgid ""
 "__You can omit this step (do not check 'Map all services') and map services "
 "to channels manually.__"
 msgstr ""
+"__Sie können diesen Schritt überspringen (aktivieren Sie das "
+"Kontrollkästchen \"Alle Services zuordnen\" nicht) und die Services manuell "
+"den Kanälen zuordnen.__"
 
 #: src/docs_inc.c:6530
 msgid ""
 "__You can skip this step (do not check 'Map all services') and map services "
 "to channels manually.__"
 msgstr ""
+"__Sie können diesen Schritt überspringen (aktivieren Sie nicht das "
+"Kontrollkästchen „Alle Services zuordnen“) und die Services manuell den "
+"Kanälen zuordnen.__"
 
 #: src/docs_inc.c:2082
 #, c-format
@@ -10649,6 +10655,9 @@ msgid ""
 "__now-first__ is working when the _primary_ (first-seen) cached% is highest "
 "for the nearest days and lowest for the far end of the guide."
 msgstr ""
+"__now-first__ funktioniert, wenn der _primäre_ (zuerst erkannte) "
+"Cached%-Wert für die nächsten Tage am höchsten und für das Ende des "
+"Programmführers am niedrigsten ist."
 
 #: src/docs_inc.c:2084
 msgid ""
@@ -10657,32 +10666,39 @@ msgid ""
 "hours to fill — the tool prints a rough estimate at the throttle's "
 "sustainable rate."
 msgstr ""
+"__zum Herunterladen__ fehlt noch die eindeutige, deduplizierte Anzahl; "
+"Bildanbieter begrenzen die Zugriffsrate in der Regel pro IP-Adresse, sodass "
+"das Ausfüllen eines umfangreichen Leitfadens zu Recht mehrere Stunden dauert"
+" - das Tool gibt eine grobe Schätzung auf Basis der nachhaltig möglichen "
+"Rate an."
 
 #: src/docs_inc.c:5838
 msgid "`$2A` would insert `02` into the file name."
-msgstr ""
+msgstr "`$2A` würde `02` in den Dateinamen einfügen."
 
 #: src/docs_inc.c:5842
 msgid "`$3B` would insert `006` into the file name."
-msgstr ""
+msgstr "`$3B` würde `006` in den Dateinamen einfügen."
 
 #: src/docs_inc.c:5836
 msgid "`$A` would insert `2` into the file name."
-msgstr ""
+msgstr "`$A` würde die Zahl `2` in den Dateinamen einfügen."
 
 #: src/docs_inc.c:5840
 msgid "`$B` would insert `6` into the file name."
-msgstr ""
+msgstr "`$B` würde die Zahl `6` in den Dateinamen einfügen."
 
 #: src/docs_inc.c:2028
 msgid ""
 "`tv_imagecache_audit.py` is a small command-line developer tool, shipped in "
 "the `support/` directory of the source tree, that cross-checks what the"
 msgstr ""
+"`tv_imagecache_audit.py` ist ein kleines Befehlszeilen-Entwicklertool, das "
+"im Verzeichnis `support/` des Quellcodes enthalten ist und überprüft, ob die"
 
 #: src/docs_inc.c:3485
 msgid "access"
-msgstr ""
+msgstr "Zugang"
 
 #: src/docs_inc.c:1060 src/docs_inc.c:4992 src/docs_inc.c:5002
 #: src/docs_inc.c:5012 src/docs_inc.c:5034 src/docs_inc.c:6324
@@ -10694,6 +10710,8 @@ msgid ""
 "and IRC (_#hts_ on _Libera_ ). If you don't have a client installed you can "
 "use the"
 msgstr ""
+"und IRC (_#hts_ on _Libera_). Falls Sie keinen Client installiert haben, "
+"können Sie den"
 
 #: src/docs_inc.c:3505
 msgid "api"
@@ -10705,11 +10723,11 @@ msgstr "arm"
 
 #: src/docs_inc.c:6328
 msgid "as that setting changes. This is the default."
-msgstr ""
+msgstr "wenn sich diese Einstellung ändert. Dies ist die Standardeinstellung."
 
 #: src/docs_inc.c:3605
 msgid "audioes"
-msgstr ""
+msgstr "audioes"
 
 #: src/docs_inc.c:2135
 msgid "auth"
@@ -10724,6 +10742,8 @@ msgid ""
 "available. Tvheadend will parse the NIT then the add newly discovered muxes "
 "automatically."
 msgstr ""
+"verfügbar. Tvheadend wertet die NIT aus und fügt die neu erkannten Muxes "
+"anschließend automatisch hinzu."
 
 #: src/docs_inc.c:1086
 msgid ""
@@ -10732,18 +10752,25 @@ msgid ""
 "or software. Many work out-of-the-box with Tvheadend using SAT>IP or the "
 "HDHomeRun protocols."
 msgstr ""
+"basiert) Computer, die Sie über Ethernet oder WLAN mit Ihrem Netzwerk "
+"verbinden; sie verfügen oft über eine große Anzahl von Tunern und werden "
+"über eine Weboberfläche oder eine Software gesteuert. Viele funktionieren "
+"mit Tvheadend sofort nach dem Auspacken, wobei sie die Protokolle SAT>IP "
+"oder HDHomeRun nutzen."
 
 #: src/docs_inc.c:662
 msgid "before continuing with the wizard, as it contains lots of useful info!"
 msgstr ""
+"Bevor Sie mit dem Assistenten fortfahren, sollten Sie sich diese "
+"Informationen durchlesen, da sie viele nützliche Hinweise enthalten!"
 
 #: src/docs_inc.c:2789 src/docs_inc.c:3071
 msgid "below"
-msgstr ""
+msgstr "unten"
 
 #: src/docs_inc.c:4411
 msgid "below for important information!"
-msgstr ""
+msgstr "Weiter unten finden Sie wichtige Informationen!"
 
 #: src/docs_inc.c:3501
 msgid "bonjour"
@@ -10751,19 +10778,19 @@ msgstr "bonjour"
 
 #: src/docs_inc.c:3629
 msgid "bouquet"
-msgstr ""
+msgstr "bouquet"
 
 #: src/docs_inc.c:1216
 msgid "button will be shown instead."
-msgstr ""
+msgstr "Stattdessen wird die Schaltfläche angezeigt."
 
 #: src/docs_inc.c:3649
 msgid "caclient"
-msgstr ""
+msgstr "caclient"
 
 #: src/docs_inc.c:3875
 msgid "capabilities."
-msgstr ""
+msgstr "Fähigkeiten"
 
 #: src/docs_inc.c:3657
 msgid "capmt"
@@ -10775,24 +10802,24 @@ msgstr "cccam"
 
 #: src/docs_inc.c:5596
 msgid "changes. We're ignoring the last component"
-msgstr ""
+msgstr "Änderungen. Wir ignorieren die letzte Komponente"
 
 #: src/docs_inc.c:1865 src/docs_inc.c:2219 src/docs_inc.c:2225
 #: src/docs_inc.c:2257 src/docs_inc.c:3617 src/docs_inc.c:6216
 msgid "channel"
-msgstr ""
+msgstr "Kanal"
 
 #: src/docs_inc.c:2179 src/docs_inc.c:2261 src/docs_inc.c:2321
 msgid "channelid"
-msgstr ""
+msgstr "Kanal-ID"
 
 #: src/docs_inc.c:2175 src/docs_inc.c:2253 src/docs_inc.c:2317
 msgid "channelname"
-msgstr ""
+msgstr "Kanal-Name"
 
 #: src/docs_inc.c:2171 src/docs_inc.c:2249 src/docs_inc.c:2313
 msgid "channelnumber"
-msgstr ""
+msgstr "Kanal-Nummer"
 
 #: src/docs_inc.c:2159 src/docs_inc.c:2309
 msgid "channels"
@@ -10800,32 +10827,36 @@ msgstr "Kanäle"
 
 #: src/docs_inc.c:3693
 msgid "charset"
-msgstr ""
+msgstr "Zeichensatz"
 
 #: src/docs_inc.c:392
 msgid "click to call up more detailed information about an event"
 msgstr ""
+"Klicken Sie hier, um detailliertere Informationen zu einer Veranstaltung "
+"aufzurufen"
 
 #: src/docs_inc.c:3793
 msgid "codec"
-msgstr ""
+msgstr "Codec"
 
 #: src/docs_inc.c:2058
 #, c-format
 msgid "compact one-column-per-day cached% matrix (whole guide at a glance)"
 msgstr ""
+"Kompakte, zwischengespeicherte Matrix mit einer Spalte pro Tag (der gesamte "
+"Leitfaden auf einen Blick)"
 
 #: src/docs_inc.c:3481
 msgid "config"
-msgstr ""
+msgstr "Konfiguration"
 
 #: src/docs_inc.c:1426
 msgid "configuration"
-msgstr ""
+msgstr "Konfiguration"
 
 #: src/docs_inc.c:3489
 msgid "cron"
-msgstr ""
+msgstr "Cron"
 
 #: src/docs_inc.c:3653
 msgid "csa"
@@ -10845,27 +10876,27 @@ msgstr "ddci"
 
 #: src/docs_inc.c:2129
 msgid "default - HTTP authentication"
-msgstr ""
+msgstr "Standard – HTTP-Authentifizierung"
 
 #: src/docs_inc.c:2289
 msgid "descramble"
-msgstr ""
+msgstr "entschlüsseln"
 
 #: src/docs_inc.c:3641
 msgid "descrambler"
-msgstr ""
+msgstr "Entschlüsseler"
 
 #: src/docs_inc.c:3645
 msgid "descrambler-emm"
-msgstr ""
+msgstr "Entschlüsselungs-EMM"
 
 #: src/docs_inc.c:1755
 msgid "dialog determines how services are mapped."
-msgstr ""
+msgstr "Dialogfeld legt fest, wie Services zugeordnet werden."
 
 #: src/docs_inc.c:1170 src/docs_inc.c:2485
 msgid "dialog."
-msgstr ""
+msgstr "Dialog."
 
 #: src/docs_inc.c:3733
 msgid "diseqc"
@@ -10873,15 +10904,15 @@ msgstr "DiseqC"
 
 #: src/docs_inc.c:2349
 msgid "display-name"
-msgstr ""
+msgstr "Anzeige-Name"
 
 #: src/docs_inc.c:1572
 msgid "documentation"
-msgstr ""
+msgstr "Dokumentation"
 
 #: src/docs_inc.c:6460 src/docs_inc.c:6488
 msgid "donate"
-msgstr ""
+msgstr "Spenden"
 
 #: src/docs_inc.c:3697
 msgid "dvb"
@@ -10949,59 +10980,59 @@ msgstr "fastscan"
 
 #: src/docs_inc.c:3209
 msgid "field to 127.0.0.1 and"
-msgstr ""
+msgstr "Feld auf 127.0.0.1 und"
 
 #: src/docs_inc.c:824
 msgid "for UK DVB-T transmitters"
-msgstr ""
+msgstr "für britische DVB-T-Sender"
 
 #: src/docs_inc.c:858
 msgid "for a detailed look into service mapping."
-msgstr ""
+msgstr "für einen detaillierten Einblick in das Service-Mapping."
 
 #: src/docs_inc.c:942
 msgid "for a full list."
-msgstr ""
+msgstr "für eine vollständige Liste."
 
 #: src/docs_inc.c:2791
 msgid "for a list of possible reasons."
-msgstr ""
+msgstr "für eine Liste möglicher Gründe."
 
 #: src/docs_inc.c:820
 msgid "for all European satellite information"
-msgstr ""
+msgstr "für alle Informationen zu europäischen Satelliten"
 
 #: src/docs_inc.c:61
 msgid "for details."
-msgstr ""
+msgstr "für Details."
 
 #: src/docs_inc.c:4752
 msgid "for more details on service mapping."
-msgstr ""
+msgstr "für mehr Details zur Service-Zuordnung."
 
 #: src/docs_inc.c:237 src/docs_inc.c:2876
 msgid "for more info."
-msgstr ""
+msgstr "für weitere Informationen."
 
 #: src/docs_inc.c:828
 msgid "for primarily central and northern Europe"
-msgstr ""
+msgstr "vor allem für Mittel- und Nordeuropa"
 
 #: src/docs_inc.c:832
 msgid "for worldwide satellite information."
-msgstr ""
+msgstr "für weltweite Satelliteninformationen."
 
 #: src/docs_inc.c:5172
 msgid "force service type to 1"
-msgstr ""
+msgstr "erzwinge Service-Typ auf 1"
 
 #: src/docs_inc.c:5340
 msgid "format."
-msgstr ""
+msgstr "Format."
 
 #: src/docs_inc.c:1580
 msgid "forum"
-msgstr ""
+msgstr "Forum"
 
 #: src/docs_inc.c:3445
 msgid "fsmonitor"
@@ -11009,7 +11040,7 @@ msgstr "fsmonitor"
 
 #: src/docs_inc.c:2078
 msgid "full option list and more examples"
-msgstr ""
+msgstr "Vollständige Optionsliste und weitere Beispiele"
 
 #: src/docs_inc.c:948
 msgid "github"
@@ -11017,27 +11048,29 @@ msgstr "github"
 
 #: src/docs_inc.c:3585
 msgid "globalheaders"
-msgstr ""
+msgstr "globalheaders"
 
 #: src/docs_inc.c:3931
 msgid "grabber script & parses the output."
-msgstr ""
+msgstr "Grabber-Skript & analysiert die Ausgabe."
 
 #: src/docs_inc.c:3947
 msgid "grabber script & parses the output. This isn't widely used!"
 msgstr ""
+"Ein Grabber-Skript, das die Ausgabe auswertet. Dies wird nicht häufig "
+"verwendet!"
 
 #: src/docs_inc.c:3939
 msgid "grabber script."
-msgstr ""
+msgstr "Grabber-Skript."
 
 #: src/docs_inc.c:3955
 msgid "grabber script. This isn't widely used!"
-msgstr ""
+msgstr "Grabber-Skript. Das wird nicht sehr häufig verwendet!"
 
 #: src/docs_inc.c:3873
 msgid "grabbing"
-msgstr ""
+msgstr "Grabbing"
 
 #: src/docs_inc.c:1140
 msgid "grid"
@@ -11048,14 +11081,17 @@ msgid ""
 "has actually downloaded against the rolling EPG, bucketed by airing day. It "
 "is a read-only diagnostic: it never changes the cache."
 msgstr ""
+"wurde tatsächlich anhand des fortlaufenden EPG heruntergeladen, gruppiert "
+"nach Ausstrahlungstag. Es handelt sich um eine schreibgeschützte "
+"Diagnosefunktion: Der Cache wird dadurch niemals verändert."
 
 #: src/docs_inc.c:670 src/docs_inc.c:788 src/docs_inc.c:862 src/docs_inc.c:895
 msgid "here"
-msgstr ""
+msgstr "hier"
 
 #: src/docs_inc.c:3593
 msgid "hevc"
-msgstr ""
+msgstr "hevc"
 
 #: src/docs_inc.c:3517
 msgid "htsp"
@@ -11099,15 +11135,15 @@ msgstr "imagecache"
 
 #: src/docs_inc.c:142
 msgid "indicates the location (or path) of the device."
-msgstr ""
+msgstr "gibt den Speicherort (oder Pfad) des Geräts an."
 
 #: src/docs_inc.c:172
 msgid "indicates the tuner (in this case"
-msgstr ""
+msgstr "bezeichnet den Tuner (in diesem Fall"
 
 #: src/docs_inc.c:4458
 msgid "information icon will display service details."
-msgstr ""
+msgstr "Über das Informations-Icon werden Details zum Service angezeigt."
 
 #: src/docs_inc.c:3717
 msgid "iptv"
@@ -11123,59 +11159,61 @@ msgstr "iptv-sub"
 
 #: src/docs_inc.c:164
 msgid "is a unique ID."
-msgstr ""
+msgstr "ist eine eindeutige ID."
 
 #: src/docs_inc.c:4858
 msgid "is also performed here."
-msgstr ""
+msgstr "wird hier ebenfalls durchgeführt."
 
 #: src/docs_inc.c:162
 msgid "is the RTSP server listening port."
-msgstr ""
+msgstr "ist der Port, auf dem der RTSP-Server auf Verbindungen wartet."
 
 #: src/docs_inc.c:160
 msgid "is the SAT>IP server name."
-msgstr ""
+msgstr "ist der Name des SAT>IP-Servers."
 
 #: src/docs_inc.c:146
 msgid "is the adapter number (also used in the path)."
-msgstr ""
+msgstr "ist die Adaptornummer (die auch im Pfad verwendet wird)."
 
 #: src/docs_inc.c:152
 msgid "is the adapter number."
-msgstr ""
+msgstr "ist die Adapternummer."
 
 #: src/docs_inc.c:150
 msgid "is the chipset name."
-msgstr ""
+msgstr "ist der Name des Chipsatzes."
 
 #: src/docs_inc.c:154
 msgid "is the delivery system."
-msgstr ""
+msgstr "ist das Verabreichungssystem."
 
 #: src/docs_inc.c:144
 msgid "is the demodulation chipset name given to it by the kernel driver."
 msgstr ""
+"ist der Name des Demodulations-Chipsatzes, der ihm vom Kernel-Treiber "
+"zugewiesen wurde."
 
 #: src/docs_inc.c:156
 msgid "is the frontend number. A tuner can have many frontends!"
-msgstr ""
+msgstr "ist die Frontend-Nummer. Ein Tuner kann mehrere Frontends haben!"
 
 #: src/docs_inc.c:180
 msgid "is the listening port."
-msgstr ""
+msgstr "ist der lauschende Port."
 
 #: src/docs_inc.c:166 src/docs_inc.c:178
 msgid "is the server's IP address."
-msgstr ""
+msgstr "ist die IP-Adresse des Servers."
 
 #: src/docs_inc.c:4416
 msgid "items"
-msgstr ""
+msgstr "Elemente"
 
 #: src/docs_inc.c:2060
 msgid "just unique images, in cache, and still to download"
-msgstr ""
+msgstr "nur noch nicht heruntergeladene Bilder im Cache"
 
 #: src/docs_inc.c:2341 src/docs_inc.c:2345
 msgid "lcn"
@@ -11194,6 +11232,8 @@ msgid ""
 "like a spreadsheet, a panel, or a list of (grouped) settings/options below "
 "that."
 msgstr ""
+"wie eine Tabelle, ein Bedienfeld oder eine Liste mit (gruppierten) "
+"Einstellungen/Optionen darunter."
 
 #: src/docs_inc.c:3729
 msgid "linuxdvb"
@@ -11213,11 +11253,11 @@ msgstr "m3u"
 
 #: src/docs_inc.c:3413
 msgid "main"
-msgstr ""
+msgstr "Haupt"
 
 #: src/docs_inc.c:1136
 msgid "menu bar"
-msgstr ""
+msgstr "Menüleiste"
 
 #: src/docs_inc.c:3609 src/docs_inc.c:5772
 msgid "mkv"
@@ -11229,18 +11269,26 @@ msgid ""
 " through the named pipe(/tmp/camd.socket). The configuration for OSCam is "
 "same as the previous"
 msgstr ""
+"Der Vorteil dieses Modus besteht darin, dass keine UDP-Verbindungen "
+"erforderlich sind. Die gesamte Kommunikation wird über die Named Pipe "
+"(/tmp/camd.socket) abgewickelt. Die Konfiguration für OSCam entspricht der "
+"vorherigen"
 
 #: src/docs_inc.c:3245
 msgid ""
 "mode, but a named pipe(/tmp/camd.socket) connection is used instead of the "
 "TCP connection."
 msgstr ""
+"Modus, allerdings wird anstelle der TCP-Verbindung eine Verbindung über eine"
+" benannte Pipe (/tmp/camd.socket) verwendet."
 
 #: src/docs_inc.c:3227
 msgid ""
 "mode, but a namedpipe (/tmp/camd.socket) connection is used instead of the "
 "TCP connection."
 msgstr ""
+"Modus, allerdings wird anstelle der TCP-Verbindung eine Named-Pipe-"
+"Verbindung (/tmp/camd.socket) verwendet."
 
 #: src/docs_inc.c:3257
 msgid "mode."
@@ -11248,7 +11296,7 @@ msgstr "modus."
 
 #: src/docs_inc.c:4578
 msgid "module under 'General Settings'."
-msgstr ""
+msgstr "Modul unter 'Allgemeine Einstellungen'."
 
 #: src/docs_inc.c:3701
 msgid "mpegts"
@@ -11276,7 +11324,7 @@ msgstr "Netzwerke"
 
 #: src/docs_inc.c:1034
 msgid "networks or manually configured."
-msgstr ""
+msgstr "Netzwerke oder manuell konfiguriert."
 
 #: src/docs_inc.c:520 src/docs_inc.c:522 src/docs_inc.c:530 src/docs_inc.c:532
 #: src/docs_inc.c:548 src/docs_inc.c:556 src/docs_inc.c:574 src/docs_inc.c:576
@@ -11294,6 +11342,8 @@ msgid ""
 "one machine-readable row, for logging the trend over time, with the per-day "
 "cached% and first-seen% of"
 msgstr ""
+"eine maschinenlesbare Zeile zur Erfassung des zeitlichen Verlaufs mit dem "
+"täglichen „cached%“- und „first-seen%“-Wert von"
 
 #: src/docs_inc.c:3761
 msgid "opentv"
@@ -11301,23 +11351,23 @@ msgstr "opentv"
 
 #: src/docs_inc.c:2113 src/docs_inc.c:4844
 msgid "or"
-msgstr ""
+msgstr "oder"
 
 #: src/docs_inc.c:6452 src/docs_inc.c:6480
 msgid "or chat to us on"
-msgstr ""
+msgstr "oder chatten Sie mit uns auf"
 
 #: src/docs_inc.c:6218
 msgid "or per"
-msgstr ""
+msgstr "oder pro"
 
 #: src/docs_inc.c:3577
 msgid "parser"
-msgstr ""
+msgstr "Parser"
 
 #: src/docs_inc.c:3601
 msgid "pass"
-msgstr ""
+msgstr "pass"
 
 #: src/docs_inc.c:3573
 msgid "pcr"
@@ -11326,18 +11376,21 @@ msgstr "pcr"
 #: src/docs_inc.c:2062
 msgid "per-channel coverage, worst first (combine with"
 msgstr ""
+"Abdeckung pro Kanal, beginnend mit den schlechtesten (in Kombination mit"
 
 #: src/docs_inc.c:2056
 msgid "per-day table, de-duplicated breakdown, and the now-first check"
 msgstr ""
+"Tabelle pro Tag, auf doppelte Aufschlüsselung und die nun an erster Stelle "
+"stehende Überprüfung"
 
 #: src/docs_inc.c:2076
 msgid "per-image detail / filters"
-msgstr ""
+msgstr "Einstellungen pro Bild / Filter"
 
 #: src/docs_inc.c:2137
 msgid "pernament code which must be enabled in the password table"
-msgstr ""
+msgstr "Permanenter Code, der in der Passworttabelle aktiviert sein muss"
 
 #: src/docs_inc.c:2297
 msgid "pids"
@@ -11345,12 +11398,12 @@ msgstr "pids"
 
 #: src/docs_inc.c:2107
 msgid "playlist"
-msgstr ""
+msgstr "Wiedergabeliste"
 
 #: src/docs_inc.c:1873 src/docs_inc.c:2203 src/docs_inc.c:2277
 #: src/docs_inc.c:3637
 msgid "profile"
-msgstr ""
+msgstr "Profil"
 
 #: src/docs_inc.c:3757
 msgid "psip"
@@ -11370,11 +11423,11 @@ msgstr "qsize"
 
 #: src/docs_inc.c:2167
 msgid "recordings"
-msgstr ""
+msgstr "Aufnahmen"
 
 #: src/docs_inc.c:2068
 msgid "restrict to airing day N (1 = today)"
-msgstr ""
+msgstr "auf den Ausstrahlungstag N beschränken (1 = heute)"
 
 #: src/docs_inc.c:3469
 msgid "rtsp"
@@ -11394,7 +11447,7 @@ msgstr "scanfile"
 
 #: src/docs_inc.c:3217 src/docs_inc.c:3237 src/docs_inc.c:3267
 msgid "section of oscam.conf:"
-msgstr ""
+msgstr "Abschnitt in der Datei oscam.conf:"
 
 #: src/docs_inc.c:2265 src/docs_inc.c:3613
 msgid "service"
@@ -11402,19 +11455,21 @@ msgstr "service"
 
 #: src/docs_inc.c:3625
 msgid "service-mapper"
-msgstr ""
+msgstr "Service Mapper"
 
 #: src/docs_inc.c:5438
 msgid "setting under EPG Grabber → OTA. Use this for most services."
 msgstr ""
+"Einstellung unter EPG Grabber → „OTA“. Verwenden Sie diese Einstellung für "
+"die meisten Services."
 
 #: src/docs_inc.c:3477
 msgid "settings"
-msgstr ""
+msgstr "Einstellungen"
 
 #: src/docs_inc.c:2207
 msgid "sort"
-msgstr ""
+msgstr "sortieren"
 
 #: src/docs_inc.c:3441
 msgid "spawn"
@@ -11430,21 +11485,25 @@ msgstr "Abonnement"
 
 #: src/docs_inc.c:2687 src/docs_inc.c:2695
 msgid "tab - including those currently broadcasting."
-msgstr ""
+msgstr "Registerkarte - einschließlich derjenigen, die gerade senden."
 
 #: src/docs_inc.c:5126 src/docs_inc.c:5162
 msgid "tab to re-generate them."
-msgstr ""
+msgstr "Registerkarte, um sie neu zu generieren."
 
 #: src/docs_inc.c:4742
 msgid "tab when you press the _[Map services]_ button."
 msgstr ""
+"Registerkarte, die angezeigt wird, wenn Sie auf die Schaltfläche _[Karten-"
+"Services]_ klicken."
 
 #: src/docs_inc.c:6306
 msgid ""
 "tab. Note, when streaming using the HTSP Protocol e.g. Kodi (via pvr.hts) or"
 " Movian the HTSP profile will always be used."
 msgstr ""
+"Registerkarte. Beachten Sie: Beim Streaming über das HTSP-Protokoll, z. B. "
+"mit Kodi (über pvr.hts) oder Movian, wird immer das HTSP-Profil verwendet."
 
 #: src/docs_inc.c:456
 msgid ""
@@ -11452,28 +11511,34 @@ msgid ""
 "channel that always runs late, or perhaps define a different post-processing"
 " command to strip adverts out on a commercial channel."
 msgstr ""
+"Registerkarte. Hier können Sie beispielsweise für einen Sender, der immer "
+"Verspätung hat, mehr Pufferzeit nach der Ausstrahlung festlegen oder einen "
+"anderen Nachbearbeitungsbefehl definieren, um Werbespots auf einem "
+"Werbesender herauszufiltern."
 
 #: src/docs_inc.c:4103
 msgid ""
 "tab. This dialog shows the received PIDs and filtered PIDs in one window."
 msgstr ""
+"Registerkarte. In diesem Dialogfeld werden die empfangenen PIDs und die "
+"gefilterten PIDs in einem Fenster angezeigt."
 
 #: src/docs_inc.c:2183 src/docs_inc.c:2231 src/docs_inc.c:2237
 #: src/docs_inc.c:2325
 msgid "tag"
-msgstr ""
+msgstr "tag"
 
 #: src/docs_inc.c:2347
 msgid "tag instead"
-msgstr ""
+msgstr "tag stattdessen"
 
 #: src/docs_inc.c:2191 src/docs_inc.c:2333
 msgid "tagid"
-msgstr ""
+msgstr "tagid"
 
 #: src/docs_inc.c:2187 src/docs_inc.c:2329
 msgid "tagname"
-msgstr ""
+msgstr "tagname"
 
 #: src/docs_inc.c:2163
 msgid "tags"
@@ -11517,41 +11582,45 @@ msgstr "tcp"
 
 #: src/docs_inc.c:2133
 msgid "temporary ticket valid for 5 minutes"
-msgstr ""
+msgstr "Befristetes Ticket, gültig für 5 Minuten"
 
 #: src/docs_inc.c:4035
 msgid "text() = Node text"
-msgstr ""
+msgstr "text() = Knotentext"
 
 #: src/docs_inc.c:1138
 msgid "that provides access to Add/Save/Edit-type functions, and a"
 msgstr ""
+"das Zugriff auf Funktionen wie Hinzufügen/Speichern/Bearbeiten bietet, sowie"
+" eine"
 
 #: src/docs_inc.c:396
 msgid "the program failed to record"
-msgstr ""
+msgstr "die Aufnahme ist fehlgeschlagen"
 
 #: src/docs_inc.c:388
 msgid "the program is currently recording"
-msgstr ""
+msgstr "das Programm nimmt gerade auf"
 
 #: src/docs_inc.c:384
 msgid "the program is scheduled for recording"
-msgstr ""
+msgstr "das Programm ist geplant zur Aufnahme"
 
 #: src/docs_inc.c:1867
 msgid ""
 "the subscription is using - if the subscription is streaming a service/mux "
 "this cell will be blank."
 msgstr ""
+"das Abonnement nutzt - wenn das Abonnement einen Service/Mux streamt, bleibt"
+" dieses Feld leer."
 
 #: src/docs_inc.c:1875
 msgid "the subscription is using."
-msgstr ""
+msgstr "das Abonnement nutzt."
 
 #: src/docs_inc.c:1428
 msgid "the view level drop-down isn't always visible."
-msgstr ""
+msgstr "Das Dropdown-Menü für die Ansichtsebene ist nicht immer sichtbar."
 
 #: src/docs_inc.c:5372
 msgid "thetvdb.com"
@@ -11559,11 +11628,11 @@ msgstr "thetvdb.com"
 
 #: src/docs_inc.c:3429
 msgid "thread"
-msgstr ""
+msgstr "thread"
 
 #: src/docs_inc.c:2131
 msgid "ticket"
-msgstr ""
+msgstr "ticket"
 
 #: src/docs_inc.c:3437
 msgid "time"
@@ -11571,7 +11640,7 @@ msgstr "Zeit"
 
 #: src/docs_inc.c:3777
 msgid "timeshift"
-msgstr ""
+msgstr "timeshift"
 
 #: src/docs_inc.c:5360
 msgid "tmdb"
@@ -11586,14 +11655,19 @@ msgid ""
 "to 9000 (or your preferred TCP port). Note that the TCP port must match "
 "OSCam's configuration. The following lines are required in"
 msgstr ""
+"auf 9000 (oder Ihren bevorzugten TCP-Port). Beachten Sie, dass der TCP-Port "
+"mit der Konfiguration von OSCam übereinstimmen muss. Die folgenden Zeilen "
+"sind erforderlich in"
 
 #: src/docs_inc.c:838
 msgid "to force a scan and effectively ask your tuner what it can see."
 msgstr ""
+"um einen Scan zu erzwingen und sozusagen Ihren Tuner zu fragen, was er "
+"erkennen kann."
 
 #: src/docs_inc.c:5446
 msgid "toggle."
-msgstr ""
+msgstr "umschalten."
 
 #: src/docs_inc.c:3417
 msgid "tprof"
@@ -11601,7 +11675,7 @@ msgstr "tprof"
 
 #: src/docs_inc.c:3713
 msgid "transcode"
-msgstr ""
+msgstr "Transkodieren"
 
 #: src/docs_inc.c:3789
 msgid "tsdebug"
@@ -11682,11 +11756,11 @@ msgstr "vaapi"
 
 #: src/docs_inc.c:1126
 msgid "view level"
-msgstr ""
+msgstr "Ansichtsmodus"
 
 #: src/docs_inc.c:1584
 msgid "webchat"
-msgstr ""
+msgstr "Webchat"
 
 #: src/docs_inc.c:3773
 msgid "webui"
@@ -11694,11 +11768,11 @@ msgstr "Weboberfläche"
 
 #: src/docs_inc.c:2281
 msgid "weight"
-msgstr ""
+msgstr "Gewichtung"
 
 #: src/docs_inc.c:5100
 msgid "will be"
-msgstr ""
+msgstr "wird sein"
 
 #: src/docs_inc.c:3769
 msgid "xmltv"
@@ -11719,6 +11793,8 @@ msgid ""
 "you want to export. If you don't export any, you will see the following "
 "error message (in the log)."
 msgstr ""
+"die Sie exportieren möchten. Wenn Sie keine Daten exportieren, wird die "
+"folgende Fehlermeldung (im Protokoll) angezeigt."
 
 #: src/docs_inc.c:1679
 msgid ""
@@ -11726,6 +11802,9 @@ msgid ""
 "Content from cell 2 Content in the first column | Content in the second "
 "column"
 msgstr ""
+"| --------------------------- | ------------- Kopflose Tabelle Zelle 1 | "
+"Inhalt von Zelle 2 Inhalt in der ersten Spalte | Inhalt in der zweiten "
+"Spalte"
 
 #: src/docs_inc.c:5750 src/docs_inc.c:5752 src/docs_inc.c:5760
 #: src/docs_inc.c:5762
