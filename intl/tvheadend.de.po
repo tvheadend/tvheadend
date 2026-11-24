@@ -11081,7 +11081,7 @@ msgstr "Tuner"
 
 #: src/wizard.c:673
 msgid "Tuner and Network"
-msgstr "Empfänger und Netzwerk"
+msgstr "Tuner und Netzwerk"
 
 #: src/input/mpegts/satip/satip_frontend.c:340
 msgid "Tuner bind IP address"
