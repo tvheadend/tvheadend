@@ -9845,6 +9845,8 @@ msgid ""
 "You cannot use non-standard predefined scheduling definitions for this "
 "field."
 msgstr ""
+"Für dieses Feld können keine nicht standardmäßigen vordefinierten "
+"Terminierungsdefinitionen verwendet werden."
 
 #: src/docs_inc.c:680
 msgid ""
@@ -9853,25 +9855,37 @@ msgid ""
 "recommend not using the same details for a user here as it may cause "
 "unexpected behavior, incorrect permissions etc."
 msgstr ""
+"Sie können eine durch Kommas getrennte Liste von Netzwerkpräfixen "
+"(IPv4/IPv6) eingeben. Falls Sie während der Installation zur Eingabe eines "
+"Benutzernamens und eines Passworts aufgefordert wurden, empfehlen wir, hier "
+"nicht dieselben Anmeldedaten zu verwenden, da dies zu unerwartetem "
+"Verhalten, falschen Berechtigungen usw. führen kann."
 
 #: src/docs_inc.c:6444 src/docs_inc.c:6474
 msgid ""
 "You may further customise your settings by editing channel numbers, etc."
 msgstr ""
+"Sie können Ihre Einstellungen weiter anpassen, indem Sie beispielsweise die "
+"Kanalnummern bearbeiten."
 
 #: src/docs_inc.c:3099
 msgid "You may import your own bouquet using enigma2 (.tv) formatted files."
 msgstr ""
+"Sie können Ihr eigenes Bouquet mithilfe von Dateien im Enigma2-Format (.tv) "
+"importieren."
 
 #: src/docs_inc.c:754
 msgid ""
 "You may need to enable specific EPG grabbers to receive OTA EPG data, See "
 "the _EPG Grabber Modules_ Help doc for details."
 msgstr ""
+"Möglicherweise müssen Sie bestimmte EPG-Grabber aktivieren, um OTA-EPG-Daten"
+" zu empfangen. Weitere Informationen finden Sie in der Hilfe unter _EPG-"
+"Grabber-Module_."
 
 #: src/docs_inc.c:4716
 msgid "You must enter a _SAT>IP source number_ for all the"
-msgstr ""
+msgstr "Sie müssen für alle eine _SAT>IP-Quellnummer_ eingeben."
 
 #: src/docs_inc.c:4157
 msgid ""
@@ -9879,6 +9893,10 @@ msgid ""
 "`192.168.6.66` enter `192.168.6.66/32` or to block the all addresses in the "
 "`192.168.6` range, enter `192.168.6.0/24`."
 msgstr ""
+"Sie müssen ein Netzwerkpräfix eingeben, das blockiert werden soll. Um "
+"beispielsweise nur die Adresse `192.168.6.66` zu blockieren, geben Sie "
+"`192.168.6.66/32` ein; um alle Adressen im Bereich `192.168.6` zu "
+"blockieren, geben Sie `192.168.6.0/24` ein."
 
 #: src/docs_inc.c:758
 msgid ""
@@ -9886,6 +9904,9 @@ msgid ""
 "your channels and make further changes; If not, please take a look at the "
 "manual set-up below."
 msgstr ""
+"Sie haben den Assistenten nun abgeschlossen. An dieser Stelle sollten Sie "
+"Ihre Kanäle einsehen und weitere Änderungen vornehmen können; falls nicht, "
+"lesen Sie bitte die nachstehende Anleitung zur manuellen Einrichtung."
 
 #: src/docs_inc.c:2756
 msgid ""
@@ -9893,44 +9914,49 @@ msgid ""
 "l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
 "l'événement[0x03][0x04][0x05][0x06][0x07]"
 msgstr ""
+"[0x01][0x09]en[0x09]Event Title[0x09]fr[0x09]Titre de "
+"l'événement[0x02][0x09]en[0x09]Event Sub-Title[0x09]fr[0x09]Sous-titre de "
+"l'événement[0x03][0x04][0x05][0x06][0x07]"
 
 #: src/docs_inc.c:472
 msgid "[Autorec]"
-msgstr ""
+msgstr "[Autorec]"
 
 #: src/docs_inc.c:140
 msgid "[Panasonic MN88472] #0"
-msgstr ""
+msgstr "[Panasonic MN88472] #0"
 
 #: src/docs_inc.c:441
 msgid "[Play]"
-msgstr ""
+msgstr "[Abspielen]"
 
 #: src/docs_inc.c:468
 msgid "[Record Series]"
-msgstr ""
+msgstr "[Serien-Aufnahme]"
 
 #: src/docs_inc.c:461
 msgid "[Record]"
-msgstr ""
+msgstr "[Aufnehmen]"
 
 #: src/docs_inc.c:4033
 msgid "[] = Condition"
-msgstr ""
+msgstr "[] = Bedingung"
 
 #: src/docs_inc.c:3215 src/docs_inc.c:3235 src/docs_inc.c:3265
 msgid "[dvbapi]"
-msgstr ""
+msgstr "[dvbapi]"
 
 #: src/docs_inc.c:5976 src/docs_inc.c:6064 src/docs_inc.c:6164
 msgid "_Example usage_"
-msgstr ""
+msgstr "_Anwendungsbeispiel_"
 
 #: src/docs_inc.c:5252
 msgid ""
 "_Local_ only checks for duplicates created by the same autorec rule, _All_ "
 "checks all the DVR logs for duplicates."
 msgstr ""
+"_Lokal_ prüft nur auf Duplikate, die durch dieselbe autorec-Regel erstellt "
+"wurden, während _Alle_ alle DVR-Protokolle auf Duplikate überprüft."
 
 #: src/docs_inc.c:340
 msgid ""
@@ -9938,40 +9964,52 @@ msgid ""
 "configuration and on what your broadcaster sends. Options for the _Duration_"
 " are as follows:"
 msgstr ""
+"_Titel_, _Kanal_, _Tag_ und _Inhaltstyp_ hängen von Ihrer Konfiguration und "
+"den von Ihrem Sender übermittelten Daten ab. Für die _Dauer_ stehen folgende"
+" Optionen zur Verfügung:"
 
 #: src/docs_inc.c:1796
 msgid "__ : Clear all \"Uncorrected Blocks\", \"BER\", etc stats."
-msgstr ""
+msgstr "__ : Alle Statistiken zu \"Unkorrigierten Blöcken\", \"BER\" usw. löschen."
 
 #: src/docs_inc.c:1712
 msgid ""
 "__ : Forcefully kill the connection. Note that many applications such as "
 "Kodi will automatically reconnect when a connection is dropped."
 msgstr ""
+"__ : Die Verbindung zwangsweise trennen. Beachten Sie, dass viele "
+"Anwendungen wie beispielsweise Kodi die Verbindung automatisch "
+"wiederherstellen, wenn sie unterbrochen wird."
 
 #: src/docs_inc.c:500
 msgid ""
 "__ tab. Use that editor if you temporarily want to disable an autorecording "
 "or make adjustments to the channel, tag, or similar."
 msgstr ""
+"__ Registerkarte. Verwenden Sie diesen Editor, wenn Sie eine automatische "
+"Aufzeichnung vorübergehend deaktivieren oder Anpassungen am Kanal, am Tag "
+"oder Ähnlichem vornehmen möchten."
 
 #: src/docs_inc.c:1765
 msgid "__Active__ : Progress bar indicating mapping status."
-msgstr ""
+msgstr "__Aktiv__: Fortschrittsbalken, der den Status der Zuordnung anzeigt."
 
 #: src/docs_inc.c:5422 src/docs_inc.c:5486
 msgid ""
 "__Actual transport stream EIT__ (`0x4e` / `0x50–0x5f`) — broadcast by the "
 "service's _own_ multiplex. Describes the service itself."
 msgstr ""
+"__EIT des eigentlichen Transportstroms__ (`0x4e` / `0x50–0x5f`) – wird vom "
+"_eigenen_ Multiplex des Dienstes ausgestrahlt. Beschreibt den Service "
+"selbst."
 
 #: src/docs_inc.c:418
 msgid "__Age__ : Age rating of the program."
-msgstr ""
+msgstr "__Age__: Altersfreigabe der Sendung."
 
 #: src/docs_inc.c:6536
 msgid "__Assign Predefined Muxes to Networks__"
-msgstr ""
+msgstr "__Vordefinierte Muxes Netzwerken zuweisen__"
 
 #: src/docs_inc.c:6342
 msgid ""
@@ -9981,14 +10019,21 @@ msgid ""
 "changes; no reload is needed. Because it is the default, only a user who "
 "wants to ignore the host setting has to pick a theme at all."
 msgstr ""
+"__Auto__ berücksichtigt die Einstellung `prefers-color-scheme` des Hosts, "
+"sodass die Benutzeroberfläche einem System folgt, das sich bei "
+"Sonnenuntergang automatisch umstellt, ohne dass das Design manuell geändert "
+"werden muss. Die Umstellung wird wirksam, sobald sich die Host-Einstellung "
+"ändert; ein Neuladen ist nicht erforderlich. Da dies die Standardeinstellung"
+" ist, muss nur ein Benutzer, der die Host-Einstellung ignorieren möchte, "
+"überhaupt ein Design auswählen."
 
 #: src/docs_inc.c:1808
 msgid "__BER__ :"
-msgstr ""
+msgstr "__BER__ :"
 
 #: src/docs_inc.c:1806
 msgid "__Bandwidth__ : Total stream input bandwidth."
-msgstr ""
+msgstr "__Bandbreite__: Gesamte Eingangsbandbreite des Streams."
 
 #: src/docs_inc.c:860
 msgid ""
@@ -9997,14 +10042,19 @@ msgid ""
 "Tvheadend can use these to automatically manage and keep your channels up-"
 "to-date. If you would like to use bouquets see"
 msgstr ""
+"__Bouquets__: Viele Service-Anbieter - vor allem solche, die Satelliten "
+"nutzen - verwenden Bouquets-Programmpakete für die Kanalverwaltung, und "
+"genau wie eine herkömmliche Set-Top-Box kann Tvheadend diese nutzen, um Ihre"
+" Kanäle automatisch zu verwalten und auf dem neuesten Stand zu halten. Wenn "
+"Sie Bouquets nutzen möchten, lesen Sie bitte"
 
 #: src/docs_inc.c:1708
 msgid "__Cancel Icon !"
-msgstr ""
+msgstr "__Abbruch Icon !"
 
 #: src/docs_inc.c:1863
 msgid "__Channel__ : The name of the"
-msgstr ""
+msgstr "__Kanal__: Der Name des"
 
 #: src/docs_inc.c:414
 msgid ""
@@ -10013,34 +10063,40 @@ msgid ""
 "'Channel 4 HD' will automatically filter the whole grid to only show "
 "programs from that channel)._"
 msgstr ""
+"__Sender__: Der Name des Senders. _Sie können einen Filter automatisch auf "
+"den Wert dieses Feldes einstellen, indem Sie darauf klicken (wenn Sie "
+"beispielsweise auf 'Channel 4 HD' klicken, wird das gesamte Programmangebot "
+"automatisch so gefiltert, dass nur Sendungen dieses Senders angezeigt "
+"werden)._"
 
 #: src/docs_inc.c:1716
 msgid "__Client Address__ : The IP address of the client device."
-msgstr ""
+msgstr "__Client-Adresse__: Die IP-Adresse des Client-Geräts."
 
 #: src/docs_inc.c:1720
 msgid "__Client Data Ports__ : The data port(s) used by the client device."
 msgstr ""
+"__Client Data Ports__: Die vom Client-Gerät verwendeten Datenanschlüsse."
 
 #: src/docs_inc.c:1718
 msgid "__Client Port__ : The port of the client device."
-msgstr ""
+msgstr "__Client-Port__: Der Port des Client-Geräts."
 
 #: src/docs_inc.c:808
 msgid "__Configuration -> DVB Inputs -> Muxes__"
-msgstr ""
+msgstr "__Konfiguration -> DVB-Eingänge -> Muxes__"
 
 #: src/docs_inc.c:782
 msgid "__Configuration -> DVB Inputs -> Networks__"
-msgstr ""
+msgstr "__Konfiguration -> DVB-Eingänge -> Netzwerke__"
 
 #: src/docs_inc.c:842 src/docs_inc.c:850
 msgid "__Configuration -> DVB Inputs -> Services__"
-msgstr ""
+msgstr "__Konfiguration -> DVB-Eingänge -> Services__"
 
 #: src/docs_inc.c:764 src/docs_inc.c:798
 msgid "__Configuration -> DVB Inputs -> TV Adapters__"
-msgstr ""
+msgstr "__Konfiguration -> DVB-Eingänge -> TV-Adapter__"
 
 #: src/docs_inc.c:420
 msgid ""
@@ -10049,12 +10105,19 @@ msgid ""
 "clicking on it (e.g. click on 'Movie/Drama' will automatically filter the "
 "whole grid to only show programs of the same type)._"
 msgstr ""
+"__Inhaltstyp__: Alle vom EPG-Anbieter bereitgestellten Informationen zu "
+"Inhalt und Genre. _Sie können einen Filter automatisch auf den Wert dieses "
+"Feldes einstellen, indem Sie darauf klicken (wenn Sie beispielsweise auf "
+"'Film/Drama' klicken, wird das gesamte Programmraster automatisch so "
+"gefiltert, dass nur Sendungen dieses Typs angezeigt werden)._"
 
 #: src/docs_inc.c:1820
 msgid ""
 "__Continuity Errors__ : Continuity Count Error. Number of stream errors, a "
 "high value here can indicate a signal problem."
 msgstr ""
+"__Kontinuitätsfehler__: Fehler bei der Kontinuitätszählung. Anzahl der "
+"Stream-Fehler; ein hoher Wert kann auf ein Signalproblem hindeuten."
 
 #: src/docs_inc.c:6344
 msgid ""
@@ -10062,56 +10125,75 @@ msgid ""
 "interface has no dark stylesheet of its own and falls back to its light one "
 "when either theme is selected."
 msgstr ""
+"Die Stile __Dark__ und __Auto__ gelten ausschließlich für die Vue-"
+"Weboberfläche. Die ältere ExtJS-Oberfläche verfügt über kein eigenes dunkles"
+" Stylesheet und greift auf das helle Stylesheet zurück, wenn eines der "
+"beiden Designs ausgewählt wird."
 
 #: src/docs_inc.c:1899
 msgid "__Descramble__ : The CAID used to descramble the stream."
 msgstr ""
+"__Entschlüsselung__: Der CAID, der zur Entschlüsselung des Datenstroms "
+"verwendet wird."
 
 #: src/docs_inc.c:376
 msgid ""
 "__Details__ : Displays the current status of a recording event for this "
 "program if one applies:"
 msgstr ""
+"__Details__ : Zeigt den aktuellen Status eines Aufnahmevorgangs für diese "
+"Sendung an, sofern ein solcher vorliegt:"
 
 #: src/docs_inc.c:201
 msgid "__Details__ : Gives a quick overview as to the status of each entry:"
 msgstr ""
+"__Details__: Bietet einen schnellen Überblick über den Status der einzelnen "
+"Einträge:"
 
 #: src/docs_inc.c:410
 msgid ""
 "__Duration__ : The scheduled duration (i.e. start time to end time) of the "
 "program."
 msgstr ""
+"__Dauer__: Die geplante Dauer (d. h. von der Startzeit bis zur Endzeit) des "
+"Programms."
 
 #: src/docs_inc.c:408
 msgid "__End Time__ : The scheduled end time of the program."
-msgstr ""
+msgstr "__Endzeit__: Die geplante Endzeit des Programms."
 
 #: src/docs_inc.c:6516
 msgid "__Enter Access Control Details to Secure Your System__"
 msgstr ""
+"__Geben Sie die Details zur Zugriffskontrolle ein, um Ihr System zu "
+"sichern__"
 
 #: src/docs_inc.c:404
 msgid "__Episode__ : Episode number, if given by your EPG provider."
-msgstr ""
+msgstr "__Folge__: Folgenummer, sofern vom EPG-Anbieter angegeben."
 
 #: src/docs_inc.c:1901
 msgid "__Errors__ : Number of errors occurred sending the stream."
 msgstr ""
+"__Fehler__: Anzahl der Fehler, die beim Senden des Datenstroms aufgetreten "
+"sind."
 
 #: src/docs_inc.c:4037
 msgid "__Example:__ //node1/node2[attrX=value]/@attrY"
-msgstr ""
+msgstr "__Beispiel:__ //node1/node2[attrX=Wert]/@attrY"
 
 #: src/docs_inc.c:2117
 msgid ""
 "__Example:__ "
 "`http://127.0.0.1:9981/play/stream/channelname/Life?playlist=xspf`"
 msgstr ""
+"__Beispiel:__ "
+"`http://127.0.0.1:9981/play/stream/channelname/Life?playlist=xspf`"
 
 #: src/docs_inc.c:1763
 msgid "__Failed__ : Number of services that failed to be mapped."
 msgstr ""
+"__Fehlgeschlagen__: Anzahl der Services, deren Zuordnung fehlgeschlagen ist."
 
 #: src/docs_inc.c:1090
 msgid ""
@@ -10120,48 +10202,59 @@ msgid ""
 "than you'd imagine... if you find yourself in trouble, this is the first "
 "thing to check along with kernel support for your hardware."
 msgstr ""
+"__Firmware__ ist ein kleines Stück binären Mikrocodes, das Ihr Systemtreiber"
+" bei der Initialisierung an den Tuner sendet. Dies verursacht mehr Probleme,"
+" als Sie sich vorstellen können … sollten Sie auf Schwierigkeiten stoßen, "
+"sollten Sie dies als Erstes überprüfen - zusammen mit der Kernel-"
+"Unterstützung für Ihre Hardware."
 
 #: src/docs_inc.c:1857
 msgid "__Hostname__ : Hostname/IP address using the subscription."
 msgstr ""
+"__Hostname__: Hostname/IP-Adresse, die im Rahmen des Abonnements verwendet "
+"wird."
 
 #: src/docs_inc.c:1855
 msgid "__ID__ : Subscription ID."
-msgstr ""
+msgstr "__ID__: Abonnement-ID."
 
 #: src/docs_inc.c:6542
 msgid ""
 "__If you don't see any options below, you need to go back and assign a "
 "network type to a tuner.__"
 msgstr ""
+"__Wenn unten keine Optionen angezeigt werden, müssen Sie zurückgehen und "
+"einem Tuner einen Netzwerktyp zuweisen.__"
 
 #: src/docs_inc.c:658
 msgid "__If you haven't already don't so__ , please take a look at the"
 msgstr ""
+"__Falls Sie das noch nicht getan haben__, werfen Sie bitte einen Blick auf "
+"die"
 
 #: src/docs_inc.c:1761
 msgid "__Ignored__ : Number of services ignored."
-msgstr ""
+msgstr "__Ignoriert__: Anzahl der ignorierten Services."
 
 #: src/docs_inc.c:1798
 msgid "__Input__ : Device used to receive the stream."
-msgstr ""
+msgstr "__Input__ : Gerät, das zum Empfang des Streams verwendet wird."
 
 #: src/docs_inc.c:1903
 msgid "__Input__ : The input data rate in kb/s."
-msgstr ""
+msgstr "__Input__: Die Eingangsdatenrate in kb/s."
 
 #: src/docs_inc.c:4263
 msgid "__It does not have any user configurable options.__"
-msgstr ""
+msgstr "__Es gibt keine vom Benutzer konfigurierbaren Optionen.__"
 
 #: src/docs_inc.c:6526
 msgid "__Map Services to Channels__"
-msgstr ""
+msgstr "__Zuordnung von Services zu Kanälen__"
 
 #: src/docs_inc.c:1759
 msgid "__Mapped__ : Number of services mapped."
-msgstr ""
+msgstr "__Mapped__: Anzahl der zugeordneten Services."
 
 #: src/docs_inc.c:4602
 msgid ""
@@ -10171,33 +10264,46 @@ msgid ""
 " the number received. When creating a placeholder label, this module will "
 "automatically add 3 where appropriate."
 msgstr ""
+"__HINWEIS:__ Im Beispiel beträgt das von DVB angegebene Alter '10', während "
+"das angezeigte Alter '13' ist. Dies liegt daran, dass der DVB-Standard bei "
+"einigen Altersempfehlungen vor der Übertragung 3 abzieht, was bedeutet, dass"
+" der Empfänger 3 zu dem empfangenen Wert addieren muss. Beim Erstellen einer"
+" Platzhalterbezeichnung fügt dieses Modul an den entsprechenden Stellen "
+"automatisch 3 hinzu."
 
 #: src/docs_inc.c:4574
 msgid ""
 "__NOTE:__ Rating labels are not enabled by default and must be enabled in "
 "the"
 msgstr ""
+"__HINWEIS:__ Bewertungssymbole sind standardmäßig nicht aktiviert und müssen"
+" in der"
 
 #: src/docs_inc.c:1082
 msgid "__Network tuners__ are small (usually"
-msgstr ""
+msgstr "__Netzwerktuner__ sind kleine (in der Regel"
 
 #: src/docs_inc.c:4854
 msgid ""
 "__Note:__ If the directory name starts with $$, then format string "
 "substitution from the"
 msgstr ""
+"__Hinweis:__ Wenn der Verzeichnisname mit $$ beginnt, erfolgt die Ersetzung "
+"der Formatzeichenfolge aus der"
 
 #: src/docs_inc.c:814
 msgid ""
 "__Note__ : Some tuners (or drivers) require more tuning parameters than "
 "others so __be sure to enter as many tuning parameters as possible__ ."
 msgstr ""
+"__Hinweis__: Einige Tuner (oder Treiber) erfordern mehr "
+"Einstellungsparameter als andere, daher __sollten Sie unbedingt so viele "
+"Einstellungsparameter wie möglich eingeben__."
 
 #: src/docs_inc.c:412
 msgid ""
 "__Number__ : The channel number of the broadcasting channel, if defined."
-msgstr ""
+msgstr "__Nummer__: Die Kanalnummer des Senders, sofern definiert."
 
 #: src/docs_inc.c:5526
 msgid ""
@@ -10214,6 +10320,21 @@ msgid ""
 " Across normal operation (no restart), Adaptive self-heals after the first "
 "actual-TS arrival."
 msgstr ""
+"__Ein wichtiger Hinweis zur Funktionsweise von Adaptive.__ Der Status "
+"\"actual-TS observed\" gilt pro Sitzung und wird beim Neustart von tvheadend"
+" zurückgesetzt. Für einen kurzen Zeitraum beim Start kann other-TS den "
+"detaillierten EPG kurzzeitig überschreiben, bis der eigene actual-TS "
+"Zeitplan jedes Services in der neuen Sitzung erneut erfasst wird. DVR-"
+"Einträge, deren Verknüpfung zu einem EPG-Ereignis vor dem Neustart "
+"hergestellt wurde, werden durch den bestehenden Fuzzy-Match-Fallback in "
+"`dvr_entry_fuzzy_match` wiederhergestellt, sobald die actual-TS Daten "
+"zurückkehren. Der einzige verbleibende Sonderfall ist eine Aufnahme, die zum"
+" Zeitpunkt des Neustarts bereits läuft und während dieses Übergangszeitraums"
+" zufällig eine Aktualisierung der Stoppzeitverlängerung erhält - die "
+"Verlängerung wird dem Platzhalter zugeordnet und nicht dem fortgesetzten "
+"Eintrag, sodass die Aufnahme zur ursprünglich geplanten Zeit endet. Im "
+"Normalbetrieb (ohne Neustart) stellt sich Adaptive nach dem Eintreffen der "
+"ersten actual-TS Daten selbstständig wieder her."
 
 #: src/docs_inc.c:5474
 msgid ""
@@ -10230,12 +10351,31 @@ msgid ""
 "normal operation (no restart), Adaptive self-heals after the first actual-TS"
 " arrival and the placeholder is then permanently filtered for that service."
 msgstr ""
+"__Ein Hinweis zur Funktionsweise von Adaptive.__ Der Status \"actual-TS "
+"observed\" gilt pro Sitzung und wird beim Neustart von tvheadend "
+"zurückgesetzt. Für einen kurzen Zeitraum beim Start kann other-TS den "
+"detaillierten EPG kurzzeitig überschreiben, bis der dienstinterne actual-TS "
+"Zeitplan in der neuen Sitzung erneut erfasst wird. DVR-Einträge, deren "
+"Verknüpfung zu einem EPG-Ereignis vor dem Neustart hergestellt wurde, werden"
+" durch den bestehenden Fuzzy-Match-Fallback in `dvr_entry_fuzzy_match` "
+"wiederhergestellt, sobald die actual-TS Daten zurückkehren. Der einzige "
+"verbleibende Sonderfall ist eine Aufnahme, die zum Zeitpunkt des Neustarts "
+"bereits läuft und während dieses Wechselzeitraums zufällig eine "
+"Aktualisierung der Stoppzeitverlängerung erhält - die Verlängerung wird dem "
+"Platzhalter zugeordnet und nicht dem fortgesetzten Eintrag, sodass die "
+"Aufzeichnung zur ursprünglich geplanten Zeit endet. Im Normalbetrieb (ohne "
+"Neustart) korrigiert sich Adaptive nach dem Eintreffen der ersten actual-TS "
+"Daten selbst, und der Platzhalter wird anschließend für diesen Service "
+"dauerhaft herausgefiltert."
 
 #: src/docs_inc.c:5488
 msgid ""
 "__Other transport stream EIT__ (`0x4f` / `0x60–0x6f`) — broadcast by "
 "_another_ multiplex describing this one. Often coarser."
 msgstr ""
+"__EIT eines anderen Transportstroms__ (`0x4f` / `0x60–0x6f`) – wird von "
+"einem _anderen_ Multiplex gesendet, der diesen beschreibt. Oft weniger "
+"detailliert."
 
 #: src/docs_inc.c:5424
 msgid ""
@@ -10244,73 +10384,93 @@ msgid ""
 "receiver tuned to one multiplex can still show some EPG for services on "
 "neighbouring multiplexes."
 msgstr ""
+"__EIT eines anderen Transportstroms__ (`0x4f` / `0x60–0x6f`) – wird von "
+"einem _anderen_ Multiplex gesendet, der diesen Multiplex beschreibt. Oft "
+"weniger detailliert; wird meist verwendet, damit ein Empfänger, der auf "
+"einen Multiplex eingestellt ist, dennoch einige EPG-Informationen für "
+"Dienste auf benachbarten Multiplexen anzeigen kann."
 
 #: src/docs_inc.c:1905
 msgid "__Output__ : The output data rate in kb/s."
-msgstr ""
+msgstr "__Ausgabe__: Die Ausgabedatenrate in kb/s."
 
 #: src/docs_inc.c:1812
 msgid "__PER__ :"
-msgstr ""
+msgstr "__PER__ :"
 
 #: src/docs_inc.c:1897
 msgid ""
 "__PID list__ : Input source Program Identification (PIDs) numbers in use by "
 "the subscription."
 msgstr ""
+"__PID-Liste__: Geben Sie die Programm-Identifikationsnummern (PIDs) der vom "
+"Abonnement genutzten Eingangsquellen ein."
 
 #: src/docs_inc.c:1804
 msgid ""
 "__PID list__ : Input source Program Identification (PIDs) numbers in use."
 msgstr ""
+"__PID-Liste__: Geben Sie die Nummern der derzeit verwendeten "
+"Programmkennungen (PIDs) der Eingangsquellen ein."
 
 #: src/docs_inc.c:227
 msgid "__Play__ / !"
-msgstr ""
+msgstr "__Abspielen__ / !"
 
 #: src/docs_inc.c:1871
 msgid "__Profile__ : The name of the"
-msgstr ""
+msgstr "__Profil__: Der Name des"
 
 #: src/docs_inc.c:398
 msgid ""
 "__Progress__ : A bar graph display of how far through a program we currently"
 " are."
 msgstr ""
+"__Fortschritt__: Eine Balkenanzeige, die anzeigt, wie weit wir derzeit im "
+"Programm fortgeschritten sind."
 
 #: src/docs_inc.c:1730
 msgid ""
 "__Proxy Address__ : The IP address of the proxy the client is connecting "
 "through (if known)."
 msgstr ""
+"__Proxy-Adresse__: Die IP-Adresse des Proxys, über den der Client eine "
+"Verbindung herstellt (sofern bekannt)."
 
 #: src/docs_inc.c:1464
 msgid "__Re-arrange__ the columns by simply dragging he header to a new spot."
 msgstr ""
+"__Ordnen Sie__ die Spalten neu an, indem Sie die Kopfzeile einfach an eine "
+"neue Stelle ziehen."
 
 #: src/docs_inc.c:1466
 msgid ""
 "__Re-size__ the columns by dragging the very edges of the column header as "
 "required."
 msgstr ""
+"__Passen Sie die Breite__ der Spalten an, indem Sie die äußersten Ränder der"
+" Spaltenüberschrift nach Bedarf ziehen."
 
 #: src/docs_inc.c:1822
 msgid "__SNR__ : Signal (To) Noise Ratio."
-msgstr ""
+msgstr "__SNR__: Signal (zu) Rausch-Verhältnis."
 
 #: src/docs_inc.c:6556
 msgid "__Scanning__"
-msgstr ""
+msgstr "__Scannen__"
 
 #: src/docs_inc.c:1728
 msgid ""
 "__Server Address__ : The address used to connect to the server. This is "
 "usually the IP of your device running Tvheadend."
 msgstr ""
+"__Serveradresse__: Die Adresse, über die die Verbindung zum Server "
+"hergestellt wird. In der Regel handelt es sich dabei um die IP-Adresse Ihres"
+" Geräts, auf dem Tvheadend läuft."
 
 #: src/docs_inc.c:1869
 msgid "__Service__ : The service used by the subscription."
-msgstr ""
+msgstr "__Service__: Der vom Abonnement genutzte Service."
 
 #: src/docs_inc.c:1828
 msgid ""
@@ -10318,34 +10478,39 @@ msgid ""
 "that not all devices supply correct signal information, the value here can "
 "sometimes be ambiguous"
 msgstr ""
+"__Signalstärke__: Die vom Gerät angezeigte Signalstärke. Bitte beachten Sie,"
+" dass nicht alle Geräte korrekte Signaldaten liefern; der hier angegebene "
+"Wert kann daher mitunter mehrdeutig sein."
 
 #: src/docs_inc.c:416
 msgid "__Stars__ : Rating (in stars) of the program."
-msgstr ""
+msgstr "__Sterne__: Bewertung (in Sternen) der Sendung."
 
 #: src/docs_inc.c:406
 msgid "__Start Time__ : The scheduled start time of the program."
-msgstr ""
+msgstr "__Startzeit__: Die geplante Startzeit des Programms."
 
 #: src/docs_inc.c:1877
 msgid "__Start__ : The date (and time) the subscription was started."
 msgstr ""
+"__Start__: Das Datum (und die Uhrzeit), an dem das Abonnement begonnen hat."
 
 #: src/docs_inc.c:1724
 msgid "__Started__ : Date the connection started - YYYY-MM-DD HH:MM:SS."
 msgstr ""
+"__Beginn__: Datum und Uhrzeit des Verbindungsbeginns – JJJJ-MM-TT HH:MM:SS."
 
 #: src/docs_inc.c:1879
 msgid "__State__ : The status of the subscription"
-msgstr ""
+msgstr "__Status__: Der Status des Abonnements"
 
 #: src/docs_inc.c:1726
 msgid "__Streaming__ : The number of active streams."
-msgstr ""
+msgstr "__Streaming__: Die Anzahl der aktiven Streams."
 
 #: src/docs_inc.c:1800
 msgid "__Sub No__ : Number of subscriptions using the stream."
-msgstr ""
+msgstr "__Sub No__: Anzahl der Abonnements, die den Stream nutzen."
 
 #: src/docs_inc.c:402
 msgid ""
@@ -10353,18 +10518,25 @@ msgid ""
 "Note that some (notably, UK) providers use this for a program synopsis "
 "instead of a true subtitle."
 msgstr ""
+"__Untertitel__: Der Untertitel der Sendung, sofern er von Ihrem EPG-Anbieter"
+" bereitgestellt wird. Beachten Sie, dass einige Anbieter (insbesondere in "
+"Großbritannien) diesen Platz für eine Zusammenfassung der Sendung anstelle "
+"eines eigentlichen Untertitels nutzen."
 
 #: src/docs_inc.c:1792
 msgid "__Sweep/Clean Icon !"
-msgstr ""
+msgstr "__Kehren/Reinigen Icon !"
 
 #: src/docs_inc.c:1621
 msgid "__This is definition list formatting__ : with a subsequent explanation"
 msgstr ""
+"__Dies ist die Formatierung einer Definitionsliste__ : mit einer "
+"anschließenden Erläuterung"
 
 #: src/docs_inc.c:1619
 msgid "__This is paragraph formatting__ : with a subsequent explanation"
 msgstr ""
+"__Dies ist eine Absatzformatierung__: mit einer anschließenden Erläuterung"
 
 #: src/docs_inc.c:400
 msgid ""
@@ -10373,6 +10545,11 @@ msgid ""
 "automatically filter the whole grid to only show programs with the same "
 "name)._"
 msgstr ""
+"__Titel__: Der Titel der Sendung. _Sie können den Filter automatisch auf den"
+" Wert dieses Feldes einstellen, indem Sie darauf klicken (wenn Sie "
+"beispielsweise auf 'Daily News' klicken, wird die gesamte Übersicht "
+"automatisch so gefiltert, dass nur Sendungen mit diesem Namen angezeigt "
+"werden)._"
 
 #: src/docs_inc.c:1861
 msgid ""
@@ -10380,6 +10557,9 @@ msgid ""
 "sometimes see \"epggrab\" here, this is an internal subscription used by "
 "Tvheadend to grab EPG data."
 msgstr ""
+"__Titel__: Titel der Anwendung, die das Abonnement nutzt - hier wird "
+"manchmal \"epggrab\" angezeigt; dabei handelt es sich um ein internes "
+"Abonnement, das von Tvheadend zum Abrufen von EPG-Daten verwendet wird."
 
 #: src/docs_inc.c:1818
 msgid ""
@@ -10389,14 +10569,19 @@ msgid ""
 "increase at a fast pace and you have no playback issues, there is nothing to"
 " worry about."
 msgstr ""
+"__Transportfehler__: Anzahl der Fehler in den Transportströmen. Ein schnell "
+"ansteigender Wert kann auf Signalprobleme hindeuten. Gerätetreiber senden "
+"manchmal am Anfang eines Streams ungültige Daten; solange der Wert nicht "
+"rapide ansteigt und keine Probleme bei der Wiedergabe auftreten, besteht "
+"kein Grund zur Sorge."
 
 #: src/docs_inc.c:6548
 msgid "__Tuner and Network__"
-msgstr ""
+msgstr "__Tuner und Netzwerk__"
 
 #: src/docs_inc.c:1714
 msgid "__Type__ : Connection type - HTSP or HTTP."
-msgstr ""
+msgstr "__Typ__: Verbindungstyp - HTSP oder HTTP."
 
 #: src/docs_inc.c:1816
 msgid ""
@@ -10404,36 +10589,47 @@ msgid ""
 " can indicate a weak signal or interference, note that some devices can send"
 " a false value."
 msgstr ""
+"__Unkorrigierte Blöcke__: Anzahl der unkorrigierten Blöcke. Ein Wert größer "
+"als 0 kann auf ein schwaches Signal oder Störungen hindeuten. Beachten Sie, "
+"dass manche Geräte einen falschen Wert senden können."
 
 #: src/docs_inc.c:1722
 msgid ""
 "__Username__ : The username used to access Tvheadend (a blank cell indicates"
 " no username was supplied)."
 msgstr ""
+"__Benutzername__: Der Benutzername, der für den Zugriff auf Tvheadend "
+"verwendet wird (eine leere Zelle bedeutet, dass kein Benutzername angegeben "
+"wurde)."
 
 #: src/docs_inc.c:1859
 msgid ""
 "__Username__ : Username using the subscription - a blank cell indicates the "
 "subscriber didn't supply a username."
 msgstr ""
+"__Benutzername__: Benutzername für das Abonnement - eine leere Zelle "
+"bedeutet, dass der Abonnent keinen Benutzernamen angegeben hat."
 
 #: src/docs_inc.c:2456
 msgid ""
 "__View Level__ | Change the interface view level to show/hide more advanced options.\n"
 "__Help__ | Display this help page."
 msgstr ""
+"__Ansichtsebene__ | Ändern Sie die Ansichtsebene der Benutzeroberfläche, um erweiterte Optionen ein- oder auszublenden.\n"
+"__Hilfe__ | Diese Hilfeseite anzeigen."
 
 #: src/docs_inc.c:1802
 msgid "__Weight__ : Stream weighting."
-msgstr ""
+msgstr "__Gewichtung__: Gewichtung des Streams"
 
 #: src/docs_inc.c:6500
 msgid "__Welcome to Tvheadend, Your TV Streaming Server and Video Recorder__"
 msgstr ""
+"__Willkommen bei Tvheadend, Ihrem TV-Streaming-Server und Videorekorder__"
 
 #: src/docs_inc.c:6442 src/docs_inc.c:6472
 msgid "__You are now Finished__"
-msgstr ""
+msgstr "__Sie sind nun fertig__"
 
 #: src/docs_inc.c:734
 msgid ""
@@ -10501,11 +10697,11 @@ msgstr ""
 
 #: src/docs_inc.c:3505
 msgid "api"
-msgstr ""
+msgstr "api"
 
 #: src/docs_inc.c:1084
 msgid "arm"
-msgstr ""
+msgstr "arm"
 
 #: src/docs_inc.c:6328
 msgid "as that setting changes. This is the default."
@@ -10517,11 +10713,11 @@ msgstr ""
 
 #: src/docs_inc.c:2135
 msgid "auth"
-msgstr ""
+msgstr "auth"
 
 #: src/docs_inc.c:3497
 msgid "avahi"
-msgstr ""
+msgstr "avahi"
 
 #: src/docs_inc.c:6080
 msgid ""
@@ -10551,7 +10747,7 @@ msgstr ""
 
 #: src/docs_inc.c:3501
 msgid "bonjour"
-msgstr ""
+msgstr "bonjour"
 
 #: src/docs_inc.c:3629
 msgid "bouquet"
@@ -10571,11 +10767,11 @@ msgstr ""
 
 #: src/docs_inc.c:3657
 msgid "capmt"
-msgstr ""
+msgstr "capmt"
 
 #: src/docs_inc.c:3665
 msgid "cccam"
-msgstr ""
+msgstr "cccam"
 
 #: src/docs_inc.c:5596
 msgid "changes. We're ignoring the last component"
@@ -10633,19 +10829,19 @@ msgstr ""
 
 #: src/docs_inc.c:3653
 msgid "csa"
-msgstr ""
+msgstr "csa"
 
 #: src/docs_inc.c:3661
 msgid "cwc"
-msgstr ""
+msgstr "cwc"
 
 #: src/docs_inc.c:3493
 msgid "dbus"
-msgstr ""
+msgstr "dbus"
 
 #: src/docs_inc.c:3801
 msgid "ddci"
-msgstr ""
+msgstr "ddci"
 
 #: src/docs_inc.c:2129
 msgid "default - HTTP authentication"
@@ -10673,7 +10869,7 @@ msgstr ""
 
 #: src/docs_inc.c:3733
 msgid "diseqc"
-msgstr ""
+msgstr "DiseqC"
 
 #: src/docs_inc.c:2349
 msgid "display-name"
@@ -10689,43 +10885,43 @@ msgstr ""
 
 #: src/docs_inc.c:3697
 msgid "dvb"
-msgstr ""
+msgstr "dvb"
 
 #: src/docs_inc.c:3669
 msgid "dvbcam"
-msgstr ""
+msgstr "dvbcam"
 
 #: src/docs_inc.c:836
 msgid "dvbscan"
-msgstr ""
+msgstr "dvbscan"
 
 #: src/docs_inc.c:3673
 msgid "dvr"
-msgstr ""
+msgstr "dvr"
 
 #: src/docs_inc.c:3677
 msgid "dvr-inotify"
-msgstr ""
+msgstr "dvr-inotify"
 
 #: src/docs_inc.c:2195
 msgid "dvrid"
-msgstr ""
+msgstr "dvrid"
 
 #: src/docs_inc.c:2147
 msgid "e2"
-msgstr ""
+msgstr "e2"
 
 #: src/docs_inc.c:2293
 msgid "emm"
-msgstr ""
+msgstr "emm"
 
 #: src/docs_inc.c:2127 src/docs_inc.c:2143
 msgid "empty"
-msgstr ""
+msgstr "leer"
 
 #: src/docs_inc.c:3737
 msgid "en50221"
-msgstr ""
+msgstr "en50221"
 
 #: src/docs_inc.c:3741
 msgid "en50494"
@@ -10733,23 +10929,23 @@ msgstr "EN50494"
 
 #: src/docs_inc.c:3681
 msgid "epg"
-msgstr ""
+msgstr "epg"
 
 #: src/docs_inc.c:3685
 msgid "epgdb"
-msgstr ""
+msgstr "epgdb"
 
 #: src/docs_inc.c:3689
 msgid "epggrab"
-msgstr ""
+msgstr "epggrab"
 
 #: src/docs_inc.c:3633
 msgid "esfilter"
-msgstr ""
+msgstr "esfilter"
 
 #: src/docs_inc.c:3569
 msgid "fastscan"
-msgstr ""
+msgstr "fastscan"
 
 #: src/docs_inc.c:3209
 msgid "field to 127.0.0.1 and"
@@ -10809,7 +11005,7 @@ msgstr ""
 
 #: src/docs_inc.c:3445
 msgid "fsmonitor"
-msgstr ""
+msgstr "fsmonitor"
 
 #: src/docs_inc.c:2078
 msgid "full option list and more examples"
@@ -10817,7 +11013,7 @@ msgstr ""
 
 #: src/docs_inc.c:948
 msgid "github"
-msgstr ""
+msgstr "github"
 
 #: src/docs_inc.c:3585
 msgid "globalheaders"
@@ -10845,7 +11041,7 @@ msgstr ""
 
 #: src/docs_inc.c:1140
 msgid "grid"
-msgstr ""
+msgstr "grid"
 
 #: src/docs_inc.c:2032
 msgid ""
@@ -10863,43 +11059,43 @@ msgstr ""
 
 #: src/docs_inc.c:3517
 msgid "htsp"
-msgstr ""
+msgstr "htsp"
 
 #: src/docs_inc.c:3529
 msgid "htsp-ans"
-msgstr ""
+msgstr "htsp-ans"
 
 #: src/docs_inc.c:3525
 msgid "htsp-req"
-msgstr ""
+msgstr "htsp-req"
 
 #: src/docs_inc.c:3521
 msgid "htsp-sub"
-msgstr ""
+msgstr "htsp-sub"
 
 #: src/docs_inc.c:3509
 msgid "http"
-msgstr ""
+msgstr "http"
 
 #: src/docs_inc.c:3513
 msgid "httpc"
-msgstr ""
+msgstr "httpc"
 
 #: src/docs_inc.c:1062
 msgid "iOS"
-msgstr ""
+msgstr "iOS"
 
 #: src/docs_inc.c:3457
 msgid "idnode"
-msgstr ""
+msgstr "idnode"
 
 #: src/docs_inc.c:2229
 msgid "idxname"
-msgstr ""
+msgstr "idxname"
 
 #: src/docs_inc.c:3533
 msgid "imagecache"
-msgstr ""
+msgstr "imagecache"
 
 #: src/docs_inc.c:142
 msgid "indicates the location (or path) of the device."
@@ -10915,15 +11111,15 @@ msgstr ""
 
 #: src/docs_inc.c:3717
 msgid "iptv"
-msgstr ""
+msgstr "iptv"
 
 #: src/docs_inc.c:3721
 msgid "iptv-pcr"
-msgstr ""
+msgstr "iptv-pcr"
 
 #: src/docs_inc.c:3725
 msgid "iptv-sub"
-msgstr ""
+msgstr "iptv-sub"
 
 #: src/docs_inc.c:164
 msgid "is a unique ID."
@@ -10983,11 +11179,11 @@ msgstr ""
 
 #: src/docs_inc.c:2341 src/docs_inc.c:2345
 msgid "lcn"
-msgstr ""
+msgstr "lcn"
 
 #: src/docs_inc.c:3709
 msgid "libav"
-msgstr ""
+msgstr "libav"
 
 #: src/docs_inc.c:3711
 msgid "libav / ffmpeg"
@@ -11001,19 +11197,19 @@ msgstr ""
 
 #: src/docs_inc.c:3729
 msgid "linuxdvb"
-msgstr ""
+msgstr "linuxdvb"
 
 #: src/docs_inc.c:1032
 msgid "linuxtv"
-msgstr ""
+msgstr "linuxtv"
 
 #: src/docs_inc.c:3449
 msgid "lock"
-msgstr ""
+msgstr "lock"
 
 #: src/docs_inc.c:2115
 msgid "m3u"
-msgstr ""
+msgstr "m3u"
 
 #: src/docs_inc.c:3413
 msgid "main"
@@ -11025,7 +11221,7 @@ msgstr ""
 
 #: src/docs_inc.c:3609 src/docs_inc.c:5772
 msgid "mkv"
-msgstr ""
+msgstr "mkv"
 
 #: src/docs_inc.c:3253
 msgid ""
@@ -11048,7 +11244,7 @@ msgstr ""
 
 #: src/docs_inc.c:3257
 msgid "mode."
-msgstr ""
+msgstr "modus."
 
 #: src/docs_inc.c:4578
 msgid "module under 'General Settings'."
@@ -11056,23 +11252,23 @@ msgstr ""
 
 #: src/docs_inc.c:3701
 msgid "mpegts"
-msgstr ""
+msgstr "mpegts"
 
 #: src/docs_inc.c:2269
 msgid "mux"
-msgstr ""
+msgstr "mux"
 
 #: src/docs_inc.c:3597
 msgid "muxer"
-msgstr ""
+msgstr "muxer"
 
 #: src/docs_inc.c:3705
 msgid "muxsched"
-msgstr ""
+msgstr "muxsched"
 
 #: src/docs_inc.c:2223 src/docs_inc.c:2235
 msgid "name"
-msgstr ""
+msgstr "name"
 
 #: src/docs_inc.c:4718
 msgid "networks"
@@ -11086,11 +11282,11 @@ msgstr ""
 #: src/docs_inc.c:548 src/docs_inc.c:556 src/docs_inc.c:574 src/docs_inc.c:576
 #: src/docs_inc.c:584 src/docs_inc.c:586
 msgid "no"
-msgstr ""
+msgstr "nein"
 
 #: src/docs_inc.c:2217
 msgid "numname"
-msgstr ""
+msgstr "numname"
 
 #: src/docs_inc.c:2066
 #, c-format
@@ -11101,7 +11297,7 @@ msgstr ""
 
 #: src/docs_inc.c:3761
 msgid "opentv"
-msgstr ""
+msgstr "opentv"
 
 #: src/docs_inc.c:2113 src/docs_inc.c:4844
 msgid "or"
@@ -11125,7 +11321,7 @@ msgstr ""
 
 #: src/docs_inc.c:3573
 msgid "pcr"
-msgstr ""
+msgstr "pcr"
 
 #: src/docs_inc.c:2062
 msgid "per-channel coverage, worst first (combine with"
@@ -11145,7 +11341,7 @@ msgstr ""
 
 #: src/docs_inc.c:2297
 msgid "pids"
-msgstr ""
+msgstr "pids"
 
 #: src/docs_inc.c:2107
 msgid "playlist"
@@ -11158,19 +11354,19 @@ msgstr ""
 
 #: src/docs_inc.c:3757
 msgid "psip"
-msgstr ""
+msgstr "psip"
 
 #: src/docs_inc.c:3765
 msgid "pyepg"
-msgstr ""
+msgstr "pyepg"
 
 #: src/docs_inc.c:3421
 msgid "qprof"
-msgstr ""
+msgstr "qprof"
 
 #: src/docs_inc.c:2285
 msgid "qsize"
-msgstr ""
+msgstr "qsize"
 
 #: src/docs_inc.c:2167
 msgid "recordings"
@@ -11182,19 +11378,19 @@ msgstr ""
 
 #: src/docs_inc.c:3469
 msgid "rtsp"
-msgstr ""
+msgstr "rtsp"
 
 #: src/docs_inc.c:2151 src/docs_inc.c:3745
 msgid "satip"
-msgstr ""
+msgstr "satip"
 
 #: src/docs_inc.c:3749
 msgid "satips"
-msgstr ""
+msgstr "satips"
 
 #: src/docs_inc.c:3781
 msgid "scanfile"
-msgstr ""
+msgstr "scanfile"
 
 #: src/docs_inc.c:3217 src/docs_inc.c:3237 src/docs_inc.c:3267
 msgid "section of oscam.conf:"
@@ -11202,7 +11398,7 @@ msgstr ""
 
 #: src/docs_inc.c:2265 src/docs_inc.c:3613
 msgid "service"
-msgstr ""
+msgstr "service"
 
 #: src/docs_inc.c:3625
 msgid "service-mapper"
@@ -11222,11 +11418,11 @@ msgstr ""
 
 #: src/docs_inc.c:3441
 msgid "spawn"
-msgstr ""
+msgstr "spawn"
 
 #: src/docs_inc.c:5338
 msgid "strftime"
-msgstr ""
+msgstr "strftime"
 
 #: src/docs_inc.c:3621
 msgid "subscription"
@@ -11285,35 +11481,35 @@ msgstr "Tags"
 
 #: src/docs_inc.c:3537
 msgid "tbl"
-msgstr ""
+msgstr "tbl"
 
 #: src/docs_inc.c:3557
 msgid "tbl-atsc"
-msgstr ""
+msgstr "tbl-atsc"
 
 #: src/docs_inc.c:3541
 msgid "tbl-base"
-msgstr ""
+msgstr "tbl-base"
 
 #: src/docs_inc.c:3545
 msgid "tbl-csa"
-msgstr ""
+msgstr "tbl-csa"
 
 #: src/docs_inc.c:3549
 msgid "tbl-eit"
-msgstr ""
+msgstr "tbl-eit"
 
 #: src/docs_inc.c:3561
 msgid "tbl-pass"
-msgstr ""
+msgstr "tbl-pass"
 
 #: src/docs_inc.c:3565
 msgid "tbl-satip"
-msgstr ""
+msgstr "tbl-satip"
 
 #: src/docs_inc.c:3553
 msgid "tbl-time"
-msgstr ""
+msgstr "tbl-time"
 
 #: src/docs_inc.c:3465
 msgid "tcp"
@@ -11359,7 +11555,7 @@ msgstr ""
 
 #: src/docs_inc.c:5372
 msgid "thetvdb.com"
-msgstr ""
+msgstr "thetvdb.com"
 
 #: src/docs_inc.c:3429
 msgid "thread"
@@ -11379,11 +11575,11 @@ msgstr ""
 
 #: src/docs_inc.c:5360
 msgid "tmdb"
-msgstr ""
+msgstr "tmdb"
 
 #: src/docs_inc.c:5364
 msgid "tmdb.org"
-msgstr ""
+msgstr "tmdb.org"
 
 #: src/docs_inc.c:3213
 msgid ""
@@ -11401,7 +11597,7 @@ msgstr ""
 
 #: src/docs_inc.c:3417
 msgid "tprof"
-msgstr ""
+msgstr "tprof"
 
 #: src/docs_inc.c:3713
 msgid "transcode"
@@ -11409,80 +11605,80 @@ msgstr ""
 
 #: src/docs_inc.c:3789
 msgid "tsdebug"
-msgstr ""
+msgstr "tsdebug"
 
 #: src/docs_inc.c:3785
 msgid "tsfile"
-msgstr ""
+msgstr "tsfile"
 
 #: src/docs_inc.c:3589
 msgid "tsfix"
-msgstr ""
+msgstr "tsfix"
 
 #: src/docs_inc.c:5368 src/docs_inc.c:5376
 msgid "tvdb"
-msgstr ""
+msgstr "tvdb"
 
 #: src/docs_inc.c:3753
 msgid "tvhdhomerun"
-msgstr ""
+msgstr "tvhdhomerun"
 
 #: src/docs_inc.c:3433
 msgid "tvhpoll"
-msgstr ""
+msgstr "tvhpoll"
 
 #: src/docs_inc.c:5764 src/docs_inc.c:5792
 msgid "tvmovies/Gladiator (2000)"
-msgstr ""
+msgstr "tvmovies/Gladiator (2000)"
 
 #: src/docs_inc.c:5820
 msgid "tvmovies/Gladiator (2000)/Gladiator (2000)"
-msgstr ""
+msgstr "tvmovies/Gladiator (2000)/Gladiator (2000)"
 
 #: src/docs_inc.c:5758
 msgid "tvshows/Bones/Bones - S02E06"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S02E06"
 
 #: src/docs_inc.c:5796
 msgid "tvshows/Bones/Bones - S05E11"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S05E11"
 
 #: src/docs_inc.c:5798
 msgid "tvshows/Bones/Bones - S05E11 - The X in the Files"
-msgstr ""
+msgstr "tvshows/Bones/Bones - S05E11 - The X in the Files"
 
 #: src/docs_inc.c:5822
 msgid "tvshows/Bones/Season 5/Bones - S05E11"
-msgstr ""
+msgstr "tvshows/Bones/Season 5/Bones - S05E11"
 
 #: src/docs_inc.c:5794
 msgid "tvshows/Countdown/Countdown"
-msgstr ""
+msgstr "tvshows/Countdown/Countdown"
 
 #: src/docs_inc.c:822
 msgid "ukfree.tv"
-msgstr ""
+msgstr "ukfree.tv"
 
 #: src/docs_inc.c:3473
 msgid "upnp"
-msgstr ""
+msgstr "upnp"
 
 #: src/docs_inc.c:3461
 msgid "url"
-msgstr ""
+msgstr "url"
 
 #: src/docs_inc.c:5902 src/docs_inc.c:5906 src/docs_inc.c:6010
 #: src/docs_inc.c:6014 src/docs_inc.c:6110 src/docs_inc.c:6114
 msgid "user"
-msgstr ""
+msgstr "Benutzer"
 
 #: src/docs_inc.c:3453
 msgid "uuid"
-msgstr ""
+msgstr "uuid"
 
 #: src/docs_inc.c:3797
 msgid "vaapi"
-msgstr ""
+msgstr "vaapi"
 
 #: src/docs_inc.c:1126
 msgid "view level"
@@ -11494,7 +11690,7 @@ msgstr ""
 
 #: src/docs_inc.c:3773
 msgid "webui"
-msgstr ""
+msgstr "Weboberfläche"
 
 #: src/docs_inc.c:2281
 msgid "weight"
@@ -11534,4 +11730,4 @@ msgstr ""
 #: src/docs_inc.c:5750 src/docs_inc.c:5752 src/docs_inc.c:5760
 #: src/docs_inc.c:5762
 msgid "〃"
-msgstr ""
+msgstr "\""
