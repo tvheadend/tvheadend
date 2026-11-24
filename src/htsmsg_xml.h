@@ -23,6 +23,18 @@
 #include "htsbuf.h"
 
 htsmsg_t *htsmsg_xml_deserialize(char *src, char *errbuf, size_t errbufsize);
+/*
+ * Parse src and pass each child element of a root element named root
+ * to cb, one at a time, so the whole document is never held as htsmsg.
+ * cb owns m and must destroy it. src is not modified. Returns 0 if the
+ * document parsed, -1 on error. On error, cb may already have been
+ * called for the items completed before the error.
+ */
+typedef void (*htsmsg_xml_item_cb_t)(void *opaque, const char *name,
+                                     htsmsg_t *m);
+int htsmsg_xml_deserialize_cb(const char *src, const char *root,
+                              htsmsg_xml_item_cb_t cb, void *opaque,
+                              char *errbuf, size_t errbufsize);
 int htsmsg_xml_decode_attr(char *s);
 const char *htsmsg_xml_get_cdata_str (htsmsg_t *tags, const char *tag);
 int htsmsg_xml_get_cdata_u32 (htsmsg_t *tags, const char *tag, uint32_t *u32);

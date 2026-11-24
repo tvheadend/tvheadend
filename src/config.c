@@ -44,6 +44,8 @@
 #define COMPAT_IPTOS
 #include "compat.h"
 
+#include <libxml/xmlstring.h>
+
 static void config_muxconfpath_notify ( void *o, const char *lang );
 
 void tvh_str_set(char **strp, const char *src);
@@ -1549,17 +1551,22 @@ config_migrate_v26_rename ( htsmsg_t *t, htsmsg_field_t *f )
   return n;
 }
 
-static void
-config_migrate_v26_decode ( char *id )
+static char *
+config_migrate_v26_decode ( const char *id )
 {
+  char *d;
   char *s;
 
   if (strchr(id, '&') == NULL)
-    return;
-  htsmsg_xml_decode_attr(id);
-  for (s = id; *s; s++) /* same normalisation as epggrab_channel_find() */
+    return NULL;
+  d = strdup(id);
+  if (d == NULL)
+    return NULL;
+  htsmsg_xml_decode_attr(d);
+  for (s = d; *s; s++) /* same normalisation as epggrab_channel_find() */
     if (*s == '/')
       *s = '#';
+  return d;
 }
 
 /* Does another record of the same module have or get the id n? Renaming
@@ -1609,8 +1616,10 @@ config_migrate_v26_block ( htsmsg_t *c, htsmsg_t *t )
   htsmsg_destroy(b);
 }
 
+/* Rename each record whose id convert changes, unless the new id would
+ * not be unique */
 static void
-config_migrate_v26 ( void )
+config_migrate_v26_ids ( char *(*convert)(const char *id) )
 {
   htsmsg_t *c;
   htsmsg_t *t;
@@ -1622,14 +1631,13 @@ config_migrate_v26 ( void )
   c = hts_settings_load_r(1, "epggrab/xmltv/channels");
   if (c == NULL)
     return;
-  /* Decode all ids first, so the result doesn't depend on the order */
+  /* Convert all ids first, so the result doesn't depend on the order */
   t = htsmsg_create_map();
   HTSMSG_FOREACH(f, c) {
     id = config_migrate_v26_id(f);
-    d = id ? strdup(id) : NULL;
+    d = id ? convert(id) : NULL;
     if (d == NULL)
       continue;
-    config_migrate_v26_decode(d);
     htsmsg_add_str(t, htsmsg_field_name(f), d);
     free(d);
   }
@@ -1648,6 +1656,53 @@ config_migrate_v26 ( void )
   }
   htsmsg_destroy(t);
   htsmsg_destroy(c);
+}
+
+static void
+config_migrate_v26 ( void )
+{
+  config_migrate_v26_ids(config_migrate_v26_decode);
+}
+
+/* libxml2 converts the attribute values of a Latin-1 document to UTF-8,
+ * so stored ids from such a document get converted too. They hold
+ * Latin-1 bytes, and UTF-8 where v26 decoded a reference: keep valid
+ * UTF-8 sequences and convert the other bytes */
+static char *
+config_migrate_v27_convert ( const char *id )
+{
+  const unsigned char *s = (const unsigned char *)id;
+  size_t l = strlen(id);
+  const unsigned char *e = s + l;
+  char *d;
+  char *w;
+  int n;
+
+  if (xmlCheckUTF8(s))
+    return NULL;
+  d = malloc(2 * l + 1);
+  if (d == NULL)
+    return NULL;
+  w = d;
+  while (s < e) {
+    n = (int)(e - s);
+    if (*s < 0x80 || xmlGetUTF8Char(s, &n) < 0) {
+      w += put_utf8(w, *s);
+      s++;
+    } else {
+      memcpy(w, s, n);
+      w += n;
+      s += n;
+    }
+  }
+  *w = '\0';
+  return d;
+}
+
+static void
+config_migrate_v27 ( void )
+{
+  config_migrate_v26_ids(config_migrate_v27_convert);
 }
 
 /*
@@ -1777,7 +1832,8 @@ static const config_migrate_t config_migrate_table[] = {
   config_migrate_v23,
   config_migrate_v24,
   config_migrate_v25,
-  config_migrate_v26
+  config_migrate_v26,
+  config_migrate_v27
 };
 
 /*
