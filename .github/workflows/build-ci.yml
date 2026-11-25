@@ -24,6 +24,24 @@ jobs:
     # the pcloud upload runs only from build-cloudsmith on master.
     uses: ./.github/workflows/webui-vue-build.yml
 
+  vue-test:
+    # Kept out of the `vue` job so a failing test cannot block the dist
+    # artifact that every package job below depends on.
+    name: Test Vue UI
+    runs-on: ubuntu-26.04
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-node@v5
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: src/webui/static-vue/package-lock.json
+    - name: Run unit tests
+      run: |
+        cd src/webui/static-vue
+        npm ci --no-audit --no-fund
+        npm test
+
   build-raspberry:
     needs: vue
     runs-on: ubuntu-26.04-arm
