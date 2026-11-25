@@ -219,6 +219,7 @@ jobs:
           - ["amd64/ubuntu:plucky", "ubuntu-plucky"]
           - ["amd64/ubuntu:questing", "ubuntu-questing"]
           - ["amd64/ubuntu:resolute", "ubuntu-resolute"]
+          - ["amd64/ubuntu:stonking", "ubuntu-stonking"]
           - ["i386/debian:stretch", "i386-debian-stretch"]
           - ["i386/debian:buster", "i386-debian-buster"]
           - ["i386/debian:bullseye", "i386-debian-bullseye"]
