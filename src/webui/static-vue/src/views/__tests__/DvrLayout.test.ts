@@ -61,12 +61,12 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
   it('hides Removed Recordings at basic level', () => {
     const tabs = getTabs(mountAtLevel('basic'))
     const labels = tabs.map((t) => t.label)
-    expect(labels).not.toContain('Removed Recordings')
+    expect(labels).not.toContain('Removed')
     /* Other five tabs always present. */
     expect(labels).toEqual([
-      'Upcoming / Current Recordings',
-      'Finished Recordings',
-      'Failed Recordings',
+      'Upcoming / Current',
+      'Finished',
+      'Failed',
       'Autorecs',
       'Timers',
     ])
@@ -74,20 +74,20 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
 
   it('hides Removed Recordings at advanced level', () => {
     const tabs = getTabs(mountAtLevel('advanced'))
-    expect(tabs.map((t) => t.label)).not.toContain('Removed Recordings')
+    expect(tabs.map((t) => t.label)).not.toContain('Removed')
   })
 
   it('shows Removed Recordings at expert level', () => {
     const tabs = getTabs(mountAtLevel('expert'))
     const labels = tabs.map((t) => t.label)
-    expect(labels).toContain('Removed Recordings')
+    expect(labels).toContain('Removed')
     /* Position is between Failed and Autorecs (matches ExtJS panel
      * order at dvr.js:1198-1203). */
     expect(labels).toEqual([
-      'Upcoming / Current Recordings',
-      'Finished Recordings',
-      'Failed Recordings',
-      'Removed Recordings',
+      'Upcoming / Current',
+      'Finished',
+      'Failed',
+      'Removed',
       'Autorecs',
       'Timers',
     ])
@@ -104,6 +104,6 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
       },
     })
     const tabs = wrapper.findComponent(PageTabsStub).props('tabs') as DvrTab[]
-    expect(tabs.map((t) => t.label)).not.toContain('Removed Recordings')
+    expect(tabs.map((t) => t.label)).not.toContain('Removed')
   })
 })
