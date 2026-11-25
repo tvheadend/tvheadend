@@ -30,7 +30,16 @@ else
     dnf config-manager --set-enabled crb
 fi
 
-dnf install -y "https://download1.rpmfusion.org/free/$fusion/rpmfusion-free-release-$releasever.noarch.rpm"
+# The fixed-name rawhide release package disappears whenever RPM Fusion
+# publishes a new one, so take it from the rawhide repository instead
+if [ "$releasever" = "rawhide" ]; then
+    dnf install -y \
+        --repofrompath="rpmfusion-free-rawhide,https://download1.rpmfusion.org/free/fedora/development/rawhide/Everything/$(uname -m)/os/" \
+        --setopt=rpmfusion-free-rawhide.gpgcheck=0 \
+        rpmfusion-free-release
+else
+    dnf install -y "https://download1.rpmfusion.org/free/$fusion/rpmfusion-free-release-$releasever.noarch.rpm"
+fi
 dnf install -y gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
 # not packaged on all releases
 dnf install -y openssl-devel-engine || true
