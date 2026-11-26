@@ -129,6 +129,7 @@ const CASES: Array<[string, string, Record<string, unknown>?]> = [
   ['configuration/DvbNetworksView', 'Edit Network'],
   ['configuration/RatingLabelsView', 'Edit Rating Label'],
   ['dvr/AutorecsView', 'Edit Autorec'],
+  ['dvr/SmartAutorecsView', 'Edit Smart Autorec'],
   ['dvr/TimersView', 'Edit Timer'],
   ['dvr/UpcomingView', 'Edit Recording'],
 ]

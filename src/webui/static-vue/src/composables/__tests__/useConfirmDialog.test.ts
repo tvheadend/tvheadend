@@ -6,7 +6,9 @@
  * PrimeVue's confirm service (mocked here). Covers what each answer
  * resolves to, and that Escape closes only the confirmation: the
  * player and the EPG drawer it is asked from listen for Escape on the
- * document and must not see it.
+ * document and must not see it. `ask()` targets the default dialog;
+ * `askWithDetail()` targets the `detail` group and hangs the block and
+ * the list on the confirmation object for that dialog's message slot.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ConfirmationOptions } from 'primevue/confirmationoptions'
@@ -72,5 +74,33 @@ describe('useConfirmDialog', () => {
     pressEscape()
     expect(outerKeydown).toHaveBeenCalledOnce()
     expect(closeMock).not.toHaveBeenCalled()
+  })
+
+  it('ask() targets the default dialog', async () => {
+    const { ask } = useConfirmDialog()
+    const p = ask('Sure?', { acceptLabel: 'Go' })
+    const opts = requireMock.mock.lastCall![0]
+    expect(opts.group).toBeUndefined()
+    expect(opts.message).toBe('Sure?')
+    expect(opts.acceptLabel).toBe('Go')
+    opts.accept()
+    opts.onHide()
+    await expect(p).resolves.toBe(true)
+  })
+
+  it('askWithDetail() carries the block and the list to the detail group', async () => {
+    const { askWithDetail } = useConfirmDialog()
+    const p = askWithDetail('Convert?', {
+      detail: '{ "title": "polar" }',
+      items: ['one', 'two'],
+      severity: 'danger',
+    })
+    const opts = requireMock.mock.lastCall![0]
+    expect(opts.group).toBe('detail')
+    expect(opts.detail).toBe('{ "title": "polar" }')
+    expect(opts.items).toEqual(['one', 'two'])
+    expect(opts.acceptProps).toEqual({ severity: 'danger' })
+    opts.reject()
+    await expect(p).resolves.toBe(false)
   })
 })
