@@ -41,7 +41,7 @@ msgstr "# Zugeordnete Kanäle"
 
 #: src/input/mpegts/mpegts_network.c:333
 msgid "# Muxes"
-msgstr "# Muxe"
+msgstr "# Muxes"
 
 #: src/input/mpegts/mpegts_network.c:341
 msgid "# Services"
@@ -718,7 +718,7 @@ msgstr "Alles wird kleingeschrieben"
 #: src/dvr/dvr_autorec.c:1040 src/dvr/dvr_config.c:884
 msgid "All: Record if EPG/XMLTV indicates it is a unique programme"
 msgstr ""
-"Alle: Aufzeichnen, wenn EPG/XMLTV angibt, dass es sich um eine einmalige "
+"Alle: Aufnehmen, wenn EPG/XMLTV angibt, dass es sich um eine einmalige "
 "Sendung handelt"
 
 #: src/dvr/dvr_autorec.c:1046 src/dvr/dvr_config.c:890
@@ -1885,7 +1885,7 @@ msgstr "Konfiguration Allgemein"
 
 #: src/config.c:2196
 msgid "Config-Recording"
-msgstr "Konfiguration Aufzeichnung"
+msgstr "Konfig-Aufnahme"
 
 #: src/config.c:2195
 msgid "Config-Stream"
@@ -2145,8 +2145,8 @@ msgid ""
 "Create scene markers in recordings based on the EPG start/stop times when "
 "available."
 msgstr ""
-"Erstelle in Aufzeichnungen Szenenmarkierungen auf der Grundlage der Start- "
-"und Endzeiten aus dem EPG, sofern diese verfügbar sind."
+"Erstelle in Aufnahmen Szenenmarkierungen auf der Grundlage der Start- und "
+"Endzeiten aus dem EPG, sofern diese verfügbar sind."
 
 #: src/bouquet.c:1245
 msgid "Create tags"
@@ -2504,7 +2504,7 @@ msgstr "Dunkel"
 #: src/dvr/dvr_config.c:1132
 msgid "Data error threshold for failed recordings (0=off)"
 msgstr ""
-"Schwellenwert für Datenfehler bei fehlgeschlagenen Aufzeichnungen (0 = "
+"Schwellenwert für Datenfehler bei fehlgeschlagenen Aufnahmen (0 = "
 "deaktiviert)"
 
 #: src/dvr/dvr_db.c:4860
@@ -2554,8 +2554,8 @@ msgid ""
 "Days to retain information about recordings. Once this period is exceeded, "
 "duplicate detection will not be possible."
 msgstr ""
-"Fristen für die Aufbewahrung von Aufzeichnungsdaten. Nach Ablauf dieser "
-"Frist ist eine Duplikatserkennung nicht mehr möglich."
+"Fristen für die Aufbewahrung von Aufnahmedaten. Nach Ablauf dieser Frist ist"
+" eine Duplikatserkennung nicht mehr möglich."
 
 #: src/epg.c:1988
 msgid "Debate"
@@ -3914,7 +3914,7 @@ msgstr "Football"
 #: src/dvr/dvr_config.c:1144
 msgid "For autorecs, attempt to find better time slots"
 msgstr ""
-"Versuche bei automatischen Aufzeichnungen, günstigere Zeitfenster zu finden"
+"Versuche bei automatischen Aufnahmen, günstigere Zeitfenster zu finden"
 
 #: src/input/mpegts/iptv/iptv_mux.c:291
 msgid "For example: 12610500. This frequency is 12610.5Mhz or 12.6105Ghz."
@@ -4380,7 +4380,7 @@ msgid ""
 msgstr ""
 "Behandle den Ausführungsstatus (EITp/f) umgehend. Normalerweise sollte diese"
 " Option deaktiviert bleiben. Auf sehr langsamen Systemen kann dies die "
-"Genauigkeit der Aufzeichnungen verbessern."
+"Genauigkeit der Aufnahmen verbessern."
 
 #: src/transcoding/codec/profile_video_class.c:291
 msgid "Hardware acceleration"
@@ -4477,7 +4477,7 @@ msgid ""
 "How to handle duplicate recordings. The 'Use DVR Configuration' value (the "
 "default) inherits the settings from the assigned DVR configuration"
 msgstr ""
-"Umgang mit doppelten Aufzeichnungen. Der Wert 'DVR-Konfiguration verwenden' "
+"Umgang mit doppelten Aufnahmen. Der Wert 'DVR-Konfiguration verwenden' "
 "(Standardeinstellung) übernimmt die Einstellungen aus der zugewiesenen DVR-"
 "Konfiguration."
 
@@ -4657,9 +4657,9 @@ msgid ""
 "If a completed recording has this many or more data errors, mark it as "
 "failed. Set to 0 to disable this check."
 msgstr ""
-"Wenn eine abgeschlossene Aufzeichnung so viele oder mehr Datenfehler "
-"aufweist, markieren Sie sie als fehlgeschlagen. Setzen Sie den Wert auf 0, "
-"um diese Prüfung zu deaktivieren."
+"Wenn eine abgeschlossene Aufnahme so viele oder mehr Datenfehler aufweist, "
+"markieren Sie sie als fehlgeschlagen. Setzen Sie den Wert auf 0, um diese "
+"Prüfung zu deaktivieren."
 
 #: src/epggrab/module/xmltv.c:1486
 msgid ""
@@ -4674,8 +4674,8 @@ msgid ""
 "If an error occurs clone the scheduled entry and try to record again (if "
 "possible)."
 msgstr ""
-"Im Fehlerfall dupliziere den geplanten Eintrag und versuche die Aufzeichnung"
-" nochmals (wenn möglich)"
+"Im Fehlerfall dupliziere den geplanten Eintrag und versuche die Aufnahme "
+"nochmals (wenn möglich)."
 
 #: src/config.c:2510
 msgid ""
@@ -4732,8 +4732,8 @@ msgid ""
 "If more than x errors occur during a recording schedule a re-record (if "
 "possible)."
 msgstr ""
-"Wenn mehr als x Fehler während der Aufzeichnung auftreten, plane eine "
-"Wiederholung der Aufnahme "
+"Wenn mehr als x Fehler während der Aufnahme auftreten, plane eine erneute "
+"Aufnahme (wenn möglich)."
 
 #: src/profile.c:377
 msgid ""
@@ -6430,7 +6430,7 @@ msgstr ""
 "automatisch gelöscht werden soll (es sei denn, die Aufbewahrungsdauer ist "
 "auf 'unbegrenzt' festgelegt). Beachten Sie, dass einige Clients die "
 "Wiedergabe möglicherweise vorab zwischenspeichern. Das bedeutet, dass die "
-"Aufzeichnung als abgespielt markiert wird, sobald der Client die Daten "
+"Aufnahme als abgespielt markiert wird, sobald der Client die Daten "
 "zwischengespeichert hat - was bereits vor dem tatsächlichen Ende der Sendung"
 " der Fall sein kann."
 
@@ -7240,9 +7240,9 @@ msgid ""
 "cancel lower-priority events. The 'Not Set' value inherits the settings from"
 " the assigned DVR configuration."
 msgstr ""
-"Priorität der Aufzeichnung. Einträge mit höherer Priorität haben Vorrang und"
-" heben Ereignisse mit niedrigerer Priorität auf. Der Wert 'Nicht festgelegt'"
-" übernimmt die Einstellungen aus der zugewiesenen DVR-Konfiguration."
+"Priorität der Aufnahme. Einträge mit höherer Priorität haben Vorrang und "
+"heben Ereignisse mit niedrigerer Priorität auf. Der Wert 'Nicht festgelegt' "
+"übernimmt die Einstellungen aus der zugewiesenen DVR-Konfiguration."
 
 #: src/channels.c:1806
 msgid "Private"
@@ -7519,7 +7519,7 @@ msgstr "Dateigröße der Aufnahme."
 
 #: src/dvr/dvr_config.c:1043
 msgid "Recording info retention period"
-msgstr "Aufbewahrungsfrist für Aufzeichnungsdaten"
+msgstr "Aufbewahrungsfrist für Aufnahme-Daten"
 
 #: src/dvr/dvr_db.c:4787
 msgid "Recording play count"
@@ -8036,7 +8036,7 @@ msgstr ""
 #: src/dvr/dvr_db.c:5122
 msgid "Saved parental rating country for once recording is complete."
 msgstr ""
-"Das Land der Altersfreigabe wurde nach Abschluss der ersten Aufzeichnung "
+"Das Land der Altersfreigabe wurde nach Abschluss der ersten Aufnahme "
 "gespeichert."
 
 #: src/dvr/dvr_db.c:5098
@@ -8162,22 +8162,21 @@ msgstr "Zu verwendende Scraper-Konfiguration"
 #: src/dvr/dvr_config.c:1559
 msgid "Script/program to run when a recording completes."
 msgstr ""
-"Skript / Programm, das ausgeführt wird, wenn eine Aufzeichnung abgeschlossen"
-" ist."
+"Skript / Programm, das ausgeführt wird, wenn eine Aufnahme abgeschlossen "
+"ist."
 
 #: src/dvr/dvr_config.c:1569
 msgid "Script/program to run when a recording gets removed."
 msgstr ""
-"Skript / Programm, das ausgeführt wird, wenn eine Aufzeichnung entfernt "
-"wird."
+"Skript / Programm, das ausgeführt wird, wenn eine Aufnahme entfernt wird."
 
 #: src/dvr/dvr_config.c:1548
 msgid ""
 "Script/program to run when a recording starts (service is subscribed but no "
 "filename available)."
 msgstr ""
-"Skript / Programm, das ausgeführt wird, wenn eine Aufzeichnung gestartet "
-"wird (Dienst ist abonniert, aber kein Dateiname verfügbar)."
+"Skript / Programm, das ausgeführt wird, wenn eine Aufnahme gestartet wird "
+"(Service ist abonniert, aber kein Dateiname verfügbar)."
 
 #: src/dvr/dvr_db.c:4153
 msgid "Season"
@@ -8499,9 +8498,9 @@ msgid ""
 "Service priority. Enter a value between -10 and 10. A higher value indicates"
 " a higher preference. See Help for more info."
 msgstr ""
-"Servicepriorität. Geben Sie einen Wert zwischen -10 und 10 ein. Ein höherer "
-"Wert zeigt eine höhere Präferenz an. Weitere Informationen finden Sie in der"
-" Hilfe."
+"Service-Priorität. Geben Sie einen Wert zwischen -10 und 10 ein. Ein höherer"
+" Wert zeigt eine höhere Präferenz an. Weitere Informationen finden Sie in "
+"der Hilfe."
 
 #: src/service.c:243
 msgid "Service raw"
@@ -9693,10 +9692,10 @@ msgid ""
 "The cache scheme to use/used to store recordings. Leave as \"system\" unless"
 " you have a special use case for one of the others. See Help for details."
 msgstr ""
-"Das Cache-Schema, das zum Speichern von Aufzeichnungen verwendet werden "
-"soll. Belassen Sie es als \"System\", es sei denn, Sie haben einen "
-"speziellen Anwendungsfall für einen der anderen. Weitere Informationen "
-"finden Sie in der Hilfe."
+"Das Cache-Schema, das zum Speichern von Aiufnahmen verwendet werden soll. "
+"Belassen Sie es als \"System\", es sei denn, Sie haben einen speziellen "
+"Anwendungsfall für einen der anderen. Weitere Informationen finden Sie in "
+"der Hilfe."
 
 #: src/dvr/dvr_autorec.c:1120
 msgid ""
@@ -9729,8 +9728,8 @@ msgid ""
 "record. You can leave this field blank to apply the rule to all channels."
 msgstr ""
 "Der Kanal, auf den diese Regel angewendet wird, d. H. Der Kanal, den Sie "
-"aufzeichnen möchten. Sie können dieses Feld leer lassen, um die Regel auf "
-"alle Kanäle anzuwenden."
+"aufnehmen möchten. Sie können dieses Feld leer lassen, um die Regel auf alle"
+" Kanäle anzuwenden."
 
 #: src/service.c:194
 msgid "The channel this service is mapped to."
@@ -9775,7 +9774,7 @@ msgstr "Das Jahr, in dem das Programm urheberrechtlich geschützt wurde."
 
 #: src/dvr/dvr_db.c:4539
 msgid "The create time of the entry describing the recording."
-msgstr "Das Erstellungsdatum des Eintrags, der die Aufzeichnung beschreibt."
+msgstr "Das Erstellungsdatum des Eintrags, der die Aufnahme beschreibt."
 
 #: src/input/mpegts/satip/satip.c:507
 msgid "The current boot ID."
@@ -10144,8 +10143,7 @@ msgstr ""
 #: src/dvr/dvr_autorec.c:1446
 msgid "The maximum number of recording entries this rule can create."
 msgstr ""
-"Die maximale Anzahl von Aufzeichnungseinträgen, die diese Regel erstellen "
-"kann."
+"Die maximale Anzahl von Aufnahme-Einträgen, die diese Regel erstellen kann."
 
 #: src/dvr/dvr_config.c:1514
 msgid "The maximum number of recordings that can be scheduled."
@@ -11041,7 +11039,7 @@ msgstr "Transport Stream-ID"
 #: src/dvr/dvr_config.c:1122
 msgid "Try re-scheduling recording if more errors than (0=off)"
 msgstr ""
-"Versuche die Aufzeichnung neu zu planen, wenn mehr Fehler als (0 = aus) "
+"Versuche die Aufnahme neu zu planen, wenn mehr Fehler als (0 = aus) "
 "auftreten."
 
 #: src/epggrab/module/xmltv.c:1417
@@ -11802,10 +11800,9 @@ msgid ""
 "etc."
 msgstr ""
 "Videorecorder-Flags, erlauben / verbieten den Zugriff auf Videorecorder-"
-"Funktionen (einschließlich automatischer Aufzeichnungen), erlauben / "
-"verbieten Benutzern, andere DVR-Einträge anzuzeigen, erlauben / verbieten "
-"Benutzern, mit DVR-Einträgen anderer Benutzer zu arbeiten (entfernen, "
-"bearbeiten) usw."
+"Funktionen (einschließlich automatischer Aufnahmen), erlauben / verbieten "
+"Benutzern, andere DVR-Einträge anzuzeigen, erlauben / verbieten Benutzern, "
+"mit DVR-Einträgen anderer Benutzer zu arbeiten (entfernen, bearbeiten) usw."
 
 #: src/access.c:1681
 msgid "View all"
@@ -12014,11 +12011,11 @@ msgid ""
 "channels instead of on primary channels. This scheduling requires extra "
 "overhead so is disabled by default."
 msgstr ""
-"Bei der Planung einer automatischen Aufzeichnung versucht diese Option, den "
+"Bei der Planung einer automatischen Aufnahme versucht diese Option, den "
 "frühestmöglichen Zeitpunkt und den 'besten' Kanal (z. B. den Kanal mit den "
 "meisten Failover-Services) zu wählen. Dies ist nützlich, wenn mehrere "
 "Timeshift- und Wiederholungskanäle verfügbar sind. Ohne diese Option werden "
-"automatische Aufzeichnungen möglicherweise auf Timeshift-Kanälen statt auf "
+"automatische Aufnahmen möglicherweise auf Timeshift-Kanälen statt auf "
 "Primärkanälen geplant. Diese Planung erfordert zusätzlichen Aufwand und ist "
 "daher standardmäßig deaktiviert."
 
