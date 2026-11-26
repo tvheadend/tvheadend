@@ -198,9 +198,8 @@ jobs:
           - ["amd64/ubuntu:focal", "ubuntu-focal"]
           - ["amd64/ubuntu:jammy", "ubuntu-jammy"]
           - ["amd64/ubuntu:noble", "ubuntu-noble"]
-          - ["amd64/ubuntu:plucky", "ubuntu-plucky"]
-          - ["amd64/ubuntu:questing", "ubuntu-questing"]
           - ["amd64/ubuntu:resolute", "ubuntu-resolute"]
+          - ["amd64/ubuntu:rolling", "ubuntu-rolling"]
           - ["i386/debian:stretch", "i386-debian-stretch"]
           - ["i386/debian:buster", "i386-debian-buster"]
           - ["i386/debian:bullseye", "i386-debian-bullseye"]
@@ -293,7 +292,7 @@ jobs:
             mkdir -p .staticlib
             export STATICLIB_CACHE=/workspace/.staticlib
             export VUE_FILE_CACHE=/workspace/.vuecache
-            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || (startsWith(matrix.container[0], 'arm32v7') && '-a armv7l') || '' }}
+            AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh ${{ (startsWith(matrix.container[0], 'i386') && '-a i386') || (startsWith(matrix.container[0], 'arm32v7') && '-a armv7l') || '' }} ${{ endsWith(matrix.container[0], ':rolling') && '-t resolute-x86_64' || '' }}
         run: docker exec build-container bash -c "$SCRIPT"
       - name: copy-result
         env:
@@ -306,6 +305,7 @@ jobs:
           path: tvheadend*.deb
           if-no-files-found: error
       - name: upload-cloudsmith
+        if: ${{ !endsWith(matrix.container[0], ':rolling') }}
         env:
           SCRIPT: |
             cd /workspace

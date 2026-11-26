@@ -209,8 +209,6 @@ jobs:
           - ["amd64/ubuntu:focal", "ubuntu-focal"]
           - ["amd64/ubuntu:jammy", "ubuntu-jammy"]
           - ["amd64/ubuntu:noble", "ubuntu-noble"]
-          - ["amd64/ubuntu:plucky", "ubuntu-plucky"]
-          - ["amd64/ubuntu:questing", "ubuntu-questing"]
           - ["amd64/ubuntu:resolute", "ubuntu-resolute"]
           - ["i386/debian:stretch", "i386-debian-stretch"]
           - ["i386/debian:buster", "i386-debian-buster"]
