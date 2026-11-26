@@ -90,6 +90,7 @@
 #include <openssl/conf.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <libxml/parser.h>
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
@@ -1250,6 +1251,9 @@ main(int argc, char **argv)
   SSL_load_error_strings();
   SSL_library_init();
 #endif
+
+  /* libxml2 must be set up once before threads use it */
+  xmlInitParser();
 
 #ifndef OPENSSL_NO_ENGINE
   /* ENGINE init */

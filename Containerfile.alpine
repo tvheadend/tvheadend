@@ -27,6 +27,7 @@ RUN apk add --no-cache \
         'gnu-libiconv-dev' \
         'libdvbcsa-dev' \
         'libhdhomerun-dev' \
+        'libxml2-dev' \
         'linux-headers' \
         'musl-dev' \
         'openssl-dev>3' \
@@ -85,6 +86,7 @@ RUN apk add --no-cache \
         'liburiparser' \
         'libva' \
         'libvpx' \
+        'libxml2' \
         'mesa' \
         'perl-http-entity-parser' \
         'pngquant' \

@@ -40,7 +40,7 @@ if [ "$releasever" = "rawhide" ]; then
 else
     dnf install -y "https://download1.rpmfusion.org/free/$fusion/rpmfusion-free-release-$releasever.noarch.rpm"
 fi
-dnf install -y gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
+dnf install -y gcc-c++ which rpm-build rpmdevtools git make cmake gettext-devel dbus-devel avahi-devel openssl-devel zlib-devel libdvbcsa-devel wget bzip2 uriparser-devel libxml2-devel pcre2-devel python python-requests ccache systemd-units systemd-devel
 # not packaged on all releases
 dnf install -y openssl-devel-engine || true
 

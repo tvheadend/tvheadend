@@ -1357,16 +1357,8 @@ static int _xmltv_parse_channel
  *  ...multiple programmes
  *</tv>
  */
-static int _xmltv_parse_tv
-  (epggrab_module_t *mod, htsmsg_t *body, epggrab_stats_t *stats)
+static void _xmltv_parse_begin ( epggrab_module_t *mod )
 {
-  int gsave = 0, save;
-  htsmsg_t *tags;
-  htsmsg_field_t *f;
-
-  if((tags = htsmsg_get_map(body, "tags")) == NULL)
-    return 0;
-
   //Pre-process the XPaths
   //Only done once per XMLTV session.
   if(((epggrab_module_int_t *)mod)->xmltv_xpath_category_code)
@@ -1446,22 +1438,29 @@ static int _xmltv_parse_tv
   tvh_mutex_lock(&global_lock);
   epggrab_channel_begin_scan(mod);
   tvh_mutex_unlock(&global_lock);
+}
 
-  HTSMSG_FOREACH(f, tags) {
-    save = 0;
-    if(!strcmp(htsmsg_field_name(f), "channel")) {
-      tvh_mutex_lock(&global_lock);
-      save = _xmltv_parse_channel(mod, htsmsg_get_map_by_field(f), stats);
-      tvh_mutex_unlock(&global_lock);
-    } else if(!strcmp(htsmsg_field_name(f), "programme")) {
-      tvh_mutex_lock(&global_lock);
-      save = _xmltv_parse_programme(mod, htsmsg_get_map_by_field(f), stats);
-      if (save) epg_updated();
-      tvh_mutex_unlock(&global_lock);
-    }
-    gsave |= save;
+static int _xmltv_parse_item
+  ( epggrab_module_t *mod, const char *name, htsmsg_t *m,
+    epggrab_stats_t *stats )
+{
+  int save = 0;
+
+  if(!strcmp(name, "channel")) {
+    tvh_mutex_lock(&global_lock);
+    save = _xmltv_parse_channel(mod, m, stats);
+    tvh_mutex_unlock(&global_lock);
+  } else if(!strcmp(name, "programme")) {
+    tvh_mutex_lock(&global_lock);
+    save = _xmltv_parse_programme(mod, m, stats);
+    if (save) epg_updated();
+    tvh_mutex_unlock(&global_lock);
   }
+  return save;
+}
 
+static void _xmltv_parse_end ( epggrab_module_t *mod )
+{
   tvh_mutex_lock(&global_lock);
   epggrab_channel_end_scan(mod);
   tvh_mutex_unlock(&global_lock);
@@ -1483,21 +1482,91 @@ static int _xmltv_parse_tv
   {
     htsmsg_destroy(xmltv_xpath_category_code);
   }
-  return gsave;
+}
+
+/*
+ * The document is imported one <channel>/<programme> at a time, so it
+ * is never held as htsmsg as a whole. trans checks the whole document
+ * first, so that a broken one still imports nothing.
+ */
+typedef struct xmltv_stream {
+  epggrab_module_t *mod;
+  epggrab_stats_t  *stats;
+  int               items;
+  int               save;
+  int               begun;
+} xmltv_stream_t;
+
+static void _xmltv_stream_count
+  ( void *opaque, const char *name, htsmsg_t *m )
+{
+  xmltv_stream_t *xs = opaque;
+
+  (void)name;
+  xs->items++;
+  htsmsg_destroy(m);
+}
+
+static void _xmltv_stream_item
+  ( void *opaque, const char *name, htsmsg_t *m )
+{
+  xmltv_stream_t *xs = opaque;
+
+  if (!xs->begun) {
+    _xmltv_parse_begin(xs->mod);
+    xs->begun = 1;
+  }
+  xs->save |= _xmltv_parse_item(xs->mod, name, m, xs->stats);
+  htsmsg_destroy(m);
+}
+
+static htsmsg_t *_xmltv_trans ( void *m, char *data )
+{
+  epggrab_module_t *mod = m;
+  xmltv_stream_t xs = { mod, NULL, 0, 0, 0 };
+  char errbuf[100];
+  htsmsg_t *ret;
+
+  if (!data)
+    return NULL;
+  if (htsmsg_xml_deserialize_cb(data, "tv", _xmltv_stream_count, &xs,
+                                errbuf, sizeof(errbuf))) {
+    tvherror(mod->subsys, "%s: htsmsg_xml_deserialize error %s",
+             mod->id, errbuf);
+    free(data);
+    return NULL;
+  }
+  ret = htsmsg_create_map();
+  if (ret == NULL) {
+    free(data);
+    return NULL;
+  }
+  if (xs.items)
+    htsmsg_add_str_alloc(ret, "xmltv", data);
+  else
+    free(data);
+  return ret;
 }
 
 static int _xmltv_parse
-  ( void *mod, htsmsg_t *data, epggrab_stats_t *stats )
+  ( void *m, htsmsg_t *data, epggrab_stats_t *stats )
 {
-  htsmsg_t *tags, *tv;
+  epggrab_module_t *mod = m;
+  xmltv_stream_t xs = { mod, stats, 0, 0, 0 };
+  const char *src;
+  char errbuf[100];
 
-  if((tags = htsmsg_get_map(data, "tags")) == NULL)
+  src = htsmsg_get_str(data, "xmltv");
+  if(src == NULL)
     return 0;
 
-  if((tv = htsmsg_get_map(tags, "tv")) == NULL)
-    return 0;
-
-  return _xmltv_parse_tv(mod, tv, stats);
+  if (htsmsg_xml_deserialize_cb(src, "tv", _xmltv_stream_item, &xs,
+                                errbuf, sizeof(errbuf)))
+    tvherror(mod->subsys, "%s: htsmsg_xml_deserialize error %s",
+             mod->id, errbuf);
+  if (xs.begun)
+    _xmltv_parse_end(mod);
+  return xs.save;
 }
 
 /* ************************************************************************
@@ -1882,7 +1951,7 @@ static void _xmltv_load_grabbers ( void )
         epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
                                   &outbuf[p], LS_XMLTV, "xmltv",
                                   name, 3, &outbuf[p],
-                                  NULL, _xmltv_parse, NULL);
+                                  NULL, _xmltv_parse, _xmltv_trans);
         p = n = i + 1;
       } else if ( outbuf[i] == '\\') {
         memmove(outbuf, outbuf + 1, strlen(outbuf));
@@ -1933,7 +2002,7 @@ static void _xmltv_load_grabbers ( void )
             } else {
               epggrab_module_int_create(NULL, &epggrab_mod_int_xmltv_class,
                                         bin, LS_XMLTV, "xmltv", name, 3, bin,
-                                        NULL, _xmltv_parse, NULL);
+                                        NULL, _xmltv_parse, _xmltv_trans);
             }
             free(outbuf);
           } else {
@@ -1954,7 +2023,7 @@ void xmltv_init ( void )
   /* External module */
   epggrab_module_ext_create(NULL, &epggrab_mod_ext_xmltv_class,
                             "xmltv", LS_XMLTV, "xmltv", "XMLTV", 3, "xmltv",
-                            _xmltv_parse, NULL);
+                            _xmltv_parse, _xmltv_trans);
 
   /* Standard modules */
   _xmltv_load_grabbers();
