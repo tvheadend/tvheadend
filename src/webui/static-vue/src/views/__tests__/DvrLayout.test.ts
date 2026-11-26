@@ -6,7 +6,7 @@
  *
  * Specifically tests the Removed Recordings tab gate (mirrors ExtJS
  * dvr.js:988 + 1207-1213): hidden at basic and advanced, visible at
- * expert. The other five tabs are always visible.
+ * expert. The other six tabs are always visible.
  *
  * The test stubs PageTabs to inspect the tabs prop directly rather
  * than relying on rendered DOM — keeps the test resilient to
@@ -61,34 +61,36 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
   it('hides Removed Recordings at basic level', () => {
     const tabs = getTabs(mountAtLevel('basic'))
     const labels = tabs.map((t) => t.label)
-    expect(labels).not.toContain('Removed Recordings')
-    /* Other five tabs always present. */
+    expect(labels).not.toContain('Removed')
+    /* Other six tabs always present. */
     expect(labels).toEqual([
-      'Upcoming / Current Recordings',
-      'Finished Recordings',
-      'Failed Recordings',
+      'Upcoming / Current',
+      'Finished',
+      'Failed',
       'Autorecs',
+      'Smart Autorecs',
       'Timers',
     ])
   })
 
   it('hides Removed Recordings at advanced level', () => {
     const tabs = getTabs(mountAtLevel('advanced'))
-    expect(tabs.map((t) => t.label)).not.toContain('Removed Recordings')
+    expect(tabs.map((t) => t.label)).not.toContain('Removed')
   })
 
   it('shows Removed Recordings at expert level', () => {
     const tabs = getTabs(mountAtLevel('expert'))
     const labels = tabs.map((t) => t.label)
-    expect(labels).toContain('Removed Recordings')
+    expect(labels).toContain('Removed')
     /* Position is between Failed and Autorecs (matches ExtJS panel
      * order at dvr.js:1198-1203). */
     expect(labels).toEqual([
-      'Upcoming / Current Recordings',
-      'Finished Recordings',
-      'Failed Recordings',
-      'Removed Recordings',
+      'Upcoming / Current',
+      'Finished',
+      'Failed',
+      'Removed',
       'Autorecs',
+      'Smart Autorecs',
       'Timers',
     ])
   })
@@ -104,6 +106,6 @@ describe('DvrLayout — L2 tab filter by uilevel', () => {
       },
     })
     const tabs = wrapper.findComponent(PageTabsStub).props('tabs') as DvrTab[]
-    expect(tabs.map((t) => t.label)).not.toContain('Removed Recordings')
+    expect(tabs.map((t) => t.label)).not.toContain('Removed')
   })
 })

@@ -345,6 +345,7 @@ const dvrChildren: RouteRecordRaw[] = [
   leaf('failed', 'dvr-failed', () => import('@/views/dvr/FailedView.vue'), N_('Failed Recordings'), 'dvr'),
   leaf('removed', 'dvr-removed', () => import('@/views/dvr/RemovedView.vue'), N_('Removed Recordings'), 'dvr', dvrRemovedGuard),
   leaf('autorecs', 'dvr-autorecs', () => import('@/views/dvr/AutorecsView.vue'), N_('Autorecs'), 'dvr'),
+  leaf('smart-autorecs', 'dvr-smart-autorecs', () => import('@/views/dvr/SmartAutorecsView.vue'), N_('Smart Autorecs'), 'dvr'),
   leaf('timers', 'dvr-timers', () => import('@/views/dvr/TimersView.vue'), N_('Timers'), 'dvr'),
 ]
 

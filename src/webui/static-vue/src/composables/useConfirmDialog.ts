@@ -29,6 +29,7 @@
  * Discard unsaved changes) so the accept button renders red.
  */
 import { useConfirm } from 'primevue/useconfirm'
+import type { ConfirmationOptions } from 'primevue/confirmationoptions'
 import { t } from '@/composables/useI18n'
 
 export interface ConfirmDialogOptions {
@@ -42,10 +43,28 @@ export interface ConfirmDialogOptions {
   severity?: 'danger'
 }
 
+export interface ConfirmDetailOptions extends ConfirmDialogOptions {
+  /** Preformatted block shown under the message (an expression, a path). */
+  detail?: string
+  /** Bullet list shown under the block (warnings, consequences). */
+  items?: string[]
+}
+
+/*
+ * The extras ride on the confirmation object itself: PrimeVue hands
+ * the whole object to the dialog's message slot, and the `detail`
+ * group's dialog in AppShell renders them. The default dialog (no
+ * group) never sees them.
+ */
+type DetailConfirmation = ConfirmationOptions & {
+  detail?: string
+  items?: string[]
+}
+
 export function useConfirmDialog() {
   const confirm = useConfirm()
 
-  function ask(message: string, opts: ConfirmDialogOptions = {}): Promise<boolean> {
+  function run(options: DetailConfirmation, opts: ConfirmDialogOptions): Promise<boolean> {
     return new Promise((resolve) => {
       let settled = false
       const settle = (v: boolean) => {
@@ -66,18 +85,25 @@ export function useConfirmDialog() {
         settle(false)
       }
       window.addEventListener('keydown', onEscape, true)
-      confirm.require({
-        message,
-        header: opts.header ?? t('Confirm'),
-        acceptLabel: opts.acceptLabel ?? t('Yes'),
-        rejectLabel: opts.rejectLabel ?? t('No'),
-        acceptProps: opts.severity === 'danger' ? { severity: 'danger' } : undefined,
-        accept: () => settle(true),
-        reject: () => settle(false),
-        onHide: () => settle(false),
-      })
+      options.header = opts.header ?? t('Confirm')
+      options.acceptLabel = opts.acceptLabel ?? t('Yes')
+      options.rejectLabel = opts.rejectLabel ?? t('No')
+      options.acceptProps = opts.severity === 'danger' ? { severity: 'danger' } : undefined
+      options.accept = () => settle(true)
+      options.reject = () => settle(false)
+      options.onHide = () => settle(false)
+      confirm.require(options)
     })
   }
 
-  return { ask }
+  function ask(message: string, opts: ConfirmDialogOptions = {}): Promise<boolean> {
+    return run({ message }, opts)
+  }
+
+  /** `ask()` with a preformatted block and/or a bullet list under the message. */
+  function askWithDetail(message: string, opts: ConfirmDetailOptions = {}): Promise<boolean> {
+    return run({ message, group: 'detail', detail: opts.detail, items: opts.items }, opts)
+  }
+
+  return { ask, askWithDetail }
 }

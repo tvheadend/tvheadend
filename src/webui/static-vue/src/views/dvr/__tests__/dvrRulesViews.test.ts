@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Tvheadend contributors
 
 /*
- * Autorecs / Timers — the Priority column filter takes its options
+ * Autorecs / Smart autorecs / Timers — the Priority column filter takes its options
  * from the rule class metadata (server-localized) once it is in,
  * instead of the inline English fallback list.
  */
@@ -10,6 +10,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { nextTick, type Component } from 'vue'
 import { mount } from '@vue/test-utils'
 import AutorecsView from '../AutorecsView.vue'
+import SmartAutorecsView from '../SmartAutorecsView.vue'
 import TimersView from '../TimersView.vue'
 import { useIdnodeClassStore } from '@/stores/idnodeClass'
 import type { IdnodeClassMeta } from '@/types/idnode'
@@ -30,6 +31,7 @@ const CS_PRI = [
 
 describe.each([
   ['Autorecs', AutorecsView as Component, 'dvrautorec'],
+  ['Smart autorecs', SmartAutorecsView as Component, 'dvrautorec'],
   ['Timers', TimersView as Component, 'dvrtimerec'],
 ])('%s — Priority filter options', (_name, view, cls) => {
   it('switches to the server-localized options when the class metadata arrives', async () => {
