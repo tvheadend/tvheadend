@@ -203,6 +203,7 @@ enum {
 #endif
   LS_UDP,
   LS_RATINGLABELS,
+  LS_TLS,
   LS_LAST     /* keep this last */
 };
 
