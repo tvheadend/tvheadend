@@ -174,6 +174,7 @@ _video_filters_get_filters(TVHContext *self, char **filters)
                      av_get_pix_fmt_name(self->oavctx->pix_fmt))) {
         return -1;
     }
+    //str_snprintf(upload, sizeof(upload), "format=nv12");
 
     if (!(*filters = str_join(",", hw_deint, hw_scale, hw_denoise, hw_sharpness, download, deint, scale, upload, NULL))) {
         return -1;
@@ -197,6 +198,7 @@ tvh_video_context_open_decoder(TVHContext *self, AVDictionary **opts)
     mystrset(&self->hw_accel_device, self->profile->device);
 #endif
     self->iavctx->time_base = av_make_q(1, 90000); // MPEG-TS uses a fixed timebase of 90kHz
+    self->iavctx->pix_fmt = AV_PIX_FMT_NV12;
     return 0;
 }
 
@@ -281,10 +283,12 @@ tvh_video_context_open_encoder(TVHContext *self, AVDictionary **opts)
     self->oavctx->sample_aspect_ratio = self->iavctx->sample_aspect_ratio;
 
     tvh_context_log(self, LOG_DEBUG,
-        "Encoder configuration: "
-        "framerate: %d/%d (%.3f fps),time_base: %.0fHz,"
-        "frame duration: %" PRId64 " ticks (%.6f sec),"
-        "gop_size: %d,sample_aspect_ratio: %d/%d",
+        "Encoder configuration:\n"
+        "  framerate:              %d/%d (%.3f fps)\n"
+        "  time_base:              %.0fHz\n"
+        "  frame duration:         %" PRId64 " ticks (%.6f sec)\n"
+        "  gop_size:               %d\n"
+        "  sample_aspect_ratio:    %d/%d",
         self->oavctx->framerate.num, self->oavctx->framerate.den, av_q2d(self->oavctx->framerate),
         av_q2d(av_inv_q(self->oavctx->time_base)),
         av_rescale_q(1, av_inv_q(self->oavctx->framerate), self->oavctx->time_base),

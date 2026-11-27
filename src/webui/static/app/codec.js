@@ -35,7 +35,7 @@ function update_deinterlace_vaapi_mode(form) {
     if (form.findField('deinterlace_vaapi_mode')) {
         const hwaccel = form.findField('hwaccel').getValue();
         const deinterlace = form.findField('deinterlace').getValue();
-        const hwaccelDetails = form.findField('hwaccel_details').getValue(); // 0=AUTO, 1=VAAPI, 2=NVDEC, 3=MMAL
+        const hwaccelDetails = form.findField('hwaccel_details').getValue(); // 0=AUTO, 1=VAAPI, 2=NVDEC, 3=MMAL, 4=V4L2
 
         const disableDeintVaapiMode = !hwaccel || !deinterlace || (hwaccelDetails !== 0 && hwaccelDetails !== 1);
         form.findField('deinterlace_vaapi_mode').setDisabled(disableDeintVaapiMode);
