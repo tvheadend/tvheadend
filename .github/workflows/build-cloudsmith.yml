@@ -22,14 +22,6 @@ jobs:
     runs-on: ubuntu-26.04-arm
     continue-on-error: true
     name: Build on Raspberry Pi ${{ matrix.arch }}
-    env:
-      GITHUB_ENV: CLOUDSMITH_API_KEY
-      CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
-      CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
-      CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
-      CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
-      PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
-      NODIRTY: ${{ secrets.NODIRTY }}
     strategy:
       matrix:
         arch: [armv6l, armv7l, aarch64]
@@ -56,6 +48,13 @@ jobs:
         name: ${{ needs.vue.outputs.artifact_name }}
         path: .vuecache
     - uses: pguyot/arm-runner-action@45f370abd7eed1b20397277e5ec0cb0a31adb026
+      env:
+        CLOUDSMITH_ORG: ${{ vars.CLOUDSMITH_ORG }}
+        CLOUDSMITH_REPO: ${{ vars.CLOUDSMITH_REPO }}
+        CLOUDSMITH_OWNER: ${{ secrets.CLOUDSMITH_OWNER }}
+        CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_KEY }}
+        PCLOUD_TOKEN: ${{ secrets.PCLOUD_TOKEN }}
+        NODIRTY: ${{ secrets.NODIRTY }}
       with:
         base_image: ${{ matrix.base_image }}
         cpu: ${{ matrix.cpu }}
@@ -64,6 +63,8 @@ jobs:
         copy_artifact_path: ../tvheadend*.deb
         import_github_env: true
         commands: |
+          # sudo-rs on ubuntu-26.04 ignores the action's "sudo -E", and arm-runner-action's environment.sh only sets variables, not exports them.
+          export CLOUDSMITH_ORG CLOUDSMITH_REPO CLOUDSMITH_OWNER CLOUDSMITH_API_KEY PCLOUD_TOKEN NODIRTY
           sudo apt-get update -y
           sudo apt-get install --force-yes -y cmake git build-essential pkg-config gettext libavahi-client-dev libssl-dev zlib1g-dev wget bzip2 git-core liburiparser-dev libdvbcsa-dev python3 python3-requests debhelper ccache lsb-release libc6-dev-armel-cross libpcre2-dev
           VUE_FILE_CACHE="$PWD/.vuecache" AUTOBUILD_CONFIGURE_EXTRA="--enable-ccache --enable-ffmpeg_static --enable-hdhomerun_static --python=python3 --enable-vue_cache --disable-vue_build" ./Autobuild.sh -p raspios -a '${{ matrix.arch }}'
