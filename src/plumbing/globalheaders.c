@@ -359,6 +359,49 @@ gh_hold(globalheaders_t *gh, streaming_message_t *sm)
 
 
 /**
+ * Re-enable A/V components that headers_complete() disabled once their
+ * headers turn out to be complete. Announced with STOP + START like
+ * service_restart_streams(), so the DVR muxers reconfigure.
+ *
+ * Returns 1 if the packet must be dropped (component still disabled).
+ */
+static int
+gh_pass_disabled(globalheaders_t *gh, th_pkt_t *pkt)
+{
+  streaming_start_component_t *ssc;
+  streaming_message_t *sm;
+
+  if (gh->gh_ss == NULL)
+    return 0;
+
+  ssc = streaming_start_component_find_by_index(gh->gh_ss,
+                                                pkt->pkt_componentindex);
+  if (ssc == NULL || !ssc->ssc_disabled || !gh_is_audiovideo(ssc->es_type))
+    return 0;
+
+  if (pkt->pkt_err == 0)
+    apply_header(ssc, pkt);
+
+  if (!header_complete(ssc, 1))
+    return 1;
+
+  /* video size is filled in by the parser (service restart), not here */
+  if (SCT_ISVIDEO(ssc->es_type) && (ssc->es_width == 0 || ssc->es_height == 0))
+    return 1;
+
+  ssc->ssc_disabled = 0;
+  tvhinfo(LS_GLOBALHEADERS, "gh re-enable stream %d %s%s%s (PID %i)",
+          ssc->es_index, streaming_component_type2txt(ssc->es_type),
+          ssc->es_lang[0] ? " " : "", ssc->es_lang, ssc->es_pid);
+
+  sm = streaming_msg_create_code(SMT_STOP, SM_CODE_SOURCE_RECONFIGURED);
+  streaming_target_deliver2(gh->gh_output, sm);
+  sm = streaming_msg_create_data(SMT_START, streaming_start_copy(gh->gh_ss));
+  streaming_target_deliver2(gh->gh_output, sm);
+  return 0;
+}
+
+/**
  *
  */
 static void
@@ -393,7 +436,9 @@ gh_pass(globalheaders_t *gh, streaming_message_t *sm)
     break;
   case SMT_PACKET:
     pkt = sm->sm_data;
-    if (pkt->pkt_payload || pkt->pkt_err)
+    if (gh_pass_disabled(gh, pkt))
+      streaming_msg_free(sm);
+    else if (pkt->pkt_payload || pkt->pkt_err)
       streaming_target_deliver2(gh->gh_output, sm);
     else
       streaming_msg_free(sm);
