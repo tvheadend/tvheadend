@@ -1116,7 +1116,7 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     x = t->s_pids;
     t->s_pids = p;
     if (pids && !pids->all && x && x->all) {
-      mpegts_input_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, t);
+      mpegts_input_close_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW | MPS_ALL, t);
       mpegts_input_close_pids(mi, mm, t, 1);
       for (i = 0; i < x->count; i++) {
         pi = &x->pids[i];
@@ -1125,7 +1125,9 @@ mpegts_service_raw_update_pids(mpegts_service_t *t, mpegts_apids_t *pids)
     } else {
       if (pids && pids->all) {
         mpegts_input_close_pids(mi, mm, t, 1);
-        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW, MPS_WEIGHT_RAW, t, 0);
+        /* (with MPS_ALL, as mpegts_input_open_service does: without it the
+         * packets of a PID another subscriber has opened do not come) */
+        mpegts_input_open_pid(mi, mm, MPEGTS_FULLMUX_PID, MPS_RAW | MPS_ALL, MPS_WEIGHT_RAW, t, 0);
       } else {
         mpegts_pid_compare(p, x, &add, &del);
         for (i = 0; i < del.count; i++) {
