@@ -39,9 +39,11 @@ typedef struct tfstream {
   uint8_t tfs_video;
   uint8_t tfs_audio;
   uint8_t tfs_subtitle;
+  uint8_t tfs_own_clock;
 
   int tfs_bad_dts;
   int64_t tfs_local_ref;
+  int64_t tfs_local_base;
   int64_t tfs_last_dts_norm;
   int64_t tfs_dts_epoch;
 
@@ -66,6 +68,7 @@ typedef struct tsfix {
   int tf_hasvideo;
   int tf_wait_for_video;
   int64_t tf_tsref;
+  int64_t tf_last_dts_norm;
   int64_t tf_start_time;
   int64_t dts_offset;
   int dts_offset_apply;
@@ -96,6 +99,77 @@ tsfix_ts_diff(int64_t ts1, int64_t ts2)
     return llabs(ts1 - ts2);
   }
   return r;
+}
+
+/**
+ * Offset of a timestamp from the 33 bit reference clock, folded into
+ * [0, PTS_MASK]. The wrap of the result is compensated by the
+ * tfs_dts_epoch handling in normalize_ts().
+ */
+static int64_t
+tsfix_ts_offset(int64_t ref, int64_t ts)
+{
+  return (ts - ref) & PTS_MASK;
+}
+
+/**
+ * Fold a difference of two 33 bit timestamps into the shortest step
+ * around the cycle, [-(PTS_MASK + 1) / 2, PTS_MASK / 2].
+ */
+static int64_t
+tsfix_ts_fold(int64_t d)
+{
+  return ((d + PTS_MASK / 2 + 1) & PTS_MASK) - (PTS_MASK / 2 + 1);
+}
+
+/**
+ * Whether a step from the last normalised DTS of a stream is continuous.
+ */
+static int
+tsfix_ts_step_ok(const tfstream_t *tfs, int64_t step)
+{
+  const int64_t nlimit =      -1; /* allow negative values - rounding errors? */
+  int64_t low          =   90000; /* one second */
+
+  if (tfs->tfs_subtitle) {
+    /*
+     * special conditions for subtitles, because they may be broadcasted
+     * with large time gaps
+     */
+    low = PTS_MASK / 2; /* more than 13 hours */
+  }
+
+  return step >= nlimit && step <= low;
+}
+
+/**
+ * Place an offset from the reference clock in the 33 bit cycle nearest
+ * the stream's own last DTS when that gives a continuous step. Otherwise
+ * use the timeline the stream follows: the session position for streams
+ * on the shared reference, the stream it borrows its clock from, or its
+ * own last DTS. A stream on its own clock starts at the session position
+ * recorded when its reference was chosen.
+ */
+static int64_t
+tsfix_ts_place(const tsfix_t *tf, const tfstream_t *tfs, int64_t dts)
+{
+  const tfstream_t *parent = tfs->tfs_parent;
+  int64_t last = tfs->tfs_last_dts_norm;
+  int64_t d = 0;
+
+  if (last != PTS_UNSET) {
+    d = last + tsfix_ts_fold(dts + tfs->tfs_dts_epoch - last);
+    if (tsfix_ts_step_ok(tfs, d - last))
+      return d;
+  }
+  if (!tfs->tfs_own_clock)
+    return tf->tf_last_dts_norm + tsfix_ts_fold(dts - tf->tf_last_dts_norm);
+  if (parent && parent->tfs_last_dts_norm != PTS_UNSET)
+    return parent->tfs_last_dts_norm +
+           tsfix_ts_fold(dts + parent->tfs_dts_epoch - parent->tfs_last_dts_norm);
+  if (last != PTS_UNSET)
+    return d;
+  return tfs->tfs_local_base + tsfix_ts_fold(dts);
 }
 
 /**
@@ -176,6 +250,7 @@ tsfix_start(tsfix_t *tf, streaming_start_t *ss)
   TAILQ_INIT(&tf->tf_backlog);
 
   tf->tf_tsref = PTS_UNSET;
+  tf->tf_last_dts_norm = tf->dts_offset_apply ? tf->dts_offset : 0;
   tf->tf_hasvideo = hasvideo;
   tf->tf_wait_for_video = vwait;
 }
@@ -212,6 +287,7 @@ static void
 normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 {
   int64_t ref, dts, odts, opts, d;
+  int64_t epoch;
 
   if(tf->tf_tsref == PTS_UNSET) {
     if (backlog) {
@@ -238,57 +314,39 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
 
   /* Subtract the transport wide start offset */
   if (tf->dts_offset_apply)
-    dts = pts_diff(ref, pkt->pkt_dts + tf->dts_offset);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts + tf->dts_offset);
   else
-    dts = pts_diff(ref, pkt->pkt_dts);
+    dts = tsfix_ts_offset(ref, pkt->pkt_dts);
+
+  d = tsfix_ts_place(tf, tfs, dts);
 
   if (tfs->tfs_last_dts_norm == PTS_UNSET) {
-    if (dts < 0 || pkt->pkt_err) {
+    if (d < 0 || pkt->pkt_err) {
       /* Early packet with negative time stamp, drop those */
       tsfix_packet_drop(tfs, pkt, "negative/error");
       return;
     }
   } else {
-    const int64_t nlimit =      -1; /* allow negative values - rounding errors? */
-    int64_t low          =   90000; /* one second */
-    int64_t upper        = 2*90000; /* two seconds */
-    d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
-
-    if (tfs->tfs_subtitle) {
-      /*
-       * special conditions for subtitles, because they may be broadcasted
-       * with large time gaps
-       */
-      low   = PTS_MASK / 2; /* more than 13 hours */
-      upper = low - 1;
-    }
-
-    if (d < nlimit || d > low) {
-      if (d < -PTS_MASK || d > -PTS_MASK + upper) {
-        if (pkt->pkt_err) {
-          tsfix_packet_drop(tfs, pkt, "possible wrong discontinuity");
-          return;
-        }
-	tfs->tfs_bad_dts++;
-        if (tfs->tfs_bad_dts < 5) {
-	  tvhwarn(LS_TSFIX,
-		   "transport stream %s, DTS discontinuity. "
-		   "DTS = %" PRId64 ", last = %" PRId64,
-		   streaming_component_type2txt(tfs->tfs_type),
-		   dts, tfs->tfs_last_dts_norm);
-	}
-      } else {
-	/* DTS wrapped, increase upper bits */
-	tfs->tfs_dts_epoch += PTS_MASK + 1;
-	tfs->tfs_bad_dts = 0;
+    if (!tsfix_ts_step_ok(tfs, d - tfs->tfs_last_dts_norm)) {
+      if (pkt->pkt_err) {
+        tsfix_packet_drop(tfs, pkt, "possible wrong discontinuity");
+        return;
+      }
+      tfs->tfs_bad_dts++;
+      if (tfs->tfs_bad_dts < 5) {
+        tvhwarn(LS_TSFIX,
+                "transport stream %s, DTS discontinuity. "
+                "DTS = %" PRId64 ", last = %" PRId64,
+                streaming_component_type2txt(tfs->tfs_type),
+                d, tfs->tfs_last_dts_norm);
       }
     } else {
       tfs->tfs_bad_dts = 0;
     }
   }
 
-  dts += tfs->tfs_dts_epoch;
-  tfs->tfs_last_dts_norm = dts;
+  epoch = d - dts;
+  dts = d;
 
   if(pkt->pkt_pts != PTS_UNSET) {
     /* Compute delta between PTS and DTS (and watch out for 33 bit wrap) */
@@ -309,6 +367,11 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     tsfix_packet_drop(tfs, pkt, "negative2/error");
     return;
   }
+
+  tfs->tfs_dts_epoch = epoch;
+  tfs->tfs_last_dts_norm = dts;
+  if (!tfs->tfs_own_clock && (tfs->tfs_video || tfs->tfs_audio))
+    tf->tf_last_dts_norm = dts;
 
 deliver:
   if (tvhtrace_enabled()) {
@@ -343,16 +406,28 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
 {
   tfstream_t *tfs2;
   int64_t diff;
+  int64_t now;
+  int64_t in;
 
   if (pkt->pkt_err)
     return REF_ERROR;
 
+  /* Session position and packet DTS on the input clock with the
+   * transport wide offset applied, as normalize_ts() sees them */
+  now = tf->tf_tsref + tf->tf_last_dts_norm;
+  in = pkt->pkt_dts;
+  if (tf->dts_offset_apply)
+    in += tf->dts_offset;
+  in &= PTS_MASK;
+
   if (tfs->tfs_audio) {
-    diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
+    diff = tsfix_ts_diff(now, in);
     if (diff > 3 * 90000) {
       tvhwarn(LS_TSFIX, "The timediff for %s is big (%"PRId64"), using current dts",
               streaming_component_type2txt(tfs->tfs_type), diff);
-      tfs->tfs_local_ref = pkt->pkt_dts;
+      tfs->tfs_local_ref = in;
+      tfs->tfs_local_base = tf->tf_last_dts_norm;
+      tfs->tfs_own_clock = 1;
     } else {
       tfs->tfs_local_ref = tf->tf_tsref;
     }
@@ -366,6 +441,8 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
                   streaming_component_type2txt(tfs->tfs_type), diff);
           tfs->tfs_parent = tfs2;
           tfs->tfs_local_ref = tfs2->tfs_local_ref;
+          tfs->tfs_local_base = tfs2->tfs_local_base;
+          tfs->tfs_own_clock = tfs2->tfs_own_clock;
         } else {
           tfs->tfs_local_ref = tf->tf_tsref;
         }
@@ -374,10 +451,12 @@ tsfix_update_ref(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt)
     if (tfs2 == NULL)
       return REF_DROP;
   } else if (tfs->tfs_type == SCT_TELETEXT) {
-    diff = tsfix_ts_diff(tf->tf_tsref, pkt->pkt_dts);
+    diff = tsfix_ts_diff(now, in);
     if (diff > 2 * 90000) {
       tvhwarn(LS_TSFIX, "The timediff for TELETEXT is big (%"PRId64"), using current dts", diff);
-      tfs->tfs_local_ref = pkt->pkt_dts;
+      tfs->tfs_local_ref = in;
+      tfs->tfs_local_base = tf->tf_last_dts_norm;
+      tfs->tfs_own_clock = 1;
     } else {
       tfs->tfs_local_ref = tf->tf_tsref;
     }
@@ -661,8 +740,11 @@ tsfix_input(void *opaque, streaming_message_t *sm)
     streaming_msg_free(sm);
     return;
   case SMT_SKIP:
-    if(tf->dts_offset != PTS_UNSET) {
+    if(tf->dts_offset != PTS_UNSET && !tf->dts_offset_apply) {
       tf->dts_offset_apply = 1;
+      /* Move the session position to the offset domain that later
+       * packets are normalised in */
+      tf->tf_last_dts_norm += tf->dts_offset;
     }
     break;
   case SMT_GRACE:
