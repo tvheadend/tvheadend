@@ -222,6 +222,7 @@ enum {
     LST_VORBIS,
     LST_MPEG2VIDEO,
     LST_LIBVPX,
+    LST_LIBSVTAV1,
     LST_LIBX26X,
     LST_NVENC,
     LST_OMX,
