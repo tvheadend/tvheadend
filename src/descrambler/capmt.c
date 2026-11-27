@@ -911,6 +911,37 @@ capmt_init_demuxes(capmt_t *capmt)
       capmt->capmt_demuxes.filters[i].dmx[j].pid = PID_UNUSED;
 }
 
+/*
+ * The filters of an adapter go with its pids (capmt_pid_flush_adapter()):
+ * an entry left behind makes capmt_set_filter() take the same filter for
+ * installed when the CA client sets it again without a stop in between,
+ * and the pid is not opened again
+ */
+static void
+capmt_filter_flush_adapter(capmt_t *capmt, int adapter)
+{
+  capmt_demuxes_t *cd = &capmt->capmt_demuxes;
+  capmt_filters_t *cf;
+  int i;
+  int j;
+
+  lock_assert(&capmt->capmt_mutex);
+
+  for (i = 0; i < cd->max; i++) {
+    cf = &cd->filters[i];
+    if (cf->max == 0 || cf->adapter != adapter)
+      continue;
+    for (j = 0; j < cf->max; j++) {
+      memset(&cf->dmx[j], 0, sizeof(cf->dmx[j]));
+      cf->dmx[j].pid = PID_UNUSED;
+    }
+    cf->max = 0;
+  }
+  /* short the max value */
+  while (cd->max > 0 && cd->filters[cd->max - 1].max == 0)
+    cd->max--;
+}
+
 /**
  * global_lock is held
  */
@@ -954,6 +985,7 @@ capmt_service_destroy(th_descrambler_t *td)
       break;
   if (ct2 == NULL) {
     capmt_pid_flush_adapter(capmt, ct->ct_adapter);
+    capmt_filter_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
   }
 
