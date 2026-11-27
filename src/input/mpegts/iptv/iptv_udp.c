@@ -87,7 +87,7 @@ iptv_udp_read ( iptv_input_t *mi, iptv_mux_t *im )
 
   n = udp_multirecv_read(&im->im_um, im->mm_iptv_fd, IPTV_PKTS, &iovec);
   if (n < 0)
-    return -1;
+    return ERRNO_AGAIN(errno) ? 0 : -1;
 
   im->mm_iptv_rtp_seq &= ~0xfff;
   for (i = 0; i < n; i++, iovec++) {
@@ -246,7 +246,10 @@ iptv_rtp_read(iptv_mux_t *im, void (*pkt_cb)(iptv_mux_t *im, uint8_t *pkt, int l
 static ssize_t
 iptv_udp_rtp_read ( iptv_input_t *mi, iptv_mux_t *im )
 {
-  return iptv_rtp_read(im, NULL);
+  ssize_t r = iptv_rtp_read(im, NULL);
+  if (r < 0 && ERRNO_AGAIN(errno))
+    r = 0;
+  return r;
 }
 
 /*

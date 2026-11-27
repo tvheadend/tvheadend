@@ -42,6 +42,17 @@ void upnp_service_destroy(upnp_service_t *service);
 void upnp_send(htsbuf_queue_t *q, struct sockaddr_storage *storage,
                int delay_ms, int from_multicast);
 
+/* Headers of an SSDP M-SEARCH, pointing into the parsed buffer */
+typedef struct upnp_msearch {
+  char *st;
+  char *man;
+  char *host;        /* address part of HOST */
+  char *searchport;  /* SEARCHPORT.UPNP.ORG */
+  char *deviceid;    /* DEVICEID.SES.COM (SAT>IP) */
+} upnp_msearch_t;
+
+int upnp_msearch_parse(char *buf, int multicast, upnp_msearch_t *msg);
+
 void upnp_server_init(const char *bindaddr);
 void upnp_server_done(void);
 
