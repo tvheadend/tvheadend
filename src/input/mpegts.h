@@ -540,6 +540,12 @@ struct mpegts_mux
   int      mm_pmt_ac3;
   int      mm_eit_tsid_nocheck;
   uint16_t mm_sid_filter;
+#if ENABLE_T2MI
+  int      mm_t2mi_carriers;      /* this mux is used as a T2-MI carrier source */
+  int      mm_t2mi_ignore_private;/* do not treat private streams as carriers */
+  idnode_list_head_t mm_t2mi_networks; /* T2-MI networks selecting this mux */
+  char    *mm_t2mi_src_mux;       /* T2-MI mux: UUID of its source mux */
+#endif
 };
 
 #define PREFCAPID_OFF      0
