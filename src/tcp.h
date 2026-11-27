@@ -131,6 +131,12 @@ void tcp_server_register(void *server);
 void tcp_server_delete(void *server);
 
 int tcp_default_ip_addr(struct sockaddr_storage *deflt, int family);
+int tcp_get_ip_for_target(struct sockaddr_storage *local_ip, 
+                          const struct sockaddr_storage *target_ip, 
+                          int family);
+int tcp_get_ip_for_target(struct sockaddr_storage *local_ip, 
+                          const struct sockaddr_storage *target_ip, 
+                          int family);
 
 int tcp_server_bound(void *server, struct sockaddr_storage *bound, int family);
 
