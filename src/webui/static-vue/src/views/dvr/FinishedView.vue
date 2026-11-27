@@ -50,7 +50,7 @@ const access = useAccessStore()
  * a finished recording (file path, real start/stop, status). */
 const editList = computed(() =>
   access.data?.admin
-    ? 'disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment'
+    ? 'disp_title,disp_extratext,episode_disp,playcount,retention,removal,owner,comment,info_path,video_path'
     : 'retention,removal,comment',
 )
 
