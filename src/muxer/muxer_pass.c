@@ -330,6 +330,13 @@ pass_muxer_pat_cb(mpegts_psi_table_t *mt, const uint8_t *buf, int len)
 
   pm = (pass_muxer_t*)mt->mt_opaque;
 
+  /* The PMT PID of the service is not known yet (a service that was never
+   * scanned: its PMT is found while it starts): no PAT - one that points
+   * nowhere makes a receiver wait for a PMT that never comes, also after
+   * the right PAT follows with the same version */
+  if (pm->pm_pmt_pid == 0 || pm->pm_pmt_pid >= 0x1fff)
+    return;
+
   memcpy(out, buf, 5 + 3);
 
   out[1] = 0x80;
