@@ -51,18 +51,20 @@ htsmsg_binary_des0(htsmsg_t *msg, const uint8_t *buf, size_t len)
     buf += 6;
     len -= 6;
     
-    if(len < namelen + datalen)
+    if (namelen > len || datalen > len - namelen)
       return -1;
 
     nlen = namelen ? htsmsg_malloc_align(type, namelen + 1) : 0;
     tlen = sizeof(htsmsg_field_t) + nlen;
     if (type == HMF_STR) {
+	  if (datalen > SIZE_MAX - tlen - 1)
+        return -1;
       tlen += datalen + 1;
     } else if (type == HMF_LIST || type == HMF_MAP) {
       tlen += sizeof(htsmsg_t);
     } else if (type == HMF_UUID) {
-      tlen = UUID_BIN_SIZE;
-      if (tlen != datalen)
+      tlen += UUID_BIN_SIZE;
+      if (datalen != UUID_BIN_SIZE)
         return -1;
     }
     f = malloc(tlen);
