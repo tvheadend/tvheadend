@@ -13,7 +13,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { enableAutoUnmount, mount } from '@vue/test-utils'
 import { defineComponent, h, markRaw, ref } from 'vue'
 import PrimeVue from 'primevue/config'
 import IdnodeGrid from '../IdnodeGrid.vue'
@@ -414,6 +414,12 @@ function mountWithPersistedFilter(blob: unknown): unknown {
   const calls = mockStore.update.mock.calls
   return calls[calls.length - 1]?.[0]
 }
+
+/* Every test mounts a grid. Without this each of them stays mounted for
+ * the rest of the file: the grids of earlier tests go on reacting to what
+ * later tests change (viewport, store), which makes the file slower with
+ * every test and fills the heap of the worker. */
+enableAutoUnmount(afterEach)
 
 describe('IdnodeGrid', () => {
   beforeEach(() => {
