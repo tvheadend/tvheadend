@@ -87,7 +87,7 @@ api_service_streams_get_one ( elementary_stream_t *es, int use_filter )
   } else if (SCT_ISVIDEO(es->es_type)) {
     htsmsg_add_u32(e, "width",          es->es_width);
     htsmsg_add_u32(e, "height",         es->es_height);
-    htsmsg_add_u32(e, "duration",       es->es_frame_duration);
+    htsmsg_add_u32(e, "duration",       ((es->es_frame_duration > INT_MAX) ? INT_MAX : (int)es->es_frame_duration));
     htsmsg_add_u32(e, "aspect_num",     es->es_aspect_num);
     htsmsg_add_u32(e, "aspect_den",     es->es_aspect_den);
   } else if (es->es_type == SCT_CA) {
