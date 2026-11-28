@@ -833,6 +833,80 @@ linuxdvb_frontend_update_pids
     tvh_write(lfe->lfe_dvr_pipe.wr, "c", 1);
 }
 
+/* a running mux instance of tuner lfe other than mmi, NULL: none */
+static mpegts_mux_instance_t *
+linuxdvb_frontend_active_other
+  ( linuxdvb_frontend_t *lfe, mpegts_mux_instance_t *mmi )
+{
+  mpegts_mux_instance_t *mmi2;
+
+  LIST_FOREACH(mmi2, &lfe->mi_mux_active, mmi_active_link)
+    if (mmi2 != mmi)
+      return mmi2;
+  return NULL;
+}
+
+/*
+ * A running mux instance of a tuner on the LNB of satconf ls (its tuner or
+ * one of the slaves of it) other than mmi, NULL: none
+ */
+static mpegts_mux_instance_t *
+linuxdvb_frontend_lnb_active
+  ( linuxdvb_satconf_t *ls, mpegts_mux_instance_t *mmi )
+{
+  tvh_hardware_t *th;
+  linuxdvb_adapter_t *la;
+  linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t *)ls->ls_frontend;
+  linuxdvb_frontend_t *lfe2;
+  mpegts_mux_instance_t *mmi2;
+  char ubuf[UUID_HEX_SIZE];
+
+  idnode_uuid_as_str(&lfe->ti_id, ubuf);
+  LIST_FOREACH(th, &tvh_hardware, th_link) {
+    if (!idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) continue;
+    la = (linuxdvb_adapter_t*)th;
+    LIST_FOREACH(lfe2, &la->la_frontends, lfe_link) {
+      if (lfe2 != lfe && (lfe2->lfe_master == NULL || strcmp(lfe2->lfe_master, ubuf)))
+        continue;
+      mmi2 = linuxdvb_frontend_active_other(lfe2, mmi);
+      if (mmi2)
+        return mmi2;
+    }
+  }
+  return NULL;
+}
+
+/*
+ * A mux instance of a tuner goes with its mux. A satconf may still hold it
+ * as the setting of its LNB: ls_mmi stays when a tuner stops while another
+ * one (the master or a slave) still uses the LNB, and the next tuner that
+ * wants the LNB compares its mux with it (linuxdvb_satconf_match_mux). The
+ * satconf takes the instance of a tuner still running on the LNB instead,
+ * without one it is reset like after the last stop.
+ */
+static void
+linuxdvb_frontend_mux_instance_delete ( tvh_input_instance_t *tii )
+{
+  mpegts_mux_instance_t *mmi = (mpegts_mux_instance_t *)tii;
+  tvh_hardware_t *th;
+  linuxdvb_adapter_t *la;
+  linuxdvb_frontend_t *lfe;
+  linuxdvb_satconf_t *ls;
+
+  LIST_FOREACH(th, &tvh_hardware, th_link) {
+    if (!idnode_is_instance(&th->th_id, &linuxdvb_adapter_class)) continue;
+    la = (linuxdvb_adapter_t*)th;
+    LIST_FOREACH(lfe, &la->la_frontends, lfe_link) {
+      ls = lfe->lfe_satconf;
+      if (ls == NULL || ls->ls_mmi != mmi) continue;
+      ls->ls_mmi = linuxdvb_frontend_lnb_active(ls, mmi);
+      if (ls->ls_mmi == NULL)
+        linuxdvb_satconf_post_stop_mux(ls);
+    }
+  }
+  mpegts_mux_instance_delete(tii);
+}
+
 static void
 linuxdvb_frontend_create_mux_instance
   ( mpegts_input_t *mi, mpegts_mux_t *mm )
@@ -840,6 +914,7 @@ linuxdvb_frontend_create_mux_instance
   tvh_hardware_t *th;
   linuxdvb_adapter_t *la;
   linuxdvb_frontend_t *lfe = (linuxdvb_frontend_t *)mi, *lfe2;
+  mpegts_mux_instance_t *mmi;
   char ubuf[UUID_HEX_SIZE];
 
   idnode_uuid_as_str(&lfe->ti_id, ubuf);
@@ -852,6 +927,11 @@ linuxdvb_frontend_create_mux_instance
       if (lfe2->lfe_master && strcmp(lfe2->lfe_master, ubuf) == 0)
         mpegts_input_create_mux_instance((mpegts_input_t *)lfe2, mm);
   }
+  /* the instances of the tuners leave no satconf behind */
+  LIST_FOREACH(mmi, &mm->mm_instances, mmi_mux_link)
+    if (mmi->tii_delete == mpegts_mux_instance_delete &&
+        idnode_is_instance(&mmi->mmi_input->ti_id, &linuxdvb_frontend_class))
+      mmi->tii_delete = linuxdvb_frontend_mux_instance_delete;
 }
 
 static idnode_set_t *
