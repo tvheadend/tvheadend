@@ -5,21 +5,18 @@
 <script setup lang="ts">
 /*
  * SignalBarCell — Signal-strength / SNR cell for the Status → Stream
- * grid, mirroring the classic UI's ProgressColumn rendering
- * (`static/app/status.js`, `extensions.js` Ext.ux.grid.ProgressColumn).
+ * grid.
  *
  * The input feed reports each metric with a scale discriminator
  * (`signal_scale` / `snr_scale`, DVBv5 semantics):
  *   - 1 (relative)  — dimensionless 0..65535. Rendered as a coloured
- *     bar filled to value/65535 with the raw value beside it and the
- *     percentage as the hover tooltip. Colour thresholds follow the
- *     classic ProgressColumn: green above 2/3, amber above 1/3, red
- *     below.
+ *     bar filled to value/65535 with the percentage beside it and the
+ *     raw value as the hover tooltip. Colour thresholds: green above
+ *     2/3, amber above 1/3, red below.
  *   - 2 (decibel)   — value ×0.001 is dB (SNR) / dBm (signal).
  *     Rendered as text only: a bar against the relative ceiling would
- *     be meaningless for dB values (the classic UI draws one anyway —
- *     a wart, not a feature worth parity), and dB "goodness" ranges
- *     are modulation-dependent, so no honest fill exists.
+ *     be meaningless for dB values, and dB "goodness" ranges are
+ *     modulation-dependent, so no honest fill exists.
  *   - other / absent — nothing (tuner doesn't report the metric).
  *
  * One component serves both columns: the column's `field` picks the
@@ -53,8 +50,8 @@ type Mode = 'bar' | 'text'
 const mode = computed<Mode | null>(() => {
   if (num.value === null) return null
   if (scale.value === 1) return 'bar'
-  /* Classic guards SNR dB on > 0 (a zero reading means "no lock",
-   * not 0.0 dB); signal dBm is legitimately negative. */
+  /* SNR dB is guarded on > 0 (a zero reading means "no lock", not
+   * 0.0 dB); signal dBm is legitimately negative. */
   if (scale.value === 2 && (!isSnr.value || num.value > 0)) return 'text'
   return null
 })
@@ -63,27 +60,29 @@ const pct = computed<number>(() =>
   Math.max(0, Math.min(100, ((num.value ?? 0) / CEILING) * 100)),
 )
 
-/* Classic ProgressColumn `colored` thresholds: green above 2/3 of the
- * ceiling, amber above 1/3, red below. */
+/* Colour thresholds: green above 2/3 of the ceiling, amber above
+ * 1/3, red below. */
 const tone = computed<'good' | 'mid' | 'low'>(() => {
   if (pct.value > 66) return 'good'
   if (pct.value > 33) return 'mid'
   return 'low'
 })
 
+/* Percentage text, rounded to an integer. */
+const pctLabel = computed(() => `${Math.round(pct.value)}%`)
+
 const text = computed<string>(() => {
   if (num.value === null) return ''
-  if (scale.value === 1) return String(num.value)
+  if (scale.value === 1) return pctLabel.value
   return `${(num.value * 0.001).toFixed(1)} ${isSnr.value ? 'dB' : 'dBm'}`
 })
 
-/* Hover tooltip on the bar variant — the percentage gives new users
- * the "out of how much?" context the raw 0..65535 value lacks. */
-const pctLabel = computed(() => `${Math.round(pct.value)}%`)
+/* Hover tooltip on the bar variant: the raw driver reading. */
+const rawLabel = computed(() => `${num.value ?? 0} / ${CEILING}`)
 </script>
 
 <template>
-  <span v-if="mode === 'bar'" class="signal-bar-cell" :title="pctLabel">
+  <span v-if="mode === 'bar'" class="signal-bar-cell" :title="rawLabel">
     <span class="signal-bar-cell__track" aria-hidden="true">
       <span
         class="signal-bar-cell__fill"
@@ -132,7 +131,7 @@ const pctLabel = computed(() => `${Math.round(pct.value)}%`)
   background: var(--tvh-error);
 }
 
-/* Raw value beside the bar — tabular digits so the column doesn't
+/* Percentage beside the bar — tabular digits so the column doesn't
  * jitter as readings tick. */
 .signal-bar-cell__text {
   flex: 0 0 auto;
