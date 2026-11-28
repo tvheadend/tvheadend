@@ -964,7 +964,7 @@ msgstr "Audio"
 
 #: src/transcoding/codec/profile_audio_class.c:355
 msgid "Audio channel layout."
-msgstr "Audio-Kanal Layout."
+msgstr "Audio-Kanal-Layout."
 
 #: src/profile.c:2599
 msgid "Audio codec profile"
@@ -976,15 +976,15 @@ msgstr "Audio-Sample-Format"
 
 #: src/profile.c:1941
 msgid "Audio stream"
-msgstr "Audio Stream"
+msgstr "Audiostream"
 
 #: src/profile.c:1946
 msgid "Audio type"
-msgstr "Audio Type"
+msgstr "Audiotyp"
 
 #: src/tvhlog.c:134
 msgid "Audioes muxer"
-msgstr "Audio Muxer"
+msgstr "Audio-Muxer"
 
 #: src/webui/webui.c:215
 msgid "Authenticated user"
@@ -1142,7 +1142,7 @@ msgstr "Avahi"
 #: src/transcoding/codec/codecs/libs/libx26x.c:77
 #: src/transcoding/codec/codecs/libs/libvorbis.c:86
 msgid "Average bitrate (ABR) mode."
-msgstr "Durchschnittlicher Bitrate (ABR) Modus"
+msgstr "Durchschnittlicher Bitraten (ABR) Modus"
 
 #: src/input/mpegts/linuxdvb/linuxdvb_satconf.c:381
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:96
@@ -1264,7 +1264,7 @@ msgstr "Ausstrahlung"
 
 #: src/dvr/dvr_autorec.c:1243
 msgid "Broadcast type"
-msgstr "Broadcast Typ"
+msgstr "Ausstrahlungsart"
 
 #: src/dvr/dvr_db.c:4979
 msgid "Broadcast."
@@ -1272,11 +1272,11 @@ msgstr "Ausstrahlung"
 
 #: src/epg.c:2082
 msgid "Broadcasting"
-msgstr "Rundfunk"
+msgstr "Ausstrahlen"
 
 #: src/input/mpegts/iptv/iptv_mux.c:297
 msgid "Buffering limit (ms)"
-msgstr "Limit für Pufferung (ms)"
+msgstr "Pufferungslimit (ms)"
 
 #: src/webui/extjs.c:207
 msgid "Build"
@@ -1496,7 +1496,7 @@ msgstr "Kanal existiert nicht"
 
 #: src/dvr/dvr_db.c:4630
 msgid "Channel icon"
-msgstr "Kanallogo"
+msgstr "Kanal-Icon"
 
 #: src/dvr/dvr_db.c:4631
 msgid "Channel icon URL."
@@ -1815,7 +1815,7 @@ msgstr ""
 
 #: src/input/mpegts/linuxdvb/linuxdvb_switch.c:140
 msgid "Committed"
-msgstr "Committed"
+msgstr "Engagiert"
 
 #: src/descrambler/dvbcam.c:852
 msgid "Common Interface Settings"
@@ -1856,12 +1856,12 @@ msgstr "Bedingter Zugriff (für die erweiterte Ansichtsebene)"
 
 #: src/descrambler/caclient.c:265
 msgid "Conditional Access Client"
-msgstr "Conditional Access Client"
+msgstr "Client für den bedingten Zugriff"
 
 #: src/descrambler/constcw.c:325 src/descrambler/constcw.c:398
 #: src/descrambler/constcw.c:471 src/descrambler/constcw.c:544
 msgid "Conditional Access Identification."
-msgstr "Conditional Access Identifikation"
+msgstr "Zusätzliche Zugangsidentifikation."
 
 #: src/config.c:2197
 msgid "Config-CAs"
@@ -2028,11 +2028,11 @@ msgstr "Kochen"
 
 #: src/profile.c:2340
 msgid "Copy"
-msgstr "Kopiere"
+msgstr "Kopie"
 
 #: src/dvr/dvr_db.c:4970
 msgid "Copyright year"
-msgstr "Copyright Jahr"
+msgstr "Jahr des Urheberrechts"
 
 #: src/memoryinfo.c:70
 msgid "Count of objects"
@@ -2825,7 +2825,7 @@ msgstr "Deaktiviere X_SATIPM3U tag"
 
 #: src/main.c:960
 msgid "Disable all access control checks"
-msgstr "All Zugangsprüfungen deaktivieren"
+msgstr "Alle Zugriffskontrollen deaktivieren"
 
 #: src/main.c:943
 msgid "Disable debug on stderr"
@@ -2963,7 +2963,7 @@ msgstr "Entferne \"fe=\" Parameter"
 
 #: src/dvr/dvr_autorec.c:1403 src/dvr/dvr_config.c:1522
 msgid "Duplicate handling"
-msgstr "Dublettenbehandlung"
+msgstr "Behandlung von Duplikaten"
 
 #: src/config.c:2118
 msgid "EF"
@@ -3084,7 +3084,7 @@ msgstr "Bildung / Wissenschaft / Sachthemen"
 
 #: src/epg.c:2042
 msgid "Educational"
-msgstr "Lehrreich"
+msgstr "Bildungsbereich"
 
 #: src/epggrab.c:345 src/input/mpegts/mpegts_service.c:105
 msgid "Either"
@@ -3554,11 +3554,11 @@ msgstr "Episode %d"
 
 #: src/dvr/dvr_db.c:4648
 msgid "Episode image"
-msgstr "Bild zur Folge"
+msgstr "Bild zur Episode"
 
 #: src/dvr/dvr_db.c:4649
 msgid "Episode image."
-msgstr "Bild zur Folge."
+msgstr "Bild zur Episode."
 
 #: src/dvr/dvr_db.c:4989
 msgid "Episode number/ID."
