@@ -22,6 +22,35 @@
 
 
 /* libfdk_aac =============================================================== */
+#if LIBAVCODEC_VERSION_MAJOR > 59
+// see libvorbis_setup() in ffmpeg-6.1.1/libavcodec/libvorbisenc.c
+static const AVChannelLayout libfdk_aac_channel_layouts[] = {
+    AV_CHANNEL_LAYOUT_MONO,
+    AV_CHANNEL_LAYOUT_STEREO,
+    AV_CHANNEL_LAYOUT_SURROUND,
+    AV_CHANNEL_LAYOUT_4POINT0,
+    AV_CHANNEL_LAYOUT_5POINT0_BACK,
+    AV_CHANNEL_LAYOUT_5POINT1_BACK,
+    AV_CHANNEL_LAYOUT_6POINT1_BACK,
+    AV_CHANNEL_LAYOUT_7POINT1,
+    AV_CHANNEL_LAYOUT_7POINT1_WIDE,
+    { 0 }
+};
+#else
+// see libvorbis_setup() in ffmpeg-3.0.2/libavcodec/libvorbisenc.c
+static const uint64_t libfdk_aac_channel_layouts[] = {
+    AV_CH_LAYOUT_MONO,
+    AV_CH_LAYOUT_STEREO,
+    AV_CH_LAYOUT_SURROUND,
+    AV_CH_LAYOUT_4POINT0,
+    AV_CH_LAYOUT_5POINT0_BACK,
+    AV_CH_LAYOUT_5POINT1_BACK,
+    AV_CH_LAYOUT_6POINT1_BACK,
+    AV_CH_LAYOUT_7POINT1,
+    AV_CH_LAYOUT_7POINT1_WIDE,
+    0
+};
+#endif
 
 typedef struct {
     TVHAudioCodecProfile;
@@ -138,4 +167,5 @@ TVHAudioCodec tvh_codec_libfdk_aac = {
     .idclass = &codec_profile_libfdk_aac_class,
     .profile_init = tvh_codec_profile_audio_init,
     .profile_destroy = tvh_codec_profile_audio_destroy,
+    .channel_layouts = libfdk_aac_channel_layouts,
 };

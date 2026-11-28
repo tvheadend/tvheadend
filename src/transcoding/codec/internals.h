@@ -189,15 +189,15 @@
     AV_DICT_SET_INT((s), (d), "pix_fmt", ((v) != AV_PIX_FMT_NONE) ? (v) : (a), \
                     AV_DICT_DONT_OVERWRITE)
 
-#define HWACCEL_AUTO        0
-#if ENABLE_VAAPI
-#define HWACCEL_PRIORITIZE_VAAPI 1
-#endif
-#if ENABLE_NVENC
-#define HWACCEL_PRIORITIZE_NVDEC 2
-#endif
+// to combine two combobox-s (hwaccel and hwaccel_details) in one we add: AV_AUTO_DEVICE_TYPE
+#define AV_AUTO_DEVICE_TYPE      -1
+
+// this category is not included in /libavutil/hwcontext.h
+// so we create a new category starting 100 that will be used in parallel with new hwcontext 
+// but will have to use Pixel Format as differentiator
 #if ENABLE_MMAL
-#define HWACCEL_PRIORITIZE_MMAL  3
+// use AV_PIX_FMT_MMAL
+#define AV_HWDEVICE_TYPE_MMAL   100
 #endif
 
 #define DEINT_RATE_FRAME         0
@@ -211,6 +211,15 @@
 #define VAAPI_DEINT_MODE_WEAVE   2
 #define VAAPI_DEINT_MODE_MADI    3
 #define VAAPI_DEINT_MODE_MCDI    4
+
+#define QSV_DEINTERLACING_OFF       0
+#define QSV_DEINTERLACING_BOB       1 // MFX_DEINTERLACING_BOB
+#define QSV_DEINTERLACING_ADVANCED  2 // MFX_DEINTERLACING_ADVANCED
+
+#define NVDEC_DEINT_MODE_SEND_FRAME                 0
+#define NVDEC_DEINT_MODE_SEND_FIELD                 1
+#define NVDEC_DEINT_MODE_SEND_FRAME_NONSPATIAL      2
+#define NVDEC_DEINT_MODE_SEND_FIELD_NONSPATIAL      3
 
 
 /* codec_profile_class ====================================================== */
@@ -416,6 +425,29 @@ typedef struct tvh_codec_profile_video {
      */
     int deinterlace_vaapi_mode;
 
+    /**
+     * VAAPI Deinterlace mode [deinterlace_vaapi mode parameter]
+     * https://ffmpeg.org/doxygen/4.1/vf__deinterlace__qsv_8c.html
+     * @note
+     * int:
+     * 0 - Default: Use the highest-numbered (and therefore most advanced) deinterlacing algorithm
+     * 1 - Use the bob deinterlacing algorithm
+     * 2 - Use the motion adaptive algorithm
+     */
+    int deinterlace_qsv_mode;
+
+    /**
+     * NVDEC Deinterlace mode [yadif_cuda mode parameter]
+     * https://ffmpeg.org/ffmpeg-filters.html#yadif_005fcuda
+     * @note
+     * int:
+     * 0 - send_frame: (default) Output one frame for each frame.
+     * 1 - send_field: Output one frame for each field. 
+     * 2 - send_frame_nospatial: Like send_frame, but it skips the spatial interlacing check.
+     * 3 - send_field_nospatial: Like send_field, but it skips the spatial interlacing check. 
+     */
+    int deinterlace_nvdec_mode;
+
     int height;
     /**
      * SW or HW scaling mode  (applies for decoding)
@@ -441,8 +473,27 @@ typedef struct tvh_codec_profile_video {
      * - 1 --> 1000 - gop size in frames
      */
     int gop_size;
-    int hwaccel;
-    int hwaccel_details;
+    /**
+     * SW or HW acceleration type prefered for decoder (applies for decoding)
+     * @note
+     * int: 
+     * VALUE - AVHWDeviceType
+     * 
+     * - -1 - special case: we match decoder and encoder automatically for optimal performance
+     * 
+     * - 0 --> 100+ - are valid AVHWDeviceType from /libavutil/hwcontext.h or fake HWDeviceType defined above in line 212
+     */
+    int decoder_hwaccel_type;
+    /**
+     * SW or HW acceleration type for encoder (applies for encoding)
+     * @note
+     * int: 
+     * VALUE - AVHWDeviceType
+     * 
+     * - 0 --> 100+ - are valid AVHWDeviceType from /libavutil/hwcontext.h or fake HWDeviceType defined above in line 212
+     */
+    int encoder_hwaccel_type;
+
     int pix_fmt;
     int crf;
 #if ENABLE_HWACCELS
@@ -475,11 +526,33 @@ typedef struct tvh_codec_profile_video {
 typedef struct {
     TVHVideoCodecProfile;
     int qp;
+/**
+ * VAAPI quality - typically maps to the encoder’s execution speed preset in VAAPI as Compression Level. [-compression_level]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
+ * @note
+ * int:
+ * 1 - (Slower / Best Effort): The GPU spends maximum mathematical effort to pack data efficiently.
+ * 2 - 
+ * ...
+ * 7 - (Fastest / Worst Effort): The GPU takes shortcuts to process frames as fast as possible.
+ */
     int quality;
+/**
+ * VAAPI global quality - controls Visual Fidelity (Rate Control). It determines how much compression artifacts or pixelation you 
+ * are willing to tolerate to save space. [-q] [-qscale]
+ * It acts as the target value for modes like Constant Quantizer Parameter (CQP), or Intelligent Constant Quality (ICQ).
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
+ * @note
+ * int:
+ * 1 - ... high quality
+ * 18 -> 23 - Higher visual quality, larger file sizes (less lossy compression).
+ * 30 -> 40 - Lower visual quality, smaller file sizes (more aggressive blockiness).
+ * 51 - ... low quality
+ */
     int global_quality;
 /**
  * VAAPI async_depth - Maximum processing parallelism. Increase this to improve single channel performance. [async_depth]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * VALUE - number of async_depth is used by VAAPI encoder
@@ -501,7 +574,7 @@ typedef struct {
     int uilp;
 /**
  * VAAPI Frame used as reference for B-frame [b_depth]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * 0 - skip
@@ -511,7 +584,7 @@ typedef struct {
     int b_reference;
 /**
  * VAAPI Maximum consecutive B-frame [bf]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * 0 - no B-Frames allowed
@@ -520,7 +593,7 @@ typedef struct {
     int desired_b_depth;
 /**
  * VAAPI Maximum bitrate [maxrate]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * double:
  * VALUE - max bitrate in bps
@@ -544,7 +617,7 @@ typedef struct {
     int platform;
 /**
  * VAAPI Low power - Some drivers/platforms offer a second encoder for some codecs intended to use less power than the default encoder [low_power]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * 0 - disabled
@@ -557,7 +630,7 @@ typedef struct {
     double buff_factor;
 /**
  * VAAPI Rate Control Mode - Set the rate control mode to use. A given driver may only support a subset of modes [rc_mode]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * 0 - auto
@@ -571,7 +644,7 @@ typedef struct {
     int rc_mode;
 /**
  * VAAPI hevc_vaapi Tier - Set general_tier_flag. This may affect the level chosen for the stream if it is not explicitly specified [tier]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * 0 - Main
@@ -580,7 +653,7 @@ typedef struct {
     int tier;
 /**
  * VAAPI Level - Set level (level_idc)  [level]
- * https://www.ffmpeg.org/ffmpeg-codecs.html#toc-VAAPI-encoders
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#VAAPI-encoders
  * @note
  * int:
  * VALUE - from -99 to 255 (default -99: auto)
@@ -590,6 +663,158 @@ typedef struct {
     int qmax;
     int super_frame;
 } tvh_codec_profile_vaapi_t;
+
+
+typedef struct {
+    TVHVideoCodecProfile;
+    int qp;
+
+// common options
+/**
+ * QSV async_depth - Maximum processing parallelism. Increase this to improve single channel performance. [async_depth]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * VALUE - number of async_depth is used by VAAPI encoder
+ */
+    int async_depth;
+ /**
+ * QSV Preset - This option itemizes a range of choices from veryfast (best speed) to veryslow (best quality). [preset]
+ * NOTE: quality and preset are the same in QSV, as Target Usage (TU)
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int: 
+ * 0 - skip
+ * 1 - ‘veryslow’
+ * 2 - ‘slower’
+ * 3 - ‘slow’
+ * 4 - ‘medium’
+ * 5 - ‘fast’
+ * 6 - ‘faster’
+ * 7 - ‘veryfast’
+ */
+    int preset;
+/**
+ * QSV Low power - Some drivers/platforms offer a second encoder for some codecs intended to use less power than the default encoder [low_power]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int low_power;
+
+// runtime options
+/**
+ * QSV global quality - controls Visual Fidelity (Rate Control). It determines how much compression artifacts or pixelation you 
+ * are willing to tolerate to save space. [-q] [-qscale]
+ * It acts as the target value for modes like Constant Quantizer Parameter (CQP), Intelligent Constant Quality (ICQ), or Look-Ahead ICQ (LA_ICQ).
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 1 - ... high quality
+ * 18 -> 23 - Higher visual quality, larger file sizes (less lossy compression).
+ * 30 -> 40 - Lower visual quality, smaller file sizes (more aggressive blockiness).
+ * 51 - ... low quality
+ */
+    int global_quality;
+/**
+ * QSV Look ahead / Look ahead depth - Depth of look ahead in number frames. [look_ahead] [look_ahead_depth]
+ * look_ahead recommended 1
+ * look_ahead_depth recommended between 40 and 100
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - one frame
+ * ...
+ * 100 - 100 frames
+ */
+    int look_ahead_depth;
+/**
+ * QSV Adaptive I-frame placement (from -1 to 1) (default -1). [adaptive_i]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int adaptive_i;
+/**
+ * QSV Adaptive B-frame placement (from -1 to 1) (default -1). [adaptive_i]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int adaptive_b;
+/**
+ * QSV Extended Bitrate Control - This is highly recommended for Xe graphics to 
+ * force the hardware to utilize Intel's most modern rate-control algorithms. [extbrc]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int ext_brc;
+/**
+ * QSV Maximum consecutive B-frame [bf]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - no B-Frames allowed
+ * >0 - number of consecutive B-frames (valid with b_reference = 1 --> "use P- or I-frames")
+ */
+    int desired_b_depth;
+/**
+ * QSV b strategy - This option controls usage of B frames as reference. [b_strategy]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int b_strategy;
+/**
+ * QSV Maximum bitrate [maxrate]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-encoders
+ * @note
+ * double:
+ * VALUE - max bitrate in bps
+ */
+    double max_bit_rate;
+/**
+ * QSV Bitrate scale factor [not ffmpeg parameter]
+ * @note
+ * double:
+ * VALUE - bitrate scale factor relative to 480p resolution
+ */
+    double bit_rate_scale_factor;
+/**
+ * QSV Video conferencing mode - VCM - video conferencing mode, when the vcm option is set. [vcm]
+ * https://www.ffmpeg.org/ffmpeg-codecs.html#QSV-Encoders
+ * @note
+ * int:
+ * 0 - disabled
+ * 1 - enabled
+ */
+    int vcm;
+
+    int loop_filter_level;
+    int loop_filter_sharpness;
+    double buff_factor;
+    int rc_mode;
+
+    int tier;
+
+    int super_frame;
+
+    
+    int qmin;
+    int qmax;
+} tvh_codec_profile_qsv_t;
 
 /* audio */
 
@@ -605,6 +830,16 @@ typedef struct tvh_codec_profile_audio {
     int sample_rate;
     // this variable will be used also as ch_layout_u_mask when LIBAVCODEC_VERSION_MAJOR > 59
     int64_t channel_layout;
+/**
+ * asetpts=N/SR/TB — normalizes PTS on the audio link (sample rate / time base) by counting samples. [asetpts]
+ * https://ffmpeg.org/ffmpeg-all.html#setpts_002c-asetpts
+ * @note
+ * int:
+ * 0 - auto (insert filter when reframing/resample/layout/timebase requires it)
+ * 1 - enabled
+ * 2 - disabled
+ */
+    int asetpts;
 } TVHAudioCodecProfile;
 
 

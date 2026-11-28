@@ -378,7 +378,7 @@ jobs:
           restore-keys: |
             staticlib-fedora-${{ matrix.releasever }}-${{ matrix.runner }}-
       - name: build
-        run: support/ci-rpm-build.sh ${{ matrix.releasever }}
+        run: support/ci-rpm-build.sh ${{ matrix.releasever }} ${{ matrix.releasever }} ${{ contains(fromJson('["37", "38", "39", "40", "41", "42", "43"]'), matrix.releasever) && '--ffmpeg=7' || '' }}
       - name: copy-result
         run: cp rpm/RPMS/*/tvheadend*.rpm .
       - uses: actions/upload-artifact@v4
