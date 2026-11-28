@@ -102,6 +102,7 @@ struct satip_device
   int                        sd_can_weight;
   int                        sd_dbus_allow;
   int                        sd_skip_ts;
+  int                        sd_rtsp_timeout;
   int                        sd_disable_workarounds;
   int                        sd_wake_ref;
   tvh_mutex_t            sd_tune_mutex;

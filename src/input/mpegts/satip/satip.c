@@ -633,6 +633,15 @@ satip_device_hack( satip_device_t *sd )
     sd->sd_pids21      = 1;
   } else if (strstr(sd->sd_info.modelname, "EyeTV Netstream 4C")) {
     sd->sd_fe  = 0;
+  } else if (strstr(sd->sd_info.manufacturer, "XORO") &&
+             strstr(sd->sd_info.modelname, "8100")) {
+    sd->sd_fullmux_ok      = 0;
+    sd->sd_pids_deladd     = 0;
+    sd->sd_pids_max        = 32;
+    sd->sd_pids_len        = 127;
+    sd->sd_pilot_on        = 1;
+    sd->sd_default_rolloff = SATIP_DEFAULT_ROLLOFF_35;
+    sd->sd_rtsp_timeout    = 30;
   }
 }
 

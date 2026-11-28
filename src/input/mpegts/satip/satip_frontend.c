@@ -1462,6 +1462,14 @@ satip_frontend_close_rtsp
   http_client_close(rtsp);
 }
 
+static void
+satip_frontend_apply_rtsp_timeout( satip_frontend_t *lfe, http_client_t *rtsp )
+{
+  int max_timeout = lfe->sf_device->sd_rtsp_timeout;
+  if (max_timeout > 0 && rtsp->hc_rtp_timeout > max_timeout)
+    rtsp->hc_rtp_timeout = max_timeout;
+}
+
 static int
 satip_frontend_rtp_decode
   ( satip_frontend_t *lfe, uint32_t *_seq, uint32_t *_unc,
@@ -1693,7 +1701,8 @@ new_tune:
           rtsp_options_decode(rtsp);
           break;
         case RTSP_CMD_SETUP:
-          rtsp_setup_decode(rtsp, 1);
+          if (rtsp_setup_decode(rtsp, 1) >= 0)
+            satip_frontend_apply_rtsp_timeout(lfe, rtsp);
           break;
         default:
           break;
@@ -1960,9 +1969,7 @@ new_tune:
       continue;
     }
 
-    if (nfds < 1) continue;
-
-    if (ev[0].ptr == rtsp) {
+    if (nfds > 0 && ev[0].ptr == rtsp) {
       r = http_client_run(rtsp);
       if (r < 0) {
         if (rtsp->hc_code == 404 && session[0]) {
@@ -2009,6 +2016,7 @@ new_tune:
             fatal = 1;
             continue;
           } else {
+            satip_frontend_apply_rtsp_timeout(lfe, rtsp);
             strlcpy((char *)session, rtsp->hc_rtsp_session ?: "", sizeof(session));
             stream_id = rtsp->hc_rtsp_stream_id;
             tvhdebug(LS_SATIP, "%s #%i - new session %s stream id %li",
@@ -2070,12 +2078,22 @@ new_tune:
     }
 
     /* We need to keep the session alive */
-    if (rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
+    if (running && !fatal && rtsp && rtsp->hc_rtsp_session &&
+        rtsp->hc_ping_time + sec2mono(rtsp->hc_rtp_timeout / 2) < mclk() &&
         rtsp->hc_cmd == HTTP_CMD_NONE) {
-      rtsp_options(rtsp);
+      r = rtsp_options(rtsp);
+      if (r < 0) {
+        tvherror(LS_SATIP, "%s - RTSP OPTIONS send error %d (%s)",
+                 buf, r, strerror(-r));
+        satip_frontend_tuning_error(lfe, tr);
+        fatal = 1;
+        continue;
+      }
       tvhtrace(LS_SATIP, "%s - OPTIONS request", buf);
       reply = 1;
     }
+
+    if (nfds < 1) continue;
 
     if (ev[0].ptr == rtcp) {
       c = recv(rtcp->fd, b, sizeof(b), MSG_DONTWAIT);
