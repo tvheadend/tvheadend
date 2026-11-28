@@ -39,6 +39,7 @@ typedef struct tfstream {
   uint8_t tfs_video;
   uint8_t tfs_audio;
   uint8_t tfs_subtitle;
+  uint8_t tfs_ait;
 
   int tfs_bad_dts;
   int64_t tfs_local_ref;
@@ -139,6 +140,8 @@ tsfix_add_stream(tsfix_t *tf, int index, streaming_component_type_t type)
     tfs->tfs_audio = 1;
   else if (SCT_ISSUBTITLE(type))
     tfs->tfs_subtitle = 1;
+  else if (type == SCT_HBBTV)
+    tfs->tfs_ait = 1;
 
   tfs->tfs_index = index;
   tfs->tfs_local_ref = PTS_UNSET;
@@ -254,10 +257,10 @@ normalize_ts(tsfix_t *tf, tfstream_t *tfs, th_pkt_t *pkt, int backlog)
     int64_t upper        = 2*90000; /* two seconds */
     d = dts + tfs->tfs_dts_epoch - tfs->tfs_last_dts_norm;
 
-    if (tfs->tfs_subtitle) {
+    if (tfs->tfs_subtitle || tfs->tfs_ait) {
       /*
-       * special conditions for subtitles, because they may be broadcasted
-       * with large time gaps
+       * special conditions for subtitles and the AIT, because they may be
+       * broadcasted with large time gaps
        */
       low   = PTS_MASK / 2; /* more than 13 hours */
       upper = low - 1;
