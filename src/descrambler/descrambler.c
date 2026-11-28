@@ -1299,7 +1299,7 @@ static int
 descrambler_table_callback
   (mpegts_table_t *mt, const uint8_t *ptr, int len, int tableid)
 {
-  descrambler_table_t *dt = mt->mt_opaque;
+  descrambler_table_t *dt;
   descrambler_section_t *ds;
   descrambler_ecmsec_t *des;
   th_descrambler_runtime_t *dr;
@@ -1318,6 +1318,17 @@ descrambler_table_callback
   clk = mclk();
   LIST_INIT(&sections);
   tvh_mutex_lock(&mt->mt_mux->mm_descrambler_lock);
+  /* The table thread holds a reference to the table, not to its descrambler
+   * table (mt_opaque). When the last user closed the PID while this section
+   * waited for the lock (descrambler_close_pid()), the table was destroyed and
+   * the descrambler table freed under this lock. */
+  if (mt->mt_destroyed) {
+    tvh_mutex_unlock(&mt->mt_mux->mm_descrambler_lock);
+    tvhtrace(LS_DESCRAMBLER, "mux %p pid %04X (%i): table closed, section dropped",
+             mt->mt_mux, mt->mt_pid, mt->mt_pid);
+    return -1;
+  }
+  dt = mt->mt_opaque;
   TAILQ_FOREACH(ds, &dt->sections, link) {
     if (!emm) {
       LIST_FOREACH(des, &ds->ecmsecs, link)
