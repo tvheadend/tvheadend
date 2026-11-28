@@ -34,6 +34,10 @@ static time_t satip_server_bootid;
 static char *satip_server_bindaddr;
 static int satip_server_rtsp_port;
 static int satip_server_rtsp_port_locked;
+/* satip_server_register() was called (tvheadend is up), and the server
+ * that is on now was registered */
+static int satip_server_up;
+static int satip_server_registered;
 static upnp_service_t *satips_upnp_discovery;
 static tvh_mutex_t satip_server_reinit;
 static int bound_port;
@@ -135,7 +139,7 @@ satip_server_http_xml(http_connection_t *hc)
     {}
   };
 
-  if (http_server_ip == NULL)
+  if (http_server_ip == NULL || strempty(satip_server_conf.satip_uuid))
     return HTTP_STATUS_NOT_FOUND;
 
   htsbuf_queue_init(&q, 0);
@@ -1039,12 +1043,17 @@ static void satip_server_save(void)
     satips_rtsp_port(0);
     if (satip_server_rtsp_port > 0) {
       satip_server_init_common("re", 1);
+      /* Switched on while tvheadend runs: what the start does for a
+       * server that is on (UUID, UPnP, the RTSP server into the poll) */
+      if (satip_server_up && !satip_server_registered)
+        satip_server_register();
     } else {
       tvh_mutex_unlock(&global_lock);
       tvhinfo(LS_SATIPS, "SAT>IP Server shutdown");
       satip_server_rtsp_done();
       satips_upnp_send_byebye();
       tvh_mutex_lock(&global_lock);
+      satip_server_registered = 0;
     }
   }
 }
@@ -1082,6 +1091,8 @@ void satip_server_register(void)
   tvh_uuid_t u;
   int save = 0;
 
+  satip_server_up = 1;
+
   if (http_server_ip == NULL)
     return;
 
@@ -1118,7 +1129,9 @@ void satip_server_register(void)
   if (save)
     idnode_changed(&config.idnode);
 
-  if (!satip_server_conf.satip_noupnp) {
+  if (satips_upnp_discovery != NULL) {
+    /* (there from an earlier registration) */
+  } else if (!satip_server_conf.satip_noupnp) {
     satips_upnp_discovery = upnp_service_create(upnp_service);
     if (satips_upnp_discovery == NULL) {
       tvherror(LS_SATIPS, "unable to create UPnP discovery service");
@@ -1132,6 +1145,7 @@ void satip_server_register(void)
 
   satip_server_rtsp_register();
   satips_upnp_send_announce();
+  satip_server_registered = 1;
 }
 
 void satip_server_done(void)
