@@ -1410,6 +1410,10 @@ main(int argc, char **argv)
   tvh_mutex_lock(&global_lock);
   tvhftrace(LS_MAIN, epg_save);
 
+  /* what was changed in the last seconds is saved before the nodes go:
+   * later a channel would be saved without its services */
+  idnode_save_flush();
+
 #if ENABLE_TIMESHIFT
   tvhftrace(LS_MAIN, timeshift_term);
 #endif
