@@ -1000,8 +1000,10 @@ void satip_rtp_done(void)
 {
   assert(TAILQ_EMPTY(&satip_rtp_sessions));
   if (atomic_get(&satip_rtcp_run)) {
+    /* No signal to wake the thread: this also runs when the server is
+     * switched off in the configuration, and SIGTERM ends tvheadend.
+     * The thread looks at the flag every 150 ms. */
     atomic_set(&satip_rtcp_run, 0);
-    tvh_thread_kill(satip_rtcp_tid, SIGTERM);
     pthread_join(satip_rtcp_tid, NULL);
   }
 }
