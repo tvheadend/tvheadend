@@ -24,6 +24,7 @@
 #include "settings.h"
 #include "atomic.h"
 #include "access.h"
+#include "subscriptions.h"
 #include "atomic.h"
 
 #include <sys/types.h>
@@ -98,8 +99,13 @@ void timeshift_init ( void )
   /* Defaults */
   memset(&timeshift_conf, 0, sizeof(timeshift_conf));
   timeshift_conf.idnode.in_class = &timeshift_conf_class;
-  timeshift_conf.max_period       = 60;                      // Hr (60mins)
-  timeshift_conf.max_size         = 10000 * (size_t)1048576; // 10G
+  timeshift_conf.max_period                 = 60;
+  timeshift_conf.cache_keepalive            = 15;
+  timeshift_conf.cache_seek_tunein          = 1;
+  timeshift_conf.cache_keepalive_min_period = 60;
+  timeshift_conf.cache_keepalive_max        = 4;
+  timeshift_conf.cache_staging              = 32;
+  timeshift_conf.max_size                   = 10000 * (size_t)1048576; // 10G
 
   idclass_register(&timeshift_conf_class);
 
@@ -131,6 +137,7 @@ static void
 timeshift_conf_class_changed ( idnode_t *self )
 {
   timeshift_fixup();
+  subscription_cache_settings_changed();
 }
 
 /*
@@ -250,7 +257,7 @@ const idclass_t timeshift_conf_class = {
     {
       .type   = PT_S64,
       .id     = "max_size",
-      .name   = N_("Maximum size (MB)"),
+      .name   = N_("Maximum size (MiB)"),
       .desc   = N_("The maximum combined size of all timeshift buffers. "
                    "If you specify an unlimited period it's highly "
                    "recommended you specify a value here."),
@@ -261,7 +268,7 @@ const idclass_t timeshift_conf_class = {
     {
       .type   = PT_S64,
       .id     = "ram_size",
-      .name   = N_("Maximum RAM size (MB)"),
+      .name   = N_("Maximum RAM size (MiB)"),
       .desc   = N_("The maximum RAM (system memory) size for timeshift "
                    "buffers. When free RAM buffers are available they "
                    "are used for timeshift data in preference to using "
@@ -309,6 +316,83 @@ const idclass_t timeshift_conf_class = {
                    "this may cause issues with some services where the "
                    "teletext DTS is invalid."),
       .off    = offsetof(timeshift_conf_t, teletext),
+      .opts   = PO_EXPERT,
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "record_cache",
+      .name   = N_("Record from cache"),
+      .desc   = N_("Keep the last \"Maximum period\" of every tuned "
+                   "channel, so a recording started after its programme "
+                   "began also gets the part already broadcast, as far "
+                   "back as the cache reaches. HTSP clients timeshift "
+                   "through the same cache instead of a buffer of their "
+                   "own. Each tuned channel uses one cache, within the "
+                   "storage path and the maximum size above."),
+      .off    = offsetof(timeshift_conf_t, record_cache),
+    },
+    {
+      .type   = PT_BOOL,
+      .id     = "cache_seek_tunein",
+      .name   = N_("Cache seek before tune-in"),
+      .desc   = N_("Let a client rewind into the part of a shared channel "
+                   "cache that is older than its own subscription, filled "
+                   "because another viewer tuned the channel first or "
+                   "\"Keep tuned channels\" held it. That part is answered "
+                   "with negative positions; a client that does not order "
+                   "them correctly shows a frozen picture with sound until "
+                   "playback reaches the moment it tuned in, so turn it off "
+                   "for such clients. Recording from the cache is not "
+                   "affected either way."),
+      .off    = offsetof(timeshift_conf_t, cache_seek_tunein),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive",
+      .name   = N_("Keep tuned channels (mins)"),
+      .desc   = N_("Keep a recently tuned channel and its shared cache "
+                   "active for this many minutes after the last normal "
+                   "subscription leaves. The keepalive uses the lowest "
+                   "subscription priority, so tuners remain available for "
+                   "live TV and recordings. Zero disables this feature."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_min_period",
+      .name   = N_("Minimum cache for keepalive (secs)"),
+      .desc   = N_("Only keep an idle tuned channel after the last normal "
+                   "subscription leaves when its shared cache already "
+                   "contains at least this many seconds of history. This "
+                   "avoids prolonged cache writes after brief channel "
+                   "zapping. Zero disables this minimum."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_min_period),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_keepalive_max",
+      .name   = N_("Maximum cache keepalives"),
+      .desc   = N_("Maximum number of idle channel-cache keepalives. When "
+                   "the limit is full, the caches with the longest retained "
+                   "history are preferred. Active live TV and recording "
+                   "subscriptions do not count. Zero means unlimited."),
+      .off    = offsetof(timeshift_conf_t, cache_keepalive_max),
+      .opts   = PO_ADVANCED,
+    },
+    {
+      .type   = PT_U32,
+      .id     = "cache_staging",
+      .name   = N_("Buffering (MiB)"),
+      .desc   = N_("RAM the shared channel caches may use together to hold "
+                   "blocks on their way to storage, shown as Buffering in "
+                   "Status > Timeshift. Raise it when the log "
+                   "reports cache gaps from a \"storage writer backlog\" on "
+                   "a busy server or slow storage. This is transient memory, "
+                   "separate from the retained \"Maximum RAM size\"."),
+      .off    = offsetof(timeshift_conf_t, cache_staging),
       .opts   = PO_EXPERT,
     },
     {}

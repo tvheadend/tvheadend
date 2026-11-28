@@ -115,6 +115,7 @@ async function mountHome(): Promise<VueWrapper> {
         ThisWeekStrip: true,
         RecentlyRecorded: true,
         HealthLine: true,
+        ChannelCaches: true,
         HomeSearchCard: true,
       },
     },

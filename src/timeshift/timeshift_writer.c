@@ -155,13 +155,112 @@ static int _write_pktbuf ( timeshift_file_t *tsf, pktbuf_t *pktbuf )
 }
 
 /*
+ * Exact on-disk size of one normal timeshift message.
+ */
+static size_t
+_timeshift_msg_size ( size_t len )
+{
+  return sizeof(size_t) +
+         sizeof(streaming_message_type_t) +
+         sizeof(int64_t) +
+         len;
+}
+
+static size_t
+_timeshift_pktbuf_size ( pktbuf_t *pb )
+{
+  return sizeof(size_t) + (pb ? pktbuf_len(pb) : 0);
+}
+
+/*
+ * A multi-part packet write must be atomic from the buffer's point of
+ * view. Roll the file/RAM write position back if one of its pieces fails.
+ */
+static void
+_timeshift_record_rollback ( timeshift_file_t *tsf, off_t start )
+{
+  if (tsf->ram) {
+    tvh_mutex_lock(&tsf->ram_lock);
+    tsf->woff = start;
+    tvh_mutex_unlock(&tsf->ram_lock);
+  } else if (tsf->wfd >= 0) {
+    if (ftruncate(tsf->wfd, start))
+      tvhwarn(LS_TIMESHIFT,
+              "unable to truncate failed timeshift write: %s",
+              strerror(errno));
+    if (lseek(tsf->wfd, start, SEEK_SET) < 0)
+      tvhwarn(LS_TIMESHIFT,
+              "unable to restore timeshift write offset: %s",
+              strerror(errno));
+    tsf->woff = start;
+  }
+}
+
+static int
+_timeshift_record_begin ( timeshift_file_t *tsf, uint64_t size )
+{
+  timeshift_t *ts = tsf->owner;
+  timeshift_file_t *oldest;
+
+  while (!timeshift_size_reserve(size)) {
+    /*
+     * Preserve the rolling-buffer behaviour even when the combined
+     * Classic + shared limit becomes full between file rotations.
+     * Never remove the file currently being written or one held by a
+     * reader.
+     */
+    oldest = ts ? TAILQ_FIRST(&ts->files) : NULL;
+
+    if (oldest == NULL ||
+        oldest == tsf ||
+        oldest->refcount) {
+      /*
+       * The shared size budget is exhausted, not the filesystem: the cache
+       * of another service can release space again, so let the caller
+       * tell this apart from a write that really failed.
+       */
+      errno = EAGAIN;
+      return 0;
+    }
+
+    timeshift_filemgr_remove(ts, oldest, 0);
+  }
+  return 1;
+}
+
+static ssize_t
+_timeshift_record_end
+  ( timeshift_file_t *tsf, off_t start, uint64_t size, ssize_t written )
+{
+  if (written == (ssize_t)size)
+    return written;
+
+  _timeshift_record_rollback(tsf, start);
+  timeshift_size_release(size);
+
+  if (written >= 0)
+    errno = EIO;
+
+  return -1;
+}
+
+/*
  * Write signal status
  */
 ssize_t timeshift_write_sigstat
   ( timeshift_file_t *tsf, int64_t time, signal_status_t *sigstat )
 {
-  return _write_msg(tsf, SMT_SIGNAL_STATUS, time, sigstat,
-                    sizeof(signal_status_t));
+  const uint64_t size = _timeshift_msg_size(sizeof(signal_status_t));
+  const off_t start = tsf->woff;
+  ssize_t r;
+
+  if (!_timeshift_record_begin(tsf, size))
+    return -1;
+
+  r = _write_msg(tsf, SMT_SIGNAL_STATUS, time, sigstat,
+                 sizeof(signal_status_t));
+
+  return _timeshift_record_end(tsf, start, size, r);
 }
 
 /*
@@ -169,16 +268,34 @@ ssize_t timeshift_write_sigstat
  */
 ssize_t timeshift_write_packet ( timeshift_file_t *tsf, int64_t time, th_pkt_t *pkt )
 {
+  const uint64_t size =
+    _timeshift_msg_size(sizeof(th_pkt_t)) +
+    _timeshift_pktbuf_size(pkt->pkt_meta) +
+    _timeshift_pktbuf_size(pkt->pkt_payload);
+  const off_t start = tsf->woff;
   ssize_t ret = 0, err;
+
+  if (!_timeshift_record_begin(tsf, size))
+    return -1;
+
   ret = err = _write_msg(tsf, SMT_PACKET, time, pkt, sizeof(th_pkt_t));
-  if (err <= 0) return err;
+  if (err <= 0)
+    goto fail;
+
   err = _write_pktbuf(tsf, pkt->pkt_meta);
-  if (err <= 0) return err;
+  if (err <= 0)
+    goto fail;
   ret += err;
+
   err = _write_pktbuf(tsf, pkt->pkt_payload);
-  if (err <= 0) return err;
+  if (err <= 0)
+    goto fail;
   ret += err;
-  return ret;
+
+  return _timeshift_record_end(tsf, start, size, ret);
+
+fail:
+  return _timeshift_record_end(tsf, start, size, -1);
 }
 
 /*
@@ -186,7 +303,15 @@ ssize_t timeshift_write_packet ( timeshift_file_t *tsf, int64_t time, th_pkt_t *
  */
 ssize_t timeshift_write_mpegts ( timeshift_file_t *tsf, int64_t time, void *data )
 {
-  return _write_msg(tsf, SMT_MPEGTS, time, data, 188);
+  const uint64_t size = _timeshift_msg_size(188);
+  const off_t start = tsf->woff;
+  ssize_t r;
+
+  if (!_timeshift_record_begin(tsf, size))
+    return -1;
+
+  r = _write_msg(tsf, SMT_MPEGTS, time, data, 188);
+  return _timeshift_record_end(tsf, start, size, r);
 }
 
 /*
@@ -328,7 +453,6 @@ static inline ssize_t _process_msg0
   if (err > 0) {
     tsf->last  = sm->sm_time;
     tsf->size += err;
-    atomic_add_u64(&timeshift_total_size, err);
     if (tsf->ram)
       atomic_add_u64(&timeshift_total_ram_size, err);
   }
@@ -391,14 +515,34 @@ static void _process_msg
         if (sm->sm_type == SMT_PACKET)
           timeshift_packet_log("liv", ts, sm);
       }
+      /*
+       * Give buffering another go a second after a shared-budget stop.  The
+       * write path rolled back and released its reservation, so the files
+       * are consistent and the next one simply rotates.
+       */
+      if (ts->full && ts->full_mono &&
+          mclk() - ts->full_mono >= sec2mono(1)) {
+        ts->full = 0;
+        ts->full_mono = 0;
+      }
+
       /* do buffering, but without teletext packets */
       if (ts->dobuf && !teletext) {
         if ((tsf = timeshift_filemgr_get(ts, sm->sm_time)) != NULL) {
           if (tsf->wfd >= 0 || tsf->ram) {
             if ((err = _process_msg0(ts, tsf, sm)) < 0) {
+              /*
+               * EAGAIN is the shared size budget, which the cache of another
+               * service can release; anything else is a write that failed.
+               * Remember which, because the only other reset of ts->full is
+               * a SMT_SKIP_LIVE from a client that is not live, so a viewer
+               * who never time-shifts would lose buffering for good.
+               */
+              const int transient = (errno == EAGAIN);
               timeshift_filemgr_close(tsf);
               tsf->bad = 1;
               ts->full = 1; ///< Stop any more writing
+              ts->full_mono = transient ? mclk() : 0;
             } else {
               timeshift_packet_log("sav", ts, sm);
             }

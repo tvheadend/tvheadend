@@ -735,6 +735,7 @@ void *timeshift_reader ( void *p )
                   timeshift_filemgr_flush(ts, NULL);
                   _seek_reset(seek);
                   ts->full = 0;
+                  ts->full_mono = 0;
                 }
 
                 /* Release */
