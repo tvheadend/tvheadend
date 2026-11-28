@@ -1342,6 +1342,7 @@ satip_frontend_extra_shutdown
   tvhpoll_t *efd;
   tvhpoll_event_t ev;
   int r, nfds;
+  int64_t deadline;
   char b[32];
 
   if (session[0] == '\0' || stream_id < 0)
@@ -1366,7 +1367,10 @@ satip_frontend_extra_shutdown
   if (r < 0) {
     tvhtrace(LS_SATIP, "bad shutdown for session %s stream id %li", session, stream_id);
   } else {
-    while (1) {
+    /* absolute limit: a server which keeps the connection busy must not
+     * keep us here forever, the connection is closed below in any case */
+    deadline = mclk() + sec2mono(SATIP_EXTRA_SHUTDOWN_TIMEOUT);
+    while (mclk() < deadline) {
       r = http_client_run(rtsp);
       if (r != HTTP_CON_RECEIVING && r != HTTP_CON_SENDING)
         break;
