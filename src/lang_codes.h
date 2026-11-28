@@ -42,6 +42,16 @@ typedef struct lang_code_list
 
 /* Convert code to preferred internal code */
 const char *lang_code_get ( const char *code );
+
+/* A code ISO 639-2 reserves for local use: qaa..qtz */
+static inline int lang_code_local ( const char *code )
+{
+  return code[0] == 'q' && code[1] >= 'a' && code[1] <= 't' &&
+         code[2] >= 'a' && code[2] <= 'z' && code[3] == '\0';
+}
+
+/* All of them, where a language is chosen for a rule (no code of a stream) */
+#define LANG_CODE_LOCAL_ANY "q??"
 const char *lang_code_get2 ( const char *code, size_t len );
 const lang_code_t *lang_code_get3 ( const char *code );
 

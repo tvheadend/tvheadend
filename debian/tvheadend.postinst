@@ -28,9 +28,13 @@ escape_json_string() {
 
 case "$1" in
 configure)
+    if ! getent group "$HTS_USER" >/dev/null; then
+        echo >&2 "Creating group: $HTS_USER..."
+        groupadd --system "$HTS_USER"
+    fi
     if ! getent passwd "$HTS_USER" >/dev/null; then
         echo >&2 "Creating user: $HTS_USER..."
-        adduser --quiet --system --group --home /var/lib/tvheadend "$HTS_USER"
+        useradd --system --no-user-group --gid "$HTS_USER" --create-home --home-dir /var/lib/tvheadend "$HTS_USER"
     fi
 
     HTS_HOMEDIR="$(getent passwd "$HTS_USER" | cut -d':' -f6)"
@@ -52,7 +56,7 @@ configure)
         [ -d "$1" ] && [ "$(stat -L -c '%u' "$1" 2>/dev/null)" = "$HTS_UID" ]
     }
 
-    # adduser does not change ownership of a pre-existing home directory, so
+    # useradd does not change ownership of a pre-existing home directory, so
     # /var/lib/tvheadend can be left owned by root - which makes config_get_dir()
     # skip it and fall back to ~/.config/hts. Take ownership so it is used as the
     # canonical configuration directory, but not if an earlier install already

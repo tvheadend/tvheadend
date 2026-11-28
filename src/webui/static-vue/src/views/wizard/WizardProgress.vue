@@ -24,15 +24,12 @@
  *
  * Step labels match the C-side `ic_caption` strings (`wizard.c`
  * — `N_("Welcome")`, etc.). They reach `t()` through a variable,
- * so `make intl` does not extract them into `intl/vue`. Until a
- * follow-up marks them for extraction and the Transifex round-trip
- * provides translations, they fall back to English on every
- * locale.
+ * so they are marked with `N_()` for `make intl`.
  */
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { WIZARD_STEPS, type WizardStepName } from '@/stores/wizard'
-import { useI18n } from '@/composables/useI18n'
+import { N_, useI18n } from '@/composables/useI18n'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -60,21 +57,17 @@ const activeStep = computed<string>(() => routeNameToStep(route.name))
 
 /*
  * Step labels mirror the C-side `ic_caption` strings declared in
- * `src/wizard.c`. These literals are NOVEL to the Vue UI's
- * client-side i18n surface — the Classic UI catalog never had
- * them, so seeding `intl/vue` brought no translations. They
- * reach `t()` through `STEP_LABELS`, which `make intl` cannot
- * extract, so they fall back to English on every locale until a
- * follow-up marks them for extraction. Each is marked
- * `/* i18n: new string *\/` so a future audit finds them. */
+ * `src/wizard.c`. The Classic UI catalog never had them, so
+ * seeding `intl/vue` brought no translations. They reach `t()`
+ * through `STEP_LABELS`, so `N_()` marks them for `make intl`. */
 const STEP_LABELS: Record<WizardStepName, string> = {
-  /* i18n: new string */ hello: 'Welcome',
-  /* i18n: new string */ login: 'Access Control',
-  /* i18n: new string */ network: 'Tuner and Network',
-  /* i18n: new string */ muxes: 'Predefined Muxes',
-  /* i18n: new string */ status: 'Scanning',
-  /* i18n: new string */ mapping: 'Service Mapping',
-  /* i18n: new string */ channels: 'Finished',
+  hello: N_('Welcome'),
+  login: N_('Access Control'),
+  network: N_('Tuner and Network'),
+  muxes: N_('Predefined Muxes'),
+  status: N_('Scanning'),
+  mapping: N_('Service Mapping'),
+  channels: N_('Finished'),
 }
 
 const currentIndex = computed<number>(() => {
@@ -104,18 +97,14 @@ const pills = computed<PillState[]>(() =>
 
 /* Phone-mode label — short prose. Counter renders 1-of-7 (not
  * 0-of-7), and the active step's name follows after an em-dash.
- * The "Step", "of", and the dash are markup-friendly so the
- * t() lookup happens once on the whole sentence (less sensitive
- * to translator conventions on connector words). */
+ * One message for the whole sentence, so translators can order
+ * the counter and the name as their language needs. Off a step
+ * route the label falls back to the first step, like the pills. */
 const phoneLabel = computed(() => {
   const n = currentIndex.value + 1
   const total = WIZARD_STEPS.length
-  const stepLabel = t(STEP_LABELS[activeStep.value as WizardStepName] ?? 'hello')
-  /* i18n: new string — sentence template; concatenation is
-   * unavoidable today without a printf-style helper, but the
-   * three pieces are simple enough that translators can
-   * recompose them in their target language. */
-  return `${t('Step')} ${n} ${t('of')} ${total} — ${stepLabel}`
+  const stepLabel = t(STEP_LABELS[activeStep.value as WizardStepName] ?? STEP_LABELS.hello)
+  return t('Step {0} of {1} — {2}', n, total, stepLabel)
 })
 </script>
 

@@ -76,9 +76,10 @@ const modeButtons: Array<{ value: Mode; label: string }> = [
 ]
 
 /* Classic builds durations as value + ' ' + _('min'), so reuse its
- * msgid. There is no Classic msgid for seconds. */
+ * msgid. There is no Classic msgid for seconds, the seconds share
+ * the x axis label of BandwidthChart. */
 const windowButtons: Array<{ value: WindowSec; label: string }> = [
-  { value: 30, label: '30s' },
+  { value: 30, label: t('{0}s', 30) },
   { value: 60, label: `1 ${t('min')}` },
   { value: 300, label: `5 ${t('min')}` },
 ]

@@ -1499,7 +1499,7 @@ satip_frontend_rtp_decode
       up = TAILQ_FIRST(&lfe->sf_udp_packets);
       tvhtrace(LS_SATIP, "RTP discontinuity, reset sequence to %d from %d", up->up_data_seq, (seq + 1) & 0xffff);
       *_seq = (up->up_data_seq - 1) & 0xffff;
-      *_unc += (up->up_data_len / 188) * (uint32_t)((uint16_t)up->up_data_seq-(uint16_t)(seq+1));
+      *_unc += (up->up_data_len / 188) * (uint32_t)(uint16_t)(up->up_data_seq - (seq + 1));
     }
     tvhtrace(LS_SATIP, "RTP discontinuity (%i != %i), queueing packet", seq + 1, nseq);
     udp_rtp_packet_append(lfe, p, c, nseq);
@@ -1870,7 +1870,7 @@ new_tune:
     rtsp_flags |= SATIP_SETUP_PILOT_ON;
   switch (lfe->sf_device->sd_default_rolloff) {
   case SATIP_DEFAULT_ROLLOFF_20:
-    rtsp_flags |= SATIP_SETUP_ROLLOFF_25;
+    rtsp_flags |= SATIP_SETUP_ROLLOFF_20;
     break;
   case SATIP_DEFAULT_ROLLOFF_25:
     rtsp_flags |= SATIP_SETUP_ROLLOFF_25;

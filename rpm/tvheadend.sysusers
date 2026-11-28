@@ -1,0 +1,2 @@
+g tvheadend 283
+u tvheadend 283:tvheadend "Tvheadend TV server" /var/lib/tvheadend /sbin/nologin

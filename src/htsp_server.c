@@ -38,6 +38,7 @@
 #include "htsmsg_json.h"
 #include "string_list.h"
 #include "lang_codes.h"
+#include "input/mpegts/dvb.h"
 #if ENABLE_TIMESHIFT
 #include "timeshift.h"
 #endif
@@ -51,7 +52,7 @@
 
 static void *htsp_server, *htsp_server_2;
 
-#define HTSP_PROTO_VERSION 44
+#define HTSP_PROTO_VERSION 46
 
 #define HTSP_ASYNC_OFF  0x00
 #define HTSP_ASYNC_ON   0x01
@@ -971,6 +972,7 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
   char buf[512];
   char ubuf[UUID_HEX_SIZE];
   const char *str;
+  int t;
 
   htsmsg_add_u32(out, "id", idnode_get_short_uuid(&de->de_id));
   htsmsg_add_str(out, "idStr", idnode_uuid_as_str(&de->de_id, ubuf));
@@ -1112,9 +1114,19 @@ htsp_build_dvrentry(htsp_connection_t *htsp, dvr_entry_t *de, const char *method
     if(!strempty(image))
       htsmsg_add_str(out, "image", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
     /* htsmsg camelcase to be compatible with other names */
-    image = de->de_fanart_image;
-    if(!strempty(image))
-      htsmsg_add_str(out, "fanartImage", htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    image = dvr_entry_get_fanart_image(de);
+    /* Keep the JSON fanart_image lookup slot unchanged. */
+    if (strempty(image))
+      image = dvr_entry_get_typed_image(de, EPG_IMAGE_BACKDROP);
+    /* Full updates must clear cached artwork; absence means no change to
+     * clients applying partial updates. Stats-only updates skip this block. */
+    htsmsg_add_str(out, "fanartImage", strempty(image) ? "" :
+                   htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+      image = dvr_entry_get_typed_image(de, t);
+      htsmsg_add_str(out, epg_image_types[t].api, strempty(image) ? "" :
+                     htsp_image(htsp, image, buf, sizeof(buf), 34, 0));
+    }
     if (de->de_copyright_year)
       htsmsg_add_u32(out, "copyrightYear", de->de_copyright_year);
 
@@ -1325,6 +1337,7 @@ htsp_build_event
   const char *str;
   char buf[512];
   const int of = htsp->htsp_granted_access->aa_htsp_output_format;
+  int t;
 
   /* Ignore? */
   if (update && e->updated <= update) return NULL;
@@ -1433,11 +1446,19 @@ htsp_build_event
     htsmsg_add_s64(out, "firstAired", e->first_aired);
   if (e->is_new)
     htsmsg_add_u32(out, "isNew", e->is_new);
+  if (e->is_repeat)
+    htsmsg_add_u32(out, "isRepeat", e->is_repeat);
   epg_broadcast_get_epnum(e, &epnum);
   htsp_serialize_epnum(out, &epnum, NULL);
   if (!strempty(e->image))
     htsmsg_add_str(out, "image", htsp_image(htsp, e->image, buf, sizeof(buf), 34,
                                               (int64_t)e->start));
+  for (t = 0; t < EPG_IMAGE_TYPE_COUNT; t++) {
+    htsmsg_add_str(out, epg_image_types[t].api,
+                   strempty(e->typed_image[t]) ? "" :
+                   htsp_image(htsp, e->typed_image[t], buf, sizeof(buf), 34,
+                              (int64_t)e->start));
+  }
 
   if (e->channel) {
     LIST_FOREACH(de, &e->channel->ch_dvrs, de_channel_link) {
@@ -4335,9 +4356,29 @@ htsp_subscription_start(htsp_subscription_t *hs, const streaming_start_t *ss)
     if(ssc->es_lang[0])
       htsmsg_add_str(c, "language", ssc->es_lang);
 
+    /* DVB stream identifier: e.g. HbbTV selects components by it */
+    if(ssc->es_component_tag_set)
+      htsmsg_add_u32(c, "component_tag", ssc->es_component_tag);
+
     if(ssc->es_type == SCT_DVBSUB) {
       htsmsg_add_u32(c, "composition_id", ssc->es_composition_id);
       htsmsg_add_u32(c, "ancillary_id", ssc->es_ancillary_id);
+      /* subtitling descriptor: 0x10.. normal, 0x20.. hard of hearing */
+      if(ssc->es_subtitle_type)
+        htsmsg_add_u32(c, "subtitling_type", ssc->es_subtitle_type);
+    }
+
+    /* the full teletext: its initial page (e.g. 100) */
+    if(ssc->es_type == SCT_TELETEXT && ssc->es_teletext_initial_page)
+      htsmsg_add_u32(c, "teletext_initial_page", ssc->es_teletext_initial_page);
+
+    /* teletext subtitles: the page (e.g. 777) and the teletext type
+     * (2 subtitle page, 5 for the hearing impaired) */
+    if(ssc->es_type == SCT_TEXTSUB) {
+      if(ssc->es_pid >= DVB_TELETEXT_BASE)
+        htsmsg_add_u32(c, "teletext_page", ssc->es_pid - DVB_TELETEXT_BASE);
+      if(ssc->es_subtitle_type)
+        htsmsg_add_u32(c, "teletext_type", ssc->es_subtitle_type);
     }
 
     if(SCT_ISVIDEO(ssc->es_type)) {

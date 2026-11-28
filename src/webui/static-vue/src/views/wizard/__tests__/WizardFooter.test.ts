@@ -6,7 +6,7 @@
  *   - Renders Cancel + Save (always); Previous only when prevStep
  *     is non-null; Skip only when showSkip is true.
  *   - Save label flips to "Finish" when `isFinal`.
- *   - `saving` disables the Save button.
+ *   - `saving` disables Save, Previous and Cancel.
  *   - Click handlers emit the right events. Cancel goes through
  *     the confirm dialog — only emits when the user accepts.
  */
@@ -17,11 +17,6 @@ import { ref } from 'vue'
 const confirmAsk = vi.fn()
 vi.mock('@/composables/useConfirmDialog', () => ({
   useConfirmDialog: () => ({ ask: confirmAsk }),
-}))
-
-vi.mock('@/composables/useI18n', () => ({
-  useI18n: () => ({ t: (s: string) => s, currentLang: () => '' }),
-  t: (s: string) => s,
 }))
 
 /* Mock the help-dock composable so the Help button's toggle
@@ -126,10 +121,12 @@ describe('WizardFooter — button visibility', () => {
     expect(wrapper.find('button[data-label="Help"]').exists()).toBe(false)
   })
 
-  it('disables the Save button while saving', () => {
-    const wrapper = mountFooter({ saving: true })
-    const saveBtn = wrapper.find<HTMLButtonElement>('button[data-label="Save & Next"]')
-    expect(saveBtn.element.disabled).toBe(true)
+  it('disables Save, Previous and Cancel while saving', () => {
+    const wrapper = mountFooter({ prevStep: 'hello', saving: true })
+    for (const label of ['Save & Next', 'Previous', 'Cancel']) {
+      const btn = wrapper.find<HTMLButtonElement>(`button[data-label="${label}"]`)
+      expect(btn.element.disabled).toBe(true)
+    }
   })
 })
 

@@ -350,7 +350,11 @@ esfilter_class_language_set(void *o, const void *v)
   const char *s = v;
   char n[4];
   int save;
-  strlcpy(n, s && s[0] ? lang_code_get(s) : "", 4);
+  /* "q??" is no language of the table: every code for local use */
+  if (s && !strcmp(s, LANG_CODE_LOCAL_ANY))
+    strlcpy(n, s, 4);
+  else
+    strlcpy(n, s && s[0] ? lang_code_get(s) : "", 4);
   save = strcmp(esf->esf_language, n);
   strcpy(esf->esf_language, n);
   return save;
@@ -362,6 +366,7 @@ esfilter_class_language_enum(void *o, const char *lang)
   htsmsg_t *l = htsmsg_create_list();
   const lang_code_t *lc = lang_codes;
   const char *any = N_("ANY");
+  const char *local = N_("Any code for local use");
   char buf[128];
 
   while (lc->code2b) {
@@ -374,6 +379,12 @@ esfilter_class_language_enum(void *o, const char *lang)
       e = htsmsg_create_key_val(lc->code2b, buf);
     }
     htsmsg_add_msg(l, NULL, e);
+    /* after "qaa", the one of them the table has: all of qaa..qtz */
+    if (!strcmp(lc->code2b, "qaa")) {
+      snprintf(buf, sizeof(buf), "%s (%s)", tvh_gettext_lang(lang, local),
+               LANG_CODE_LOCAL_ANY);
+      htsmsg_add_msg(l, NULL, htsmsg_create_key_val(LANG_CODE_LOCAL_ANY, buf));
+    }
     lc++;
   }
   return l;

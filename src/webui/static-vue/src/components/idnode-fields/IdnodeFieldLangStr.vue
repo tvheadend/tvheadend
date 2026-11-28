@@ -25,8 +25,10 @@
 import { computed } from 'vue'
 import type { IdnodeProp } from '@/types/idnode'
 import { useAccessStore } from '@/stores/access'
+import { useI18n } from '@/composables/useI18n'
 
 const access = useAccessStore()
+const { t } = useI18n()
 
 const props = defineProps<{
   prop: IdnodeProp
@@ -43,35 +45,36 @@ const isReadonly = computed(() => props.prop.rdonly === true)
  * side is hundreds of entries, most of which never appear in EPG
  * streams; offering the common broadcasting languages keeps the
  * dropdown navigable. The text field allows free-form input via
- * the "Other…" sentinel below if a niche code is needed. */
-const COMMON_LANGS: { code: string; name: string }[] = [
-  { code: 'eng', name: 'English' },
-  { code: 'ger', name: 'German' },
-  { code: 'fre', name: 'French' },
-  { code: 'spa', name: 'Spanish' },
-  { code: 'ita', name: 'Italian' },
-  { code: 'dut', name: 'Dutch' },
-  { code: 'por', name: 'Portuguese' },
-  { code: 'rus', name: 'Russian' },
-  { code: 'pol', name: 'Polish' },
-  { code: 'cze', name: 'Czech' },
-  { code: 'swe', name: 'Swedish' },
-  { code: 'nor', name: 'Norwegian' },
-  { code: 'dan', name: 'Danish' },
-  { code: 'fin', name: 'Finnish' },
-  { code: 'gre', name: 'Greek' },
-  { code: 'hun', name: 'Hungarian' },
-  { code: 'tur', name: 'Turkish' },
-  { code: 'ara', name: 'Arabic' },
-  { code: 'jpn', name: 'Japanese' },
-  { code: 'kor', name: 'Korean' },
-  { code: 'chi', name: 'Chinese' },
-]
+ * the "Other…" sentinel below if a niche code is needed. The names
+ * are translated, so the list follows a language change. */
+const commonLangs = computed<{ code: string; name: string }[]>(() => [
+  { code: 'eng', name: t('English') },
+  { code: 'ger', name: t('German') },
+  { code: 'fre', name: t('French') },
+  { code: 'spa', name: t('Spanish') },
+  { code: 'ita', name: t('Italian') },
+  { code: 'dut', name: t('Dutch') },
+  { code: 'por', name: t('Portuguese') },
+  { code: 'rus', name: t('Russian') },
+  { code: 'pol', name: t('Polish') },
+  { code: 'cze', name: t('Czech') },
+  { code: 'swe', name: t('Swedish') },
+  { code: 'nor', name: t('Norwegian') },
+  { code: 'dan', name: t('Danish') },
+  { code: 'fin', name: t('Finnish') },
+  { code: 'gre', name: t('Greek') },
+  { code: 'hun', name: t('Hungarian') },
+  { code: 'tur', name: t('Turkish') },
+  { code: 'ara', name: t('Arabic') },
+  { code: 'jpn', name: t('Japanese') },
+  { code: 'kor', name: t('Korean') },
+  { code: 'chi', name: t('Chinese') },
+])
 
-const COMMON_LOOKUP = new Map(COMMON_LANGS.map((l) => [l.code, l.name]))
+const commonLookup = computed(() => new Map(commonLangs.value.map((l) => [l.code, l.name])))
 
 function langLabel(code: string): string {
-  return COMMON_LOOKUP.get(code) ?? code
+  return commonLookup.value.get(code) ?? code
 }
 
 const entries = computed<{ lang: string; text: string }[]>(() => {
@@ -83,7 +86,7 @@ const entries = computed<{ lang: string; text: string }[]>(() => {
 const usedLangs = computed<Set<string>>(() => new Set(entries.value.map((e) => e.lang)))
 
 const availableLangs = computed<{ code: string; name: string }[]>(() =>
-  COMMON_LANGS.filter((l) => !usedLangs.value.has(l.code)),
+  commonLangs.value.filter((l) => !usedLangs.value.has(l.code)),
 )
 
 /* Pick the first unused common language for a fresh row. Default
@@ -147,7 +150,7 @@ function onAdd() {
  * different language but can't pick one that's already in use on
  * another row. */
 function pickerOpts(rowLang: string): { code: string; name: string }[] {
-  return COMMON_LANGS.filter(
+  return commonLangs.value.filter(
     (l) => l.code === rowLang || !usedLangs.value.has(l.code),
   )
 }
@@ -170,7 +173,7 @@ function pickerOpts(rowLang: string): { code: string; name: string }[] {
           class="ifld-langstr__lang"
           :value="entry.lang"
           :disabled="isReadonly"
-          :aria-label="`Language for ${prop.caption ?? prop.id}`"
+          :aria-label="t('Language for {0}', prop.caption ?? prop.id)"
           @change="onLangChange(entry.lang, ($event.target as HTMLSelectElement).value)"
         >
           <option
@@ -188,7 +191,7 @@ function pickerOpts(rowLang: string): { code: string; name: string }[] {
             on its own.
           -->
           <option
-            v-if="!COMMON_LOOKUP.has(entry.lang)"
+            v-if="!commonLookup.has(entry.lang)"
             :value="entry.lang"
           >
             {{ langLabel(entry.lang) }}
@@ -199,7 +202,7 @@ function pickerOpts(rowLang: string): { code: string; name: string }[] {
           type="text"
           :value="entry.text"
           :disabled="isReadonly"
-          :aria-label="`${langLabel(entry.lang)} value`"
+          :aria-label="t('{0} value', langLabel(entry.lang))"
           autocomplete="off"
           @input="onTextChange(entry.lang, ($event.target as HTMLInputElement).value)"
         />
@@ -207,8 +210,8 @@ function pickerOpts(rowLang: string): { code: string; name: string }[] {
           v-if="!isReadonly"
           type="button"
           class="ifld-langstr__remove"
-          :aria-label="`Remove ${langLabel(entry.lang)}`"
-          :title="`Remove ${langLabel(entry.lang)}`"
+          :aria-label="t('Remove {0}', langLabel(entry.lang))"
+          :title="t('Remove {0}', langLabel(entry.lang))"
           @click="onRemove(entry.lang)"
         >
           ×
@@ -220,7 +223,7 @@ function pickerOpts(rowLang: string): { code: string; name: string }[] {
         class="ifld-langstr__add"
         @click="onAdd"
       >
-        + Add language
+        {{ t('+ Add language') }}
       </button>
     </div>
   </div>

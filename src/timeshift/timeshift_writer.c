@@ -370,7 +370,8 @@ static void _process_msg
 
     /* Store */
     case SMT_PACKET:
-      if (timeshift_conf.teletext && sm->sm_type == SMT_PACKET) {
+      /* teletext stays out of the buffer unless "Include teletext" is set */
+      if (!timeshift_conf.teletext && sm->sm_type == SMT_PACKET) {
         pkt = sm->sm_data;
         teletext = pkt->pkt_type == SCT_TELETEXT;
       }

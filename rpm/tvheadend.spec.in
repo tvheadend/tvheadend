@@ -23,6 +23,7 @@ BuildRequires:  gcc
 BuildRequires:  gettext
 BuildRequires:  gzip
 BuildRequires:  systemd-units
+BuildRequires:  systemd-rpm-macros
 BuildRequires:  gettext-devel
 BuildRequires:  dbus-devel
 BuildRequires:  avahi-devel
@@ -75,12 +76,18 @@ export STATICLIB_CACHE="%{staticlib_cache}"
 
 install -Dpm 0644 rpm/tvheadend.sysconfig %{buildroot}%{_sysconfdir}/sysconfig/%{name}
 install -Dpm 0644 rpm/tvheadend.service %{buildroot}%{_unitdir}/%{name}.service
+install -Dpm 0644 rpm/tvheadend.sysusers %{buildroot}%{_sysusersdir}/%{name}.conf
 
 install -dm 0755 %{buildroot}%{_sharedstatedir}/%{name}/
 
 chmod 0644 %{buildroot}%{_mandir}/man1/%{name}.1
 
 
+# From Fedora 42 on, RPM creates the user and group from the sysusers.d
+# file and generates the matching user()/group() Provides itself.
+# Fedora 39-41 disable RPM's own user creation and older RPM versions
+# lack it. Keep the scriptlet there and on EL; it skips existing accounts.
+%if !(0%{?fedora} >= 42)
 %pre
 getent group tvheadend >/dev/null || groupadd -f -g %{tvheadend_group_number} -r tvheadend
 if ! getent passwd tvheadend > /dev/null ; then
@@ -94,6 +101,7 @@ if ! getent passwd tvheadend > /dev/null ; then
   fi
 fi
 exit 0
+%endif
 
 
 %post
@@ -114,6 +122,7 @@ exit 0
 %{_bindir}/*
 %{_datadir}/%{name}/
 %{_unitdir}/*
+%{_sysusersdir}/%{name}.conf
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %{_mandir}/man1/*.1.*
 %attr(-,%{tvheadend_user},%{tvheadend_group}) %dir %{_sharedstatedir}/%{tvheadend_user}/

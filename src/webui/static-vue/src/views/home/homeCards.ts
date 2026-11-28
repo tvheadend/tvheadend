@@ -29,6 +29,7 @@ import {
 } from 'lucide-vue-next'
 import type { RouteLocationRaw } from 'vue-router'
 import type { HomeCapabilities, InstallState } from '@/composables/useHomeState'
+import { N_ } from '@/composables/useI18n'
 import type { AuthMode } from '@/types/access'
 
 export type CardTier = 'guidance' | 'tv' | 'server'
@@ -65,7 +66,8 @@ export interface HomeCard {
   tier: CardTier
   kind: CardKind
   icon: LucideIcon
-  /* English label / blurb — passed through i18n `t()` at render. */
+  /* English label / blurb, marked with `N_()` so `make intl`
+   * extracts it, and passed through `t()` at render (HomeCard). */
   title: string
   description: string
   /* `nav` cards navigate here; `action` cards carry an action id the
@@ -107,8 +109,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'action',
     icon: LogIn,
-    title: 'Sign in',
-    description: 'Sign in to access recordings, settings, and the rest of the UI.',
+    title: N_('Sign in'),
+    description: N_('Sign in to access recordings, settings, and the rest of the UI.'),
     action: 'sign-in',
     visible: ({ authMode }) => authMode === 'anonymous',
   },
@@ -124,8 +126,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'action',
     icon: Command,
-    title: 'Try the command palette',
-    description: 'Press ⌘K (or Ctrl-K) to jump anywhere — search routes, channels, recordings, EPG.',
+    title: N_('Try the command palette'),
+    description: N_('Press ⌘K (or Ctrl-K) to jump anywhere — search routes, channels, recordings, EPG.'),
     action: 'open-palette',
     visible: ({ state, seenPalette, touchOnly, authMode }) =>
       hasChannels(state) && !seenPalette && !touchOnly && authMode !== 'anonymous',
@@ -142,8 +144,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'action',
     icon: Search,
-    title: 'Try the search button',
-    description: 'Tap the search icon to jump anywhere — routes, channels, recordings, EPG.',
+    title: N_('Try the search button'),
+    description: N_('Tap the search icon to jump anywhere — routes, channels, recordings, EPG.'),
     action: 'open-palette',
     visible: ({ state, seenPalette, touchOnly, authMode }) =>
       hasChannels(state) && !seenPalette && touchOnly && authMode !== 'anonymous',
@@ -153,8 +155,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'action',
     icon: Tv,
-    title: 'Set up live TV',
-    description: 'Scan for channels and get the guide running.',
+    title: N_('Set up live TV'),
+    description: N_('Scan for channels and get the guide running.'),
     action: 'start-wizard',
     visible: ({ state, caps }) => state === 'fresh' && caps.configure,
   },
@@ -163,8 +165,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'action',
     icon: ListChecks,
-    title: 'Finish setting up channels',
-    description: "Services were found — map them to channels to start watching.",
+    title: N_('Finish setting up channels'),
+    description: N_("Services were found — map them to channels to start watching."),
     action: 'start-wizard',
     visible: ({ state, caps }) => state === 'channels-missing' && caps.configure,
   },
@@ -173,9 +175,9 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'guidance',
     kind: 'notice',
     icon: Info,
-    title: 'No channels yet',
+    title: N_('No channels yet'),
     description:
-      "This server isn't set up for TV yet — that needs administrator access.",
+      N_("This server isn't set up for TV yet — that needs administrator access."),
     visible: notReady,
   },
   /* ---- TV tier ---- */
@@ -184,8 +186,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'tv',
     kind: 'nav',
     icon: Calendar,
-    title: 'TV Guide',
-    description: "Browse what's on now and what's coming up.",
+    title: N_('TV Guide'),
+    description: N_("Browse what's on now and what's coming up."),
     to: { name: 'epg' },
     visible: ({ state }) => hasChannels(state),
   },
@@ -194,8 +196,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'tv',
     kind: 'nav',
     icon: Video,
-    title: 'Recordings',
-    description: 'Your scheduled and finished recordings.',
+    title: N_('Recordings'),
+    description: N_('Your scheduled and finished recordings.'),
     to: { name: 'dvr' },
     visible: ({ state, caps }) => hasChannels(state) && caps.record,
   },
@@ -204,8 +206,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'tv',
     kind: 'nav',
     icon: CalendarClock,
-    title: 'Set up the TV guide',
-    description: 'No guide data yet — choose where it comes from.',
+    title: N_('Set up the TV guide'),
+    description: N_('No guide data yet — choose where it comes from.'),
     to: { name: 'config-channel-epg' },
     visible: ({ state, caps }) => state === 'epg-missing' && caps.configure,
   },
@@ -220,8 +222,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'server',
     kind: 'action',
     icon: SatelliteDish,
-    title: 'Scan for channels',
-    description: 'Look for new channels on every enabled network.',
+    title: N_('Scan for channels'),
+    description: N_('Look for new channels on every enabled network.'),
     action: 'scan-all-networks',
     visible: ({ state, caps }) => state !== 'fresh' && caps.configure,
   },
@@ -242,8 +244,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'server',
     kind: 'action',
     icon: RefreshCw,
-    title: 'Refresh TV guide',
-    description: 'Pull fresh listings from internal and over-the-air EPG grabbers.',
+    title: N_('Refresh TV guide'),
+    description: N_('Pull fresh listings from internal and over-the-air EPG grabbers.'),
     action: 'refresh-epg',
     visible: ({ state, caps }) => hasChannels(state) && caps.configure,
   },
@@ -258,8 +260,8 @@ export const homeCards: readonly HomeCard[] = [
     tier: 'server',
     kind: 'nav',
     icon: ListChecks,
-    title: 'Reorganize channels',
-    description: 'Reorder, tag and enable channels in bulk.',
+    title: N_('Reorganize channels'),
+    description: N_('Reorder, tag and enable channels in bulk.'),
     to: {
       name: 'config-channel-channels',
       query: { manageMode: 'true' },

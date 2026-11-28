@@ -189,7 +189,7 @@ satip_rtsp_setup( http_client_t *hc, int src, int fe,
     if (dmc->dmc_fe_rolloff != DVB_ROLLOFF_NONE &&
         dmc->dmc_fe_rolloff != DVB_ROLLOFF_AUTO) {
       ADD(dmc_fe_rolloff, ro, "0.35");
-    } if (dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
+    } else if (dmc->dmc_fe_delsys == DVB_SYS_DVBS2) {
       if (flags & SATIP_SETUP_ROLLOFF_20) {
         satip_rtsp_add_val("ro", buf, 200);
       } else if (flags & SATIP_SETUP_ROLLOFF_25) {

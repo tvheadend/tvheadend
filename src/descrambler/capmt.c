@@ -130,6 +130,10 @@ typedef struct dmx_filter {
 LIST_HEAD(capmt_service_list, capmt_service);
 LIST_HEAD(capmt_caid_ecm_list, capmt_caid_ecm);
 
+/* CA_SET_DESCR_MODE algo of OSCam's extended_cw_api for VideoGuard ICAM
+ * services: DVB-CSA with the ICAM ecm byte (mapped to CA_ALGO_DVBCSA) */
+#define CA_ALGO_CSA_ALT 3
+
 /*
  * ECM descriptor
  */
@@ -497,6 +501,13 @@ capmt_pid_flush_adapter(capmt_t *capmt, int adapter)
     if ((pid = o->pid) > 0) {
       o->pid = PID_BLOCKED;
       o->pid_refs = 0;
+      /* ECM pids were opened with the fast table flag (capmt_pid_add),
+       * close them the same way - otherwise the descrambler section and
+       * its last ECM stay on a mux which keeps running, and the same ECM
+       * is not forwarded again on the next start of the service */
+      if (o->ecm > 0)
+        pid = DESCRAMBLER_ECM_PID(pid);
+      o->ecm = -1;
       if (mux) {
         tvh_mutex_unlock(&capmt->capmt_mutex);
         descrambler_close_pid(mux, &ca->ca_pids[i], pid);
@@ -708,6 +719,24 @@ capmt_write_msg(capmt_t *capmt, int adapter, int sid, const uint8_t *buf, size_t
   return 0;
 }
 
+/*
+ * A fast message goes before the messages that are not fast, but behind the
+ * fast ones (and the hello) already queued: ECMs leave in the order they came
+ */
+static void
+capmt_queue_fast(capmt_t *capmt, capmt_message_t *msg)
+{
+  capmt_message_t *msg2;
+
+  TAILQ_FOREACH(msg2, &capmt->capmt_writeq, cm_link)
+    if ((msg2->cm_flags & (CAPMT_MSG_FAST | CAPMT_MSG_HELLO)) == 0)
+      break;
+  if (msg2)
+    TAILQ_INSERT_BEFORE(msg2, msg, cm_link);
+  else
+    TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+}
+
 /**
  *
  */
@@ -741,15 +770,12 @@ capmt_queue_msg
   msg->cm_adapter = adapter;
   msg->cm_sid     = sid;
   msg->cm_flags   = flags;
-  if (flags & CAPMT_MSG_FAST) {
-    msg2 = TAILQ_FIRST(&capmt->capmt_writeq);
-    TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
-    if (msg2 && (msg2->cm_flags & CAPMT_MSG_HELLO) != 0) {
-      TAILQ_REMOVE(&capmt->capmt_writeq, msg2, cm_link);
-      TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg2, cm_link);
-    }
-  } else
+  if (!(flags & CAPMT_MSG_FAST))
     TAILQ_INSERT_TAIL(&capmt->capmt_writeq, msg, cm_link);
+  else if (flags & CAPMT_MSG_HELLO)
+    TAILQ_INSERT_HEAD(&capmt->capmt_writeq, msg, cm_link);
+  else
+    capmt_queue_fast(capmt, msg);
   tvh_write(capmt->capmt_pipe.wr, "c", 1);
 }
 
@@ -885,6 +911,37 @@ capmt_init_demuxes(capmt_t *capmt)
       capmt->capmt_demuxes.filters[i].dmx[j].pid = PID_UNUSED;
 }
 
+/*
+ * The filters of an adapter go with its pids (capmt_pid_flush_adapter()):
+ * an entry left behind makes capmt_set_filter() take the same filter for
+ * installed when the CA client sets it again without a stop in between,
+ * and the pid is not opened again
+ */
+static void
+capmt_filter_flush_adapter(capmt_t *capmt, int adapter)
+{
+  capmt_demuxes_t *cd = &capmt->capmt_demuxes;
+  capmt_filters_t *cf;
+  int i;
+  int j;
+
+  lock_assert(&capmt->capmt_mutex);
+
+  for (i = 0; i < cd->max; i++) {
+    cf = &cd->filters[i];
+    if (cf->max == 0 || cf->adapter != adapter)
+      continue;
+    for (j = 0; j < cf->max; j++) {
+      memset(&cf->dmx[j], 0, sizeof(cf->dmx[j]));
+      cf->dmx[j].pid = PID_UNUSED;
+    }
+    cf->max = 0;
+  }
+  /* short the max value */
+  while (cd->max > 0 && cd->filters[cd->max - 1].max == 0)
+    cd->max--;
+}
+
 /**
  * global_lock is held
  */
@@ -928,6 +985,7 @@ capmt_service_destroy(th_descrambler_t *td)
       break;
   if (ct2 == NULL) {
     capmt_pid_flush_adapter(capmt, ct->ct_adapter);
+    capmt_filter_flush_adapter(capmt, ct->ct_adapter);
     capmt->capmt_adapters[ct->ct_adapter].ca_tuner = NULL;
   }
 
@@ -1511,7 +1569,16 @@ capmt_analyze_cmd(capmt_t *capmt, uint32_t cmd, int adapter, sbuf_t *sb, int off
       tvherror(LS_CAPMT, "%s: Invalid adapter %d or index %d", capmt_name(capmt), adapter, index);
       return;
     }
-    if (algo < 0 || algo > 2) {
+    /*
+     * OSCam with extended_cw_api sends algo 3 (CSA-ALT) for VideoGuard ICAM
+     * services. The ICAM ecm byte is derived by the descrambler itself from
+     * the ECM (descrambler.c, csa_ecm), so this is plain DVB-CSA here.
+     */
+    if (algo == CA_ALGO_CSA_ALT) {
+      tvhdebug(LS_CAPMT, "%s: CA_SET_DESCR_MODE algo 3 (CSA-ALT) mapped to DVB-CSA", capmt_name(capmt));
+      algo = CA_ALGO_DVBCSA;
+    }
+    if (algo < CA_ALGO_DVBCSA || algo > CA_ALGO_AES) {
       tvherror(LS_CAPMT, "%s: Invalid algo %d", capmt_name(capmt), algo);
       return;
     }

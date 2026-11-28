@@ -32,10 +32,10 @@ endif
 # Upstream Packages
 # ###########################################################################
 
-LIBHDHR         = libhdhomerun_20250815
+LIBHDHR         = libhdhomerun_20261107
 LIBHDHR_TB      = $(LIBHDHR).tgz
 LIBHDHR_URL     = https://download.silicondust.com/hdhomerun/$(LIBHDHR_TB)
-LIBHDHR_SHA1    = 5de17a094030e6fcdab80bbcb2777596895fb79e
+LIBHDHR_SHA1    = e66270f27f3ccd3cb4902754395f2de727807368
 
 # ###########################################################################
 # Library Config
@@ -78,6 +78,7 @@ $(LIB_ROOT)/$(LIBHDHR)/libhdhomerun.a: $(OBJS)
 
 $(LIB_ROOT)/$(LIBHDHR)/.tvh_download:
 	$(call DOWNLOAD,$(LIBHDHR_URL),$(LIB_ROOT)/$(LIBHDHR_TB),$(LIBHDHR_SHA1))
+	rm -rf $(LIB_ROOT)/libhdhomerun
 	$(call UNTAR,$(LIBHDHR_TB),z)
 	ln -sf libhdhomerun $(LIB_ROOT)/$(LIBHDHR)
 	$(call PATCH,$(LIBHDHR),$(LIB_DIFFS))

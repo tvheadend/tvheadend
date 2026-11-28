@@ -18,8 +18,11 @@
  *   - Skip         — rendered when `showSkip` is true (status
  *                    + optional mapping). Emits `skip`.
  *   - Save & Next  — primary action. Label flips to "Finish" on
- *                    the last (channels) step. Disabled while
- *                    `saving` is true. Emits `save`.
+ *                    the last (channels) step. Emits `save`.
+ *
+ * Save, Previous and Cancel are disabled while `saving` is true,
+ * so the step is not left before its save has finished and a
+ * failed save can still show its error there.
  *
  * Cancel-confirmation copy follows ADR 0015 § "no rollback" —
  * the user is told partial config persists on cancel so they
@@ -32,7 +35,7 @@
  */
 import { computed } from 'vue'
 import Button from 'primevue/button'
-import { useI18n } from '@/composables/useI18n'
+import { N_, useI18n } from '@/composables/useI18n'
 import { useConfirmDialog } from '@/composables/useConfirmDialog'
 import { useHelp } from '@/composables/useHelp'
 
@@ -46,8 +49,8 @@ interface Props {
   /* When true, render the Skip button (status step polling, or
    * mapping if the user opts out of auto-mapping). */
   showSkip?: boolean
-  /* Disables the Save button (e.g. while a save POST is in
-   * flight). */
+  /* Disables Save, Previous and Cancel (e.g. while a save POST
+   * is in flight). */
   saving?: boolean
   /* Markdown page name passed to `useHelp().toggle()` for the
    * Help button. ExtJS wizard uses `firstconfig` for every step
@@ -68,8 +71,9 @@ interface Props {
   /* Label for the Skip button. Defaults to 'Skip'; the status
    * step swaps to 'Next' once the scan reaches 100 % so the
    * button reads as a continuation rather than an opt-out.
-   * Caller passes the English string; the footer t()s it for
-   * i18n consistency with the other labels here. */
+   * Caller passes the English string marked with `N_()`; the
+   * footer t()s it for i18n consistency with the other labels
+   * here. */
   skipLabel?: string
   /* When true, the Skip button promotes from outlined-secondary
    * to the primary filled style (same look as Save & Next /
@@ -87,7 +91,7 @@ const props = withDefaults(defineProps<Props>(), {
   saving: false,
   helpPage: 'firstconfig',
   hideSave: false,
-  skipLabel: 'Skip',
+  skipLabel: N_('Skip'),
   skipEmphasized: false,
 })
 
@@ -154,6 +158,7 @@ async function handleCancel(): Promise<void> {
         severity="secondary"
         text
         class="wizard-footer__cancel"
+        :disabled="saving"
         @click="handleCancel"
       />
       <Button
@@ -173,6 +178,7 @@ async function handleCancel(): Promise<void> {
         :label="t('Previous')"
         severity="secondary"
         outlined
+        :disabled="saving"
         @click="emit('previous')"
       />
       <!-- i18n: "Skip" and "Next" are both novel strings.
@@ -181,7 +187,7 @@ async function handleCancel(): Promise<void> {
            stuck waiting through the polling interval; the
            status step flips the label to "Next" at 100 % so the
            button reads as a continuation. Both go through t(skipLabel),
-           which make intl cannot extract yet, so they stay English. -->
+           so the callers mark them with N_() for make intl. -->
       <Button
         v-if="showSkip"
         :label="t(skipLabel)"

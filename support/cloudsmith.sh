@@ -64,7 +64,7 @@ case $DISTRO in
         esac;;
     ubuntu)
         case $CODENAME in
-            trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble|plucky|questing|resolute)
+            trusty|xenial|bionic|focal|impish|jammy|kinetic|lunar|mantic|noble|plucky|questing|resolute|stonking)
                 OS="ubuntu"
                 TARGET=$CODENAME;;
             *)
@@ -80,11 +80,11 @@ case $DISTRO in
         TARGET="${VERSION%%.*}";;
     fedora)
         case $VERSION in
-            37|38|39|40|41|42|43|44)
+            37|38|39|40|41|42|43|44|45)
                 PKGMGR="dnf"
                 OS="fedora"
                 TARGET=$VERSION;;
-            45|46)
+            46)
                 echo -e "${YELLOW}Fedora $VERSION (rawhide) is not supported by Cloudsmith${NC}"
                 exit 0;;
             *)
