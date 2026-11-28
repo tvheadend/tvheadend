@@ -227,6 +227,8 @@ void subscription_stop(th_subscription_t *s);
 
 void subscription_unlink_service(th_subscription_t *s, int reason);
 
+void subscription_service_destroyed(struct service *t);
+
 void subscription_dummy_join(const char *id, int first);
 
 void subscription_add_bytes_in(th_subscription_t *s, size_t in);

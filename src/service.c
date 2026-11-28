@@ -637,6 +637,7 @@ service_destroy(service_t *t, int delconf)
 
   while((s = LIST_FIRST(&t->s_subscriptions)) != NULL)
     subscription_unlink_service(s, SM_CODE_SOURCE_DELETED);
+  subscription_service_destroyed(t);
 
   bouquet_destroy_by_service(t, delconf);
 
