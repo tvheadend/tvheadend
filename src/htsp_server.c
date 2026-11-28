@@ -1593,6 +1593,7 @@ htsp_method_api(htsp_connection_t *htsp, htsmsg_t *in)
       default:
         htsmsg_destroy(args2);
         htsmsg_destroy(ret);
+        tvh_mutex_lock(&global_lock);
         return htsp_error(htsp, N_("Bad request"));
     }
   } else if (resp) {
