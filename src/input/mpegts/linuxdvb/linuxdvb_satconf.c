@@ -1616,9 +1616,32 @@ const idclass_t linuxdvb_satconf_ele_class =
  * Creation/Config
  * *************************************************************************/
 
+/* whether the satconf waits for a device of this element (a rotor that
+ * moves): the timer of the wait has the element as its argument */
+static int
+linuxdvb_satconf_ele_waits ( const linuxdvb_satconf_ele_t *ls )
+{
+  const linuxdvb_diseqc_t *ld = ls->lse_parent->ls_active_diseqc;
+
+  return ld != NULL &&
+         (ld == ls->lse_rotor || ld == ls->lse_switch ||
+          ld == ls->lse_en50494 || ld == (const linuxdvb_diseqc_t *)ls->lse_lnb);
+}
+
 void
 linuxdvb_satconf_ele_destroy ( linuxdvb_satconf_ele_t *ls )
 {
+  linuxdvb_satconf_t *lsp = ls->lse_parent;
+
+  /* a rotor wait for this position: its timer comes back with this
+   * element - the wait ends here, the tune of its mux fails and where the
+   * rotor stopped is not known. A wait for another position goes on */
+  if (linuxdvb_satconf_ele_waits(ls)) {
+    mtimer_disarm(&lsp->ls_diseqc_timer);
+    lsp->ls_active_diseqc = NULL;
+    lsp->ls_last_orbital_pos = 0;
+    lsp->ls_last_queued_pos = 0;
+  }
   TAILQ_REMOVE(&ls->lse_parent->ls_elements, ls, lse_link);
   idnode_save_check(&ls->lse_id, 1);
   idnode_unlink(&ls->lse_id);
